@@ -1,0 +1,51 @@
+{{ define "register" }}
+<h1>Register</h1>
+{{ if .Error }}
+<div class="error">
+	{{ .Error }}
+</div>
+{{ end }}
+<form
+	action="/register"
+	method="post">
+	<div class="field">
+		<label for="username">Username</label>
+		<input
+			type="text"
+			id="username"
+			name="username"
+			autocomplete="username"
+			required
+			minlength="3"
+			maxlength="16"
+			pattern="[a-zA-Z0-9][a-zA-Z0-9_]{2,15}"
+			title="3–16 chars, letters/digits/underscore, must not start with _">
+	</div>
+	<div class="field">
+		<label for="password">Password</label>
+		<input
+			type="password"
+			id="password"
+			name="password"
+			autocomplete="new-password"
+			required
+			minlength="8">
+	</div>
+	<div class="field">
+		<label for="password_confirm">Confirm password</label>
+		<input
+			type="password"
+			id="password_confirm"
+			name="password_confirm"
+			autocomplete="new-password"
+			required
+			minlength="8">
+	</div>
+	<div class="tos-row">
+		<input type="checkbox" id="tos_agree" name="tos_agree" value="on">
+		<label for="tos_agree">I have read and agree to the Terms of Service</label>
+	</div>
+
+	<button type="submit">Create account</button>
+</form>
+{{end}}
