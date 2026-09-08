@@ -1,3 +1,4 @@
+import globals from "globals";
 import eslint from '@eslint/js';
 import unicorn from 'eslint-plugin-unicorn';
 import sonarjs from 'eslint-plugin-sonarjs';
@@ -12,6 +13,12 @@ export default [
 			'build/',
 			'coverage/',
 		],
+	},
+
+	{
+		languageOptions: {
+			globals: globals.node,
+		},
 	},
 
 	eslint.configs.recommended,
