@@ -8,6 +8,8 @@ import (
 	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
+
+	"transcendance/models"
 )
 
 func ConnectDatabase() (*gorm.DB, error) {
@@ -34,4 +36,8 @@ func ConnectDatabase() (*gorm.DB, error) {
 	}
 
 	return db, nil
+}
+
+func MigrateDatabase(db *gorm.DB) error {
+	return db.AutoMigrate(&models.User{})
 }

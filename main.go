@@ -4,21 +4,16 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 
 	"transcendance/config"
-	"transcendance/models"
+	"transcendance/localization"
 	"transcendance/routes"
 	"transcendance/views"
-	"transcendance/localization"
 )
 
-func main() {
-	db, err := config.ConnectDatabase()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if err := db.AutoMigrate(&models.User{}); err != nil {
+func run(db *gorm.DB) *gin.Engine {
+	if err := config.MigrateDatabase(db); err != nil {
 		log.Fatal(err)
 	}
 
@@ -28,14 +23,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// Register localization middleware on all routes
-	router.Use(l10n.Middleware());
+
+	router.Use(l10n.Middleware())
 
 	renderer := views.NewRenderer(l10n)
 	routes.RegisterRoutes(router, db, renderer)
 
-	log.Println("Server running on http://localhost:8080")
+	return router
+}
 
+
+func main() {
+db, err := config.ConnectDatabase()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	router := run(db)
+
+	log.Println("Server running on http://localhost:8080")
 	if err := router.Run(":8080"); err != nil {
 		log.Fatal(err)
 	}
