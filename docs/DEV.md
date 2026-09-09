@@ -14,6 +14,7 @@ You must have a npm-capable package maneger.
 NPM Dependencies:
 ```
 npm i vite \
+    svelte \
     @sveltejs/vite-plugin-svelte
 ```
 
@@ -35,6 +36,8 @@ For convenience, a `Makefile` is provided. To build frontend components and run 
 
 # Database
 
+To start the database use docker-compose: `docker compose up -d`
+
 To connect to the database, do this:
 ```
 docker exec -it <container-name> mariadb \
@@ -43,7 +46,7 @@ docker exec -it <container-name> mariadb \
 ```
 Then enter the password for `root` in `.env` and select the `main` database: `USE main;`
 
-# Dependencies
+# Server Dependencies
 
  * [gin](https://github.com/gin-gonic/gin) Web server framework
  * [gorm](https://gorm.io/gorm) Database ORM
@@ -51,3 +54,8 @@ Then enter the password for `root` in `.env` and select the `main` database: `US
  * [godotenv](https://github.com/joho/godotenv) Sources .env
  * [bcrypt](https://golang.org/x/crypto/bcrypt) bcrypt implementation
 
+# Static routes
+
+ * `/frontend`: Frontend components
+ * `/favicon.ico`: Icon
+ * `/static`: Static files
