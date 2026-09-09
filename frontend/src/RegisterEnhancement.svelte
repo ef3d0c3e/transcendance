@@ -30,8 +30,11 @@
 					result.textContent = data.message ?? "Registration failed.";
 					return;
 				}
+				else {
+					result.style.color = "black";
+					result.textContent = data.message;
+				}
 
-				result.textContent = data.message;
 
 				form.reset();
 			} catch (error) {
