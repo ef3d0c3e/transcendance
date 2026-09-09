@@ -19,7 +19,9 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 
-	router.Static("/static/frontend", "./frontend/dist")
+	router.Static("/frontend", "./frontend/dist")
+	router.Static("/static", "./static")
+	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
 	router.GET("/register", authController.ShowRegister)
 	router.POST("/register", authController.Register)
