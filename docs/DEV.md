@@ -7,6 +7,9 @@ Get it here: <https://go.dev/dl/>
 
 To install it, extract the archive in some 'standard' location, then add the `bin/` directory in your `$PATH`.
 
+Also `go` should create a directory in your `$HOME`.
+Make sure to add `$HOME/go/bin` to your path if you want to install/use go tools.
+
 ## Frontend
 
 You must have a npm-capable package maneger.
@@ -29,6 +32,10 @@ docker compose -d
 # Run the server
 go run .
 ```
+
+To make the whole process of `Edit -> Stop Server -> Restart server` streamlined, you should install [fresh](https://github.com/gravityblast/fresh): `go install github.com/gravityblast/fresh@latest`.
+
+Then at the project's root start fresh: `fresh`. It will automatically rebuild and restart the server whenever you edit the source code or localization files.
 
 ## Makefile
 
@@ -53,6 +60,7 @@ Then enter the password for `root` in `.env` and select the `main` database: `US
  * [gorm-mysql](https://gorm.io/driver/mysql) MySQL driver for Gorm
  * [godotenv](https://github.com/joho/godotenv) Sources .env
  * [bcrypt](https://golang.org/x/crypto/bcrypt) bcrypt implementation
+ * [gofluent](https://github.com/hakastein/gofluent) Fluent for Go
 
 # Static routes
 
