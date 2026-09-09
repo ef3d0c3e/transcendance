@@ -26,11 +26,12 @@
 				const data = await response.json();
 
 				if (!response.ok) {
-					result.textContent = data.error ?? "Registration failed.";
+					result.style.color = "red";
+					result.textContent = data.message ?? "Registration failed.";
 					return;
 				}
 
-				result.textContent = "Account created successfully.";
+				result.textContent = data.message;
 
 				form.reset();
 			} catch (error) {

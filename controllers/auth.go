@@ -30,21 +30,21 @@ func (ac *AuthController) Register(c *gin.Context) {
 
 	if username == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Username is required",
+			"message": ac.Renderer.T(c, "register-error-username-required"),
 		})
 		return
 	}
 
 	if password != passwordConfirm {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "Passwords do not match",
+			"message": ac.Renderer.T(c, "register-error-passwords-do-not-match"),
 		})
 		return
 	}
 
 	if tosAgree != "on" {
 		c.JSON(http.StatusBadRequest, gin.H{
-			"error": "You must agree to the Terms of Service",
+			"message": ac.Renderer.T(c, "register-error-tos"),
 		})
 		return
 	}
@@ -55,7 +55,7 @@ func (ac *AuthController) Register(c *gin.Context) {
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Could not hash password",
+			"message": ac.Renderer.T(c, "register-error-password-hash"),
 		})
 		return
 	}
@@ -67,12 +67,13 @@ func (ac *AuthController) Register(c *gin.Context) {
 
 	if err := ac.DB.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"error":   "Could not create user",
+			"message": ac.Renderer.T(c, "register-error-user"),
 		})
 		return
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
 		"success": true,
+		"message": ac.Renderer.T(c, "register-success"),
 	})
 }

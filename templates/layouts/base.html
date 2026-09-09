@@ -7,10 +7,10 @@
 	<!--- Temporary -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
 
-	<title>{{ .Title }}</title>
+	<title>{{ .Data.Title }}</title>
 </head>
 <body>
-	{{ .Content }}
+	{{ .Data.Content }}
 </body>
 </html>
 {{ end }}

@@ -1,0 +1,12 @@
+register-title = Créer un compte
+register-username = Nom d'utilisateur
+register-password = Mot de passe
+register-password-confirm = Confirmer votre mot de passe
+register-tos = J'ai lu et j'accepte les Conditions d'Utilisation
+register-submit = Créer un compte
+register-error-username-required = Un nom d'utilisateur est requi
+register-error-passwords-do-not-match = Les mots de passe doivent correspondre
+register-error-tos = Vous devez accepter les Conditions d'Utilisation
+register-error-password-hash = Impossible de hash le mot de passe
+register-error-user = Impossible de créer l'utilisateur
+register-success = Compte crée avec succès
