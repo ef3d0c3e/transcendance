@@ -19,6 +19,8 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 
+	router.Static("/static/frontend", "./frontend/dist")
+
 	router.GET("/register", authController.ShowRegister)
 	router.POST("/register", authController.Register)
 }

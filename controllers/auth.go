@@ -28,20 +28,23 @@ func (ac *AuthController) Register(c *gin.Context) {
 	passwordConfirm := c.PostForm("password_confirm")
 	tosAgree := c.PostForm("tos_agree")
 
+	if username == "" {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Username is required",
+		})
+		return
+	}
+
 	if password != passwordConfirm {
-		ac.Renderer.Render(c, "register", map[string]any{
-			"Title":    "Register",
-			"Username": username,
-			"Error":    "Passwords do not match",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Passwords do not match",
 		})
 		return
 	}
 
 	if tosAgree != "on" {
-		ac.Renderer.Render(c, "register", map[string]any{
-			"Title":    "Register",
-			"Username": username,
-			"Error":    "You must agree to the Terms of Service",
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "You must agree to the Terms of Service",
 		})
 		return
 	}
@@ -51,7 +54,9 @@ func (ac *AuthController) Register(c *gin.Context) {
 		bcrypt.DefaultCost,
 	)
 	if err != nil {
-		c.String(http.StatusInternalServerError, "could not hash password")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Could not hash password",
+		})
 		return
 	}
 
@@ -61,9 +66,13 @@ func (ac *AuthController) Register(c *gin.Context) {
 	}
 
 	if err := ac.DB.Create(&user).Error; err != nil {
-		c.String(http.StatusInternalServerError, "could not create user")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error":   "Could not create user",
+		})
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/login")
+	c.JSON(http.StatusCreated, gin.H{
+		"success": true,
+	})
 }
