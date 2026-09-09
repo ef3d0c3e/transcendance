@@ -1,6 +1,7 @@
-package main
+package tests
 
 import (
+	"fmt"
 	"log"
 
 	"github.com/gin-gonic/gin"
@@ -12,7 +13,13 @@ import (
 	"transcendance/views"
 )
 
-func run(db *gorm.DB) *gin.Engine {
+var (
+	DB     *gorm.DB
+	Router *gin.Engine
+	cleanup func()
+)
+
+func Run(db *gorm.DB) *gin.Engine {
 	if err := config.MigrateDatabase(db); err != nil {
 		log.Fatal(err)
 	}
@@ -32,17 +39,26 @@ func run(db *gorm.DB) *gin.Engine {
 	return router
 }
 
+func Init() error {
+	var err error
 
-func main() {
-db, err := config.ConnectDatabase()
+	DB, cleanup, err = config.ConnectTestDatabase()
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	router := run(db)
+	Router = gin.Default()
 
-	log.Println("Server running on http://localhost:8080")
-	if err := router.Run(":8080"); err != nil {
-		log.Fatal(err)
+	if err := config.MigrateDatabase(DB); err != nil {
+		cleanup()
+		return fmt.Errorf("migrate test database: %w", err)
+	}
+
+	return nil
+}
+
+func Cleanup() {
+	if cleanup != nil {
+		cleanup()
 	}
 }

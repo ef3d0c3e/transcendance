@@ -61,9 +61,21 @@ Then enter the password for `root` in `.env` and select the `main` database: `US
  * [godotenv](https://github.com/joho/godotenv) Sources .env
  * [bcrypt](https://golang.org/x/crypto/bcrypt) bcrypt implementation
  * [gofluent](https://github.com/hakastein/gofluent) Fluent for Go
+ * [testify](https://https://github.com/stretchr/testify) Assertion library
 
 # Static routes
 
  * `/frontend`: Frontend components
  * `/favicon.ico`: Icon
  * `/static`: Static files
+
+# Tests
+
+If you wish to run tests, you must grant `admin` the rights to create and drop databases: 
+```
+GRANT ALL CREATE, DROP ON main_test.* TO 'admin'@'%'
+FLUSH PRIVILEGES
+```
+
+**Running tests:**
+To run tests: `go test ./PACKAGE  -v` replace `PACKAGE` with the package to run tests for
