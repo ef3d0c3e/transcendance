@@ -3,10 +3,11 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 
-	"github.com/joho/godotenv"
 	_ "github.com/go-sql-driver/mysql"
+	"github.com/joho/godotenv"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -71,11 +72,14 @@ func ConnectTestDatabase() (*gorm.DB, func(), error) {
 		if err != nil {
 			return
 		}
-		defer admin.Close()
 
 		_, _ = admin.Exec(
 			"DROP DATABASE IF EXISTS `" + testDatabase + "`",
 		)
+		err = admin.Close()
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	return db, cleanup, nil

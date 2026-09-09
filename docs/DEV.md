@@ -10,6 +10,9 @@ To install it, extract the archive in some 'standard' location, then add the `bi
 Also `go` should create a directory in your `$HOME`.
 Make sure to add `$HOME/go/bin` to your path if you want to install/use go tools.
 
+You should install `golangci-lint`, check out instruction [here](https://golangci-lint.run/docs/welcome/install/local/)
+Then you can run lints like so: `golangci-lint run`
+
 ## Frontend
 
 You must have a npm-capable package maneger.
