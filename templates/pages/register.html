@@ -1,13 +1,12 @@
 {{ define "register" }}
+<script type="module" src="/static/frontend/register.js"></script>
 <h1>Register</h1>
-{{ if .Error }}
-<div class="error">
-	{{ .Error }}
-</div>
-{{ end }}
+<div id="register-result"></div>
 <form
+	id="register-form"
 	action="/register"
-	method="post">
+	method="post"
+>
 	<div class="field">
 		<label for="username">Username</label>
 		<input
@@ -48,4 +47,5 @@
 
 	<button type="submit">Create account</button>
 </form>
-{{end}}
+<div id="register-enhancement"></div>
+{{ end }}

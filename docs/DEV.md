@@ -7,7 +7,19 @@ Get it here: <https://go.dev/dl/>
 
 To install it, extract the archive in some 'standard' location, then add the `bin/` directory in your `$PATH`.
 
-## Running
+## Frontend
+
+You must have a npm-capable package maneger.
+
+NPM Dependencies:
+```
+npm i vite \
+    @sveltejs/vite-plugin-svelte
+```
+
+To build frontend components, go to `frontend/` and execute `npm build`
+
+## Running the server
 
 ```
 # Start the database container
@@ -16,6 +28,10 @@ docker compose -d
 # Run the server
 go run .
 ```
+
+## Makefile
+
+For convenience, a `Makefile` is provided. To build frontend components and run the server, simply execute `make dev`
 
 # Database
 
