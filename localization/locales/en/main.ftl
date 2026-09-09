@@ -1,0 +1,12 @@
+register-title = Create account
+register-username = Username
+register-password = Password
+register-password-confirm = Confirm password
+register-tos = I have read and agree to the Terms of Service
+register-submit = Create account
+register-error-username-required = Username is required
+register-error-passwords-do-not-match = Passwords do not match
+register-error-tos = You must agree to the Terms of Service
+register-error-password-hash = Could not hash password
+register-error-user = Could not create user
+register-success = Account successfully created

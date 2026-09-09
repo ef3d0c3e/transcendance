@@ -9,6 +9,7 @@ import (
 	"transcendance/models"
 	"transcendance/routes"
 	"transcendance/views"
+	"transcendance/localization"
 )
 
 func main() {
@@ -21,8 +22,16 @@ func main() {
 		log.Fatal(err)
 	}
 
-	renderer := views.NewRenderer()
 	router := gin.Default()
+
+	l10n, err := localization.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	// Register localization middleware on all routes
+	router.Use(l10n.Middleware());
+
+	renderer := views.NewRenderer(l10n)
 	routes.RegisterRoutes(router, db, renderer)
 
 	log.Println("Server running on http://localhost:8080")
