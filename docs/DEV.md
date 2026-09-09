@@ -82,3 +82,8 @@ FLUSH PRIVILEGES
 
 **Running tests:**
 To run tests: `go test ./PACKAGE  -v` replace `PACKAGE` with the package to run tests for
+
+## CI/CD
+
+When you want to merge your branch. Add the `run-ci` label to your pull request.
+That way, linters and tests will run and give you a detailed result of their execution.

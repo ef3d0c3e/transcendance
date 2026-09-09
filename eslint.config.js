@@ -9,12 +9,21 @@ export default [
 		ignores: [
 			'eslint.config.js',
 			'frontend/dist/',
+			'frontend/vite.config.js',
 		],
 	},
 
 	{
+		files: ['**/*.js'],
 		languageOptions: {
 			globals: globals.node,
+		},
+	},
+
+	{
+		files: ['frontend/**/*.js'],
+		languageOptions: {
+			globals: globals.browser,
 		},
 	},
 
