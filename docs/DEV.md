@@ -24,13 +24,13 @@ npm i vite \
     @sveltejs/vite-plugin-svelte
 ```
 
-To build frontend components, go to `frontend/` and execute `npm build`
+To build frontend components, go to `frontend/` and execute `npm run build` (or `make frontend` from the root)
 
 ## Running the server
 
 ```
 # Start the database container
-docker compose -d
+docker compose up -d
 
 # Run the server
 go run .
