@@ -1,0 +1,16 @@
+{{ define "base" }}
+<!DOCTYPE html>
+<html>
+<head>
+	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
+
+	<!--- Temporary -->
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+
+	<title>{{ .Data.Title }}</title>
+</head>
+<body>
+	{{ .Data.Content }}
+</body>
+</html>
+{{ end }}

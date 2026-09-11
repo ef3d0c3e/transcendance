@@ -1,0 +1,51 @@
+{{ define "register" }}
+<script type="module" src="/frontend/register.js"></script>
+<h1>{{ .T "register-title" }}</h1>
+<div id="register-result"></div>
+<form
+	id="register-form"
+	action="/register"
+	method="post"
+>
+	<div class="field">
+		<label for="username">{{ .T "register-username" }}</label>
+		<input
+			type="text"
+			id="username"
+			name="username"
+			autocomplete="username"
+			required
+			minlength="3"
+			maxlength="16"
+			pattern="[a-zA-Z0-9_]{3,16}"
+			title="3–16 chars, letters/digits/underscore">
+	</div>
+	<div class="field">
+		<label for="password">{{ .T "register-password" }}</label>
+		<input
+			type="password"
+			id="password"
+			name="password"
+			autocomplete="new-password"
+			required
+			minlength="8">
+	</div>
+	<div class="field">
+		<label for="password_confirm">{{ .T "register-password-confirm" }}</label>
+		<input
+			type="password"
+			id="password_confirm"
+			name="password_confirm"
+			autocomplete="new-password"
+			required
+			minlength="8">
+	</div>
+	<div class="tos-row">
+		<input type="checkbox" id="tos_agree" name="tos_agree" value="on">
+		<label for="tos_agree">{{ .T "register-tos" }}</label>
+	</div>
+
+	<button type="submit">{{ .T "register-submit" }}</button>
+</form>
+<div id="register-enhancement"></div>
+{{ end }}
