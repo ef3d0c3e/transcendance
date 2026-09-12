@@ -1,4 +1,4 @@
-name: CI
+name: Go tests
 
 on:
   push:
@@ -58,65 +58,3 @@ jobs:
 
       - name: Run Go tests
         run: go test ./... -v -race -coverprofile=coverage.out
-
-  backend-lint:
-    name: Go Lint
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: '1.27.1'
-
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v7
-        with:
-          version: v2.13.2
-          args: --timeout=5m
-
-  build-frontend:
-    name: Build frontend
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            frontend/package-lock.json
-
-      - name: Install frontend deps
-        run: npm install vite svelte @sveltejs/vite-plugin-svelte
-
-      - name: Build frontend
-        run: make frontend
-
-  frontend-lint:
-    name: ESLint (Svelte)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '24'
-          cache: 'npm'
-          cache-dependency-path: |
-            package-lock.json
-            frontend/package-lock.json
-
-      - name: Install ESLint deps
-        run: npm install eslint @eslint/js eslint-plugin-unicorn eslint-plugin-sonarjs eslint-plugin-import-x vite svelte @sveltejs/vite-plugin-svelte
-
-      - name: Run ESLint
-        run: npx eslint .

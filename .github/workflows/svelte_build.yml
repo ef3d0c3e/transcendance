@@ -1,0 +1,27 @@
+name: Svelte build
+
+on:
+  push:
+
+jobs:
+  build-frontend:
+    name: Build frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: |
+            package-lock.json
+            frontend/package-lock.json
+
+      - name: Install frontend deps
+        run: npm install vite svelte @sveltejs/vite-plugin-svelte
+
+      - name: Build frontend
+        run: make frontend
