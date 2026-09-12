@@ -21,12 +21,55 @@ type AuthController struct {
 	Renderer *views.Renderer
 }
 
+type AuthenticatedUser struct {
+	ID       uint
+	Username string
+}
+
+func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, err := c.Cookie("session_token")
+
+		if err != nil || token == "" {
+			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
+			c.Next()
+			return
+		}
+
+		session, err := gorm.G[models.UserSession](db).
+			Where("token = ? AND expires_at > ?", token, time.Now()).
+			First(c.Request.Context())
+
+		if err != nil {
+			// Invalid/expired token = unauthenticated.
+			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
+			c.Next()
+			return
+		}
+
+		c.Set("authenticatedUser", &AuthenticatedUser{
+			ID: session.UserID,
+		})
+
+		c.Next()
+	}
+}
+
+func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
+	user, _ := c.Get("authenticatedUser")
+	if user == nil {
+		return nil
+	}
+
+	return user.(*AuthenticatedUser)
+}
+
 func (ac *AuthController) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	ac.Renderer.Render(c, "register", map[string]any{
 		"Title": "Register",
-		"User": user,
+		"User":  user,
 	})
 }
 
@@ -118,7 +161,7 @@ func (ac *AuthController) LoginGet(c *gin.Context) {
 
 	ac.Renderer.Render(c, "login", map[string]any{
 		"Title": "Login",
-		"User": user,
+		"User":  user,
 	})
 }
 
@@ -190,45 +233,38 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	})
 }
 
-type AuthenticatedUser struct {
-	ID       uint
-	Username string
-}
+func (ac *AuthController) LogoutGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
 
-func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		token, err := c.Cookie("session_token")
-
-		if err != nil || token == "" {
-			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
-			c.Next()
-			return
-		}
-
-		session, err := gorm.G[models.UserSession](db).
-			Where("token = ? AND expires_at > ?", token, time.Now()).
-			First(c.Request.Context())
-
-		if err != nil {
-			// Invalid/expired token = unauthenticated.
-			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
-			c.Next()
-			return
-		}
-
-		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID: session.UserID,
-		})
-
-		c.Next()
-	}
-}
-
-func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
-	user, _ := c.Get("authenticatedUser")
 	if user == nil {
-		return nil
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": ac.Renderer.T(c, "logout-unauthenticated"),
+		})
+		return
 	}
 
-	return user.(*AuthenticatedUser)
+	if v := c.Query("all"); v == "yes" {
+		// Log out all devices
+		ctx := c.Request.Context()
+		_, err := gorm.G[models.UserSession](ac.DB).
+			Where("user_id = ?", user.ID).
+			Delete(ctx)
+		if err != nil {
+			c.JSON(http.StatusOK, gin.H{
+				"message": ac.Renderer.T(c, "logout-error-all"),
+			})
+			return
+		}
+	} else {
+		// Log out current device
+		token, err := c.Cookie("session_token")
+		if err != nil && token != "" {
+
+		}
+	}
+
+	c.SetCookie("session_token", "", -1, "/", "", true, true)
+	c.JSON(http.StatusOK, gin.H{
+		"message": ac.Renderer.T(c, "logout-success"),
+	})
 }

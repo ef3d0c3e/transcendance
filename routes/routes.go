@@ -28,4 +28,6 @@ func RegisterRoutes(
 
 	router.GET("/login", authController.LoginGet)
 	router.POST("/login", authController.LoginPost)
+
+	router.GET("/logout", authController.LogoutGet)
 }
