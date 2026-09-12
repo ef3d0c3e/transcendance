@@ -1,0 +1,60 @@
+name: Go tests
+
+on:
+  push:
+
+jobs:
+  backend-test:
+    name: go test
+    runs-on: ubuntu-latest
+    env:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: admin
+      MYSQL_PASSWORD: admin_password
+      MYSQL_DATABASE: main_test
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MYSQL_ROOT_PASSWORD: root_password
+          MYSQL_USER: admin
+          MYSQL_PASSWORD: admin_password
+          MYSQL_DATABASE: main_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mariadb-admin ping -h 127.0.0.1 --protocol=tcp -uroot -proot_password"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.27.1'
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Write .env file for tests
+        run: |
+          cat <<EOF > .env
+          MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+          MYSQL_USER=${MYSQL_USER}
+          MYSQL_PASSWORD=${MYSQL_PASSWORD}
+          MYSQL_DATABASE=${MYSQL_DATABASE}
+          EOF
+
+      - name: Wait for MariaDB
+        run: |
+          for i in {1..30}; do
+            mysqladmin ping -h 127.0.0.1 -P 3306 --protocol=tcp -uroot -proot_password --silent && break
+            echo "Waiting for MariaDB..."
+            sleep 2
+          done
+
+      - name: Run Go tests
+        run: go test ./... -v -race -coverprofile=coverage.out
