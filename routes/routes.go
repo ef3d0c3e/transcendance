@@ -23,6 +23,11 @@ func RegisterRoutes(
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
-	router.GET("/register", authController.ShowRegister)
-	router.POST("/register", authController.Register)
+	router.GET("/register", authController.RegisterGet)
+	router.POST("/register", authController.RegisterPost)
+
+	router.GET("/login", authController.LoginGet)
+	router.POST("/login", authController.LoginPost)
+
+	router.GET("/logout", authController.LogoutGet)
 }
