@@ -22,8 +22,11 @@ type AuthController struct {
 }
 
 func (ac *AuthController) RegisterGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+
 	ac.Renderer.Render(c, "register", map[string]any{
 		"Title": "Register",
+		"User": user,
 	})
 }
 
@@ -111,8 +114,11 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 }
 
 func (ac *AuthController) LoginGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+
 	ac.Renderer.Render(c, "login", map[string]any{
 		"Title": "Login",
+		"User": user,
 	})
 }
 
@@ -147,7 +153,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": ac.Renderer.T(c, "login-error-password"),
+			"message": ac.Renderer.T(c, "login-error-invalid"),
 		})
 		return
 	}
@@ -164,7 +170,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	token := base64.RawURLEncoding.EncodeToString(buf)
 
 	now := time.Now()
-	session := models.UserSesssion{
+	session := models.UserSession{
 		UserID:    user.ID,
 		Token:     token,
 		CreatedAt: now,
@@ -182,4 +188,47 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "login-success", "username", username),
 	})
+}
+
+type AuthenticatedUser struct {
+	ID       uint
+	Username string
+}
+
+func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		token, err := c.Cookie("session_token")
+
+		if err != nil || token == "" {
+			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
+			c.Next()
+			return
+		}
+
+		session, err := gorm.G[models.UserSession](db).
+			Where("token = ? AND expires_at > ?", token, time.Now()).
+			First(c.Request.Context())
+
+		if err != nil {
+			// Invalid/expired token = unauthenticated.
+			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
+			c.Next()
+			return
+		}
+
+		c.Set("authenticatedUser", &AuthenticatedUser{
+			ID: session.UserID,
+		})
+
+		c.Next()
+	}
+}
+
+func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
+	user, _ := c.Get("authenticatedUser")
+	if user == nil {
+		return nil
+	}
+
+	return user.(*AuthenticatedUser)
 }

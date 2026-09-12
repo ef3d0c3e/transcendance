@@ -39,5 +39,5 @@ func ConnectDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-	return db.AutoMigrate(&models.User{}, &models.UserSesssion{})
+	return db.AutoMigrate(&models.User{}, &models.UserSession{})
 }
