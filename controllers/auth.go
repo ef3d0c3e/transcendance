@@ -184,18 +184,19 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	user, err := gorm.G[models.User](ac.DB).
+	users, err := gorm.G[models.User](ac.DB).
 		Where("username = ?", username).
-		First(ctx)
-	if err != nil {
+		Find(ctx)
+	if err != nil || len(users) != 1 {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-username"),
 		})
 		return
 	}
+	user := users[0]
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-invalid"),
 		})
 		return
@@ -259,7 +260,11 @@ func (ac *AuthController) LogoutGet(c *gin.Context) {
 		// Log out current device
 		token, err := c.Cookie("session_token")
 		if err != nil && token != "" {
-
+			ctx := c.Request.Context()
+			// Silently fail, since the user's cookie is cleared anyway, that just means keeping data in the DB a little longer
+			_, _ = gorm.G[models.UserSession](ac.DB).
+				Where("user_id = ? and token = ", user.ID, token).
+				Delete(ctx)
 		}
 	}
 
