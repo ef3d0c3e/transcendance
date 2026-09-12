@@ -1,0 +1,31 @@
+{{ define "login" }}
+<script type="module" src="/frontend/login.js"></script>
+<h1>{{ .T "login-title" }}</h1>
+<div id="login-result"></div>
+<form
+	id="login-form"
+	action="/login"
+	method="post">
+	<div class="field">
+		<label for="username">{{ .T "login-username" }}</label>
+		<input
+			type="text"
+			id="username"
+			name="username"
+			autocomplete="username"
+			required>
+	</div>
+	<div class="field">
+		<label for="password">{{ .T "login-password" }}</label>
+		<input
+			type="password"
+			id="password"
+			name="password"
+			autocomplete="password"
+			required>
+	</div>
+
+	<button type="submit">{{ .T "login-submit" }}</button>
+</form>
+<div id="login-enhancement"></div>
+{{ end }}
