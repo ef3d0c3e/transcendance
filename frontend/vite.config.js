@@ -10,6 +10,11 @@ export default defineConfig({
 			formats: ["es"],
 			fileName: "register",
 		},
+		lib: {
+			entry: "src/login.js",
+			formats: ["es"],
+			fileName: "login",
+		},
 
 		emptyOutDir: true,
 	},

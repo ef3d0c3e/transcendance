@@ -8,7 +8,16 @@ register-error-username = Invalid username. Username must be between 3 and 16 ch
 register-error-password = Invalid password. Your password must be between 12 and 72 characters long.
 register-error-passwords-do-not-match = Passwords do not match
 register-error-tos = You must agree to the Terms of Service
-register-error-password-hash = Could not hash password
 register-error-username-taken = Username already taken
 register-error-user = Could not create user
 register-success = Account successfully created
+
+login-title = Login
+login-username = Username
+login-password = Password
+login-submit = Login
+login-error-username = Invalid username
+login-error-password = Invalid password
+login-error-invalid = Invalid username or password
+login-error-internal = Login failed
+login-success = Welcome back, { $username }

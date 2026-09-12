@@ -12,3 +12,13 @@ register-error-password-hash = Impossible de hash le mot de passe
 register-error-user = Impossible de créer l'utilisateur
 register-error-username-taken = Nom d'utilisateur déjà utilisé
 register-success = Compte crée avec succès
+
+login-title = Connexion
+login-username = Nom d'utilisateur
+login-password = Mot de passe
+login-submit = Connexion
+login-error-username = Nom d'utilisateur invalide
+login-error-password = Mot de passe invalide
+login-error-invalid = Nom d'utilisateur ou mot de passe invalide
+login-error-internal = Échec de la connexion
+login-success = Bienvenu, { $username }
