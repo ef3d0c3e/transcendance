@@ -1,11 +1,11 @@
-name: ESLint
+name: JS lints
 
 on:
   push:
 
 jobs:
   frontend-lint:
-    name: ESLint (Svelte)
+    name: ESLint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
