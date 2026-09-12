@@ -5,7 +5,7 @@ on:
 
 jobs:
   backend-lint:
-    name: Go Lint
+    name: golangci-lint
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

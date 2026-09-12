@@ -5,7 +5,7 @@ on:
 
 jobs:
   backend-test:
-    name: Go Tests
+    name: go test
     runs-on: ubuntu-latest
     env:
       MYSQL_ROOT_PASSWORD: root_password
