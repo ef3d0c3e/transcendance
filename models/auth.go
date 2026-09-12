@@ -17,7 +17,7 @@ type User struct {
 	Avatar       string
 }
 
-type UserSesssion struct {
+type UserSession struct {
 	ID           uint           `gorm:"primaryKey"`
 	UserID       uint           `gorm:"not null;index"`
 	User         User           `gorm:"constraint:OnDelete:CASCADE"`

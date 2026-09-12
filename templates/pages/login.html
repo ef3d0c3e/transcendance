@@ -1,6 +1,9 @@
 {{ define "login" }}
 <script type="module" src="/frontend/login.js"></script>
 <h1>{{ .T "login-title" }}</h1>
+{{ if .Data.User }}
+<h3>{{ .T "login-error-authenticated" }}</h3>
+{{ else }}
 <div id="login-result"></div>
 <form
 	id="login-form"
@@ -28,4 +31,5 @@
 	<button type="submit">{{ .T "login-submit" }}</button>
 </form>
 <div id="login-enhancement"></div>
+{{ end }}
 {{ end }}
