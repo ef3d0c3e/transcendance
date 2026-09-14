@@ -82,3 +82,14 @@ FLUSH PRIVILEGES
 
 **Running tests:**
 To run tests: `go test ./PACKAGE  -v` replace `PACKAGE` with the package to run tests for
+
+# Tooling
+
+The following tools are recommended for working with the project:
+ * [golangci-lint](https://golangci-lint.run/docs/welcome/install/local/) go linter.
+ * [eslint](https://www.npmjs.com/package/eslint) javascript linter. Installation: `npm install @eslint/js eslint-plugin-unicorn eslint-plugin-sonarjs eslint-plugin-import-x`.
+ * [eslint-lsp](https://github.com/danielpza/eslint-lsp) language server that integrates ESLint lints as a language server.
+ * [svelte-language-server](https://github.com/sveltejs/language-tools) language server for Svelte.
+ * [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) language server for js/ts.
+ * [gopls](https://go.dev/gopls/) go language server.
+ * [LSP-html](https://github.com/sublimelsp/LSP-html) HTML language server.
