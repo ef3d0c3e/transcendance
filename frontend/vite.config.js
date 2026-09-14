@@ -5,15 +5,15 @@ export default defineConfig({
 	plugins: [svelte()],
 
 	build: {
-		lib: {
-			entry: "src/register.js",
-			formats: ["es"],
-			fileName: "register",
-		},
-		lib: {
-			entry: "src/login.js",
-			formats: ["es"],
-			fileName: "login",
+		rollupOptions: {
+			input: {
+				register: "src/register.js",
+				login: "src/login.js",
+			},
+			output: {
+				entryFileNames: "[name].js",
+				format: "es",
+			},
 		},
 
 		emptyOutDir: true,
