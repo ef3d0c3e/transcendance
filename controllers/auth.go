@@ -47,8 +47,19 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
+		user, err := gorm.G[models.User](db).
+			Where("id = ?", session.UserID).
+			First(c.Request.Context())
+
+		if err != nil {
+			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
+			c.Next()
+			return
+		}
+
 		c.Set("authenticatedUser", &AuthenticatedUser{
 			ID: session.UserID,
+			Username: user.Username,
 		})
 
 		c.Next()
