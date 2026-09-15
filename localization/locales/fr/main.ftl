@@ -25,6 +25,9 @@ login-error-invalid = Nom d'utilisateur ou mot de passe invalide
 login-error-internal = Échec de la connexion
 login-success = Bienvenu, { $username }
 
+logout-title = Déconnexion
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
+
+index-title = Index

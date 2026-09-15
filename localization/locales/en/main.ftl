@@ -24,6 +24,7 @@ login-error-invalid = Invalid username or password
 login-error-internal = Login failed
 login-success = Welcome back, { $username }
 
+logout-title = logout
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
@@ -31,3 +32,4 @@ logout-error-all = Failed to log out all devices
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
+index-title = Index

@@ -1,5 +1,6 @@
 import { defineConfig } from "vite";
 import { svelte } from "@sveltejs/vite-plugin-svelte";
+import { e_layout } from "e-layout";
 
 export default defineConfig({
 	plugins: [svelte({

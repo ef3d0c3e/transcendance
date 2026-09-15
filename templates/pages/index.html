@@ -1,0 +1,34 @@
+{{ define "index" }}
+<header>
+	<e-cluster justify="space-evenly" align="center">
+		<e-box>
+			<h1>
+				{{ .T "index-title" }}
+			</h1>
+		</e-box>
+		<e-box>
+			<h2>
+				{{ if .Data.User }}
+				<a href="/profile">{{ .Data.User.Username }}</a>
+				<a href="/logout">{{ .T "logout-title" }}</a>
+				{{ else }}
+				<a href="/register">{{ .T "register-title" }}</a>
+				<a href="/login">{{ .T "login-title" }}</a>
+				{{ end }}
+			</h2>
+		</e-box>
+	</e-cluster>
+</header>
+<main>
+	<e-stack>
+		<e-box>
+			<h1>Some title</h1>
+			<p>some text</p>
+		</e-box>
+		<e-box>
+			<h1>Some title</h1>
+			<p>some text</p>
+		</e-box>
+	</e-stack>
+</main>
+{{ end }}
