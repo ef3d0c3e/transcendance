@@ -57,46 +57,55 @@ func NewRenderer(l *localization.Localizer) *Renderer {
 	}
 }
 
-type page_builder struct {
-	template_name string
-	data          map[string]any
-	children      map[string]page_builder
+type pageBuilder struct {
+	templateName string
+	data         map[string]any
+	children     map[string]*pageBuilder
 }
 
 // Create a new page builder
-func PageBuilder(template_name string, data map[string]any) page_builder {
-	return page_builder{
-		template_name: template_name,
-		data:          data,
-		children:      make(map[string]page_builder, 1),
+func PageBuilder(templateName string, data map[string]any) pageBuilder {
+	if data == nil {
+		data = make(map[string]any, 1)
+	}
+	return pageBuilder{
+		templateName: templateName,
+		data:         data,
+		children:     make(map[string]*pageBuilder, 1),
 	}
 }
 
 // Add a template (child) to the page builder
-// - `template_name` Template name
+// - `templateName` Template name
 // - `name` Name that will be available to the parent
 // This method returns the added child, so you may add children to that child
-func (b *page_builder) Add(template_name string, name string, data map[string]any) page_builder {
-	child := PageBuilder(template_name, data)
+func (b *pageBuilder) Add(templateName string, name string, data map[string]any) *pageBuilder {
+	if data == nil {
+		data = make(map[string]any, 1)
+	}
+	child := &pageBuilder{
+		templateName: templateName,
+		data:         data,
+		children:     make(map[string]*pageBuilder, 1),
+	}
 	b.children[name] = child
 	return child
 }
 
 func (r *Renderer) renderPage(
 	loc *fluentloc.Localization,
-	b *page_builder,
+	b *pageBuilder,
 ) (template.HTML, error) {
 	children := make(map[string]template.HTML, len(b.children))
 
 	// Render children first (DFS)
 	for name, child := range b.children {
-		content, err := r.renderPage(loc, &child)
+		content, err := r.renderPage(loc, child)
 		if err != nil {
 			return "", err
 		}
 
 		children[name] = content
-		b.data[name] = content
 	}
 
 	view := View{
@@ -110,14 +119,14 @@ func (r *Renderer) renderPage(
 
 	var content bytes.Buffer
 
-	if err := r.templates.ExecuteTemplate(&content, b.template_name, view); err != nil {
+	if err := r.templates.ExecuteTemplate(&content, b.templateName, view); err != nil {
 		return "", err
 	}
 
 	return template.HTML(content.String()), nil
 }
 
-func (r *Renderer) Render(c *gin.Context, b *page_builder) {
+func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 	if b == nil {
 		log.Println("Rendered page is nil")
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
