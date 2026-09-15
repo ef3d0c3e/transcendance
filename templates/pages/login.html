@@ -3,6 +3,7 @@
 <h1>{{ .T "login-title" }}</h1>
 {{ if .Data.User }}
 <h3>{{ .T "login-error-authenticated" }}</h3>
+<p>{{ .Data.User.Username }}</p>
 {{ else }}
 <div id="login-result"></div>
 <form
