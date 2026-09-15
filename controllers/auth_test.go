@@ -14,7 +14,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestRegister(t *testing.T) {
+func TestRegisterOk(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice"},
 		"password":         {"foo-bar-qux"},
@@ -48,7 +48,7 @@ func TestRegister(t *testing.T) {
 	require.NotEmpty(t, user.PasswordHash)
 }
 
-func TestUsernameTaken(t *testing.T) {
+func TestRegisterUsernameTaken(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"eve"},
@@ -95,7 +95,7 @@ func TestUsernameTaken(t *testing.T) {
 	}
 }
 
-func TestUsernameTooShort(t *testing.T) {
+func TestRegisterUsernameTooShort(t *testing.T) {
 	form := url.Values{
 		"username":         {"al"},
 		"password":         {"foo-bar-qux"},
@@ -118,7 +118,7 @@ func TestUsernameTooShort(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestUsernameTooLong(t *testing.T) {
+func TestRegisterUsernameTooLong(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice123456789abcdef"},
 		"password":         {"foo-bar-qux"},
@@ -141,7 +141,7 @@ func TestUsernameTooLong(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestUsernameInvalid(t *testing.T) {
+func TestRegisterUsernameInvalid(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice$"},
 		"password":         {"foo-bar-qux"},
@@ -164,7 +164,7 @@ func TestUsernameInvalid(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestPasswordTooShort(t *testing.T) {
+func TestRegisterPasswordTooShort(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
 		"password":         {"foo-bar"},
@@ -187,7 +187,7 @@ func TestPasswordTooShort(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestPasswordTooLong(t *testing.T) {
+func TestRegisterPasswordTooLong(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
 		"password":         {"foo-bar-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
@@ -210,7 +210,7 @@ func TestPasswordTooLong(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestPasswordMismatch(t *testing.T) {
+func TestRegisterPasswordMismatch(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
 		"password":         {"foo-bar-baz"},
@@ -221,6 +221,138 @@ func TestPasswordMismatch(t *testing.T) {
 	req := httptest.NewRequest(
 		http.MethodPost,
 		"/register",
+		strings.NewReader(form.Encode()),
+	)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rec := httptest.NewRecorder()
+
+	router := tests.Run(tests.DB)
+	router.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestRegisterLoginOk(t *testing.T) {
+	{
+		form := url.Values{
+			"username":         {"alice2"},
+			"password":         {"foo-bar-qux"},
+			"password_confirm": {"foo-bar-qux"},
+			"tos_agree":        {"on"},
+		}
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/register",
+			strings.NewReader(form.Encode()),
+		)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		rec := httptest.NewRecorder()
+
+		router := tests.Run(tests.DB)
+		router.ServeHTTP(rec, req)
+
+		require.Equal(t, http.StatusCreated, rec.Code)
+	}
+
+	form := url.Values{
+		"username": {"alice2"},
+		"password": {"foo-bar-qux"},
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/login",
+		strings.NewReader(form.Encode()),
+	)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rec := httptest.NewRecorder()
+
+	router := tests.Run(tests.DB)
+	router.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusOK, rec.Code)
+}
+
+func TestRegisterBadPassword(t *testing.T) {
+	{
+		form := url.Values{
+			"username":         {"alice3"},
+			"password":         {"foo-bar-qux"},
+			"password_confirm": {"foo-bar-qux"},
+			"tos_agree":        {"on"},
+		}
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/register",
+			strings.NewReader(form.Encode()),
+		)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		rec := httptest.NewRecorder()
+
+		router := tests.Run(tests.DB)
+		router.ServeHTTP(rec, req)
+
+		require.Equal(t, http.StatusCreated, rec.Code)
+	}
+
+	form := url.Values{
+		"username": {"alice3"},
+		"password": {"foo-bar-baz"},
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/login",
+		strings.NewReader(form.Encode()),
+	)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	rec := httptest.NewRecorder()
+
+	router := tests.Run(tests.DB)
+	router.ServeHTTP(rec, req)
+
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+}
+
+func TestRegisterBadUsername(t *testing.T) {
+	{
+		form := url.Values{
+			"username":         {"alice4"},
+			"password":         {"foo-bar-qux"},
+			"password_confirm": {"foo-bar-qux"},
+			"tos_agree":        {"on"},
+		}
+
+		req := httptest.NewRequest(
+			http.MethodPost,
+			"/register",
+			strings.NewReader(form.Encode()),
+		)
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+		rec := httptest.NewRecorder()
+
+		router := tests.Run(tests.DB)
+		router.ServeHTTP(rec, req)
+
+		require.Equal(t, http.StatusCreated, rec.Code)
+	}
+
+	form := url.Values{
+		"username": {"bob4"},
+		"password": {"foo-bar-qux"},
+	}
+
+	req := httptest.NewRequest(
+		http.MethodPost,
+		"/login",
 		strings.NewReader(form.Encode()),
 	)
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
