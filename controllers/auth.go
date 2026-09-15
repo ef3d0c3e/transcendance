@@ -78,10 +78,14 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 func (ac *AuthController) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
-	ac.Renderer.Render(c, "register", map[string]any{
+	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Register",
 		"User":  user,
 	})
+	builder.Add("register", "Content", map[string]any{
+		"User":  user,
+	})
+	ac.Renderer.Render2(c, &builder)
 }
 
 var is_alphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
@@ -170,10 +174,14 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 func (ac *AuthController) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
-	ac.Renderer.Render(c, "login", map[string]any{
+	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Login",
 		"User":  user,
 	})
+	builder.Add("login", "Content", map[string]any{
+		"User":  user,
+	})
+	ac.Renderer.Render2(c, &builder)
 }
 
 func (ac *AuthController) LoginPost(c *gin.Context) {

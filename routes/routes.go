@@ -30,4 +30,10 @@ func RegisterRoutes(
 	router.POST("/login", authController.LoginPost)
 
 	router.GET("/logout", authController.LogoutGet)
+
+	pages := Pages{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/", pages.IndexGet)
 }
