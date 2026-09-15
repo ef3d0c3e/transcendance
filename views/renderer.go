@@ -117,7 +117,7 @@ func (r *Renderer) renderPage(
 	return template.HTML(content.String()), nil
 }
 
-func (r *Renderer) Render2(c *gin.Context, b *page_builder) {
+func (r *Renderer) Render(c *gin.Context, b *page_builder) {
 	if b == nil {
 		log.Println("Rendered page is nil")
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
@@ -132,5 +132,10 @@ func (r *Renderer) Render2(c *gin.Context, b *page_builder) {
 		return
 	}
 
-	c.Writer.Write([]byte(content))
+	_, err = c.Writer.Write([]byte(content))
+	if err != nil {
+		log.Println("Failed to write bytes to client")
+		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
+		return
+	}
 }
