@@ -24,5 +24,5 @@ func (p *Pages) IndexGet(c *gin.Context) {
 		"Hello": "foobar",
 	})
 
-	p.Renderer.Render2(c, &builder)
+	p.Renderer.Render(c, &builder)
 }
