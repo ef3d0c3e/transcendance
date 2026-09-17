@@ -27,3 +27,8 @@ login-success = Welcome back, { $username }
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
+
+profile-title = Profile
+profile-profile = { $username }'s profile
+profile-error-username = Unknown user
+profile-time =January 2 2006

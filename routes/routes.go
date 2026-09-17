@@ -31,6 +31,12 @@ func RegisterRoutes(
 
 	router.GET("/logout", authController.LogoutGet)
 
+	profileController := controllers.ProfileController {
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/profile", profileController.ProfileGet)
+
 	pages := Pages{
 		DB:       db,
 		Renderer: renderer,
