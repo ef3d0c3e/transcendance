@@ -9,7 +9,7 @@ import (
 type User struct {
 	ID uint `gorm:"primaryKey"`
 
-	Username     string         `gorm:"size:16;uniqueIndex;index:idx_users_username,type:fulltext;not null"`
+	Username     string         `gorm:"size:16;uniqueIndex;not null"`
 	PasswordHash string         `gorm:"not null"`
 	CreatedAt    time.Time      `gorm:"not null"`
 	UpdatedAt    time.Time      `gorm:"not null"`
