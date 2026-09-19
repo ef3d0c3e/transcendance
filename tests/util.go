@@ -30,10 +30,12 @@ func Run(db *gorm.DB) *gin.Engine {
 	if err != nil {
 		log.Fatal(err)
 	}
+	themer := views.NewThemer()
 
 	router.Use(l10n.Middleware())
+	router.Use(themer.Middleware())
 
-	renderer := views.NewRenderer(l10n)
+	renderer := views.NewRenderer(l10n, themer)
 	routes.RegisterRoutes(router, db, renderer)
 
 	return router
