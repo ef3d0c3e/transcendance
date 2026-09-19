@@ -1,0 +1,39 @@
+{{ define "search_user" }}
+<style>
+.profile-picture {
+	height: 2em;
+	width: 2em;
+	margin: 0;
+	padding: 0;
+	vertical-align: -.7em;
+}
+</style>
+<e-center intrinsic>
+<form
+	id="search-form"
+	action="/search"
+	method="get">
+	<input
+		type="text"
+		id="username"
+		name="username"
+		placeholder="{{ .T "search-user-form-placeholder" }}"
+		value="{{ .Data.Username }}">
+
+	<button type="submit">{{ .T "search-user-submit" }}</button>
+</form>
+</e-center>
+<table>
+{{ range $val := .Data.Users }}
+	<tr><td>
+	{{ if $val.Avatar }}
+		<img src="{{ $val.Avatar }}" class="profile-picture">
+	{{ else }}
+		<img src="/static/profile-picture.svg" class="profile-picture">
+	{{ end }}
+		<a href="/profile/{{$val.Username}}">{{$val.Username}}</a>
+	</td></tr>
+{{ end }}
+<table>
+{{ .Children.Paginator }}
+{{ end }}

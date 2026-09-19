@@ -27,3 +27,7 @@ login-success = Welcome back, { $username }
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
+
+search-user-title = Search for Users
+search-user-submit = Search User
+search-user-form-placeholder = Username

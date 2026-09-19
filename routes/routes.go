@@ -36,4 +36,12 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/", pages.IndexGet)
+	router.GET("/api/notifications", pages.NotificationApiGet)
+	router.GET("/notifications", pages.NotificationGet)
+
+	searchController := controllers.SearchController{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/search", searchController.SearchUsersGet)
 }
