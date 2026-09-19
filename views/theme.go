@@ -72,18 +72,3 @@ func (t *Themer) negotiate(c *gin.Context) string {
 
 	return requested
 }
-
-// Detect theme requested by user. Build a list of themes
-func (t *Themer) requestedThemes(c *gin.Context) []string {
-	var requested []string
-
-	if v := c.Query(t.QueryParam); v != "" {
-		requested = append(requested, v)
-	}
-
-	if v, err := c.Cookie(t.CookieName); err == nil && v != "" {
-		requested = append(requested, v)
-	}
-
-	return requested
-}
