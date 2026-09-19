@@ -33,7 +33,7 @@ func (t *Themer) Middleware() gin.HandlerFunc {
 			c.Set(themeContextKey, theme)
 
 			// Store cookie
-			c.SetCookie(t.CookieName, theme, 720 * 3600, "/", "", false, true)
+			c.SetCookie(t.CookieName, theme, 30 * 24 * 3600, "/", "", false, true)
 		}
 		c.Next()
 	}
