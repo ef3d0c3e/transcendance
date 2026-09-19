@@ -15,7 +15,6 @@
 			const button = form.querySelector("button[type=submit]");
 
 			button.disabled = true;
-			result.textContent = "";
 
 			try {
 				const response = await fetch(form.action, {
@@ -25,14 +24,17 @@
 
 				const data = await response.json();
 
+				result.innerHTML = '';
+				const section = document.createElement("section")
+				result.appendChild(section)
 				if (!response.ok) {
-					result.style.color = "red";
-					result.textContent = data.message ?? "Registration failed.";
+					section.className = "section-error";
+					section.textContent = data.message ?? "Registration failed.";
 					return;
 				}
 				else {
-					result.style.color = "black";
-					result.textContent = data.message;
+					section.className = "section-success";
+					section.textContent = data.message;
 				}
 
 

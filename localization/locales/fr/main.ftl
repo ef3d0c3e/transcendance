@@ -37,3 +37,6 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+
+theme-switcher-light = Theme clair
+theme-switcher-dark = Theme sombre
