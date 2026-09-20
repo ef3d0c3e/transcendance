@@ -60,6 +60,7 @@ func RegisterRoutes(
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
 
-	router.GET("/notif", authController.NotificationGet)
+	router.GET("/notifications", authController.NotificationGet)
+	router.GET("/getanotif", authController.GetANotifGet)
 	router.GET("api/notifications", authController.ApiNotifGet)
 }
