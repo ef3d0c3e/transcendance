@@ -27,3 +27,7 @@ login-success = Welcome back, { $username }
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
+
+theme-switcher-light = Switch to light theme
+theme-switcher-dark = Switch to dark theme
+
