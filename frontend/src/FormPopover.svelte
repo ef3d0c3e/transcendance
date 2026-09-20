@@ -34,7 +34,7 @@
 		loading = true;
 
 		try {
-			const response = await fetch(url);
+			const response = await fetch(url + '?fragment=1');
 
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}`);
@@ -146,9 +146,11 @@
 	onpointerleave={handlePointerLeave}
 	role="presentation"
 >
-	<button type="button" aria-haspopup="dialog" aria-expanded={open}>
-		{label}
-	</button>
+	<a href="{url}">
+		<button type="button" aria-haspopup="dialog" aria-expanded={open}>
+			{label}
+		</button>
+	</a>
 
 	<div
 		class="popover"
