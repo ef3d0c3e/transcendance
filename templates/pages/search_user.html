@@ -23,17 +23,17 @@
 	<button type="submit">{{ .T "search-user-submit" }}</button>
 </form>
 </e-center>
-<table>
+<ul>
 {{ range $val := .Data.Users }}
-	<tr><td>
+	<li>
 	{{ if $val.Avatar }}
 		<img src="{{ $val.Avatar }}" class="profile-picture">
 	{{ else }}
 		<img src="/static/profile-picture.svg" class="profile-picture">
 	{{ end }}
 		<a href="/profile/{{$val.Username}}">{{$val.Username}}</a>
-	</td></tr>
+	</li>
 {{ end }}
-<table>
+</ul>
 {{ .Children.Paginator }}
 {{ end }}
