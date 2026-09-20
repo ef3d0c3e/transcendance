@@ -3,6 +3,7 @@
 <html>
 <head>
 	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
+	<script type="module" src="/frontend/notification.js"></script>
 
 	<!--- Temporary -->
 	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
@@ -10,6 +11,7 @@
 	<title>{{ .Data.Title }}</title>
 </head>
 <body>
+<div id="notification"></div>
 	{{ .Children.Content }}
 </body>
 </html>

@@ -36,6 +36,7 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/", pages.IndexGet)
-	router.GET("/notif", authController.NotificationGet)
+	router.GET("/notifications", authController.NotificationGet)
+	router.GET("/getanotif", authController.GetANotifGet)
 	router.GET("api/notifications", authController.ApiNotifGet)
 }
