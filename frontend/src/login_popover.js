@@ -7,7 +7,7 @@ if (target) {
 	mount(Popover, {
 		target,
 		props: {
-			url: '/login?fragment=1',
+			url: '/login',
 			formSelector: '#login-form',
 			enhancementSelector: '#login-enhancement',
 			label: 'Login',
