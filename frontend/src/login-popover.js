@@ -8,9 +8,9 @@ if (target) {
 		target,
 		props: {
 			url: '/login',
+			target,
 			formSelector: '#login-form',
 			enhancementSelector: '#login-enhancement',
-			label: 'Login',
 		},
 	});
 }

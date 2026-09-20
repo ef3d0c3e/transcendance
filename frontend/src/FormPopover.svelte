@@ -1,11 +1,21 @@
 <script>
 	import { tick } from 'svelte';
 	import { mount } from 'svelte';
+	import { onMount } from "svelte";
 
-	let { url, formSelector, enhancementSelector, label } = $props();
+	let { url, target, formSelector, enhancementSelector } = $props();
 
 	import FormEnhancement from './FormEnhancement.svelte';
 
+
+	let label = $state("");
+	onMount(() => {
+		if (!target) {
+			return;
+		}
+
+		label = target.dataset.label ?? "";
+	});
 
 	let open = $state(false);
 	let loading = $state(false);
