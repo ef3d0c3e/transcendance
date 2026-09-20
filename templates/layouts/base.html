@@ -10,6 +10,12 @@
 	<title>{{ .Data.Title }}</title>
 </head>
 <body>
+	<header>
+		<a id="login-popover"></a>
+		<script type="module" src="/frontend/login_popover.js"></script>
+		<a id="register-popover"></a>
+		<script type="module" src="/frontend/register_popover.js"></script>
+	</header>
 	<main>
 	{{ .Children.Content }}
 	</main>

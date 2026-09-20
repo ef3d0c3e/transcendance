@@ -122,7 +122,7 @@ input {
 
 input:focus {
 	outline: none;
-	border: 1px solid var(--color-border-1);
+	border: 1px solid var(--color-accent-3);
 	box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.25);
 }
 
@@ -131,15 +131,6 @@ input[type=checkbox] {
 	vertical-align: -0.2rem;
 	width: 1.2rem;
 	height: 1.2rem;
-}
-
-button[type=submit] {
-	background-color: #5746a0;
-	&:focus {
-		outline: none;
-		border: 1px solid var(--color-accent-3);
-		box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.25);
-	}
 }
 
 
@@ -165,7 +156,7 @@ input[type=checkbox]:checked {
 	background-size: 90%;
 }
 
-button[type=submit] {
+button {
 	color: var(--color-text-alt);
 	background-color: var(--color-accent-3);
 	border-radius: .5rem;
@@ -173,11 +164,11 @@ button[type=submit] {
 	padding: 0 1ch;
 	border: 0px;
 	font-size: 1.2rem;
+	cursor: pointer;
+	&:hover {
+		background-color: var(--color-accent-2);
+	}
 
-}
-
-button[type=submit]:hover {
-	background-color: var(--color-accent-2);
 }
 
 .section-success {
@@ -192,4 +183,10 @@ button[type=submit]:hover {
 	color: var(--color-error-3);
 	border: 1px solid var(--color-error-2);
 	padding: .8rem;
+}
+
+.section-popover {
+	padding: .6rem .8rem;
+	box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 15%);
+	overflow: auto;
 }
