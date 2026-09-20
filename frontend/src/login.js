@@ -1,10 +1,14 @@
 import { mount } from 'svelte';
-import Login from './LoginEnhancement.svelte';
+import FormEnhancement from './FormEnhancement.svelte';
 
 const target = document.querySelector('#login-enhancement');
 
 if (target) {
-	mount(Login, {
+	mount(FormEnhancement, {
 		target,
+		props: {
+			formSelector: '#login-form',
+			onSuccess: () => {},
+		},
 	});
 }

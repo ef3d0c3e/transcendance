@@ -1,9 +1,11 @@
 <script>
 	import { onMount } from "svelte";
 
+	let { formSelector, onSuccess } = $props();
+
 	onMount(() => {
-		const form = document.querySelector("#login-form");
-		const result = document.querySelector("#login-result");
+		const form = document.querySelector(formSelector);
+		const result = form.querySelector("#form-result");
 
 		if (!form || !result) {
 			return;
@@ -15,7 +17,6 @@
 			const button = form.querySelector("button[type=submit]");
 
 			button.disabled = true;
-			result.textContent = "";
 
 			try {
 				const response = await fetch(form.action, {
@@ -25,21 +26,26 @@
 
 				const data = await response.json();
 
-				result.innerHTML = '';
-				const section = document.createElement("section")
-				result.appendChild(section)
+				var section;
+				if (!result.hasChildNodes()) {
+					section = document.createElement("section");
+					result.appendChild(section);
+				} else {
+					section = result.childNodes[0];
+				}
+
 				if (!response.ok) {
 					section.className = "section-error";
-					section.textContent = data.message ?? "Login failed.";
+					section.textContent = data.message ?? "Request failed.";
 					return;
 				}
-				else {
-					section.className = "section-success";
-					section.textContent = data.message;
-				}
 
+				section.className = "section-success";
+				section.textContent = data.message;
 
 				form.reset();
+				form.replaceChildren(result);
+				onSuccess();
 			} catch (error) {
 				result.textContent = "Unable to contact the server.";
 			} finally {
