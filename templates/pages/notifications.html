@@ -1,0 +1,46 @@
+{{ define "notifications" }}
+
+<div id="container">
+	<h2>
+		Notifications
+		<span id="notifications-badge">3</span>
+		<div style="float: right; font-size: medium;">Mark all as Read</div>
+	</h2>
+	<ul style="display:inline-block">
+		<li style="display:inline"><a>1</a></li>
+		<li style="display:inline"><a>2</a></li>
+		<li style="display:inline"><a>3</a></li>
+		<li style="display:inline"><a>4</a></li>
+		<li style="display:inline"><a>5</a></li>
+	</ul>
+	<e-stack style="border: solid; border-radius:20px; border-width: 15px; border-color: gray;">
+		<a>
+			<div style="background-color: rgb(130, 190, 0);">
+				<h2>Titre</h2>
+				<p>Some time ago</p>
+				<p>Very very long description, cool event, abonne toi sonne la cloche</p>
+			</div>
+		</a>
+		<a>
+			<div style="background-color: rgb(0, 136, 206); border: none; font-family: Avenir;">
+				<span class="wrapper-time" style="display: inline; color: rgb(255, 182, 18);">
+					<p style="font-weight: bold;">10/29/2026</p>
+					<p style="font-size: small;">20 minutes ago</p>
+				</span>
+				<span class="wrapper-text" style="display: inline; color: white;">
+					<h2>Titre</h2>
+					<p>Very very long description, cool event, abonne toi sonne la cloche</p>
+				</span>
+			</div>
+		</a>
+		<a>
+			<div>
+				<h2>Titre</h2>
+				<p>Some time ago</p>
+				<p>Very very long description, cool event, abonne toi sonne la cloche</p>
+			</div>
+		</a>
+	</e-stack>
+</div>
+
+{{ end }}

@@ -90,18 +90,17 @@
 </script>
 
 <div onmouseenter={loadNotifications} role="alert">
-	<button aria-label="Notifications" style="width: 40px; height: 40px;">
-		<Bell style="position: absolute;"/>
+<div id="button">
+	<button aria-label="Notifications">
+		<Bell/>
+	</button>
 		{#if loaded && notifications.length > 0}
-			<div id="notif-count" style="position: relative; background-color: lightblue; border-radius: 50%; width: 20px; height: 20px; top: -10px; left: 15px; z-index: 1;">
-				<p style="text-align: center;">
+			<div id="notif-count">
 					{notifications.length}
-				</p>
 			</div>
 		{/if}
-	</button>
-
-	<div style="max-width: 50%;">
+	<div id="notif-wrapper">
+		<a href="/notifications">View all notifications</a>
 		{#if loading}
 		<div>
 			<div></div>
@@ -117,37 +116,65 @@
 			<div>No new notifications</div>
 		</div>
 		{:else}
-		<div id="notif-list">
+		<e-stack id="notif-list">
 			{#each notifications as notification}
-			<div class:unread={notification.status==="unread" }>
-				<div>
-					{@html notification.icon}
-				</div>
-
-				<div id="notif" style="border: solid; border-radius: 15px;">
-					<div id="title" style="padding-left: 20px;">
-						<p>{notification.title}</p>
-						{#if notification.status === "unread"}
-						<div></div>
-						{/if}
+			<div id="notif" class:read={notification.status==="read" } class:unread={notification.status==="unread" }>
+					<div>
+						{@html notification.icon}
 					</div>
-						<p id="desc">{notification.description}</p>
-						<p id="time" style="padding-left: 20px;">{time_ago(notification.date)}</p>
-				</div>
+					<div>
+						<h1 id="title">{notification.Title}</h1>
+						<p id="desc">{notification.Description}</p>
+						<p id="time">{time_ago(notification.CreatedAt)}</p>
+					</div>
 			</div>
 			{/each}
-		</div>
+		</e-stack>
 		{/if}
 	</div>
 </div>
+</div>
 
-<!--FIXME style tag does not apply for some reason, resorting to inline for now-->
 <style>
-	#notif{
-		border: solid;
-		border-radius: 35px;
+	#button:hover>*{
+		display: block;
 	}
-	#notif > *{
+	#notif-count{
+	 position: relative;
+	 background-color: lightblue;
+	 border-radius: 50%;
+	 width: 20px;
+	 height: 20px;
+	 top: -20px;
+	 left: 28px;
+	 z-index: 1;
+	 text-align: center;
+	 }
+	#notif-wrapper{
+		max-width: 50%;
+		padding: 10px;
+		background-color: lightcyan;
+		display: none;
+	}
+	#notif{
+		border-radius: 15px;
+	}
+	.read{
+		background-color: white;
+	}
+	.unread{
+		background-color: green;
+	}
+	#notif h1{
+		font-size: medium;
+	}
+	#notif p{
+		font-size: small;
+	}
+	:global(#notif > *){
 		padding-left: 30px;
+	}
+	#time{
+		text-align: right;
 	}
 </style>
