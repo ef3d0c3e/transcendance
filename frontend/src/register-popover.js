@@ -8,9 +8,9 @@ if (target) {
 		target,
 		props: {
 			url: '/register',
+			target,
 			formSelector: '#register-form',
 			enhancementSelector: '#register-enhancement',
-			label: 'Register',
 		},
 	});
 }

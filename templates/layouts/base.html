@@ -11,11 +11,9 @@
 </head>
 <body>
 	<header>
-		<a id="login-popover"></a>
-		<script type="module" src="/frontend/login_popover.js"></script>
-		<a id="register-popover"></a>
-		<script type="module" src="/frontend/register_popover.js"></script>
 		{{ template "theme_switcher" . }}
+		{{ template "login_popover" . }}
+		{{ template "register_popover" . }}
 	</header>
 	<main>
 	{{ .Children.Content }}
