@@ -11,8 +11,9 @@ export default defineConfig({
 			input: {
 				register: "src/register.js",
 				login: "src/login.js",
-				login_popover: "src/login_popover.js",
-				register_popover: "src/register_popover.js",
+				login_popover: "src/login-popover.js",
+				register_popover: "src/register-popover.js",
+				theme_switcher: "src/theme-switcher.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
