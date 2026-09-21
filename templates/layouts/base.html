@@ -4,7 +4,15 @@
 <head>
 	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
 
-	<!--- Temporary -->
+	<script>
+if (!document.cookie.includes('theme=')) {
+    const theme = matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.documentElement.setAttribute("theme", theme);
+}
+	</script>
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>

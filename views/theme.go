@@ -32,8 +32,7 @@ func (t *Themer) Middleware() gin.HandlerFunc {
 			theme := t.negotiate(c)
 			c.Set(themeContextKey, theme)
 
-			// Store cookie
-			c.SetCookie(t.CookieName, theme, 30 * 24 * 3600, "/", "", false, false)
+			// Cookie is set by the client side javascript
 		}
 		c.Next()
 	}
