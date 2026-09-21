@@ -40,7 +40,7 @@ func (ac *AuthController) GetANotifGet(c *gin.Context) {
 		Type: "FriendRequest",
 		Data: data,
 		Status: "unread",
-		Action: "",
+		Action: "/friendRequest",
 	}
 	if err := ac.DB.Create(&notif).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -53,6 +53,7 @@ func (ac *AuthController) GetANotifGet(c *gin.Context) {
 func (ac *AuthController) NotificationGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	notifID := c.Param("ID")
+	act := c.Param("action")
 	if user != nil {
 		ctx := c.Request.Context()
 		_, err := gorm.G[models.Notif](ac.DB).
@@ -67,7 +68,7 @@ func (ac *AuthController) NotificationGet(c *gin.Context) {
 		if err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
 		} else {
-			c.Redirect(http.StatusFound, notif.Action)
+			c.Redirect(http.StatusFound, notif.Action + act)
 		}
 	}
 }

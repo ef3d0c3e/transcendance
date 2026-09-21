@@ -140,26 +140,32 @@
 		<a href="/notifications">View all notifications</a>
 		<e-stack id="notif-list">
 			{#each notifications as notification}
-			<a href="/notification/{notification.ID}">
-				<div id="notif" class:read={notification.Status==="read"}>
-						<div>
-							{@html notification.icon}
-						</div>
-						<div>
-							{#if notification.Type === "FriendRequest"}
-								<h1 id="title">Friend Request</h1>
-								<p id="desc">{notification.Data["Username"]} sent you a friend request</p>
-							{:else if notification.Type === "Info"}
-								<h1 id="title">{notification.Data["title"]}</h1>
-								<p id="desc">{notification.Data["description"]}</p>
-							{:else}
-								<h1 id="title">Undefined Notification</h1>
-								<p id="desc">You should not see this</p>
-							{/if}
-							<p id="time">{time_ago(notification.CreatedAt)}</p>
-						</div>
-				</div>
-			</a>
+			<div id="notif" class:read={notification.Status==="read"}>
+				<a href="/notification/{notification.ID}">
+					<div>
+						{@html notification.icon}
+					</div>
+					<div>
+						{#if notification.Type === "FriendRequest"}
+							<h1 id="title">Friend Request</h1>
+							<p id="desc">{notification.Data["Username"]} sent you a friend request</p>
+						{:else if notification.Type === "Info"}
+							<h1 id="title">{notification.Data["title"]}</h1>
+							<p id="desc">{notification.Data["description"]}</p>
+						{:else}
+							<h1 id="title">Undefined Notification</h1>
+							<p id="desc">You should not see this</p>
+						{/if}
+					</div>
+				</a>
+				<span>
+					{#if notification.Type === "FriendRequest"}
+						<a href="/notification/{notification.ID}/accept">Accept</a>
+						<a href="/notification/{notification.ID}/deny">Deny</a>
+					{/if}
+					<p id="time">{time_ago(notification.CreatedAt)}</p>
+				</span>
+			</div>
 			{/each}
 		</e-stack>
 		{/if}
