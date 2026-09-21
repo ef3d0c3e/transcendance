@@ -146,8 +146,16 @@
 							{@html notification.icon}
 						</div>
 						<div>
-							<h1 id="title">{notification.Title}</h1>
-							<p id="desc">{notification.Description}</p>
+							{#if notification.Type === "FriendRequest"}
+								<h1 id="title">Friend Request</h1>
+								<p id="desc">{notification.Data["Username"]} sent you a friend request</p>
+							{:else if notification.Type === "Info"}
+								<h1 id="title">{notification.Data["title"]}</h1>
+								<p id="desc">{notification.Data["description"]}</p>
+							{:else}
+								<h1 id="title">Undefined Notification</h1>
+								<p id="desc">You should not see this</p>
+							{/if}
 							<p id="time">{time_ago(notification.CreatedAt)}</p>
 						</div>
 				</div>
