@@ -9,7 +9,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (ac *AuthController) NotificationGet(c *gin.Context) {
+func (ac *AuthController) NotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c);
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": "notifications",
@@ -38,6 +38,28 @@ func (ac *AuthController) GetANotifGet(c *gin.Context) {
 	}
 }
 
+func (ac *AuthController) NotificationGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	notifID := c.Param("ID")
+	if user != nil {
+		ctx := c.Request.Context()
+		_, err := gorm.G[models.Notif](ac.DB).
+			Where("id = ? and user_id = ?", notifID, user.ID).
+			Update(ctx, "Status", "read")
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		}
+		notif, err := gorm.G[models.Notif](ac.DB).
+			Where("id = ? and user_id = ?", notifID, user.ID).
+			First(ctx)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.Redirect(http.StatusFound, notif.Action)
+		}
+	}
+}
+
 func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -46,34 +68,15 @@ func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 			},
 		})
 	} else {
-	ctx := c.Request.Context()
-	notifs, err := gorm.G[models.Notif](ac.DB).
-		Where("user_id = ?", user.ID).
-		Order("created_at DESC").
-		Find(ctx)
-	if err != nil {
-	} else {
-		c.JSON(http.StatusOK, gin.H{"notifications": notifs})
-	}
-	/*
-		c.JSON(http.StatusOK, gin.H{
-			"notificationz": []map[string]any{
-				{
-					"icon": "",
-					"title": "test greg",
-					"description": "bah c'est une notif",
-					"date": "2026-09-11",
-					"status": "unread",
-				},
-				{
-					"icon": "",
-					"title": "test greg 2",
-					"description": "bah c'est une autre notif",
-					"date": "1970-09-12",
-					"status": "read",
-				},
-			},
-		})
-	*/
+		ctx := c.Request.Context()
+		notifs, err := gorm.G[models.Notif](ac.DB).
+			Where("user_id = ?", user.ID).
+			Order("created_at DESC").
+			Find(ctx)
+		if err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+		} else {
+			c.JSON(http.StatusOK, gin.H{"notifications": notifs})
+		}
 	}
 }
