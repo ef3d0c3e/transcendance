@@ -48,7 +48,10 @@ func (t Translator) T(id string, kv ...any) string {
 // NewRenderer: parse all templates under templates/**/*.html
 func NewRenderer(l *localization.Localizer) *Renderer {
 	t := template.Must(
-		template.New("").ParseGlob("templates/**/*.html"),
+		template.New("").Funcs(template.FuncMap{
+			"sub": func(a, b int) int { return a - b },
+			"add": func(a, b int) int { return a + b },
+		}).ParseGlob("templates/**/*.html"),
 	)
 
 	return &Renderer{
