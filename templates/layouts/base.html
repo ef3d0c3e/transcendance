@@ -10,14 +10,11 @@
 	<title>{{ .Data.Title }}</title>
 </head>
 <body>
-	<header>
-		{{ template "theme_switcher" . }}
-		{{ template "login_popover" . }}
-		{{ template "register_popover" . }}
-	</header>
+	{{ template "header_base" . }}
 	<main>
-	{{ .Children.Content }}
+		{{ .Children.Content }}
 	</main>
+	{{ template "footer_base" . }}
 </body>
 </html>
 {{ end }}

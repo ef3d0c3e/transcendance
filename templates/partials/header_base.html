@@ -1,0 +1,8 @@
+{{ define "header_base" }}
+<header>
+	<a href="/">logo</a>
+		{{ template "theme_switcher" . }}
+		{{ template "login_popover" . }}
+		{{ template "register_popover" . }}
+</header>
+{{ end }}

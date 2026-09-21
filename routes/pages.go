@@ -17,11 +17,50 @@ func (p *Pages) IndexGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	_ = user
 
-	builder := views.PageBuilder("base2", map[string]any {
-		"Title": "TEST",
+	builder := views.PageBuilder("base", map[string]any {
+		"Title": "CHANGE ME", //use project final name instead
 	})
-	builder.Add("header", "Header", map[string]any {
-		"Hello": "foobar",
+	builder.Add("index", "Content", map[string]any {
+		"User": user,
+	})
+
+	p.Renderer.Render(c, &builder)
+}
+
+func (p *Pages) TosGet(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	_ = user
+
+	builder := views.PageBuilder("base", map[string]any {
+		"Title": "Terms of service",
+	})
+	builder.Add("tos", "Content", map[string]any {
+	})
+
+	p.Renderer.Render(c, &builder)
+}
+
+func (p *Pages) ContactGet(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	_ = user
+
+	builder := views.PageBuilder("base", map[string]any {
+		"Title": "Contact",
+	})
+	builder.Add("contact", "Content", map[string]any {
+	})
+
+	p.Renderer.Render(c, &builder)
+}
+
+func (p *Pages) PrivacyGet(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	_ = user
+
+	builder := views.PageBuilder("base", map[string]any {
+		"Title": "Privacy",
+	})
+	builder.Add("privacy", "Content", map[string]any {
 	})
 
 	p.Renderer.Render(c, &builder)

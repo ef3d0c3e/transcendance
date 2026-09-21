@@ -36,4 +36,7 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/", pages.IndexGet)
+	router.GET("/terms", pages.TosGet)
+	router.GET("/contact", pages.ContactGet)
+	router.GET("/privacy", pages.PrivacyGet)
 }
