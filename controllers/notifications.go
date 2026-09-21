@@ -7,6 +7,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
+	"gorm.io/datatypes"
+	"encoding/json"
 )
 
 func (ac *AuthController) NotificationsGet(c *gin.Context) {
@@ -20,19 +22,29 @@ func (ac *AuthController) NotificationsGet(c *gin.Context) {
 	ac.Renderer.Render(c, &builder)
 }
 
+// Only for testing purposes to add notifications in real time
 func (ac *AuthController) GetANotifGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
+	userJson, _ := json.Marshal(user)
+	c.String(http.StatusOK, string(userJson))
+	var data datatypes.JSONMap
+	err := data.UnmarshalJSON(userJson)
+	if (err != nil) {
+		c.String(http.StatusInternalServerError, err.Error())
+	}
+	c.JSON(http.StatusOK, gin.H{"user": data})
 	notif := models.Notif{
 		UserID: user.ID,
+		EmmiterID: user.ID,
 		Icon: "",
-		Title: "Free Notification",
-		Description: "You got a Notification and it cost you nothing!",
+		Type: "FriendRequest",
+		Data: data,
 		Status: "unread",
-		Action: "/logout",
+		Action: "",
 	}
 	if err := ac.DB.Create(&notif).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": ac.Renderer.T(c, "login-error-internal"),
+			"message": ac.Renderer.T(c, err.Error()),
 		})
 		return
 	}
@@ -70,7 +82,7 @@ func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 	} else {
 		ctx := c.Request.Context()
 		notifs, err := gorm.G[models.Notif](ac.DB).
-			Where("user_id = ?", user.ID).
+			Where("user_id = ? and status = ?", user.ID, "unread").
 			Order("created_at DESC").
 			Find(ctx)
 		if err != nil {
