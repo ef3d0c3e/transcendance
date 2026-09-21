@@ -8,6 +8,7 @@ import (
 	"gorm.io/gorm"
 
 	"transcendance/config"
+	"transcendance/controllers"
 	"transcendance/localization"
 	"transcendance/routes"
 	"transcendance/views"
@@ -32,6 +33,7 @@ func Run(db *gorm.DB) *gin.Engine {
 	}
 
 	router.Use(l10n.Middleware())
+	router.Use(controllers.AuthMiddleware(db))
 
 	renderer := views.NewRenderer(l10n)
 	routes.RegisterRoutes(router, db, renderer)

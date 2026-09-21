@@ -33,7 +33,7 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 		return
 	}
 	if user == nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusForbidden, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-permission", "username", username),
 		})
 		return
@@ -49,8 +49,8 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 	}
 
 	// Admins can delete everyone, otherwise user rank must be strictly above
-	if user.Username != username && (user.Rank != 2 && user.Rank < otherUser.Rank) {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if user.Username != username && (user.Rank != 2 && user.Rank <= otherUser.Rank) {
+		c.JSON(http.StatusForbidden, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-permission", "username", username),
 		})
 		return
@@ -59,7 +59,7 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 	count, err := gorm.G[models.User](ac.DB).Where("id = ?", otherUser.ID).Delete(c.Request.Context())
 	if err != nil || count != 1 {
 		log.Printf("Failed to delete user `%s'", username)
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-generic"),
 		})
 		return
