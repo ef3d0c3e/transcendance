@@ -29,7 +29,13 @@ func RegisterRoutes(
 	router.GET("/login", authController.LoginGet)
 	router.POST("/login", authController.LoginPost)
 
-	router.GET("/logout", authController.LogoutGet)
+	router.GET("/api/logout", authController.LogoutGet)
+
+	accountController := controllers.AccountController{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/api/account_delete", accountController.AccountDeleteGet)
 
 	pages := Pages{
 		DB:       db,

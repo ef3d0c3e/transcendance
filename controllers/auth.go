@@ -24,6 +24,8 @@ type AuthController struct {
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
+	// 2: Admin, 1: Moderator, 0: User
+	Rank     uint
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -36,9 +38,11 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		session, err := gorm.G[models.UserSession](db).
+		var session models.UserSession
+		err = db.
 			Where("token = ? AND expires_at > ?", token, time.Now()).
-			First(c.Request.Context())
+			First(&session).
+			Error
 
 		if err != nil {
 			// Invalid/expired token = unauthenticated.
@@ -47,9 +51,11 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		user, err := gorm.G[models.User](db).
+		var user models.User
+		err = db.
 			Where("id = ?", session.UserID).
-			First(c.Request.Context())
+			First(&user).
+			Error
 
 		if err != nil {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
@@ -60,6 +66,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		c.Set("authenticatedUser", &AuthenticatedUser{
 			ID: session.UserID,
 			Username: user.Username,
+			Rank: user.Rank,
 		})
 
 		c.Next()
@@ -136,7 +143,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	count, err := gorm.G[models.User](ac.DB).Where("username = ?", username).Count(ctx, "username")
+	count, err := gorm.G[models.User](ac.DB.Unscoped()).Where("username = ?", username).Count(ctx, "username")
 	if err != nil {
 		log.Printf("Failed to query user database: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -202,17 +209,17 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	users, err := gorm.G[models.User](ac.DB).
+	var user models.User;
+	err := ac.DB.
 		Where("username = ?", username).
-		Find(ctx)
-	if err != nil || len(users) != 1 {
+		First(&user).
+		Error
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-username"),
 		})
 		return
 	}
-	user := users[0]
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{

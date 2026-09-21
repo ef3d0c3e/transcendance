@@ -15,6 +15,7 @@ type User struct {
 	UpdatedAt    time.Time      `gorm:"not null"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Avatar       string
+	Rank         uint            `gorm:"not null;default:0"`
 }
 
 type UserSession struct {

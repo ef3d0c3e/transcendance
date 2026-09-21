@@ -28,6 +28,11 @@ logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
+account-delete-success = { $username }'s account has been deleted
+account-delete-success-self = Your account has been deleted
+account-delete-error-generic = Failed to delete account
+account-delete-error-missing = Missing account name
+account-delete-error-permission = You do not have permissions to delete { $username }'s account
 search-user-title = Search for Users
 search-user-submit = Search User
 search-user-form-placeholder = Username
