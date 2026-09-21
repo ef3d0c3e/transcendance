@@ -5,6 +5,7 @@
 	let loaded = false;
 	let loading = false;
 	let error = null;
+	let visible = false;
 
 	async function loadNotifications() {
 		if (loaded || loading) {
@@ -34,6 +35,26 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	function menu_open() {
+		visible = true;
+		document.body.addEventListener('click', event => {
+			if (event.target.closest('#button')) {
+				return;
+			}
+			menu_close();
+		});
+	}
+
+	function menu_close() {
+		visible = false;
+		document.body.removeEventListener('click', event => {
+			if (event.target.closest('#button')) {
+				return;
+			}
+			menu_close();
+		});
 	}
 
 	function time_ago(dateString) {
@@ -91,16 +112,16 @@
 
 <div onmouseenter={loadNotifications} role="alert">
 <div id="button">
-	<button aria-label="Notifications">
+	<button aria-label="Notifications" onclick={menu_open}>
 		<Bell/>
 	</button>
-		{#if loaded && notifications.length > 0}
-			<div id="notif-count">
-					{notifications.length}
-			</div>
-		{/if}
+	{#if loaded && notifications.length > 0}
+		<div id="notif-count">
+				{notifications.length}
+		</div>
+	{/if}
+	{#if visible}
 	<div id="notif-wrapper">
-		<a href="/notifications">View all notifications</a>
 		{#if loading}
 		<div>
 			<div></div>
@@ -116,29 +137,30 @@
 			<div>No new notifications</div>
 		</div>
 		{:else}
+		<a href="/notifications">View all notifications</a>
 		<e-stack id="notif-list">
 			{#each notifications as notification}
-			<div id="notif" class:read={notification.status==="read" } class:unread={notification.status==="unread" }>
-					<div>
-						{@html notification.icon}
-					</div>
-					<div>
-						<h1 id="title">{notification.Title}</h1>
-						<p id="desc">{notification.Description}</p>
-						<p id="time">{time_ago(notification.CreatedAt)}</p>
-					</div>
-			</div>
+			<a href="/notification/{notification.ID}">
+				<div id="notif" class:read={notification.Status==="read"}>
+						<div>
+							{@html notification.icon}
+						</div>
+						<div>
+							<h1 id="title">{notification.Title}</h1>
+							<p id="desc">{notification.Description}</p>
+							<p id="time">{time_ago(notification.CreatedAt)}</p>
+						</div>
+				</div>
+			</a>
 			{/each}
 		</e-stack>
 		{/if}
 	</div>
+	{/if}
 </div>
 </div>
 
 <style>
-	#button:hover>*{
-		display: block;
-	}
 	#notif-count{
 	 position: relative;
 	 background-color: lightblue;
@@ -151,10 +173,12 @@
 	 text-align: center;
 	 }
 	#notif-wrapper{
+		position: fixed;
+		max-height: 50vh;
 		max-width: 50%;
 		padding: 10px;
 		background-color: lightcyan;
-		display: none;
+		overflow-y: scroll;
 	}
 	#notif{
 		border-radius: 15px;
@@ -162,8 +186,9 @@
 	.read{
 		background-color: white;
 	}
-	.unread{
-		background-color: green;
+	a{
+		text-decoration: none;
+		color: black;
 	}
 	#notif h1{
 		font-size: medium;
@@ -171,7 +196,7 @@
 	#notif p{
 		font-size: small;
 	}
-	:global(#notif > *){
+	#notif > *{
 		padding-left: 30px;
 	}
 	#time{
