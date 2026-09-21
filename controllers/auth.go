@@ -11,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"transcendance/models"
 	"transcendance/views"
@@ -38,31 +39,35 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		session, err := gorm.G[models.UserSession](db).
+		var session models.UserSession
+		err = db.
 			Where("token = ? AND expires_at > ?", token, time.Now()).
-			Find(c.Request.Context())
+			First(&session).
+			Error
 
-		if err != nil || len(session) == 0 {
+		if err != nil {
 			// Invalid/expired token = unauthenticated.
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
 		}
 
-		user, err := gorm.G[models.User](db).
-			Where("id = ?", session[0].UserID).
-			Find(c.Request.Context())
+		var user models.User
+		err = db.
+			Where("id = ?", session.UserID).
+			First(&user).
+			Error
 
-		if err != nil || len(user) == 0 {
+		if err != nil {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID: session[0].UserID,
-			Username: user[0].Username,
-			Rank: user[0].Rank,
+			ID: session.UserID,
+			Username: user.Username,
+			Rank: user.Rank,
 		})
 
 		c.Next()
@@ -139,7 +144,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	count, err := gorm.G[models.User](ac.DB).Where("username = ?", username).Count(ctx, "username")
+	count, err := gorm.G[models.User](ac.DB, clause.Locking{}).Where("username = ?", username).Count(ctx, "username")
 	if err != nil {
 		log.Printf("Failed to query user database: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -205,17 +210,17 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 		return
 	}
 
-	ctx := c.Request.Context()
-	users, err := gorm.G[models.User](ac.DB).
+	var user models.User;
+	err := ac.DB.
 		Where("username = ?", username).
-		Find(ctx)
-	if err != nil || len(users) != 1 {
+		First(&user).
+		Error
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-username"),
 		})
 		return
 	}
-	user := users[0]
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
