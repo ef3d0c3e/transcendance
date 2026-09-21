@@ -36,4 +36,10 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/", pages.IndexGet)
+
+	searchController := controllers.SearchController{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/search", searchController.SearchUsersGet)
 }

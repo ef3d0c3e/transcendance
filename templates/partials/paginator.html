@@ -1,0 +1,46 @@
+{{ define "paginator" }}
+<style>
+.paginator {
+	display: flex;
+	justify-content: center;
+	list-style: none;
+	padding: 0px;
+}
+
+.paginator li {
+	display: block;
+	padding: 4px 10px;
+	background-color: #eee;
+	margin: 0 1px;
+	border-radius: 5px;
+}
+
+.paginator a {
+	text-decoration: none;
+	color: #55f;
+}
+</style>
+<nav>
+	<ul class="paginator">
+	{{ if ne .Data.Current 1 }}
+		<a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}"><li>«</li></a>
+	{{ end }}
+	{{ if gt .Data.Current 2 }}
+		<a href="{{ .Data.Url }}{{ sub .Data.Current 2 }}"><li>{{ sub .Data.Current 2 }}</li></a>
+	{{ end }}
+	{{ if gt .Data.Current 1 }}
+		<a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}"><li>{{ sub .Data.Current 1 }}</li></a>
+	{{ end }}
+		<li>{{ .Data.Current }}</li>
+	{{ if le .Data.Current (sub .Data.Total 1) }}
+		<a href="{{ .Data.Url }}{{ add .Data.Current 1 }}"><li>{{ add .Data.Current 1 }}</li></a>
+	{{ end }}
+	{{ if le .Data.Current (sub .Data.Total 2) }}
+		<a href="{{ .Data.Url }}{{ add .Data.Current 2 }}"><li>{{ add .Data.Current 2 }}</li></a>
+	{{ end }}
+	{{ if gt .Data.Total .Data.Current  }}
+		<a href="{{ .Data.Url }}{{ add .Data.Current 1 }}"><li>»</li></a>
+	{{ end }}
+	</ul>
+</nav>
+{{ end }}
