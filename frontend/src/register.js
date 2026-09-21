@@ -1,10 +1,14 @@
 import { mount } from 'svelte';
-import Register from './RegisterEnhancement.svelte';
+import FormEnhancement from './FormEnhancement.svelte';
 
 const target = document.querySelector('#register-enhancement');
 
 if (target) {
-	mount(Register, {
+	mount(FormEnhancement, {
 		target,
+		props: {
+			formSelector: '#register-form',
+			onSuccess: () => {},
+		},
 	});
 }

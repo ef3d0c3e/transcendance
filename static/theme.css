@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap');
+
+:root[theme=light] {
+	--color-text: #18201d;
+	--color-text-alt: #e3e8e6;
+
+	--color-bg-1: #eef4f1;
+	--color-bg-2: #fafcfb;
+	--color-bg-3: #f7faf9;
+	--color-bg-4: #e1eae6;
+
+	--color-accent-1: #1c182e;
+	--color-accent-2: #2f256e;
+	--color-accent-3: #5746a0;
+
+	--color-accent-4: #123330;
+	--color-accent-5: #0a6e64;
+	--color-accent-6: #4dd9c7;
+
+	--color-border-1: #d0dcd6;
+
+	--color-success-1: #e7f3ec;
+	--color-success-2: #a1d8b6;
+	--color-success-3: #16a34a;
+
+	--color-error-1: #f7edec;
+	--color-error-2: #f5b5b4;
+	--color-error-3: #ef4444;
+}
+
+:root[theme=dark] {
+	--color-text: #e3e8e6;
+	--color-text-alt: #18201d;
+
+	--color-bg-1: #0d1110;
+	--color-bg-2: #1f221f;
+	--color-bg-3: #252c29;
+	--color-bg-4: #171c1a;
+
+	--color-accent-1: #1c182e;
+	--color-accent-2: #2f256e;
+	--color-accent-3: #5746a0;
+
+	--color-accent-4: #123330;
+	--color-accent-5: #0a6e64;
+	--color-accent-6: #4dd9c7;
+
+	--color-border-1: #3d4842;
+
+	--color-success-1: #23342b;
+	--color-success-2: #1e5936;
+	--color-success-3: #16a34a;
+
+	--color-error-1: #332e2b;
+	--color-error-2: #723634;
+	--color-error-3: #ef4444;
+}
+
+* {
+	margin: 0;
+	padding: 0;
+	color: var(--color-text);
+}
+
+body {
+	margin: 0 auto;
+	border-radius: 6px;
+	overflow-x: hidden;
+	word-break: break-word;
+	overflow-wrap: break-word;
+
+	/* Main body text */
+	font-family: "DM Sans", sans-serif;
+	font-size: 1rem;
+	line-height: 1.6;
+	font-weight: 400;
+
+	background-color: var(--color-bg-1);
+}
+
+header {
+	width: 100%;
+	background-color: var(--color-bg-2);
+	box-shadow: 0px 5px 5px 0px rgba(0,0,0,0.25);
+	padding: 1rem 1rem;
+}
+
+footer {
+	margin: 0 auto;
+	padding: 1rem 2rem;
+	position: fixed;
+	left: 0;
+	bottom: 0;
+}
+
+main {
+	margin: 0 auto;
+    max-width: 750px;
+	padding: 2rem;
+}
+
+section {
+	border: 1px solid var(--color-border-1);
+	background-color: var(--color-bg-3);
+	border-radius: .8rem;
+	padding: 1rem;
+}
+
+form {
+	display: block;
+	margin: 0 auto;
+	max-width: 560px;
+}
+
+label {
+	width: 100%;
+	font-weight: 500;
+}
+
+input {
+	display: block;
+	line-height: 3.2;
+	padding: 0 .8ch;
+	width: calc(100% - (2 * .8ch));
+	background-color: var(--color-bg-4);
+	border: 1px solid var(--color-border-1);
+	border-radius: .25rem;
+	margin-bottom: .75rem;
+}
+
+input:focus {
+	outline: none;
+	border: 1px solid var(--color-accent-3);
+	box-shadow: 0px 0px 4px 0px rgba(0,0,0,0.25);
+}
+
+input[type=checkbox] {
+	appearance: none;
+
+	display: inline-block;
+	margin: 0;
+	vertical-align: -.2em;
+	width: 1.2em;
+	height: 1.2em;
+	border: 1px solid var(--color-border-1);
+	border-radius: .2rem;
+	cursor: pointer;
+}
+
+input[type=checkbox]:checked {
+	background: var(--color-accent-3);
+
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3E%3Cpath d='M4 10l4 4 8-8' fill='none' stroke='white' stroke-width='2'/%3E%3C/svg%3E");
+	background-position: center;
+	background-repeat: no-repeat;
+	background-size: 90%;
+}
+
+button {
+	color: var(--color-text-alt);
+	background-color: var(--color-accent-5);
+	border-radius: .5rem;
+	line-height: 2;
+	padding: 0 1ch;
+	border: 0px;
+	font-size: 1.2rem;
+	cursor: pointer;
+	&:hover {
+		background-color: var(--color-accent-4);
+	}
+}
+
+form button {
+	background-color: var(--color-accent-3);
+	&:hover {
+		background-color: var(--color-accent-2);
+	}
+}
+
+.section-success {
+	background-color: var(--color-success-1);
+	color: var(--color-success-3);
+	border: 1px solid var(--color-success-2);
+	padding: .8rem;
+}
+
+.section-error {
+	background-color: var(--color-error-1);
+	color: var(--color-error-3);
+	border: 1px solid var(--color-error-2);
+	padding: .8rem;
+}
+
+.section-popover {
+	padding: .6rem .8rem;
+	box-shadow: 0 0.5rem 2rem rgb(0 0 0 / 15%);
+	overflow: auto;
+}
