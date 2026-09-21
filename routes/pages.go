@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"net/http"
 	"transcendance/controllers"
 	"transcendance/views"
 
@@ -25,34 +24,5 @@ func (p *Pages) IndexGet(c *gin.Context) {
 		"Hello": "foobar",
 	})
 
-	p.Renderer.Render(c, &builder)
-}
-
-func (p* Pages) NotificationApiGet(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"notifications": []map[string]any{
-			{
-				"title": "foo",
-				"description": "...",
-				"date": "2026-09-15T23:40:00Z",
-				"icon": "data/svg:...",
-				"status": "unread",
-			},
-			{
-				"title": "bar",
-				"description": "...",
-				"date": "2026-09-15T23:20:00Z",
-				"icon": "data/svg:...",
-				"status": "read",
-			},
-		},
-	})
-}
-
-func (p* Pages) NotificationGet(c *gin.Context) {
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": "Notifications",
-	})
-	builder.Add("notifications", "Content", map[string]any {})
 	p.Renderer.Render(c, &builder)
 }
