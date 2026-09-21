@@ -11,7 +11,6 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 
 	"transcendance/models"
 	"transcendance/views"
@@ -144,7 +143,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	}
 
 	ctx := c.Request.Context()
-	count, err := gorm.G[models.User](ac.DB, clause.Locking{}).Where("username = ?", username).Count(ctx, "username")
+	count, err := gorm.G[models.User](ac.DB.Unscoped()).Where("username = ?", username).Count(ctx, "username")
 	if err != nil {
 		log.Printf("Failed to query user database: %s", err)
 		c.JSON(http.StatusInternalServerError, gin.H{
