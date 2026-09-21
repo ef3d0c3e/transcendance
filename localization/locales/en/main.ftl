@@ -33,6 +33,7 @@ account-delete-success-self = Your account has been deleted
 account-delete-error-generic = Failed to delete account
 account-delete-error-missing = Missing account name
 account-delete-error-permission = You do not have permissions to delete { $username }'s account
-search-user-title = Search for Users
-search-user-submit = Search User
+
+search-user-title = Search for users
+search-user-submit = Search
 search-user-form-placeholder = Username
