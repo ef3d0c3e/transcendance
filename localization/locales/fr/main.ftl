@@ -9,7 +9,6 @@ register-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit 
 register-error-password = Le mot de passe est invalide. Le mot de passe doit faire entre 12 et 72 caractères.
 register-error-passwords-do-not-match = Les mots de passe doivent correspondre
 register-error-tos = Vous devez accepter les Conditions d'Utilisation
-register-error-password-hash = Impossible de hash le mot de passe
 register-error-user = Impossible de créer l'utilisateur
 register-error-username-taken = Nom d'utilisateur déjà utilisé
 register-success = Compte crée avec succès
@@ -28,3 +27,9 @@ login-success = Bienvenu, { $username }
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
+
+account-delete-success = Le compte de { $username } a été supprimé
+account-delete-success-self = Votre compte a été supprimé
+account-delete-error-generic = Echec de la suppression du compte
+account-delete-error-missing = Il manque le nom du compte
+account-delete-error-permission = Vous n'avez pas la permission pour supprimer le compte de { $username }

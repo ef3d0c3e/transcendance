@@ -56,6 +56,11 @@ docker exec -it <container-name> mariadb \
 ```
 Then enter the password for `root` in `.env` and select the `main` database: `USE main;`
 
+Once you have create a user account, you may want to make them an administrator by editing their 'rank' row:
+```
+update users set rank = 2 where username='admin';
+```
+
 # Server Dependencies
 
  * [gin](https://github.com/gin-gonic/gin) Web server framework
@@ -76,7 +81,7 @@ Then enter the password for `root` in `.env` and select the `main` database: `US
 
 If you wish to run tests, you must grant `admin` the rights to create and drop databases: 
 ```
-GRANT ALL CREATE, DROP ON main_test.* TO 'admin'@'%'
+GRANT CREATE, DROP ON main_test.* TO 'admin'@'%'
 FLUSH PRIVILEGES
 ```
 
