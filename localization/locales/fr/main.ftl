@@ -33,3 +33,7 @@ account-delete-success-self = Votre compte a été supprimé
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-error-missing = Il manque le nom du compte
 account-delete-error-permission = Vous n'avez pas la permission pour supprimer le compte de { $username }
+
+search-user-title = Rechercher des utilisateurs
+search-user-submit = Rechercher
+search-user-form-placeholder = Nom d'utilisateur
