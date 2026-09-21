@@ -28,3 +28,5 @@ login-success = Bienvenu, { $username }
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
+
+

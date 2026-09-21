@@ -24,6 +24,8 @@ type AuthController struct {
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
+	// 2: Admin, 1: Moderator, 0: User
+	Rank     uint
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -38,9 +40,9 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 
 		session, err := gorm.G[models.UserSession](db).
 			Where("token = ? AND expires_at > ?", token, time.Now()).
-			First(c.Request.Context())
+			Find(c.Request.Context())
 
-		if err != nil {
+		if err != nil || len(session) == 0 {
 			// Invalid/expired token = unauthenticated.
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
@@ -48,18 +50,19 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		user, err := gorm.G[models.User](db).
-			Where("id = ?", session.UserID).
-			First(c.Request.Context())
+			Where("id = ?", session[0].UserID).
+			Find(c.Request.Context())
 
-		if err != nil {
+		if err != nil || len(user) == 0 {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID: session.UserID,
-			Username: user.Username,
+			ID: session[0].UserID,
+			Username: user[0].Username,
+			Rank: user[0].Rank,
 		})
 
 		c.Next()
