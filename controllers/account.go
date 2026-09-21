@@ -15,7 +15,6 @@ type AccountController struct {
 	Renderer *views.Renderer
 }
 
-
 func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
@@ -23,7 +22,9 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 	if user != nil {
 		username = user.Username
 	}
-	if v := c.Query("username"); v != "" { username = v }
+	if v := c.Query("username"); v != "" {
+		username = v
+	}
 
 	if username == "" {
 		c.JSON(http.StatusBadRequest, gin.H{
@@ -38,25 +39,25 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 		return
 	}
 
-	otherUser, err := gorm.G[models.User](ac.DB).Where("username = ?", username).Find(c.Request.Context())
-	if err != nil || len(otherUser) == 0 { 
+	var otherUser models.User
+	err := ac.DB.Where("username = ?", username).First(&otherUser).Error
+	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-generic"),
 		})
 		return
 	}
 
-
 	// Admins can delete everyone, otherwise user rank must be strictly above
-	if user.Username != username && (user.Rank != 2 && user.Rank < otherUser[0].Rank )  {
+	if user.Username != username && (user.Rank != 2 && user.Rank < otherUser.Rank) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-permission", "username", username),
 		})
 		return
 	}
-	
-	count, err := gorm.G[models.User](ac.DB).Where("id = ?", otherUser[0].ID).Delete(c.Request.Context())
-	if err != nil || count != 1 { 
+
+	count, err := gorm.G[models.User](ac.DB).Where("id = ?", otherUser.ID).Delete(c.Request.Context())
+	if err != nil || count != 1 {
 		log.Printf("Failed to delete user `%s'", username)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-generic"),
@@ -64,7 +65,7 @@ func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
 		return
 	}
 	log.Printf("Deleted user `%s'", username)
-		c.JSON(http.StatusOK, gin.H{
-			"message": ac.Renderer.T(c, "account-delete-success", "username", username),
-		})
+	c.JSON(http.StatusNoContent, gin.H{
+		"message": ac.Renderer.T(c, "account-delete-success", "username", username),
+	})
 }
