@@ -42,4 +42,12 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/search", searchController.SearchUsersGet)
+
+	friendsController := controllers.FriendsController{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/friendaction", friendsController.FriendsPost)
+	router.GET("/friends", friendsController.FriendsGet)
+	router.GET("/api/friends/*target", friendsController.ApiFriendsGet)
 }
