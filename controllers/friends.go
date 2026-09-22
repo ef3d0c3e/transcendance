@@ -73,16 +73,16 @@ func updateRelation(db *gorm.DB, user, target models.User, action string) {
 	switch action {
 	case "friends":
 		db.Find(&relation).
-		Where("ID = ? and TargetID = ?", user.ID, target.ID).
+		Where("ID = ? and target_id = ?", user.ID, target.ID).
 		Update("Type", "friends")
 		//send notification
 	case "delete":
-		db.Where("ID = ? and TargetID = ?", user.ID, target.ID).
+		db.Where("ID = ? and target_id = ?", user.ID, target.ID).
 		Delete(&relation)
 	case "pending":
 		//fails silently if user is blocked
 		db.First(&relation).
-		Where("ID = ? and TargetID = ?", target.ID, user.ID)
+		Where("ID = ? and target_id = ?", target.ID, user.ID)
 		if relation.Type == "blocked" {
 			return
 		}
