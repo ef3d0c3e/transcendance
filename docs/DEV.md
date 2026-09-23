@@ -71,6 +71,7 @@ update users set rank = 2 where username='admin';
  * [gofluent](https://github.com/hakastein/gofluent) Fluent for Go
  * [testify](https://https://github.com/stretchr/testify) Assertion library
  * [go-toml](github.com/pelletier/go-toml) TOML support
+ * [github.com/chai2010/webp](golang.org/x/image/webp) WEBP image support, the standard one doesn't support encoding
 
 # Static routes
 

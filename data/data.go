@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"image"
 	"log"
 	"os"
 	"path/filepath"
@@ -9,14 +10,22 @@ import (
 
 	fluent "github.com/hakastein/gofluent"
 	toml "github.com/pelletier/go-toml"
+
+	_ "image/gif"
+	_ "image/jpeg"
+	_ "image/png"
+	_ "golang.org/x/image/webp"
+
+	"golang.org/x/image/draw"
+	"github.com/chai2010/webp"
 )
 
 type Card struct {
 	// ID in collection
-	ID             int
-	Name           string
-	Locales        map[string]*fluent.Bundle
-	Tags           []string
+	ID            int
+	Name          string
+	Locales       map[string]*fluent.Bundle
+	Tags          []string
 	ThumbnailPath string
 	ArtworkPath   string
 }
@@ -32,9 +41,30 @@ type Collection struct {
 	Cards   []CollectionCard
 }
 
-func generate_thumbnail(path string) (string, error) {
-	// TODO
-	return path, nil
+func generateThumbnail(imagePath string, cardName string) (string, error) {
+	outputPath := "data/dist/" + cardName + ".webp"
+	if _, err := os.Stat(outputPath); err == nil {
+		return outputPath, nil
+	}
+
+	srcFile, err := os.Open(imagePath)
+	if err != nil {
+		return "", err
+	}
+	defer srcFile.Close()
+
+	src, _, err := image.Decode(srcFile)
+	if err != nil {
+		return "", err
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, 600, 400))
+	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
+	
+	if err := webp.Save(outputPath, dst, &webp.Options{ Quality: 75 }); err != nil {
+		return "", err
+	}
+	return outputPath, nil
 }
 
 type Data struct {
@@ -85,11 +115,6 @@ func LoadCards() (*Data, error) {
 				card.ID = int(config.Get("id").(int64))
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
-				thumbnail, err := generate_thumbnail(path)
-				if err != nil {
-					return err
-				}
-				card.ThumbnailPath = thumbnail
 			}
 			cards[cardName] = card
 		}
@@ -181,10 +206,23 @@ func LoadCards() (*Data, error) {
 		if ok {
 			return nil, fmt.Errorf("Card '%s' has id #%d, which is already used", card.Name, id)
 		}
-		cardsById[id] = struct {*Card; *Collection}{
+		cardsById[id] = struct {
+			*Card
+			*Collection
+		}{
 			card,
 			collection,
 		}
+	}
+
+	// Generate thumbnails
+	for _, card := range cards {
+		thumbnail, err := generateThumbnail(card.ArtworkPath, card.Name)
+		if err != nil {
+			return nil, err
+		}
+		card.ThumbnailPath = thumbnail
+		cards[card.Name] = card
 	}
 
 	return &Data{

@@ -19,9 +19,9 @@ type DataController struct {
 func (dc *DataController) CardGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
-	id, err := strconv.Atoi(c.Query("id"))
+	id, err := strconv.Atoi(c.Param("ID"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"message": dc.Renderer.T(c, "cards-error-not-found"),
 		})
 		return
@@ -29,20 +29,29 @@ func (dc *DataController) CardGet(c *gin.Context) {
 
 	card, collection := dc.Data.GetCard(id)
 	if card == nil || collection == nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.JSON(http.StatusNotFound, gin.H{
 			"message": dc.Renderer.T(c, "cards-error-not-found"),
 		})
 		return
 	}
 
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": "Login",
-		"User":  user,
-	})
-	builder.Add("card", "Content", map[string]any{
-		"User":  user,
-		"Card": card,
-		"Collection": collection,
-	})
-	dc.Renderer.Render(c, &builder)
+	method := c.Param("METHOD")
+	switch method {
+	case "info":
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": "Login",
+			"User":  user,
+		})
+		builder.Add("card", "Content", map[string]any{
+			"User":       user,
+			"Card":       card,
+			"Collection": collection,
+			"ID":         id,
+		})
+		dc.Renderer.Render(c, &builder)
+	case "artwork":
+		c.File(card.ArtworkPath)
+	case "thumbnail":
+		c.File(card.ThumbnailPath)
+	}
 }
