@@ -11,13 +11,13 @@ import (
 	fluent "github.com/hakastein/gofluent"
 	toml "github.com/pelletier/go-toml"
 
+	_ "golang.org/x/image/webp"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
-	_ "golang.org/x/image/webp"
 
-	"golang.org/x/image/draw"
 	"github.com/chai2010/webp"
+	"golang.org/x/image/draw"
 )
 
 type Card struct {
@@ -51,7 +51,7 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer srcFile.Close()
+	defer func() { _ = srcFile.Close() }()
 
 	src, _, err := image.Decode(srcFile)
 	if err != nil {
@@ -60,8 +60,8 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 
 	dst := image.NewRGBA(image.Rect(0, 0, 600, 400))
 	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
-	
-	if err := webp.Save(outputPath, dst, &webp.Options{ Quality: 75 }); err != nil {
+
+	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 75}); err != nil {
 		return "", err
 	}
 	return outputPath, nil
@@ -105,7 +105,7 @@ func LoadCards() (*Data, error) {
 			if strings.HasSuffix(name, ".ftl") {
 				localeName := strings.Split(name, ".")[0]
 				card.Locales[localeName] = fluent.NewBundle("en")
-				card.Locales[localeName].AddResource(fluent.NewResource(path))
+				if err := card.Locales[localeName].AddResource(fluent.NewResource(path)); err != nil { return err }
 			} else if name == "card.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {
@@ -145,7 +145,7 @@ func LoadCards() (*Data, error) {
 			if strings.HasSuffix(name, ".ftl") {
 				localeName := strings.Split(name, ".")[0]
 				collection.Locales[localeName] = fluent.NewBundle(path)
-				collection.Locales[localeName].AddResource(fluent.NewResource(path))
+				if err := collection.Locales[localeName].AddResource(fluent.NewResource(path)); err != nil { return err }
 			} else if name == "collection.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {

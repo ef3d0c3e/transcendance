@@ -9,18 +9,20 @@ import (
 
 	"transcendance/config"
 	"transcendance/controllers"
+	"transcendance/data"
 	"transcendance/localization"
 	"transcendance/routes"
 	"transcendance/views"
 )
 
 var (
-	DB     *gorm.DB
-	Router *gin.Engine
+	DB      *gorm.DB
+	Router  *gin.Engine
+	Data    *data.Data
 	cleanup func()
 )
 
-func Run(db *gorm.DB) *gin.Engine {
+func Run(data *data.Data, db *gorm.DB) *gin.Engine {
 	if err := config.MigrateDatabase(db); err != nil {
 		log.Fatal(err)
 	}
@@ -36,7 +38,7 @@ func Run(db *gorm.DB) *gin.Engine {
 	router.Use(controllers.AuthMiddleware(db))
 
 	renderer := views.NewRenderer(l10n)
-	routes.RegisterRoutes(router, db, renderer)
+	routes.RegisterRoutes(router, data, db, renderer)
 
 	return router
 }
@@ -44,6 +46,12 @@ func Run(db *gorm.DB) *gin.Engine {
 func Init() error {
 	var err error
 
+	data, err := data.LoadCards()
+	if err != nil {
+		return err
+	}
+	Data = data
+	
 	DB, cleanup, err = config.ConnectTestDatabase()
 	if err != nil {
 		return err
