@@ -70,6 +70,7 @@ update users set rank = 2 where username='admin';
  * [bcrypt](https://golang.org/x/crypto/bcrypt) bcrypt implementation
  * [gofluent](https://github.com/hakastein/gofluent) Fluent for Go
  * [testify](https://https://github.com/stretchr/testify) Assertion library
+ * [go-toml](github.com/pelletier/go-toml) TOML support
 
 # Static routes
 
