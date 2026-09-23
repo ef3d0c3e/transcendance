@@ -9,6 +9,7 @@ export default defineConfig({
 			input: {
 				register: "src/register.js",
 				login: "src/login.js",
+				friendbutton: "src/friendbutton.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
