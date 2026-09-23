@@ -57,5 +57,5 @@ func RegisterRoutes(
 		Renderer: renderer,
 		Data: data,
 	}
-	router.GET("/cards", dataController.CardGet)
+	router.GET("/cards/:ID/:METHOD", dataController.CardGet)
 }
