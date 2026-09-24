@@ -68,21 +68,27 @@ func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
 	}
 }
 
-func updateRelation(db *gorm.DB, user, target models.User, action string) {
+func updateRelation(db *gorm.DB, user, target models.User, action string){
 	var relation models.Relation
 	switch action {
 	case "friends":
 		db.Find(&relation).
-		Where("ID = ? and target_id = ?", user.ID, target.ID).
+		Where("user_id = ? and target_id = ?", user.ID, target.ID).
 		Update("Type", "friends")
 		//send notification
 	case "delete":
-		db.Where("ID = ? and target_id = ?", user.ID, target.ID).
+		res := db.Where("user_id = ? and target_id = ?", user.ID, target.ID).
 		Delete(&relation)
+		if res.Error != nil {
+			return
+		}
+		if  res.RowsAffected ==  0  {
+			return
+		}
 	case "pending":
 		//fails silently if user is blocked
 		db.First(&relation).
-		Where("ID = ? and target_id = ?", target.ID, user.ID)
+		Where("user_id = ? and target_id = ?", target.ID, user.ID)
 		if relation.Type == "blocked" {
 			return
 		}
@@ -99,9 +105,6 @@ func updateRelation(db *gorm.DB, user, target models.User, action string) {
 		if res.Error != nil {
 			//something went wrong
 			return
-		}
-		if action == "friends" {
-			//send notification
 		}
 	}
 }
@@ -131,14 +134,16 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 		updateRelation(fc.DB, target, user, "friends")
 	case relationStr == "respond" && action == "deny":
 		updateRelation(fc.DB, target, user, "delete")
-	case relationStr == "block" && action == "unblock":
+	case relationStr == "blocked" && action == "unblock":
 		updateRelation(fc.DB, user, target, "delete")
-	case (relationStr == "friend" || relationStr == "pending" || relationStr == "respond") &&
-		 (action == "unfriend" || action == "block"):
+	case (relationStr == "friends" ) && (action == "unfriend"):
 		updateRelation(fc.DB, user, target, "delete")
 		updateRelation(fc.DB, target, user, "delete")
-		fallthrough
+	case relationStr == "pending" && action == "cancel":
+		updateRelation(fc.DB, user, target, "delete")
 	case action == "block":
+		updateRelation(fc.DB, user, target, "delete")
+		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "blocked")
 	default:
 		//invalid action somehow, send error
