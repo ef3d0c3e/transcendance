@@ -58,4 +58,6 @@ func RegisterRoutes(
 		Data: data,
 	}
 	router.GET("/cards/:ID/:METHOD", dataController.CardGet)
+
+	router.GET("/search_cards", dataController.CardSearchGet)
 }

@@ -11,10 +11,11 @@ import (
 	fluent "github.com/hakastein/gofluent"
 	toml "github.com/pelletier/go-toml"
 
-	_ "golang.org/x/image/webp"
 	_ "image/gif"
 	_ "image/jpeg"
 	_ "image/png"
+
+	_ "golang.org/x/image/webp"
 
 	"github.com/chai2010/webp"
 	"golang.org/x/image/draw"
@@ -31,14 +32,15 @@ type Card struct {
 }
 
 type CollectionCard struct {
-	name string
+	Name string
 }
 
 type Collection struct {
-	ID      int
-	Name    string
-	Locales map[string]*fluent.Bundle
-	Cards   []CollectionCard
+	ID          int
+	Name        string
+	Locales     map[string]*fluent.Bundle
+	Cards       []CollectionCard
+	Tags        []string
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
@@ -68,9 +70,11 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 }
 
 type Data struct {
-	cards       map[string]*Card
-	collections map[string]*Collection
-	cardsById   map[int]struct {
+	Cards       map[string]*Card
+	Collections map[string]*Collection
+	// Tags locales
+	Tags      map[string]*fluent.Bundle
+	cardsById map[int]struct {
 		*Card
 		*Collection
 	}
@@ -80,6 +84,7 @@ type Data struct {
 func LoadCards() (*Data, error) {
 	cards := make(map[string]*Card)
 	collections := make(map[string]*Collection)
+	tags := make(map[string]*fluent.Bundle)
 
 	traverse_cards := func(path string, file os.FileInfo, err error) error {
 		if err != nil {
@@ -103,9 +108,19 @@ func LoadCards() (*Data, error) {
 			name := components[len(components)-1]
 			card := cards[cardName]
 			if strings.HasSuffix(name, ".ftl") {
-				localeName := strings.Split(name, ".")[0]
-				card.Locales[localeName] = fluent.NewBundle("en")
-				if err := card.Locales[localeName].AddResource(fluent.NewResource(path)); err != nil { return err }
+				localeName, _, _ := strings.Cut(name, ".")
+				card.Locales[localeName] = fluent.NewBundle(localeName)
+				source, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				resource := fluent.NewResource(string(source))
+				if resource == nil {
+					return fmt.Errorf("Failed to parse FTL from %s", path)
+				}
+				if err := card.Locales[localeName].AddResource(resource); err != nil {
+					return err
+				}
 			} else if name == "card.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {
@@ -120,7 +135,10 @@ func LoadCards() (*Data, error) {
 		}
 		return err
 	}
-
+	if err := filepath.Walk("data/cards", traverse_cards); err != nil {
+		return nil, err
+	}
+	// Build collection
 	traverse_collections := func(path string, file os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -143,20 +161,31 @@ func LoadCards() (*Data, error) {
 			name := components[len(components)-1]
 			collection := collections[collectionName]
 			if strings.HasSuffix(name, ".ftl") {
-				localeName := strings.Split(name, ".")[0]
-				collection.Locales[localeName] = fluent.NewBundle(path)
-				if err := collection.Locales[localeName].AddResource(fluent.NewResource(path)); err != nil { return err }
+				localeName, _, _ := strings.Cut(name, ".")
+				collection.Locales[localeName] = fluent.NewBundle(localeName)
+				source, err := os.ReadFile(path)
+				if err != nil {
+					return err
+				}
+				resource := fluent.NewResource(string(source))
+				if resource == nil {
+					return fmt.Errorf("Failed to parse FTL from %s", path)
+				}
+				if err := collection.Locales[localeName].AddResource(resource); err != nil {
+					return err
+				}
 			} else if name == "collection.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {
 					return err
 				}
+				collection.Tags = config.GetArray("tags").([]string)
 				collection.ID = int(config.Get("id").(int64))
 
 				cardList := config.Get("cards").([]*toml.Tree)
 				for _, entry := range cardList {
 					card := CollectionCard{
-						name: entry.Get("name").(string),
+						Name: entry.Get("name").(string),
 					}
 					collection.Cards = append(collection.Cards, card)
 				}
@@ -165,10 +194,44 @@ func LoadCards() (*Data, error) {
 		}
 		return err
 	}
-	if err := filepath.Walk("data/cards", traverse_cards); err != nil {
+	if err := filepath.Walk("data/collections", traverse_collections); err != nil {
 		return nil, err
 	}
-	if err := filepath.Walk("data/collections", traverse_collections); err != nil {
+	// Build tags locales
+	traverse_tags := func(path string, file os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if path == "data/tags" {
+			return nil
+		}
+
+		components := strings.Split(path, "/")
+
+		if file.IsDir() {
+			return nil
+		}
+
+		name := components[len(components)-1]
+		if strings.HasSuffix(name, ".ftl") {
+			localeName, _, _ := strings.Cut(name, ".")
+			tags[localeName] = fluent.NewBundle(localeName)
+			source, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			resource := fluent.NewResource(string(source))
+			if resource == nil {
+				return fmt.Errorf("Failed to parse FTL from %s", path)
+			}
+			if err := tags[localeName].AddResource(resource); err != nil {
+				return err
+			}
+		}
+
+		return err
+	}
+	if err := filepath.Walk("data/tags", traverse_tags); err != nil {
 		return nil, err
 	}
 
@@ -181,9 +244,9 @@ func LoadCards() (*Data, error) {
 	cardsInCollection := make(map[string]string)
 	for _, collection := range collections {
 		for _, collectionCard := range collection.Cards {
-			card, ok := cards[collectionCard.name]
+			card, ok := cards[collectionCard.Name]
 			if !ok {
-				return nil, fmt.Errorf("Collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.name)
+				return nil, fmt.Errorf("Collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
 			}
 			cardsInCollection[card.Name] = collection.Name
 		}
@@ -226,8 +289,9 @@ func LoadCards() (*Data, error) {
 	}
 
 	return &Data{
-		cards:       cards,
-		collections: collections,
+		Cards:       cards,
+		Collections: collections,
+		Tags:        tags,
 		cardsById:   cardsById,
 	}, nil
 }
