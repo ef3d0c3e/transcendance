@@ -116,7 +116,7 @@ func LoadCards() (*Data, error) {
 				}
 				resource := fluent.NewResource(string(source))
 				if resource == nil {
-					return fmt.Errorf("Failed to parse FTL from %s", path)
+					return fmt.Errorf("failed to parse FTL from %s", path)
 				}
 				if err := card.Locales[localeName].AddResource(resource); err != nil {
 					return err
@@ -169,7 +169,7 @@ func LoadCards() (*Data, error) {
 				}
 				resource := fluent.NewResource(string(source))
 				if resource == nil {
-					return fmt.Errorf("Failed to parse FTL from %s", path)
+					return fmt.Errorf("failed to parse FTL from %s", path)
 				}
 				if err := collection.Locales[localeName].AddResource(resource); err != nil {
 					return err
@@ -222,7 +222,7 @@ func LoadCards() (*Data, error) {
 			}
 			resource := fluent.NewResource(string(source))
 			if resource == nil {
-				return fmt.Errorf("Failed to parse FTL from %s", path)
+				return fmt.Errorf("failed to parse FTL from %s", path)
 			}
 			if err := tags[localeName].AddResource(resource); err != nil {
 				return err
