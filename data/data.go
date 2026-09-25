@@ -36,11 +36,11 @@ type CollectionCard struct {
 }
 
 type Collection struct {
-	ID          int
-	Name        string
-	Locales     map[string]*fluent.Bundle
-	Cards       []CollectionCard
-	Tags        []string
+	ID      int
+	Name    string
+	Locales map[string]*fluent.Bundle
+	Cards   []CollectionCard
+	Tags    []string
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
@@ -82,10 +82,47 @@ type Data struct {
 
 // Load cards and collections from the `data/` directory
 func LoadCards() (*Data, error) {
+	tags := make(map[string]*fluent.Bundle)
 	cards := make(map[string]*Card)
 	collections := make(map[string]*Collection)
-	tags := make(map[string]*fluent.Bundle)
 
+	// Build tags locales
+	traverse_tags := func(path string, file os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if path == "data/tags" {
+			return nil
+		}
+
+		components := strings.Split(path, "/")
+
+		if file.IsDir() {
+			return nil
+		}
+
+		name := components[len(components)-1]
+		if strings.HasSuffix(name, ".ftl") {
+			localeName, _, _ := strings.Cut(name, ".")
+			tags[localeName] = fluent.NewBundle(localeName)
+			source, err := os.ReadFile(path)
+			if err != nil {
+				return err
+			}
+			resource := fluent.NewResource(string(source))
+			if resource == nil {
+				return fmt.Errorf("failed to parse FTL from %s", path)
+			}
+			if err := tags[localeName].AddResource(resource); err != nil {
+				return err
+			}
+		}
+
+		return err
+	}
+	if err := filepath.Walk("data/tags", traverse_tags); err != nil {
+		return nil, err
+	}
 	traverse_cards := func(path string, file os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -121,12 +158,29 @@ func LoadCards() (*Data, error) {
 				if err := card.Locales[localeName].AddResource(resource); err != nil {
 					return err
 				}
+				// Verify locale contains messages
+				if _, ok := card.Locales[localeName].Message("name"); !ok {
+					return fmt.Errorf("missing 'name' local key in %s", path)
+				}
+				if _, ok := card.Locales[localeName].Message("description"); !ok {
+					return fmt.Errorf("missing 'description' local key in %s", path)
+				}
 			} else if name == "card.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {
 					return err
 				}
 				card.Tags = config.GetArray("tags").([]string)
+				// Verify tags have a locale key
+				for localeName, locale := range tags {
+					for _, tag := range card.Tags {
+						if _, ok := locale.Message(tag); ok {
+							continue
+						}
+						return fmt.Errorf("missing tag '%s' in '%s' tags locale", tag, localeName)
+					}
+				}
+
 				card.ID = int(config.Get("id").(int64))
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
@@ -174,12 +228,29 @@ func LoadCards() (*Data, error) {
 				if err := collection.Locales[localeName].AddResource(resource); err != nil {
 					return err
 				}
+				// Verify locale contains messages
+				if _, ok := collection.Locales[localeName].Message("name"); !ok {
+					return fmt.Errorf("missing 'name' local key in %s", path)
+				}
+				if _, ok := collection.Locales[localeName].Message("description"); !ok {
+					return fmt.Errorf("missing 'description' local key in %s", path)
+				}
 			} else if name == "collection.toml" {
 				config, err := toml.LoadFile(path)
 				if err != nil {
 					return err
 				}
 				collection.Tags = config.GetArray("tags").([]string)
+				// Verify tags have a locale key
+				for localeName, locale := range tags {
+					for _, tag := range collection.Tags {
+						if _, ok := locale.Message(tag); ok {
+							continue
+						}
+						return fmt.Errorf("missing tag '%s' in '%s' tags locale", tag, localeName)
+					}
+				}
+
 				collection.ID = int(config.Get("id").(int64))
 
 				cardList := config.Get("cards").([]*toml.Tree)
@@ -197,48 +268,6 @@ func LoadCards() (*Data, error) {
 	if err := filepath.Walk("data/collections", traverse_collections); err != nil {
 		return nil, err
 	}
-	// Build tags locales
-	traverse_tags := func(path string, file os.FileInfo, err error) error {
-		if err != nil {
-			return err
-		}
-		if path == "data/tags" {
-			return nil
-		}
-
-		components := strings.Split(path, "/")
-
-		if file.IsDir() {
-			return nil
-		}
-
-		name := components[len(components)-1]
-		if strings.HasSuffix(name, ".ftl") {
-			localeName, _, _ := strings.Cut(name, ".")
-			tags[localeName] = fluent.NewBundle(localeName)
-			source, err := os.ReadFile(path)
-			if err != nil {
-				return err
-			}
-			resource := fluent.NewResource(string(source))
-			if resource == nil {
-				return fmt.Errorf("failed to parse FTL from %s", path)
-			}
-			if err := tags[localeName].AddResource(resource); err != nil {
-				return err
-			}
-		}
-
-		return err
-	}
-	if err := filepath.Walk("data/tags", traverse_tags); err != nil {
-		return nil, err
-	}
-
-	log.Print("===========================================")
-	log.Print("cards=", cards)
-	log.Print("collections=", collections)
-	log.Print("===========================================")
 
 	// Verify every cards in collections exist
 	cardsInCollection := make(map[string]string)
@@ -246,7 +275,7 @@ func LoadCards() (*Data, error) {
 		for _, collectionCard := range collection.Cards {
 			card, ok := cards[collectionCard.Name]
 			if !ok {
-				return nil, fmt.Errorf("Collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
+				return nil, fmt.Errorf("collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
 			}
 			cardsInCollection[card.Name] = collection.Name
 		}
@@ -260,14 +289,14 @@ func LoadCards() (*Data, error) {
 	for _, card := range cards {
 		collectionName, ok := cardsInCollection[card.Name]
 		if !ok {
-			return nil, fmt.Errorf("Card '%s' is not in a collection", card.Name)
+			return nil, fmt.Errorf("card '%s' is not in a collection", card.Name)
 		}
 
 		collection := collections[collectionName]
 		id := card.ID + collection.ID*1000
 		_, ok = cardsById[id]
 		if ok {
-			return nil, fmt.Errorf("Card '%s' has id #%d, which is already used", card.Name, id)
+			return nil, fmt.Errorf("card '%s' has id #%d, which is already used", card.Name, id)
 		}
 		cardsById[id] = struct {
 			*Card
@@ -287,6 +316,9 @@ func LoadCards() (*Data, error) {
 		card.ThumbnailPath = thumbnail
 		cards[card.Name] = card
 	}
+
+	log.Printf("Loaded %d cards in %d collections", len(cards), len(collections))
+	log.Print("========================================")
 
 	return &Data{
 		Cards:       cards,
