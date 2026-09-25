@@ -2,6 +2,7 @@ package routes
 
 import (
 	"transcendance/controllers"
+	"transcendance/data"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
@@ -11,6 +12,7 @@ import (
 
 func RegisterRoutes(
 	router *gin.Engine,
+	data *data.Data,
 	db *gorm.DB,
 	renderer *views.Renderer,
 ) {
@@ -48,4 +50,14 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/search", searchController.SearchUsersGet)
+
+	// Data
+	dataController := controllers.DataController{
+		DB:       db,
+		Renderer: renderer,
+		Data: data,
+	}
+	router.GET("/cards/:ID/:METHOD", dataController.CardGet)
+
+	router.GET("/search_cards", dataController.CardSearchGet)
 }
