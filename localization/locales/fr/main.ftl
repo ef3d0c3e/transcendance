@@ -1,3 +1,5 @@
+cancel = Annuler
+
 register-title = Créer un compte
 register-username = Nom d'utilisateur
 register-password = Mot de passe
@@ -27,6 +29,17 @@ login-success = Bienvenu, { $username }
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
+
+friends-title = Liste d'amis
+friends-add = Demander en ami
+friends-unfriend = Supprimer l'ami
+friends-block = Bloquer
+friends-unblock = Debloquer
+friends-blocked = Bloque
+friends-pending = En attente
+friends-respond-message = Cet utilisateur vous a demande en ami
+friends-unknown-error = Une erreur est survenue
+friends-spam-error = Vous ne pouvez envoyer qu'une invitation a la fois.
 
 account-delete-success = Le compte de { $username } a été supprimé
 account-delete-success-self = Votre compte a été supprimé
