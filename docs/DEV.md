@@ -25,6 +25,7 @@ npm i vite \
 ```
 
 To build frontend components, go to `frontend/` and execute `npm run build` (or `make frontend` from the root)
+You can use `npx vite build --watch` inside the `frontend/` directory to automatically rebuild when you edit a Svelte file.
 
 ## Running the server
 
