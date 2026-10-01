@@ -20,25 +20,24 @@ type FriendsController struct {
 func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 	user := models.User{}
 	db.First(&user, GetAuthenticatedUser(c).ID)
-	ctx := c.Request.Context()
-	relation, err := gorm.G[models.Relation](db).
-		Where("user_id = ? and target_id = ?", user.ID, target.ID).
-		First(ctx)
-	if err == gorm.ErrRecordNotFound {
-		relation, err = gorm.G[models.Relation](db).
-		Where("user_id = ? and target_id = ?", target.ID, user.ID).
-			First(ctx)
-	}
-	if err != nil {
-		return ""
-	}
-	if relation.User.ID == target.ID {
+	relation := models.Relation{}
+	res := db.First(&relation, "user_id = ? and target_id = ?", user.ID, target.ID)
+	if res.RowsAffected == 0 {
+		res = db.First(&relation, "user_id = ? and target_id = ?", target.ID, user.ID)
+		if res.RowsAffected == 0 {
+			return ""
+		}
 		switch relation.Type {
 		case "blocked":
 			return ""
 		case "pending":
 			return "respond"
+		default:
+			return "default"
 		}
+	}
+	if res.Error != nil {
+		return ""
 	}
 	return relation.Type
 }
@@ -49,12 +48,14 @@ func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
 	targetID := c.Param("target")
 	if (targetID == "/") { //no target, query all relations from active user
 		rel := models.Relation{}
-		res := fc.DB.Find(&rel, user.ID).Order("Type")
+		res := fc.DB.Find(&rel).
+		Where("user_id = ?", user.ID).
+		Order("Type")
 		if res.RowsAffected == 0 {
 			c.JSON(http.StatusOK, "No friends or pending requests")
 			return
 		}
-	c.JSON(http.StatusOK, gin.H{"Relations:": rel})
+		c.JSON(http.StatusOK, gin.H{"Relations:": rel})
 	} else { //query specific relation
 		targetID = strings.ReplaceAll(targetID, "/", "")
 		targetID, _ := strconv.Atoi(targetID)
@@ -120,14 +121,23 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 	if targetID == "" || action == "" {
 		return
 	}
-	ctx := c.Request.Context()
-	target, err := gorm.G[models.User](fc.DB).Where("ID = ?", targetID).First(ctx)
-	if err != nil {
-		return
+	var target  models.User
+	fc.DB.First(&target, targetID)
+	if target == user {
+		return;
 	}
+	var relation models.Relation
+	res := fc.DB.First(&relation, "user_id = ? and type = ?", user.ID, "pending")
+	activeInvite := res.RowsAffected > 0
 	relationStr := GetRelation(target, c, fc.DB)
 	switch {
 	case relationStr == "" && action == "add":
+		if activeInvite {
+			c.JSON(http.StatusOK, gin.H{
+				"message": fc.Renderer.T(c, "friends-spam-error"),
+			})
+			return
+		}
 		updateRelation(fc.DB, user, target, "pending")
 	case relationStr == "respond" && (action == "add" || action == "accept"):
 		updateRelation(fc.DB, user, target, "friends")
@@ -146,7 +156,9 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "blocked")
 	default:
-		//invalid action somehow, send error
+		c.JSON(http.StatusOK, gin.H{
+			"message": fc.Renderer.T(c, "friend-unknown-error"),
+		})
 	}
 }
 
@@ -157,7 +169,7 @@ func (fc *FriendsController) FriendsGet(c *gin.Context) {
 	}
 
 	builder := views.PageBuilder("base", map[string]any{
-		"Title": fc.Renderer.T(c, "search-user-title"),
+		"Title": fc.Renderer.T(c, "friends-title"),
 		"User":  user,
 	})
 

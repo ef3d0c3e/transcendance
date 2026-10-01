@@ -19,8 +19,11 @@
 			case "friends":
 				action  = "unfriend"
 				break
-			case  "blocked":
+			case "blocked":
 				action =  "unblock"
+				break
+			case "respond":
+				action =  "accept"
 				break
 			default:
 				action = "add"
@@ -31,18 +34,32 @@
 		loadRelation()
 	});
 
-	async function relationAction() {
-		await fetch(`/friendaction?target=${id}&action=${action}`, {
+	async function relationAction(act) {
+		await fetch(`/friendaction?target=${id}&action=${act}`, {
 			method: "GET",
 		})
 		loadRelation()
 	}
 </script>
 
-<button class={relation} onclick={()=>relationAction()}>{ action }</button>
+{#if relation == "respond"}
+	<p>This user has sent you a friend request</p>
+	<button class="deny" onclick={()=>relationAction("deny")}>deny</button>
+{/if}
+<button class={relation} onclick={()=>relationAction(action)}>{ action }</button>
+
 
 <style>
 .blocked {
+	background-color: darkred;
+}
+.friends {
+	background-color: darkgreen;
+}
+.respond {
+	background-color: lightgreen;
+}
+.deny {
 	background-color: red;
 }
 </style>

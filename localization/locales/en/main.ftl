@@ -1,3 +1,5 @@
+cancel = Cancel
+
 register-title = Create account
 register-username = Username
 register-password = Password
@@ -31,3 +33,14 @@ logout-error-all = Failed to log out all devices
 search-user-title = Search for Users
 search-user-submit = Search User
 search-user-form-placeholder = Username
+
+friends-title = Friends list
+friends-add = Add Friend
+friends-unfriend = Unfriend
+friends-block = Block user
+friends-unblock = Unblock
+friends-blocked = Blocked
+friends-pending = Pending invite
+friends-respond-message = This user has sent you a friend invite
+friends-unknown-error = Something went wrong !
+friends-spam-error = You may only have one outgoing invite active
