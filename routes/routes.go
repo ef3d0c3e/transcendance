@@ -39,5 +39,5 @@ func RegisterRoutes(
 	router.GET("/notifications", authController.NotificationsGet)
 	router.GET("/notification/:ID/*action", authController.NotificationGet)
 	router.GET("/getanotif", authController.GetANotifGet)
-	router.GET("api/notifications", authController.ApiNotifGet)
+	router.GET("/api/notifications", authController.ApiNotifGet)
 }

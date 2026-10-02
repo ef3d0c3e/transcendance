@@ -27,3 +27,8 @@ login-success = Welcome back, { $username }
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
+
+notification-friend-request-title = Friend Request
+notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-request-accept = Accept
+notification-friend-request-deny = Deny

@@ -28,3 +28,8 @@ login-success = Bienvenu, { $username }
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
+
+notification-friend-request-title = Demande en Ami
+notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-friend-request-accept = Accepter
+notification-friend-request-deny = Refuser

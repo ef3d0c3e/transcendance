@@ -25,6 +25,7 @@ npm i vite \
 ```
 
 To build frontend components, go to `frontend/` and execute `npm run build` (or `make frontend` from the root)
+You can also make vite rebuild frontend components on every change: `npx vite build --watch`.
 
 ## Running the server
 
