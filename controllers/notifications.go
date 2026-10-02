@@ -1,14 +1,17 @@
 package controllers
 
 import (
+	"math"
 	"net/http"
+	"time"
 	"transcendance/models"
 	"transcendance/views"
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"gorm.io/datatypes"
 	"encoding/json"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
+	"gorm.io/gorm"
 )
 
 func (ac *AuthController) NotificationsGet(c *gin.Context) {
@@ -98,6 +101,28 @@ func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 				data["Icon"] = notif.Icon
 				data["Action"] = notif.Action
 				locale := make(map[string]string)
+				elapsed := time.Now().Sub(notif.CreatedAt).Seconds()
+				if elapsed < 60 {
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-just-now")
+				} else if elapsed < 60 * 60 {
+					count := math.Floor(elapsed / 60)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-minutes", "count", count)
+				} else if elapsed < 60 * 60 * 24 {
+					count := math.Floor(elapsed / 60 / 60)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-hours", "count", count)
+				} else if elapsed < 60 * 60 * 24 * 7 {
+					count := math.Floor(elapsed / 60 / 60 / 24)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-days", "count", count)
+				} else if elapsed < 60 * 60 * 24 * 30 {
+					count := math.Floor(elapsed / 60 / 60 / 24 / 7)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-weeks", "count", count)
+				} else if elapsed < 60 * 60 * 24 * 365 {
+					count := math.Floor(elapsed / 60 / 60 / 24 / 30)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-months", "count", count)
+				} else {
+					count := math.Floor(elapsed / 60 / 60 / 24 / 365)
+					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-years", "count", count)
+				}
 				if notif.Type == "FriendRequest" {
 					locale["Title"] = ac.Renderer.T(c, "notification-friend-request-title")
 					locale["Desc"] = ac.Renderer.T(c, "notification-friend-request-desc", "username", notif.Data["Username"])

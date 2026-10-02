@@ -83,6 +83,36 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+notification-time-ago-just-now = just now
+notification-time-ago-seconds = { $count ->
+    [one] { $count } second ago
+   *[other] { $count } seconds ago
+}
+notification-time-ago-minutes = { $count ->
+    [one] { $count } minute ago
+   *[other] { $count } minutes ago
+}
+notification-time-ago-hours = { $count ->
+    [one] { $count } hour ago
+   *[other] { $count } hours ago
+}
+notification-time-ago-days = { $count ->
+    [one] { $count } day ago
+   *[other] { $count } days ago
+}
+notification-time-ago-weeks = { $count ->
+    [one] { $count } week ago
+   *[other] { $count } weeks ago
+}
+notification-time-ago-months = { $count ->
+    [one] { $count } month ago
+   *[other] { $count } months ago
+}
+notification-time-ago-years = { $count ->
+    [one] { $count } year ago
+   *[other] { $count } years ago
+}
+
 notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
 notification-friend-request-accept = Accept
