@@ -11,7 +11,11 @@
 	<title>{{ .Data.Title }}</title>
 </head>
 <body>
-<div id="notification"></div>
+<div id="notification"
+    data-label-loading="{{ .T "notification-loading" }}"
+    data-label-none="{{ .T "notification-none" }}"
+    data-label-view-all="{{ .T "notification-view-all" }}"
+    ></div>
 	{{ .Children.Content }}
 </body>
 </html>

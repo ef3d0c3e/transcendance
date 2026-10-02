@@ -6,5 +6,8 @@ const target = document.querySelector('#notification');
 if (target) {
 	mount(notification, {
 		target,
+        props: {
+            dataset: target.dataset
+        }
 	});
 }

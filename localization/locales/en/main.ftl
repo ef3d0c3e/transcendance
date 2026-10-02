@@ -28,6 +28,9 @@ logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
+notification-loading = Loading notifications...
+notification-none = No new notifications
+notification-view-all = View all notifications
 notification-time-ago-just-now = just now
 notification-time-ago-seconds = { $count ->
     [one] { $count } second ago

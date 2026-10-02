@@ -1,5 +1,6 @@
 <script>
 	import Bell from '../icons/Bell.svelte'
+	export let dataset;
 
 	let notifications = [];
 	let lastLoaded = null;
@@ -79,7 +80,7 @@ loadNotifications()
 		{#if loading}
 		<div>
 			<div></div>
-			<span>Loading notifications...</span>
+			<span>{dataset.labelLoading}</span>
 		</div>
 		{:else if error}
 		<div id="error">
@@ -88,10 +89,10 @@ loadNotifications()
 		</div>
 		{:else if notifications.length === 0}
 		<div>
-			<div>No new notifications</div>
+			<div>{dataset.labelNone}</div>
 		</div>
 		{:else}
-		<a href="/notifications">View all notifications</a>
+		<a href="/notifications">{dataset.labelViewAll}</a>
 		<e-stack id="notif-list">
 			{#each notifications as notification}
 			<div id="notif" class:read={notification.Status==="read"}>

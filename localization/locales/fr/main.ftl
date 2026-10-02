@@ -29,6 +29,9 @@ logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
 
+notification-loading = Chargement des notifications...
+notification-none = Pas de nouvelle notification
+notification-view-all = Voir toutes les notifications
 notification-time-ago-just-now = à l'instant
 notification-time-ago-seconds = { $count ->
     [one] il y a { $count } seconde
