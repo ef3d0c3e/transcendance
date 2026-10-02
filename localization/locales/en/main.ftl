@@ -83,3 +83,7 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+notification-friend-request-title = Friend Request
+notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-request-accept = Accept
+notification-friend-request-deny = Deny

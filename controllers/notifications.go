@@ -25,17 +25,13 @@ func (ac *AuthController) NotificationsGet(c *gin.Context) {
 // Only for testing purposes to add notifications in real time
 func (ac *AuthController) GetANotifGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
-	userJson, _ := json.Marshal(user)
-	c.String(http.StatusOK, string(userJson))
+	dataJson, _ := json.Marshal(gin.H{"UserID": 555, "Username": "foobar"})
 	var data datatypes.JSONMap
-	err := data.UnmarshalJSON(userJson)
-	if (err != nil) {
+	if err := data.UnmarshalJSON(dataJson); err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 	}
-	c.JSON(http.StatusOK, gin.H{"user": data})
 	notif := models.Notif{
 		UserID: user.ID,
-		EmmiterID: user.ID,
 		Icon: "",
 		Type: "FriendRequest",
 		Data: data,
@@ -85,11 +81,33 @@ func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 		notifs, err := gorm.G[models.Notif](ac.DB).
 			Where("user_id = ? and status = ?", user.ID, "unread").
 			Order("created_at DESC").
+			Limit(15).
 			Find(ctx)
 		if err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
 		} else {
-			c.JSON(http.StatusOK, gin.H{"notifications": notifs})
+			// Only expose what's required + expose localized data
+			result := make([]map[string]any, 0)
+			for _, notif := range notifs {
+				data := make(map[string]any)
+				data["ID"] = notif.ID
+				data["Type"] = notif.Type
+				data["Status"] = notif.Status
+				data["Data"] = notif.Data
+				data["CreatedAt"] = notif.CreatedAt
+				data["Icon"] = notif.Icon
+				data["Action"] = notif.Action
+				locale := make(map[string]string)
+				if notif.Type == "FriendRequest" {
+					locale["Title"] = ac.Renderer.T(c, "notification-friend-request-title")
+					locale["Desc"] = ac.Renderer.T(c, "notification-friend-request-desc", "username", notif.Data["Username"])
+					locale["Accept"] = ac.Renderer.T(c, "notification-friend-request-accept")
+					locale["Deny"] = ac.Renderer.T(c, "notification-friend-request-deny")
+				}
+				data["Locale"] = locale
+				result = append(result, data)
+			}
+			c.JSON(http.StatusOK, gin.H{"notifications": result})
 		}
 	}
 }
