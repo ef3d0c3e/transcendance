@@ -32,7 +32,7 @@
 
 			const data = await response.json();
 
-			notifications = (data.notifications ?? []).slice(0, 5);
+			notifications = (data.notifications ?? []);
 			lastLoaded = new Date();
 		} catch (err) {
 			console.error("Failed to load notifications:", err);
@@ -94,7 +94,7 @@ loadNotifications()
 		{:else}
 		<a href="/notifications">{dataset.labelViewAll}</a>
 		<e-stack id="notif-list">
-			{#each notifications as notification}
+			{#each notifications.slice(0, 5) as notification}
 			<div id="notif" class:read={notification.Status==="read"}>
 				<a href="/notification/{notification.ID}">
 					<div>
