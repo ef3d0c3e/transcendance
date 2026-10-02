@@ -82,6 +82,33 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+notification-time-ago-just-now = à l'instant
+notification-time-ago-seconds = { $count ->
+    [one] il y a { $count } seconde
+   *[other] il y a { $count } secondes
+}
+notification-time-ago-minutes = { $count ->
+    [one] il y a { $count } minute
+   *[other] il y a { $count } minutes
+}
+notification-time-ago-hours = { $count ->
+    [one] il y a { $count } heure
+   *[other] il y a { $count } heures
+}
+notification-time-ago-days = { $count ->
+    [one] il y a { $count } jour
+   *[other] il y a { $count } jours
+}
+notification-time-ago-weeks = { $count ->
+    [one] il y a { $count } semaine
+   *[other] il y a { $count } semaines
+}
+notification-time-ago-months = il y a { $count } mois
+notification-time-ago-years = { $count ->
+    [one] il y a { $count } an
+   *[other] il y a { $count } ans
+}
+
 notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
 notification-friend-request-accept = Accepter
