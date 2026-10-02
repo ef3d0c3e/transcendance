@@ -83,6 +83,9 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+notification-loading = Loading notifications...
+notification-none = No new notifications
+notification-view-all = View all notifications
 notification-time-ago-just-now = just now
 notification-time-ago-seconds = { $count ->
     [one] { $count } second ago
