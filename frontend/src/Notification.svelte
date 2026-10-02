@@ -2,13 +2,17 @@
 	import Bell from '../icons/Bell.svelte'
 
 	let notifications = [];
-	let loaded = false;
+	let lastLoaded = null;
 	let loading = false;
 	let error = null;
 	let visible = false;
 
 	async function loadNotifications() {
-		if (loaded || loading) {
+		if (loading || (lastLoaded != null && (new Date() - lastLoaded) < 5000)) {
+			return;
+		}
+		// Don't load while the menu is open
+		if (lastLoaded != null && visible) {
 			return;
 		}
 
@@ -28,7 +32,7 @@
 			const data = await response.json();
 
 			notifications = (data.notifications ?? []).slice(0, 5);
-			loaded = true;
+			lastLoaded = new Date();
 		} catch (err) {
 			console.error("Failed to load notifications:", err);
 			error = "Could not load notifications";
@@ -108,6 +112,8 @@
 
 		return `${years}y ago`;
 	}
+
+loadNotifications()
 </script>
 
 <div onmouseenter={loadNotifications} role="alert">
@@ -115,7 +121,7 @@
 	<button aria-label="Notifications" onclick={menu_open}>
 		<Bell/>
 	</button>
-	{#if loaded && notifications.length > 0}
+	{#if lastLoaded != null && notifications.length > 0}
 		<div id="notif-count">
 				{notifications.length}
 		</div>
