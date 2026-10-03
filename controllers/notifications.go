@@ -101,7 +101,7 @@ func (ac *AuthController) ApiNotifGet(c *gin.Context) {
 				data["Icon"] = notif.Icon
 				data["Action"] = notif.Action
 				locale := make(map[string]string)
-				elapsed := time.Now().Sub(notif.CreatedAt).Seconds()
+				elapsed := time.Since(notif.CreatedAt).Seconds()
 				if elapsed < 60 {
 					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-just-now")
 				} else if elapsed < 60 * 60 {

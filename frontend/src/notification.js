@@ -7,7 +7,7 @@ if (target) {
 	mount(notification, {
 		target,
         props: {
-            dataset: target.dataset
-        }
+            dataset: target.dataset,
+        },
 	});
 }
