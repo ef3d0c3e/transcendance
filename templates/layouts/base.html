@@ -20,8 +20,8 @@ if (!document.cookie.includes('theme=')) {
 <body>
 	<header>
 		{{ template "theme_switcher" . }}
-		{{ template "login_popover" . }}
-		{{ template "register_popover" . }}
+		{{ template "login_popup" . }}
+		{{ template "register_popup" . }}
 	</header>
 	<main>
 	{{ .Children.Content }}
