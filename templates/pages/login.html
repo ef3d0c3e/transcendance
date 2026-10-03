@@ -3,31 +3,26 @@
 <h1>{{ .T "login-title" }}</h1>
 {{ if .Data.User }}
 <h3>{{ .T "login-error-authenticated" }}</h3>
-<p>{{ .Data.User.Username }}</p>
 {{ else }}
-<div id="login-result"></div>
 <form
 	id="login-form"
 	action="/login"
 	method="post">
-	<div class="field">
-		<label for="username">{{ .T "login-username" }}</label>
-		<input
-			type="text"
-			id="username"
-			name="username"
-			autocomplete="username"
-			required>
-	</div>
-	<div class="field">
-		<label for="password">{{ .T "login-password" }}</label>
-		<input
-			type="password"
-			id="password"
-			name="password"
-			autocomplete="password"
-			required>
-	</div>
+	<div id="form-result"></div>
+	<label for="username">{{ .T "login-username" }}</label>
+	<input
+		type="text"
+		id="username"
+		name="username"
+		autocomplete="username"
+		required>
+	<label for="password">{{ .T "login-password" }}</label>
+	<input
+		type="password"
+		id="password"
+		name="password"
+		autocomplete="current-password"
+		required>
 
 	<button type="submit">{{ .T "login-submit" }}</button>
 </form>
