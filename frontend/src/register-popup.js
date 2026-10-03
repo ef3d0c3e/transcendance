@@ -1,10 +1,10 @@
 import { mount } from 'svelte';
-import Popover from './FormPopover.svelte';
+import Popup from './FormPopup.svelte';
 
-const target = document.querySelector('#register-popover');
+const target = document.querySelector('#register-popup');
 
 if (target) {
-	mount(Popover, {
+	mount(Popup, {
 		target,
 		props: {
 			url: '/register',
