@@ -1,4 +1,5 @@
 {{ define "register" }}
+<section>
 <script type="module" src="/frontend/register.js"></script>
 <h1>{{ .T "register-title" }}</h1>
 {{ if .Data.User }}
@@ -36,12 +37,16 @@
 		autocomplete="new-password"
 		required
 		minlength="8">
-	<input type="checkbox" id="tos_agree" name="tos_agree" value="on">
-	<label for="tos_agree">{{ .T "register-tos" }}</label>
+	
+	<label for="tos_agree">
+		<input type="checkbox" id="tos_agree" name="tos_agree" value="on">
+		{{ .T "register-tos" }}
+	</label>
 	<br>
 
 	<button type="submit">{{ .T "register-submit" }}</button>
 </form>
 <div id="register-enhancement"></div>
+</section>
 {{ end }}
 {{ end }}

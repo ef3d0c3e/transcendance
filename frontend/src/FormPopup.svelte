@@ -1,10 +1,10 @@
 <script>
-	import { onMount, tick, mount } from 'svelte';
-	import FormEnhancement from './FormEnhancement.svelte';
+	import { onMount, tick, mount } from "svelte";
+	import FormEnhancement from "./FormEnhancement.svelte";
 
 	let { url, target, formSelector, enhancementSelector } = $props();
 
-	let label = $state('');
+	let label = $state("");
 	let open = $state(false);
 	let loading = $state(false);
 	let loaded = $state(false);
@@ -16,11 +16,11 @@
 
 	onMount(() => {
 		if (target) {
-			label = target.dataset.label ?? '';
+			label = target.dataset.label ?? "";
 		}
 	});
 
-	async function openPopover() {
+	async function openpopup() {
 		clearTimeout(closeTimer);
 		open = true;
 
@@ -33,7 +33,7 @@
 		loading = true;
 
 		try {
-			const response = await fetch(url + '?fragment=1');
+			const response = await fetch(url + "?fragment=1");
 
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}`);
@@ -49,8 +49,8 @@
 					target: enhancementTarget,
 					props: {
 						formSelector,
-						onSuccess: handleFormSuccess
-					}
+						onSuccess: handleFormSuccess,
+					},
 				});
 			}
 
@@ -60,13 +60,13 @@
 			popup?.focus();
 		} catch (error) {
 			console.error(error);
-			content.textContent = 'Unable to load form.';
+			content.textContent = "Unable to load form.";
 		} finally {
 			loading = false;
 		}
 	}
 
-	function closePopover() {
+	function closepopup() {
 		clearTimeout(closeTimer);
 		open = false;
 	}
@@ -75,20 +75,20 @@
 		clearTimeout(closeTimer);
 
 		closeTimer = setTimeout(() => {
-			closePopover();
+			closepopup();
 		}, 800);
 	}
 
 	function handleBackdropClick(event) {
 		if (event.target === event.currentTarget) {
-			closePopover();
+			closepopup();
 		}
 	}
 
 	function handleKeydown(event) {
-		if (event.key === 'Escape' && open) {
+		if (event.key === "Escape" && open) {
 			event.preventDefault();
-			closePopover();
+			closepopup();
 		}
 	}
 </script>
@@ -97,7 +97,7 @@
 	type="button"
 	aria-haspopup="dialog"
 	aria-expanded={open}
-	onclick={open ? closePopover : openPopover}
+	onclick={open ? closepopup : openpopup}
 >
 	{label}
 </button>
@@ -110,20 +110,18 @@
 	onclick={handleBackdropClick}
 >
 	<div
-		class="popover"
+		class="popup"
 		role="dialog"
 		aria-modal="true"
 		aria-label={label}
 		tabindex="-1"
 		bind:this={popup}
 	>
-		<section class="section-popover">
-			{#if loading}
-				<p>Loading...</p>
-			{/if}
+		{#if loading}
+			<p>Loading...</p>
+		{/if}
 
-			<div bind:this={content}></div>
-		</section>
+		<div bind:this={content}></div>
 	</div>
 </div>
 
@@ -139,9 +137,14 @@
 		align-items: center;
 		justify-content: center;
 
-		padding: 16px;
+		/* Respect notches */
+		padding: max(1rem, env(safe-area-inset-top))
+			max(1rem, env(safe-area-inset-right))
+			max(1rem, env(safe-area-inset-bottom))
+			max(1rem, env(safe-area-inset-left));
 
-		background: rgb(0 0 0 / 50%);
+		background: rgb(0 0 0 / 55%);
+		backdrop-filter: blur(3px);
 
 		visibility: hidden;
 		opacity: 0;
@@ -158,19 +161,62 @@
 		pointer-events: auto;
 	}
 
-	.popover {
-		width: min(20rem, calc(100vw - 32px));
-		max-height: calc(100vh - 32px);
+	.popup {
+		position: relative;
+
+		width: min(100%, 20rem);
+
+		max-height: calc(
+			100dvh - max(1rem, env(safe-area-inset-top)) -
+				max(1rem, env(safe-area-inset-bottom)) - 2rem
+		);
 
 		overflow: auto;
 
-		border-radius: 8px;
-		box-shadow: 0px 0px 50px 10px rgb(0 0 0 / 25%);
+		overscroll-behavior: contain;
+
+		/* Makes focus outlines easier to see */
+		outline: none;
+
+		transform: translateY(0) scale(1);
+
+		transition:
+			transform 150ms ease,
+			opacity 150ms ease;
 	}
 
-	.section-popover {
-		max-height: calc(100vh - 32px);
-		overflow: auto;
-		padding: 1rem;
+	.backdrop:not(.open) .popup {
+		transform: translateY(0.5rem) scale(0.98);
+		opacity: 0;
+	}
+
+	.backdrop.open .popup {
+		transform: translateY(0) scale(1);
+		opacity: 1;
+	}
+
+	/* Small screens */
+	@media (max-width: 480px) {
+		.backdrop {
+			align-items: flex-end;
+			padding: 0;
+		}
+
+		.popup {
+			width: 100%;
+			max-height: min(90dvh, 42rem);
+		}
+
+		.backdrop:not(.open) .popup {
+			transform: translateY(1rem);
+		}
+	}
+
+	/* Reduced motion */
+	@media (prefers-reduced-motion: reduce) {
+		.backdrop,
+		.popup {
+			transition: none;
+		}
 	}
 </style>
