@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"transcendance/controllers"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
@@ -14,15 +13,10 @@ type Pages struct {
 }
 
 func (p *Pages) IndexGet(c *gin.Context) {
-	user := controllers.GetAuthenticatedUser(c)
-	_ = user
-
-	builder := views.PageBuilder("base2", map[string]any {
-		"Title": "TEST",
+	builder := views.PageBuilder("base", map[string]any{
+		"Title": "Cards",
 	})
-	builder.Add("header", "Header", map[string]any {
-		"Hello": "foobar",
+	builder.Add("cards", "Content", map[string]any{
 	})
-
 	p.Renderer.Render(c, &builder)
 }

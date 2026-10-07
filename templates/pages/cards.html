@@ -1,0 +1,324 @@
+{{ define "cards" }}
+<style>
+	:root {
+		--card-border-radius: 0.5rem;
+	}
+
+	.card-container {
+		width: 30ch;
+		height: 30em;
+
+		position: relative;
+
+		--mouse-x: 50%;
+		--mouse-y: 50%;
+		--tilt-x: 0deg;
+		--tilt-y: 0deg;
+
+		&:hovered {
+			z-index: 100;
+		}
+	}
+
+	.card-container[data-tilt] {
+		perspective: 1000px;
+	}
+
+	.card-container[data-tilt] .card {
+		transform:
+			rotateX(var(--tilt-x)) rotateY(var(--tilt-y));
+
+		transform-style: preserve-3d;
+
+		transition:
+			transform 0.15s ease-out,
+			box-shadow 0.3s ease;
+
+		will-change: transform;
+	}
+
+	/* Shine */
+	.card-container[data-tilt] .card::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+
+		z-index: 10;
+		pointer-events: none;
+
+		background:
+			radial-gradient(circle at calc(100% - var(--mouse-x)) calc(100% - var(--mouse-y)),
+				rgba(255, 255, 255, 0.15),
+				transparent 80%);
+
+		opacity: 0;
+		transition: opacity 0.2s ease;
+	}
+
+	.card-container[data-tilt][data-hovered="true"] .card::before {
+		opacity: 1;
+	}
+
+	.card-container[data-tilt][data-hovered="true"] .card {
+		box-shadow:
+			0 25px 50px rgba(0, 0, 0, 0.4),
+			0 10px 20px rgba(0, 0, 0, 0.25);
+	}
+
+	.card {
+		width: 100%;
+		height: 100%;
+		position: absolute;
+		inset: 0;
+
+		display: flex;
+		flex-direction: column;
+		box-sizing: border-box;
+		overflow: hidden;
+
+		border-radius: var(--card-border-radius);
+		backface-visibility: hidden;
+		-webkit-backface-visibility: hidden;
+
+		background:
+			radial-gradient(120% 90% at 0% 40%, color-mix(in srgb, var(--c1), transparent 50%), transparent 60%),
+			radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--c2), transparent 50%), transparent 60%),
+			linear-gradient(160deg,
+				color-mix(in srgb, color-mix(in srgb, var(--c1), transparent 80%), black 20%),
+				color-mix(in srgb, color-mix(in srgb, var(--c2), transparent 80%), black 20%)),
+			var(--color-bg-1);
+
+		transform: none;
+	}
+
+	.card[data-hovered="true"] {
+		--tilt-x: calc((50% - var(--mouse-x)) * 0.15);
+		--tilt-y: calc((var(--mouse-y) - 50%) * 0.15);
+	}
+
+	/* Fake light/reflection */
+	.card::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: 10;
+		pointer-events: none;
+
+		background:
+			radial-gradient(circle at calc(100% - var(--mouse-x)) calc(100% - var(--mouse-y)),
+				rgba(255, 255, 255, 0.10),
+				transparent 10%);
+
+		opacity: 0;
+		transition: opacity 0.3s ease;
+	}
+
+	.card[data-hovered="true"]::before {
+		opacity: 1;
+	}
+
+	.card[data-hovered="true"]::after {
+		opacity: 1;
+	}
+
+	/* Card components */
+	span.card-badge {
+		position: absolute;
+		top: .5em;
+		left: 1ch;
+		align-self: flex-start;
+		padding: .5ch .8ch;
+
+		font-size: .7rem;
+		letter-spacing: 0.1ch;
+		font-weight: 800;
+		color: white;
+		text-shadow: 0px 0px 2px color-mix(in srgb, var(--badge-color), black 50%);
+
+		border-radius: 10ch;
+		background:
+			linear-gradient(160deg,
+				color-mix(in srgb, color-mix(in srgb, var(--badge-color), transparent 50%), black 20%),
+				color-mix(in srgb, color-mix(in srgb, var(--badge-color), transparent 50%), white 50%));
+
+		backdrop-filter: blur(1px);
+	}
+
+	.card img {
+		border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
+
+		width: 100%;
+		flex: 0 0 40%;
+		height: 40%;
+		object-fit: cover;
+		object-position: center;
+	}
+
+	h2.card-title {
+		margin: .3ch .5ch .1ch .5ch;
+		flex: 0 0 auto;
+	}
+
+	p.card-description {
+		flex: 1 1 auto;
+		min-height: 0;
+		overflow: hidden;
+		margin: 1ch 1ch;
+
+		text-align: justify;
+		line-height: 1.1;
+		color: color-mix(in srgb, var(--color-text) 75%, transparent);
+	}
+
+	div.card-footer {
+		position: static;
+		flex: 0 0 auto;
+		display: inline-flex;
+		width: 90%;
+		margin: 0 auto .4ch;
+		border-top: 1px solid rgba(127, 127, 127, .5);
+	}
+
+	span.card-collection {
+		font-weight: 600;
+		letter-spacing: -.05ch;
+		margin-right: auto;
+	}
+
+	span.card-number {
+		color: color-mix(in srgb, var(--color-text) 30%, transparent);
+	}
+
+	main {
+		width: 100%;
+	}
+</style>
+
+<script>
+	document.addEventListener('DOMContentLoaded', () => {
+		const cards = document.querySelectorAll('.card-container[data-tilt]');
+
+		console.log('Found cards:', cards.length);
+
+		cards.forEach(card => {
+			card.addEventListener('pointerenter', () => {
+				console.log('entered card');
+				card.dataset.hovered = 'true';
+			});
+
+			card.addEventListener('pointermove', (e) => {
+				const rect = card.getBoundingClientRect();
+
+				const x = 100 - ((e.clientX - rect.left) / rect.width) * 100;
+				const y = 100 - ((e.clientY - rect.top) / rect.height) * 100;
+
+				const nx = (x - 50) / 50;
+				const ny = (y - 50) / 50;
+
+				const maxTilt = 10;
+
+				card.style.setProperty('--mouse-x', `${x}%`);
+				card.style.setProperty('--mouse-y', `${y}%`);
+
+				card.style.setProperty('--tilt-x', `${-ny * maxTilt}deg`);
+				card.style.setProperty('--tilt-y', `${nx * maxTilt}deg`);
+			});
+
+			card.addEventListener('pointerleave', () => {
+				card.dataset.hovered = 'false';
+
+				card.style.setProperty('--mouse-x', '50%');
+				card.style.setProperty('--mouse-y', '50%');
+				card.style.setProperty('--tilt-x', '0deg');
+				card.style.setProperty('--tilt-y', '0deg');
+			});
+		});
+	});
+</script>
+
+<e-cluster justify="center">
+	<div class="card-container" data-tilt>
+		<div class="card" style="--c1: rgb(127,0,255); --c2: rgb(0,255,127); --badge-color: rgb(64, 127, 255);">
+			<img src="/static/image1.webp">
+			<span class="card-badge">COMMUNE</span>
+			<h2 class="card-title">Pavage de Pythagore</h2>
+			<p class="card-description">
+				Un pavage de Pythagore ou pavage à deux carrés est un pavage du plan euclidien par des carrés de deux
+				tailles
+				différentes, dans lequel chaque carré d'une taille est entouré de quatre carrés de l'autre taille.
+			</p>
+			<div class="card-footer">
+				<span class="card-collection">
+					Pavages
+				</span>
+				<span class="card-number">
+					02 / 06
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="card-container">
+		<div class="card" style="--c1: rgb(127,255,127); --c2: rgb(255,255,127); --badge-color: rgb(255, 20, 64);">
+			<img src="/static/image2.jpg">
+			<span class="card-badge">RARE</span>
+			<h2 class="card-title">Flying Scotsman</h2>
+			<p class="card-description">
+				La locomotive à vapeur LNER classe A3 Pacific n ° 4472 Flying Scotsman (à l'origine n° 1472) a été
+				construite en 1923 pour le London and North Eastern Railway (LNER) aux Doncaster Works selon une
+				conception
+				de H. N. Gresley.
+			</p>
+			<div class="card-footer">
+				<span class="card-collection">
+					Trains
+				</span>
+				<span class="card-number">
+					01 / 32
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="card-container" data-tilt>
+		<div class="card" style="--c1: rgb(255,255,255); --c2: rgb(64,255,255); --badge-color: rgb(255, 20, 64);">
+			<img src="/static/image3.jpg">
+			<span class="card-badge">RARE</span>
+			<h2 class="card-title">Base antarctique McMurdo</h2>
+			<p class="card-description">
+				La base antarctique McMurdo est une base américaine antarctique située dans le sud de l'île de Ross.
+				Elle sert de port logistique pour la moitié du continent. La station est située sur la dépendance de
+				Ross, territoire revendiqué par la Nouvelle-Zélande, possédant la base Scott à cinq kilomètres.
+			</p>
+			<div class="card-footer">
+				<span class="card-collection">
+					Antarctique
+				</span>
+				<span class="card-number">
+					07 / 16
+				</span>
+			</div>
+		</div>
+	</div>
+
+	<div class="card-container" data-tilt>
+		<div class="card" style="--c1: rgb(200,84,0); --c2: rgb(127,127,127); --badge-color: rgb(255, 220, 80);">
+			<img src="/static/image4.jpg">
+			<span class="card-badge">LEGENDAIRE</span>
+			<h2 class="card-title">Ford T</h2>
+			<p class="card-description">
+				La Ford T (familièrement surnommée « Tin Lizzie » ou Flivver aux États-Unis) est une automobile
+				fabriquée de 1908 à 1927 par Ford Motor Company sous la direction de Henry Ford.
+			</p>
+			<div class="card-footer">
+				<span class="card-collection">
+					Voitures
+				</span>
+				<span class="card-number">
+					004 / 127
+				</span>
+			</div>
+		</div>
+	</div>
+</e-cluster>
+{{ end }}
