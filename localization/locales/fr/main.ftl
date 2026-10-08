@@ -38,7 +38,8 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
-cards-error-not-found = Impossible de trouver la carte
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
 
 card-rarity-common = Commune
 card-rarity-rare = Rare

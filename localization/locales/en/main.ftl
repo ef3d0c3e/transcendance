@@ -39,6 +39,7 @@ search-user-submit = Search
 search-user-form-placeholder = Username
 
 cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
 
 card-rarity-common = Common
 card-rarity-rare = Rare

@@ -153,11 +153,13 @@
         border-top: 1px solid rgba(127, 127, 127, 0.5);
     }
 
-    :global(span.card-collection) {
+    :global(a.card-collection) {
         z-index: 10;
         font-weight: 600;
         letter-spacing: -0.05ch;
         margin-right: auto;
+        text-decoration: none;
+        color: var(--color-text)
     }
 
     :global(span.card-number) {
