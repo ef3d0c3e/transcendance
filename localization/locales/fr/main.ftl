@@ -50,3 +50,14 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+
+friends-title = Liste d'amis
+friends-add = Demander en ami
+friends-unfriend = Supprimer l'ami
+friends-block = Bloquer
+friends-unblock = Debloquer
+friends-blocked = Bloque
+friends-pending = En attente
+friends-respond-message = Cet utilisateur vous a demande en ami
+friends-unknown-error = Une erreur est survenue
+friends-spam-error = Vous ne pouvez envoyer qu'une invitation a la fois.
