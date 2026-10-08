@@ -1,16 +1,32 @@
 {{ define "base" }}
 <!DOCTYPE html>
-<html>
+<html theme="{{ .Theme }}">
 <head>
 	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
 
-	<!--- Temporary -->
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+	<script>
+if (!document.cookie.includes('theme=')) {
+    const theme = matchMedia('(prefers-color-scheme: dark)').matches
+        ? 'dark'
+        : 'light';
+    document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+    document.documentElement.setAttribute("theme", theme);
+}
+	</script>
+	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
 </head>
 <body>
+	<header>
+		<h1 class="header-title">Transcendance</h1>
+		{{ template "theme_switcher" . }}
+		{{ template "login_popup" . }}
+		{{ template "register_popup" . }}
+	</header>
+	<main>
 	{{ .Children.Content }}
+	</main>
 </body>
 </html>
 {{ end }}

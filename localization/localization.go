@@ -37,7 +37,7 @@ type Localizer struct {
 	// Locale cookie name: 'lang'
 	CookieName string
 
-	// Cache of per-user locales
+	// Cache of (locale fallback chain, locale)
 	Cache sync.Map
 }
 

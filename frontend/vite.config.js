@@ -12,6 +12,9 @@ export default defineConfig({
 				register: "src/register.js",
 				login: "src/login.js",
 				card_render: "src/card-render.js",
+				login_popup: "src/login-popup.js",
+				register_popup: "src/register-popup.js",
+				theme_switcher: "src/theme-switcher.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
