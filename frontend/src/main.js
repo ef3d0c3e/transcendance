@@ -95,3 +95,12 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 		});
 	}
 }
+
+// Cards
+{
+	const target = document.querySelector('#card-rendering');
+
+	if (target) {
+		mount(Render, {target});
+	}
+}
