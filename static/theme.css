@@ -430,12 +430,6 @@ section {
 	}
 }
 
-@media (min-width: 768px) {
-	main {
-		width: min(100%, 36rem);
-	}
-}
-
 @media (prefers-reduced-motion: reduce) {
 
 	*,
