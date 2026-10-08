@@ -1,3 +1,2 @@
-name = Baz Collection
+name = Development
 description = First collection
-

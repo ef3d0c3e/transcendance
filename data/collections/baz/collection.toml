@@ -1,8 +1,0 @@
-id = 1
-tags = ["collection"]
-
-[[cards]]
-name = "foo-bar"
-
-[[cards]]
-name = "quz"
