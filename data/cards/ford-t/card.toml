@@ -2,5 +2,5 @@ id = 4
 rarity = "legendary"
 tags = [ "vehicle", "car" ]
 
-color-primary = "rgb(200,84,0)"
-color-secondary = "rgb(127,127,127)"
+color-primary = "#c85400"
+color-secondary = "#7f7f7f"
