@@ -129,6 +129,7 @@ type Data struct {
 		*Card
 		*Collection
 	}
+	collectionsById map[int]*Collection
 }
 
 // Load cards and collections from the `data/` directory
@@ -384,6 +385,12 @@ func LoadCards() (*Data, error) {
 		}
 	}
 
+	// Build collectionsById
+	collectionsById := make(map[int]*Collection)
+	for _, collection := range collections {
+		collectionsById[collection.ID] = collection
+	}
+
 	// Generate thumbnails
 	for _, card := range cards {
 		thumbnail, err := generateThumbnail(card.ArtworkPath, card.Name)
@@ -402,10 +409,15 @@ func LoadCards() (*Data, error) {
 		Collections: collections,
 		Tags:        tags,
 		cardsById:   cardsById,
+		collectionsById: collectionsById,
 	}, nil
 }
 
 func (dc *Data) GetCard(id int) (*Card, *Collection) {
 	col := dc.cardsById[id]
 	return col.Card, col.Collection
+}
+
+func (dc *Data) GetCollection(id int) *Collection {
+	return dc.collectionsById[id]
 }

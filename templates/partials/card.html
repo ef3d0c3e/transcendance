@@ -9,7 +9,7 @@
         <h2 class="card-title">{{ .Data.CardTitle }}</h2>
         <p class="card-description">{{ .Data.CardDescription }}</p>
         <div class="card-footer">
-            <span class="card-collection">{{ .Data.CardCollectionTitle }}</span>
+            <a class="card-collection" href="/collections/{{ .Data.CardCollectionID }}">{{ .Data.CardCollectionTitle }}</a>
             <span class="card-number">{{ .Data.CardCount }}</span>
         </div>
 

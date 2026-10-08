@@ -41,6 +41,9 @@ search-user-form-placeholder = Nom d'utilisateur
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
 
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
+
 card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
