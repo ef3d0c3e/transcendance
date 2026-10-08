@@ -68,6 +68,7 @@ type IndexableCard struct {
 	CollectionName        string
 	CollectionDescription string
 	CollectionTags        []string
+	Rarity                string
 }
 
 func (dc *DataController) toIndexable(locale string, card *data.Card, collection *data.Collection) (*IndexableCard, error) {
@@ -122,6 +123,11 @@ func (dc *DataController) toIndexable(locale string, card *data.Card, collection
 		collectionTags = append(collectionTags, collectionTagstring)
 	}
 
+	rarity, err := dc.Renderer.Localizer.LocalizeFor(locale, "card-rarity-"+card.Rarity)
+	if err != nil {
+		return nil, err
+	}
+
 	return &IndexableCard{
 		Name:                  name,
 		Description:           desc,
@@ -129,6 +135,7 @@ func (dc *DataController) toIndexable(locale string, card *data.Card, collection
 		CollectionName:        collectionName,
 		CollectionDescription: collectionDesc,
 		CollectionTags:        collectionTags,
+		Rarity:                rarity,
 	}, nil
 
 }
@@ -148,6 +155,7 @@ func buildMapping() *mapping.IndexMappingImpl {
 	card.AddFieldMappingsAt("CollectionName", fm)
 	card.AddFieldMappingsAt("CollectionTags", fm)
 	card.AddFieldMappingsAt("CollectionDescription", fm)
+	card.AddFieldMappingsAt("Rarity", fm)
 
 	im.AddDocumentMapping("card", card)
 	im.DefaultMapping = card
@@ -212,6 +220,7 @@ func (ss *SearchSet) Search(term string, limit int) ([]*data.Card, error) {
 		fieldQuery("CollectionName", term, 1),
 		fieldQuery("CollectionTags", term, 0.5),
 		fieldQuery("CollectionDescription", term, 0.25),
+		fieldQuery("Rarity", term, 1),
 	)
 
 	req := bleve.NewSearchRequestOptions(q, limit, 0, false)
