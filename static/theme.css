@@ -188,13 +188,12 @@ header>span {
 }
 
 main {
-	width: min(100%, 32rem);
-	min-height: calc(100dvh - 4rem);
+	max-width: 1440px;
 
 	margin: 0 auto;
 
 	padding:
-		clamp(1.25rem, 5vw, 3rem) max(1rem, env(safe-area-inset-right)) clamp(2rem, 8vw, 4rem) max(1rem, env(safe-area-inset-left));
+		clamp(1.25rem, 5vw, 3rem) env(safe-area-inset-right) clamp(2rem, 8vw, 4rem) env(safe-area-inset-left);
 
 	display: flex;
 	flex-direction: column;
@@ -376,12 +375,10 @@ button {
 	}
 }
 
-/* =========================================================
-   Sections / cards
-   ========================================================= */
+/* Sections */
 
 section {
-	padding: 1rem;
+	padding: 1rem 1rem;
 
 	background: var(--color-bg-2);
 	border: 1px solid var(--color-border-1);
