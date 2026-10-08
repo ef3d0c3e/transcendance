@@ -29,6 +29,7 @@ type Card struct {
 	Tags          []string
 	ThumbnailPath string
 	ArtworkPath   string
+	Rarity        string
 }
 
 type CollectionCard struct {
@@ -60,7 +61,19 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 		return "", err
 	}
 
-	dst := image.NewRGBA(image.Rect(0, 0, 600, 400))
+	// Card image size is 330x192
+	// Scale shortest side to image display size, while preserving aspect ratio
+	thumbX := src.Bounds().Max.X
+	thumbY := src.Bounds().Max.Y
+	if thumbX > thumbY {
+		thumbY = 192;
+		thumbX = (thumbY * thumbX) / src.Bounds().Max.Y
+	} else {
+		thumbX = 330;
+		thumbY = (thumbX * thumbY) / src.Bounds().Max.X
+	}
+
+	dst := image.NewRGBA(image.Rect(0, 0, thumbX, thumbY))
 	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
 
 	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 75}); err != nil {
@@ -182,6 +195,8 @@ func LoadCards() (*Data, error) {
 				}
 
 				card.ID = int(config.Get("id").(int64))
+				card.Rarity = config.Get("rarity").(string)
+				// TODO: Verify rarity value here
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
 			}
