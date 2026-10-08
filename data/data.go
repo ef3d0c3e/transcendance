@@ -23,13 +23,28 @@ import (
 
 type Card struct {
 	// ID in collection
-	ID            int
-	Name          string
-	Locales       map[string]*fluent.Bundle
-	Tags          []string
-	ThumbnailPath string
-	ArtworkPath   string
-	Rarity        string
+	ID             int
+	Name           string
+	Locales        map[string]*fluent.Bundle
+	Tags           []string
+	ThumbnailPath  string
+	ArtworkPath    string
+	Rarity         string
+	ColorPrimary   string
+	ColorSecondary string
+}
+
+func (c *Card) Translate(localeName string, id string) string {
+	loc := c.Locales[localeName]
+	if loc == nil {
+		return ""
+	}
+	msg, _ := loc.Message(id)
+	if msg == nil { return "" }
+	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
+	if err != nil { return "" }
+
+	return value
 }
 
 type CollectionCard struct {
@@ -37,11 +52,13 @@ type CollectionCard struct {
 }
 
 type Collection struct {
-	ID      int
-	Name    string
-	Locales map[string]*fluent.Bundle
-	Cards   []CollectionCard
-	Tags    []string
+	ID             int
+	Name           string
+	Locales        map[string]*fluent.Bundle
+	Cards          []CollectionCard
+	Tags           []string
+	ColorPrimary   string
+	ColorSecondary string
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
@@ -66,10 +83,10 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 	thumbX := src.Bounds().Max.X
 	thumbY := src.Bounds().Max.Y
 	if thumbX > thumbY {
-		thumbY = 192;
+		thumbY = 192
 		thumbX = (thumbY * thumbX) / src.Bounds().Max.Y
 	} else {
-		thumbX = 330;
+		thumbX = 330
 		thumbY = (thumbX * thumbY) / src.Bounds().Max.X
 	}
 
@@ -196,6 +213,9 @@ func LoadCards() (*Data, error) {
 
 				card.ID = int(config.Get("id").(int64))
 				card.Rarity = config.Get("rarity").(string)
+
+				card.ColorPrimary = config.Get("color-primary").(string)
+				card.ColorSecondary = config.Get("color-secondary").(string)
 				// TODO: Verify rarity value here
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
@@ -268,6 +288,15 @@ func LoadCards() (*Data, error) {
 
 				collection.ID = int(config.Get("id").(int64))
 
+				collection.ColorPrimary = config.Get("color-primary").(string)
+				if collection.ColorPrimary == "" {
+					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
+				}
+				collection.ColorSecondary = config.Get("color-secondary").(string)
+				if collection.ColorSecondary == "" {
+					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
+				}
+
 				cardList := config.Get("cards").([]*toml.Tree)
 				for _, entry := range cardList {
 					card := CollectionCard{
@@ -292,6 +321,14 @@ func LoadCards() (*Data, error) {
 			if !ok {
 				return nil, fmt.Errorf("collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
 			}
+			// Set card color if they don't override the collection's color
+			if card.ColorPrimary == "" {
+				card.ColorPrimary = collection.ColorPrimary
+			}
+			if card.ColorSecondary == "" {
+				card.ColorSecondary = collection.ColorSecondary
+			}
+
 			cardsInCollection[card.Name] = collection.Name
 		}
 	}
