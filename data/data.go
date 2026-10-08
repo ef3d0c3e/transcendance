@@ -40,9 +40,13 @@ func (c *Card) Translate(localeName string, id string) string {
 		return ""
 	}
 	msg, _ := loc.Message(id)
-	if msg == nil { return "" }
+	if msg == nil {
+		return ""
+	}
 	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
-	if err != nil { return "" }
+	if err != nil {
+		return ""
+	}
 
 	return value
 }
@@ -59,6 +63,23 @@ type Collection struct {
 	Tags           []string
 	ColorPrimary   string
 	ColorSecondary string
+}
+
+func (c *Collection) Translate(localeName string, id string) string {
+	loc := c.Locales[localeName]
+	if loc == nil {
+		return ""
+	}
+	msg, _ := loc.Message(id)
+	if msg == nil {
+		return ""
+	}
+	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
+	if err != nil {
+		return ""
+	}
+
+	return value
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
@@ -189,8 +210,8 @@ func LoadCards() (*Data, error) {
 					return err
 				}
 				// Verify locale contains messages
-				if _, ok := card.Locales[localeName].Message("name"); !ok {
-					return fmt.Errorf("missing 'name' local key in %s", path)
+				if _, ok := card.Locales[localeName].Message("title"); !ok {
+					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
 				if _, ok := card.Locales[localeName].Message("description"); !ok {
 					return fmt.Errorf("missing 'description' local key in %s", path)
@@ -214,8 +235,12 @@ func LoadCards() (*Data, error) {
 				card.ID = int(config.Get("id").(int64))
 				card.Rarity = config.Get("rarity").(string)
 
-				card.ColorPrimary = config.Get("color-primary").(string)
-				card.ColorSecondary = config.Get("color-secondary").(string)
+				if config.Has("color-primary") {
+					card.ColorPrimary = config.Get("color-primary").(string)
+				}
+				if config.Has("color-secondary") {
+					card.ColorSecondary = config.Get("color-secondary").(string)
+				}
 				// TODO: Verify rarity value here
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
@@ -264,8 +289,8 @@ func LoadCards() (*Data, error) {
 					return err
 				}
 				// Verify locale contains messages
-				if _, ok := collection.Locales[localeName].Message("name"); !ok {
-					return fmt.Errorf("missing 'name' local key in %s", path)
+				if _, ok := collection.Locales[localeName].Message("title"); !ok {
+					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
 				if _, ok := collection.Locales[localeName].Message("description"); !ok {
 					return fmt.Errorf("missing 'description' local key in %s", path)
@@ -288,14 +313,14 @@ func LoadCards() (*Data, error) {
 
 				collection.ID = int(config.Get("id").(int64))
 
-				collection.ColorPrimary = config.Get("color-primary").(string)
-				if collection.ColorPrimary == "" {
+				if !config.Has("color-primary") {
 					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
+				}
+				collection.ColorPrimary = config.Get("color-primary").(string)
+				if !config.Has("color-secondary") {
+					return fmt.Errorf("Collection %s is missing 'color-secondary'", collection.Name)
 				}
 				collection.ColorSecondary = config.Get("color-secondary").(string)
-				if collection.ColorSecondary == "" {
-					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
-				}
 
 				cardList := config.Get("cards").([]*toml.Tree)
 				for _, entry := range cardList {
