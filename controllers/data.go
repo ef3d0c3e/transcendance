@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"net/http"
 	"strconv"
 	"strings"
@@ -24,7 +25,15 @@ type DataController struct {
 func (dc *DataController) CardGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
-	id, err := strconv.Atoi(c.Param("ID"))
+	first := c.Param("FIRST")
+	second := c.Param("SECOND")
+	// Return assets
+	if first == "assets" {
+		c.File("data/assets/" + second)
+		return
+	}
+
+	id, err := strconv.Atoi(first)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
 			"message": dc.Renderer.T(c, "cards-error-not-found"),
@@ -40,8 +49,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 		return
 	}
 
-	method := c.Param("METHOD")
-	switch method {
+	switch second {
 	case "info":
 		builder := views.PageBuilder("base", map[string]any{
 			"Title": "Login",
@@ -61,7 +69,14 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"User":  user,
 		})
 		rarity := dc.Renderer.T(c, "card-rarity-" + card.Rarity)
+		colFormat := "%d / %d"
+		if len(collection.Cards) >= 100 {
+			colFormat = "%03d / %03d"
+		} else if len(collection.Cards) >= 10 {
+			colFormat = "%02d / %02d"
+		}
 		builder.Add("card", "Content", map[string]any{
+			"CardContainerData": template.HTMLAttr(`data-tilt`),
 			"CardColorPrimary": card.ColorPrimary,
 			"CardColorSecondary": card.ColorSecondary,
 			"CardBadgeColor": "#7fff2f",
@@ -70,7 +85,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"CardTitle": card.Translate(loc, "title"),
 			"CardDescription": card.Translate(loc, "description"),
 			"CardCollectionTitle": collection.Translate(loc, "title"),
-			"CardCount": "02 / 06",
+			"CardCount": fmt.Sprintf(colFormat, card.ID, len(collection.Cards)),
 		})
 		dc.Renderer.Render(c, &builder)
 	case "artwork":
