@@ -59,7 +59,7 @@
 				),
 				radial-gradient(
 					circle at var(--fx-ix) var(--fx-iy),
-					rgba(255, 255, 255, 0.18),
+					rgba(255, 255, 255, 0.08),
 					transparent max(0%, calc(var(--mouse-distance, 60%) - 10%))
 				);
 
