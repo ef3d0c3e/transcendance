@@ -1,0 +1,17 @@
+{{ define "card" }}
+<script type="module" src="/frontend/card_render.js"></script>
+<div id="card-rendering"></div>
+<div class="card-container" {{ .Data.CardContainer }}>
+    <div class="card"
+        style="--c1:{{ .Data.CardColorPrimary }};--c2:{{ .Data.CardColorSecondary }};--badge-color:{{ .Data.CardBadgeColor }};">
+        <img src="{{ .Data.CardArtwork }}">
+        <span class="card-badge">{{ .Data.CardBadge }}</span>
+        <h2 class="card-title">{{ .Data.CardTitle }}</h2>
+        <p class="card-description">{{ .Data.CardDescription }}</p>
+        <div class="card-footer">
+            <span class="card-collection">{{ .Data.CardCollectionTitle }}</span>
+            <span class="card-number">{{ .Data.CardCount }}</span>
+        </div>
+    </div>
+</div>
+{{ end }}
