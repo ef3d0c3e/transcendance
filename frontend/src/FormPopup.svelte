@@ -164,12 +164,10 @@
 	.popup {
 		position: relative;
 
-		width: min(100%, 20rem);
+		margin: 1rem;
+		width: min(100%, 24rem);
 
-		max-height: calc(
-			100dvh - max(1rem, env(safe-area-inset-top)) -
-				max(1rem, env(safe-area-inset-bottom)) - 2rem
-		);
+		max-height: 100dvh;
 
 		overflow: auto;
 
