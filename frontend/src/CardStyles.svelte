@@ -28,7 +28,6 @@
 	:global(.card-container[data-tilt]) {
 		perspective: 1000px;
 
-		user-select: none;
 		cursor: grab;
 	}
 
