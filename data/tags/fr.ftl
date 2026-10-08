@@ -1,5 +1,6 @@
-cards = Cartes
-foo = Foo
-bar = Bar
-quz = Quz
-collection = Collection
+tiling = Pavages
+train = Train
+vehicle = Vehicule
+dev = Développement
+antarctica = Antarctique
+car = Voiture
