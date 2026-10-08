@@ -12,12 +12,9 @@
 
 		--mouse-x: 50%;
 		--mouse-y: 50%;
+		--mouse-distance: 0%;
 		--tilt-x: 0deg;
 		--tilt-y: 0deg;
-
-		&:hovered {
-			z-index: 100;
-		}
 	}
 
 	.card-container[data-tilt] {
@@ -37,34 +34,6 @@
 		will-change: transform;
 	}
 
-	/* Shine */
-	.card-container[data-tilt] .card::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-
-		z-index: 10;
-		pointer-events: none;
-
-		background:
-			radial-gradient(circle at calc(100% - var(--mouse-x)) calc(100% - var(--mouse-y)),
-				rgba(255, 255, 255, 0.15),
-				transparent 80%);
-
-		opacity: 0;
-		transition: opacity 0.2s ease;
-	}
-
-	.card-container[data-tilt][data-hovered="true"] .card::before {
-		opacity: 1;
-	}
-
-	.card-container[data-tilt][data-hovered="true"] .card {
-		box-shadow:
-			0 25px 50px rgba(0, 0, 0, 0.4),
-			0 10px 20px rgba(0, 0, 0, 0.25);
-	}
-
 	.card {
 		width: 100%;
 		height: 100%;
@@ -77,9 +46,6 @@
 		overflow: hidden;
 
 		border-radius: var(--card-border-radius);
-		backface-visibility: hidden;
-		-webkit-backface-visibility: hidden;
-
 		background:
 			radial-gradient(120% 90% at 0% 40%, color-mix(in srgb, var(--c1), transparent 50%), transparent 60%),
 			radial-gradient(120% 90% at 100% 100%, color-mix(in srgb, var(--c2), transparent 50%), transparent 60%),
@@ -89,6 +55,7 @@
 			var(--color-bg-1);
 
 		transform: none;
+		isolation: isolate;
 	}
 
 	.card[data-hovered="true"] {
@@ -96,33 +63,9 @@
 		--tilt-y: calc((var(--mouse-y) - 50%) * 0.15);
 	}
 
-	/* Fake light/reflection */
-	.card::before {
-		content: "";
-		position: absolute;
-		inset: 0;
-		z-index: 10;
-		pointer-events: none;
-
-		background:
-			radial-gradient(circle at calc(100% - var(--mouse-x)) calc(100% - var(--mouse-y)),
-				rgba(255, 255, 255, 0.10),
-				transparent 10%);
-
-		opacity: 0;
-		transition: opacity 0.3s ease;
-	}
-
-	.card[data-hovered="true"]::before {
-		opacity: 1;
-	}
-
-	.card[data-hovered="true"]::after {
-		opacity: 1;
-	}
-
 	/* Card components */
 	span.card-badge {
+		z-index: 12;
 		position: absolute;
 		top: .5em;
 		left: 1ch;
@@ -145,6 +88,7 @@
 	}
 
 	.card img {
+		z-index: 11;
 		border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;
 
 		width: 100%;
@@ -155,11 +99,13 @@
 	}
 
 	h2.card-title {
+		z-index: 10;
 		margin: .3ch .5ch .1ch .5ch;
 		flex: 0 0 auto;
 	}
 
 	p.card-description {
+		z-index: 10;
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow: hidden;
@@ -171,6 +117,7 @@
 	}
 
 	div.card-footer {
+		z-index: 10;
 		position: static;
 		flex: 0 0 auto;
 		display: inline-flex;
@@ -180,14 +127,413 @@
 	}
 
 	span.card-collection {
+		z-index: 10;
 		font-weight: 600;
 		letter-spacing: -.05ch;
 		margin-right: auto;
 	}
 
 	span.card-number {
+		z-index: 10;
 		color: color-mix(in srgb, var(--color-text) 30%, transparent);
 	}
+
+	/* Card effects */
+	/*.card-effect {
+		--card-effect-z: 10;
+		--card-effect-opacity: 0.5;
+
+		position: absolute;
+		inset: 0;
+
+		z-index: var(--card-effect-z);
+
+		width: 100%;
+		height: 100%;
+
+		pointer-events: none;
+		border-radius: inherit;
+	}*/
+
+	/* Effect: Glare */
+	/*.card-glare {
+		background:
+			radial-gradient(circle at calc(100% - var(--mouse-x)) calc(100% - var(--mouse-y)),
+			rgba(255, 255, 255, 0.10),
+			transparent calc(max(0%, var(--mouse-distance) - 10%)));
+
+		transition: opacity 0.3s ease;
+	}*/
+
+	/* Effect: Watermark */
+	/*.card-watermark {
+		--card-effect-opacity: .2;
+		--card-effect-transform: matrix(1, 0, 0, 1, 0, 0);
+
+		background-image: var(--card-effect-watermark-image);
+		background-size: 64px 64px;
+		background-repeat: repeat;
+		background-position: center;
+
+		opacity: var(--card-effect-opacity, 1);
+		transform: var(--card-effect-transform, none);
+
+		mix-blend-mode: overlay;
+	}*/
+
+	/* Effect: Foil */
+	/*.card-foil {
+		--card-effect-opacity: .2;
+		--card-effect-scale: 1;
+		--card-effect-color: #ffffff;
+		--card-effect-mask: none;
+
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+
+		opacity: var(--card-effect-opacity);
+
+		background:
+			linear-gradient(125deg,
+			color-mix(in srgb, var(--card-effect-color), transparent 50%) calc(max(0%, var(--mouse-x) - 10%)),
+			var(--card-effect-color) calc(max(0%, var(--mouse-x))),
+			color-mix(in srgb, var(--card-effect-color), transparent 50%) calc(min(100%, var(--mouse-x) + 10%))
+			);
+
+		mask-image: var(--card-effect-mask);
+
+		mask-size: 200%;
+		mask-mode: luminance;
+		mask-position: center;
+		mask-repeat: repeat;
+		mix-blend-mode: multiply;
+	}
+	*/
+
+
+
+
+
+	/* ==========================================================================
+	   Card effects
+		   --------------------------------------------------------------------------
+	   Assumes the card's tilt script sets, on .card (or an ancestor):
+		   --mouse-x, --mouse-y   pointer position as percentages, e.g. 42%
+	   --mouse-distance       distance from center as a percentage (glare only)
+
+	   The card needs `position: relative; overflow: hidden` and `isolation: isolate`
+	   so blend modes only affect the card itself.
+	   ========================================================================== */
+
+	.card {
+		isolation: isolate;
+	}
+
+	/* --------------------------------------------------------------------------
+	   Base: shared by every effect
+		   -------------------------------------------------------------------------- */
+	.card-effect {
+		/* Configurable per effect (see the JS for the matching data-* attributes) */
+		--card-effect-z: 10;
+		--card-effect-opacity: 0.5;
+		--card-effect-rest: 1;
+		/* opacity multiplier when not hovered */
+		--card-effect-scale: 1;
+		/* texture / mask tile scale */
+		--card-effect-angle: 125deg;
+		--card-effect-hue: 0deg;
+		--card-effect-color: #ffffff;
+		--card-effect-mask: none;
+
+		/* Pointer helpers. If the highlight moves the wrong way for your tilt
+		   code, swap --fx-x and --fx-ix (and the y pair) right here. */
+		--fx-x: var(--mouse-x, 50%);
+		--fx-y: var(--mouse-y, 50%);
+		--fx-ix: calc(100% - var(--fx-x));
+		--fx-iy: calc(100% - var(--fx-y));
+
+		position: absolute;
+		inset: 0;
+		z-index: var(--card-effect-z);
+
+		width: 100%;
+		height: 100%;
+
+		pointer-events: none;
+		border-radius: inherit;
+	}
+
+	/* Foil-like effects fade down at rest and come alive on hover */
+	:is(.card-foil, .card-rainbow, .card-sparkle, .card-prism) {
+		--card-effect-rest: 0.35;
+		opacity: calc(var(--card-effect-opacity) * var(--card-effect-rest));
+		transition: opacity 0.3s ease;
+	}
+
+	.card:hover :is(.card-foil, .card-rainbow, .card-sparkle, .card-prism) {
+		--card-effect-rest: 1;
+	}
+
+	/* Optional region mask: only the white parts of the image show the effect.
+	   --card-effect-scale shrinks/grows the tile (0.1 = 20% tiles, 1 = 200%). */
+	:is(.card-foil, .card-rainbow, .card-prism) {
+		mask-image: var(--card-effect-mask);
+		mask-mode: luminance;
+		mask-size: calc(200% * var(--card-effect-scale));
+		mask-position: center;
+		mask-repeat: repeat;
+	}
+
+	/* --------------------------------------------------------------------------
+	   Glare: soft pointer-following light, with a tight specular core
+		   -------------------------------------------------------------------------- */
+	.card-glare {
+		background:
+			radial-gradient(circle at var(--fx-ix) var(--fx-iy),
+				rgba(255, 255, 255, 0.55),
+				transparent 22%),
+			radial-gradient(circle at var(--fx-ix) var(--fx-iy),
+				rgba(255, 255, 255, 0.18),
+				transparent max(0%, calc(var(--mouse-distance, 60%) - 10%)));
+
+		mix-blend-mode: var(--card-effect-blend, overlay);
+		opacity: var(--card-effect-opacity);
+		transition: opacity 0.3s ease;
+	}
+
+	/* --------------------------------------------------------------------------
+	   Watermark: unchanged
+		   -------------------------------------------------------------------------- */
+	.card-watermark {
+		--card-effect-opacity: 0.2;
+		--card-effect-transform: matrix(1, 0, 0, 1, 0, 0);
+
+		background-image: var(--card-effect-watermark-image);
+		background-size: 64px 64px;
+		background-repeat: repeat;
+		background-position: center;
+
+		opacity: var(--card-effect-opacity, 1);
+		transform: var(--card-effect-transform, none);
+
+		mix-blend-mode: overlay;
+	}
+
+	/* --------------------------------------------------------------------------
+	   Foil: colored metallic foil (copper, gold, silver...) via data-color.
+	   A sheen band sweeps across a brushed-metal texture that moves against
+		   the pointer (parallax).
+	   -------------------------------------------------------------------------- */
+	.card-foil {
+		--card-effect-opacity: 0.5;
+
+		background:
+			/* sheen band following the pointer */
+			linear-gradient(var(--card-effect-angle),
+				transparent calc(var(--fx-x) - 30%),
+				rgba(255, 255, 255, 0.95) var(--fx-x),
+				transparent calc(var(--fx-x) + 30%)),
+			/* brushed streaks, opposite parallax */
+			repeating-linear-gradient(90deg,
+				rgba(255, 255, 255, 0.22) 0 1px,
+				rgba(0, 0, 0, 0.22) 1px 3px),
+			/* base metal color */
+			var(--card-effect-color);
+
+		background-size: 100% 100%, 140% 140%, auto;
+		background-position: center, var(--fx-ix) var(--fx-iy), center;
+		background-blend-mode: screen, overlay, normal;
+
+		mix-blend-mode: var(--card-effect-blend, overlay);
+		filter: brightness(1.15) contrast(1.35) saturate(1.2) hue-rotate(var(--card-effect-hue));
+	}
+
+	/* --------------------------------------------------------------------------
+	   Rainbow: classic iridescent holo. A narrow spectrum scrolls across the
+		   card on both axes and is concentrated around the pointer.
+	   -------------------------------------------------------------------------- */
+	.card-rainbow {
+		--card-effect-opacity: 0.45;
+		--card-effect-band: 0.3;
+		--card-effect-spectrum:
+			#ff2d95 0%,
+			#ffb400 calc(7% * var(--card-effect-band)),
+			#f4ff3a calc(14% * var(--card-effect-band)),
+			#2dff9a calc(21% * var(--card-effect-band)),
+			#2dc8ff calc(28% * var(--card-effect-band)),
+			#7a4dff calc(35% * var(--card-effect-band)),
+			#ff2d95 calc(42% * var(--card-effect-band));
+
+		background:
+			repeating-linear-gradient(var(--card-effect-angle), var(--card-effect-spectrum)),
+			radial-gradient(farthest-corner circle at var(--fx-ix) var(--fx-iy),
+				rgb(235, 235, 235) 0%,
+				rgb(70, 70, 70) 70%);
+
+		background-size: 300% 300%, 100% 100%;
+		background-position: var(--fx-x) var(--fx-y), center;
+		background-blend-mode: hard-light, normal;
+
+		mix-blend-mode: var(--card-effect-blend, color-dodge);
+		filter: brightness(0.9) contrast(1.4) saturate(1.5) hue-rotate(var(--card-effect-hue));
+	}
+
+	/* --------------------------------------------------------------------------
+	   Sparkle: glitter. Several dot layers on different tile sizes, each moving
+		   at its own parallax speed, visible mostly around the pointer.
+	   Ignores data-mask.
+	   -------------------------------------------------------------------------- */
+	.card-sparkle {
+		--card-effect-opacity: 0.7;
+		--card-effect-rest: 1;
+		/* always on, no hover dependency */
+		--card-effect-speed: 2;
+
+		/* Wandering visibility window */
+		mask-image: radial-gradient(circle at 50% 50%,
+				#000 0%, rgba(0, 0, 0, 0.35) 40%, transparent 70%);
+		mask-size: 220% 220%;
+		mask-repeat: no-repeat;
+		animation: sparkle-sweep calc(18s / var(--card-effect-speed)) ease-in-out infinite;
+
+		mix-blend-mode: var(--card-effect-blend, plus-lighter);
+		filter: hue-rotate(var(--card-effect-hue));
+	}
+
+	.card-sparkle::before,
+	.card-sparkle::after {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		background-repeat: repeat;
+	}
+
+	.card-sparkle::before {
+		background-image:
+			radial-gradient(circle at 23% 61%, #fff 0 1px, transparent 1.6px),
+			radial-gradient(circle at 71% 18%, #ffe9a8 0 1px, transparent 1.6px);
+		background-size: 31px 37px, 53px 47px;
+		animation:
+			sparkle-drift-a calc(26s / var(--card-effect-speed)) linear infinite,
+			sparkle-twinkle calc(3.1s / var(--card-effect-speed)) ease-in-out infinite;
+	}
+
+	.card-sparkle::after {
+		background-image:
+			radial-gradient(circle at 44% 83%, #a8dcff 0 1.2px, transparent 2px),
+			radial-gradient(circle at 12% 27%, #fff 0 0.8px, transparent 1.3px);
+		background-size: 71px 67px, 23px 29px;
+		animation:
+			sparkle-drift-b calc(34s / var(--card-effect-speed)) linear infinite,
+			sparkle-twinkle calc(4.3s / var(--card-effect-speed)) ease-in-out -1.9s infinite;
+	}
+
+	/* Each tile layer moves by exactly one tile size, so the loop is seamless */
+	@keyframes sparkle-drift-a {
+		to {
+			background-position: 31px 37px, -53px 47px;
+		}
+	}
+
+	@keyframes sparkle-drift-b {
+		to {
+			background-position: -71px 67px, 23px -29px;
+		}
+	}
+
+	@keyframes sparkle-twinkle {
+
+		0%,
+		100% {
+			opacity: 0.2;
+		}
+
+		50% {
+			opacity: 1;
+		}
+	}
+
+	@keyframes sparkle-sweep {
+
+		0%,
+		100% {
+			mask-position: 0% 0%;
+		}
+
+		25% {
+			mask-position: 100% 30%;
+		}
+
+		50% {
+			mask-position: 70% 100%;
+		}
+
+		75% {
+			mask-position: 10% 60%;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+
+		.card-sparkle,
+		.card-sparkle::before,
+		.card-sparkle::after {
+			animation: none;
+		}
+
+		.card-sparkle {
+			mask-position: 50% 50%;
+		}
+	}
+
+	/* --------------------------------------------------------------------------
+	   Prism: faceted, crystalline holo. Greyscale conic "facets" modulate the
+		   rainbow, so each facet flashes a different color as the card moves.
+	   -------------------------------------------------------------------------- */
+	.card-prism {
+		--card-effect-opacity: 0.4;
+		--card-effect-cell: 1;
+		--card-effect-band: 1;
+		--card-effect-spectrum:
+			#ff4d8d 0%,
+			#ffc233 calc(8% * var(--card-effect-band)),
+			#6dffb1 calc(16% * var(--card-effect-band)),
+			#3dc4ff calc(24% * var(--card-effect-band)),
+			#9a6bff calc(32% * var(--card-effect-band)),
+			#ff4d8d calc(40% * var(--card-effect-band));
+		--card-effect-hex: url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='93.53'%20height='108'%20viewBox='0%200%2093.53%20108'%3E%3Cpolygon%20points='0.0,0.0%2015.6,9.0%200.0,18.0'%20fill='%23585858'%20stroke='%23585858'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,0.0%200.0,18.0%20-15.6,9.0'%20fill='%23474747'%20stroke='%23474747'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,0.0%20-15.6,9.0%20-15.6,-9.0'%20fill='%234f4f4f'%20stroke='%234f4f4f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,0.0%20-15.6,-9.0%20-0.0,-18.0'%20fill='%23898989'%20stroke='%23898989'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,0.0%20-0.0,-18.0%2015.6,-9.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,0.0%2015.6,-9.0%2015.6,9.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2046.8,9.0%2031.2,18.0'%20fill='%236e6e6e'%20stroke='%236e6e6e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2031.2,18.0%2015.6,9.0'%20fill='%234b4b4b'%20stroke='%234b4b4b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2015.6,9.0%2015.6,-9.0'%20fill='%23636363'%20stroke='%23636363'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2015.6,-9.0%2031.2,-18.0'%20fill='%23a2a2a2'%20stroke='%23a2a2a2'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2031.2,-18.0%2046.8,-9.0'%20fill='%23bababa'%20stroke='%23bababa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,0.0%2046.8,-9.0%2046.8,9.0'%20fill='%239a9a9a'%20stroke='%239a9a9a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2077.9,9.0%2062.4,18.0'%20fill='%23505050'%20stroke='%23505050'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2062.4,18.0%2046.8,9.0'%20fill='%23252525'%20stroke='%23252525'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2046.8,9.0%2046.8,-9.0'%20fill='%234b4b4b'%20stroke='%234b4b4b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2046.8,-9.0%2062.4,-18.0'%20fill='%237f7f7f'%20stroke='%237f7f7f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2062.4,-18.0%2077.9,-9.0'%20fill='%239a9a9a'%20stroke='%239a9a9a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,0.0%2077.9,-9.0%2077.9,9.0'%20fill='%237b7b7b'%20stroke='%237b7b7b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%20109.1,9.0%2093.5,18.0'%20fill='%23585858'%20stroke='%23585858'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%2093.5,18.0%2077.9,9.0'%20fill='%23474747'%20stroke='%23474747'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%2077.9,9.0%2077.9,-9.0'%20fill='%234f4f4f'%20stroke='%234f4f4f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%2077.9,-9.0%2093.5,-18.0'%20fill='%23898989'%20stroke='%23898989'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%2093.5,-18.0%20109.1,-9.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,0.0%20109.1,-9.0%20109.1,9.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%200.0,36.0%20-15.6,45.0'%20fill='%236b6b6b'%20stroke='%236b6b6b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%20-15.6,45.0%20-31.2,36.0'%20fill='%23525252'%20stroke='%23525252'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%20-31.2,36.0%20-31.2,18.0'%20fill='%23616161'%20stroke='%23616161'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%20-31.2,18.0%20-15.6,9.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%20-15.6,9.0%20-0.0,18.0'%20fill='%23a8a8a8'%20stroke='%23a8a8a8'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,27.0%20-0.0,18.0%200.0,36.0'%20fill='%239e9e9e'%20stroke='%239e9e9e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%2031.2,36.0%2015.6,45.0'%20fill='%23505050'%20stroke='%23505050'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%2015.6,45.0%20-0.0,36.0'%20fill='%232f2f2f'%20stroke='%232f2f2f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%20-0.0,36.0%200.0,18.0'%20fill='%235b5b5b'%20stroke='%235b5b5b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%200.0,18.0%2015.6,9.0'%20fill='%23787878'%20stroke='%23787878'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%2015.6,9.0%2031.2,18.0'%20fill='%23aaaaaa'%20stroke='%23aaaaaa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,27.0%2031.2,18.0%2031.2,36.0'%20fill='%237f7f7f'%20stroke='%237f7f7f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2062.4,36.0%2046.8,45.0'%20fill='%23656565'%20stroke='%23656565'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2046.8,45.0%2031.2,36.0'%20fill='%23474747'%20stroke='%23474747'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2031.2,36.0%2031.2,18.0'%20fill='%23555555'%20stroke='%23555555'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2031.2,18.0%2046.8,9.0'%20fill='%23969696'%20stroke='%23969696'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2046.8,9.0%2062.4,18.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,27.0%2062.4,18.0%2062.4,36.0'%20fill='%239e9e9e'%20stroke='%239e9e9e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2093.5,36.0%2077.9,45.0'%20fill='%236b6b6b'%20stroke='%236b6b6b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2077.9,45.0%2062.4,36.0'%20fill='%23525252'%20stroke='%23525252'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2062.4,36.0%2062.4,18.0'%20fill='%23616161'%20stroke='%23616161'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2062.4,18.0%2077.9,9.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2077.9,9.0%2093.5,18.0'%20fill='%23a8a8a8'%20stroke='%23a8a8a8'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,27.0%2093.5,18.0%2093.5,36.0'%20fill='%239e9e9e'%20stroke='%239e9e9e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%20124.7,36.0%20109.1,45.0'%20fill='%23505050'%20stroke='%23505050'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%20109.1,45.0%2093.5,36.0'%20fill='%232f2f2f'%20stroke='%232f2f2f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%2093.5,36.0%2093.5,18.0'%20fill='%235b5b5b'%20stroke='%235b5b5b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%2093.5,18.0%20109.1,9.0'%20fill='%23787878'%20stroke='%23787878'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%20109.1,9.0%20124.7,18.0'%20fill='%23aaaaaa'%20stroke='%23aaaaaa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,27.0%20124.7,18.0%20124.7,36.0'%20fill='%237f7f7f'%20stroke='%237f7f7f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%2015.6,63.0%200.0,72.0'%20fill='%23676767'%20stroke='%23676767'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%200.0,72.0%20-15.6,63.0'%20fill='%234a4a4a'%20stroke='%234a4a4a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%20-15.6,63.0%20-15.6,45.0'%20fill='%236b6b6b'%20stroke='%236b6b6b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%20-15.6,45.0%20-0.0,36.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%20-0.0,36.0%2015.6,45.0'%20fill='%23bababa'%20stroke='%23bababa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,54.0%2015.6,45.0%2015.6,63.0'%20fill='%23aaaaaa'%20stroke='%23aaaaaa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2046.8,63.0%2031.2,72.0'%20fill='%234d4d4d'%20stroke='%234d4d4d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2031.2,72.0%2015.6,63.0'%20fill='%23262626'%20stroke='%23262626'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2015.6,63.0%2015.6,45.0'%20fill='%23555555'%20stroke='%23555555'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2015.6,45.0%2031.2,36.0'%20fill='%23737373'%20stroke='%23737373'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2031.2,36.0%2046.8,45.0'%20fill='%23979797'%20stroke='%23979797'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,54.0%2046.8,45.0%2046.8,63.0'%20fill='%23858585'%20stroke='%23858585'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2077.9,63.0%2062.4,72.0'%20fill='%234c4c4c'%20stroke='%234c4c4c'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2062.4,72.0%2046.8,63.0'%20fill='%233a3a3a'%20stroke='%233a3a3a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2046.8,63.0%2046.8,45.0'%20fill='%23515151'%20stroke='%23515151'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2046.8,45.0%2062.4,36.0'%20fill='%23797979'%20stroke='%23797979'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2062.4,36.0%2077.9,45.0'%20fill='%23979797'%20stroke='%23979797'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,54.0%2077.9,45.0%2077.9,63.0'%20fill='%23848484'%20stroke='%23848484'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%20109.1,63.0%2093.5,72.0'%20fill='%23676767'%20stroke='%23676767'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%2093.5,72.0%2077.9,63.0'%20fill='%234a4a4a'%20stroke='%234a4a4a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%2077.9,63.0%2077.9,45.0'%20fill='%236b6b6b'%20stroke='%236b6b6b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%2077.9,45.0%2093.5,36.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%2093.5,36.0%20109.1,45.0'%20fill='%23bababa'%20stroke='%23bababa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,54.0%20109.1,45.0%20109.1,63.0'%20fill='%23aaaaaa'%20stroke='%23aaaaaa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%200.0,90.0%20-15.6,99.0'%20fill='%233c3c3c'%20stroke='%233c3c3c'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%20-15.6,99.0%20-31.2,90.0'%20fill='%232d2d2d'%20stroke='%232d2d2d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%20-31.2,90.0%20-31.2,72.0'%20fill='%23404040'%20stroke='%23404040'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%20-31.2,72.0%20-15.6,63.0'%20fill='%23767676'%20stroke='%23767676'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%20-15.6,63.0%20-0.0,72.0'%20fill='%23909090'%20stroke='%23909090'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='-15.6,81.0%20-0.0,72.0%200.0,90.0'%20fill='%23888888'%20stroke='%23888888'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%2031.2,90.0%2015.6,99.0'%20fill='%234c4c4c'%20stroke='%234c4c4c'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%2015.6,99.0%20-0.0,90.0'%20fill='%23292929'%20stroke='%23292929'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%20-0.0,90.0%200.0,72.0'%20fill='%23494949'%20stroke='%23494949'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%200.0,72.0%2015.6,63.0'%20fill='%23737373'%20stroke='%23737373'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%2015.6,63.0%2031.2,72.0'%20fill='%238e8e8e'%20stroke='%238e8e8e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='15.6,81.0%2031.2,72.0%2031.2,90.0'%20fill='%23777777'%20stroke='%23777777'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2062.4,90.0%2046.8,99.0'%20fill='%235d5d5d'%20stroke='%235d5d5d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2046.8,99.0%2031.2,90.0'%20fill='%234b4b4b'%20stroke='%234b4b4b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2031.2,90.0%2031.2,72.0'%20fill='%235a5a5a'%20stroke='%235a5a5a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2031.2,72.0%2046.8,63.0'%20fill='%23a2a2a2'%20stroke='%23a2a2a2'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2046.8,63.0%2062.4,72.0'%20fill='%23c0c0c0'%20stroke='%23c0c0c0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='46.8,81.0%2062.4,72.0%2062.4,90.0'%20fill='%23a0a0a0'%20stroke='%23a0a0a0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2093.5,90.0%2077.9,99.0'%20fill='%233c3c3c'%20stroke='%233c3c3c'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2077.9,99.0%2062.4,90.0'%20fill='%232d2d2d'%20stroke='%232d2d2d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2062.4,90.0%2062.4,72.0'%20fill='%23404040'%20stroke='%23404040'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2062.4,72.0%2077.9,63.0'%20fill='%23767676'%20stroke='%23767676'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2077.9,63.0%2093.5,72.0'%20fill='%23909090'%20stroke='%23909090'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='77.9,81.0%2093.5,72.0%2093.5,90.0'%20fill='%23888888'%20stroke='%23888888'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%20124.7,90.0%20109.1,99.0'%20fill='%234c4c4c'%20stroke='%234c4c4c'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%20109.1,99.0%2093.5,90.0'%20fill='%23292929'%20stroke='%23292929'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%2093.5,90.0%2093.5,72.0'%20fill='%23494949'%20stroke='%23494949'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%2093.5,72.0%20109.1,63.0'%20fill='%23737373'%20stroke='%23737373'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%20109.1,63.0%20124.7,72.0'%20fill='%238e8e8e'%20stroke='%238e8e8e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='109.1,81.0%20124.7,72.0%20124.7,90.0'%20fill='%23777777'%20stroke='%23777777'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%2015.6,117.0%200.0,126.0'%20fill='%23585858'%20stroke='%23585858'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%200.0,126.0%20-15.6,117.0'%20fill='%23474747'%20stroke='%23474747'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%20-15.6,117.0%20-15.6,99.0'%20fill='%234f4f4f'%20stroke='%234f4f4f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%20-15.6,99.0%20-0.0,90.0'%20fill='%23898989'%20stroke='%23898989'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%20-0.0,90.0%2015.6,99.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='0.0,108.0%2015.6,99.0%2015.6,117.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2046.8,117.0%2031.2,126.0'%20fill='%236e6e6e'%20stroke='%236e6e6e'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2031.2,126.0%2015.6,117.0'%20fill='%234b4b4b'%20stroke='%234b4b4b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2015.6,117.0%2015.6,99.0'%20fill='%23636363'%20stroke='%23636363'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2015.6,99.0%2031.2,90.0'%20fill='%23a2a2a2'%20stroke='%23a2a2a2'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2031.2,90.0%2046.8,99.0'%20fill='%23bababa'%20stroke='%23bababa'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='31.2,108.0%2046.8,99.0%2046.8,117.0'%20fill='%239a9a9a'%20stroke='%239a9a9a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2077.9,117.0%2062.4,126.0'%20fill='%23505050'%20stroke='%23505050'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2062.4,126.0%2046.8,117.0'%20fill='%23252525'%20stroke='%23252525'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2046.8,117.0%2046.8,99.0'%20fill='%234b4b4b'%20stroke='%234b4b4b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2046.8,99.0%2062.4,90.0'%20fill='%237f7f7f'%20stroke='%237f7f7f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2062.4,90.0%2077.9,99.0'%20fill='%239a9a9a'%20stroke='%239a9a9a'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='62.4,108.0%2077.9,99.0%2077.9,117.0'%20fill='%237b7b7b'%20stroke='%237b7b7b'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%20109.1,117.0%2093.5,126.0'%20fill='%23585858'%20stroke='%23585858'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%2093.5,126.0%2077.9,117.0'%20fill='%23474747'%20stroke='%23474747'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%2077.9,117.0%2077.9,99.0'%20fill='%234f4f4f'%20stroke='%234f4f4f'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%2077.9,99.0%2093.5,90.0'%20fill='%23898989'%20stroke='%23898989'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%2093.5,90.0%20109.1,99.0'%20fill='%23b0b0b0'%20stroke='%23b0b0b0'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3Cpolygon%20points='93.5,108.0%20109.1,99.0%20109.1,117.0'%20fill='%239d9d9d'%20stroke='%239d9d9d'%20stroke-width='.6'%20stroke-linejoin='round'/%3E%3C/svg%3E");
+
+		background-image:
+			var(--card-effect-hex),
+			var(--card-effect-hex),
+			repeating-linear-gradient(var(--card-effect-angle), var(--card-effect-spectrum));
+		background-repeat: repeat, repeat, no-repeat;
+		background-size:
+			calc(93.5px * var(--card-effect-cell)) auto,
+			calc(93.5px * var(--card-effect-cell) * 2.3) auto,
+			300% 300%;
+		background-position:
+			calc(var(--fx-ix) * 0.5) calc(var(--fx-iy) * 0.5),
+			calc(var(--fx-x) * 0.8) calc(var(--fx-y) * 0.8),
+			var(--fx-x) var(--fx-y);
+		background-blend-mode: hard-light, soft-light, normal;
+
+		mix-blend-mode: var(--card-effect-blend, color-dodge);
+		filter: brightness(0.75) contrast(1.6) saturate(1.4) hue-rotate(var(--card-effect-hue));
+	}
+
+
+
+
+
+
+
+
+
+
+
 
 	main {
 		width: 100%;
@@ -209,8 +555,9 @@
 			card.addEventListener('pointermove', (e) => {
 				const rect = card.getBoundingClientRect();
 
-				const x = 100 - ((e.clientX - rect.left) / rect.width) * 100;
-				const y = 100 - ((e.clientY - rect.top) / rect.height) * 100;
+				const x = ((e.clientX - rect.left) / rect.width) * 100;
+				const y = ((e.clientY - rect.top) / rect.height) * 100;
+				const dist = Math.hypot(x / 100 - .5, y / 100 - .5) * 100;
 
 				const nx = (x - 50) / 50;
 				const ny = (y - 50) / 50;
@@ -219,20 +566,64 @@
 
 				card.style.setProperty('--mouse-x', `${x}%`);
 				card.style.setProperty('--mouse-y', `${y}%`);
+				card.style.setProperty('--mouse-distance', `${dist}%`);
 
-				card.style.setProperty('--tilt-x', `${-ny * maxTilt}deg`);
-				card.style.setProperty('--tilt-y', `${nx * maxTilt}deg`);
+				card.style.setProperty('--tilt-x', `${ny * maxTilt}deg`);
+				card.style.setProperty('--tilt-y', `${-nx * maxTilt}deg`);
 			});
 
 			card.addEventListener('pointerleave', () => {
 				card.dataset.hovered = 'false';
 
+				card.style.setProperty('--mouse-distance', '0%');
 				card.style.setProperty('--mouse-x', '50%');
 				card.style.setProperty('--mouse-y', '50%');
 				card.style.setProperty('--tilt-x', '0deg');
 				card.style.setProperty('--tilt-y', '0deg');
 			});
 		});
+
+		const cssUrl = (path) => `url("${String(path).replace(/"/g, '%22')}")`;
+
+		// data-attribute -> CSS custom property (plain values)
+		const EFFECT_VARS = {
+			z: '--card-effect-z',
+			opacity: '--card-effect-opacity',
+			rest: '--card-effect-rest',       // opacity multiplier when not hovered
+			transform: '--card-effect-transform',
+			scale: '--card-effect-scale',
+			angle: '--card-effect-angle',     // e.g. "125deg"
+			hue: '--card-effect-hue',         // e.g. "90deg" (shifts the palette)
+			color: '--card-effect-color',
+			band: '--card-effect-band',       // rainbow/prism: color band width (1 = wide, 0.3 = tight)
+			cell: '--card-effect-cell',       // prism: hexagon size multiplier
+			speed: '--card-effect-speed',     // sparkle: animation speed multiplier
+			blend: '--card-effect-blend',     // any mix-blend-mode value
+			spectrum: '--card-effect-spectrum' // rainbow/prism: "#f00 0%, #0f0 10%, ..."
+		};
+
+		// data-attribute -> CSS custom property (image paths wrapped in url())
+		const EFFECT_URLS = {
+			mask: '--card-effect-mask',
+			watermark: '--card-effect-watermark-image'
+		};
+
+		document.querySelectorAll('.card-effect').forEach(effect => {
+			const data = effect.dataset;
+
+			for (const [key, variable] of Object.entries(EFFECT_VARS)) {
+				if (data[key] !== undefined) {
+					effect.style.setProperty(variable, data[key]);
+				}
+			}
+
+			for (const [key, variable] of Object.entries(EFFECT_URLS)) {
+				if (data[key] !== undefined) {
+					effect.style.setProperty(variable, cssUrl(data[key]));
+				}
+			}
+		});
+
 	});
 </script>
 
@@ -248,18 +639,18 @@
 				différentes, dans lequel chaque carré d'une taille est entouré de quatre carrés de l'autre taille.
 			</p>
 			<div class="card-footer">
-				<span class="card-collection">
-					Pavages
-				</span>
-				<span class="card-number">
-					02 / 06
-				</span>
+				<span class="card-collection">Pavages</span>
+				<span class="card-number">02 / 06</span>
+			</div>
+
+			<div class="card-effect card-prism" data-z="11" data-opacity="0.5" data-band="1">
 			</div>
 		</div>
 	</div>
 
-	<div class="card-container">
-		<div class="card" style="--c1: rgb(127,255,127); --c2: rgb(255,255,127); --badge-color: rgb(255, 20, 64);">
+	<div class="card-container" data-tilt>
+		<div class="card" style="--c1: rgb(127,255,127); --c2: rgb(255,255,127); --badge-color: rgb(255, 20, 64);"
+			data-foil>
 			<img src="/static/image2.jpg">
 			<span class="card-badge">RARE</span>
 			<h2 class="card-title">Flying Scotsman</h2>
@@ -270,18 +661,18 @@
 				de H. N. Gresley.
 			</p>
 			<div class="card-footer">
-				<span class="card-collection">
-					Trains
-				</span>
-				<span class="card-number">
-					01 / 32
-				</span>
+				<span class="card-collection">Trains</span>
+				<span class="card-number">01 / 32</span>
 			</div>
+
+			<div class="card-effect card-foil" data-z="11" data-opacity="0.5" data-scale="1.0" data-color="#0000ff"
+				data-mask="/static/foil2.png"></div>
 		</div>
 	</div>
 
 	<div class="card-container" data-tilt>
-		<div class="card" style="--c1: rgb(255,255,255); --c2: rgb(64,255,255); --badge-color: rgb(255, 20, 64);">
+		<div class="card" data-holographic
+			style="--c1: rgb(255,255,255); --c2: rgb(64,255,255); --badge-color: rgb(255, 20, 64);" data-holographic>
 			<img src="/static/image3.jpg">
 			<span class="card-badge">RARE</span>
 			<h2 class="card-title">Base antarctique McMurdo</h2>
@@ -291,12 +682,16 @@
 				Ross, territoire revendiqué par la Nouvelle-Zélande, possédant la base Scott à cinq kilomètres.
 			</p>
 			<div class="card-footer">
-				<span class="card-collection">
-					Antarctique
-				</span>
+				<span class="card-collection">Antarctique</span>
 				<span class="card-number">
 					07 / 16
 				</span>
+			</div>
+
+			<div class="card-effect card-glare" data-z=11 data-opacity="0.5"></div>
+			<div class="card-effect card-foil" data-z="11" data-opacity="0.5" data-scale="1.0" data-color="#b4602a"
+				data-mask="/static/foil3.png"></div>
+			<div class="card-effect card-rainbow" data-z="10" data-opacity=".1" data-hue="60deg" data-blend="normal">
 			</div>
 		</div>
 	</div>
@@ -311,12 +706,13 @@
 				fabriquée de 1908 à 1927 par Ford Motor Company sous la direction de Henry Ford.
 			</p>
 			<div class="card-footer">
-				<span class="card-collection">
-					Voitures
-				</span>
-				<span class="card-number">
-					004 / 127
-				</span>
+				<span class="card-collection">Voitures</span>
+				<span class="card-number">004 / 127</span>
+			</div>
+
+			<div class="card-effect card-foil" data-z="10" data-opacity="0.5" data-scale="0.2" data-color="#b4602a"
+				data-mask="/static/foil1.png"></div>
+			<div class="card-effect card-watermark" data-z=11 data-opacity=".8" data-watermark="/static/watermark.png">
 			</div>
 		</div>
 	</div>
