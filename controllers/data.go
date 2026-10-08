@@ -27,11 +27,11 @@ func getCardData(c *gin.Context, loc string, renderer *views.Renderer, collectio
 	var rarity_color string
 	switch card.Rarity {
 	case "common":
-		rarity_color = "rgb(64, 127, 255)"
+		rarity_color = "#407fff"
 	case "rare":
-		rarity_color = "rgb(255, 20, 64)"
+		rarity_color = "#ff1440"
 	case "legendary":
-		rarity_color = "rgb(255, 220, 80)"
+		rarity_color = "#ffdc50"
 	}
 	id := collection.ID*1000 + card.ID
 
