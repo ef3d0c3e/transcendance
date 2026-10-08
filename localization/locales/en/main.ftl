@@ -60,3 +60,14 @@ account-delete-error-permission = You do not have permissions to delete { $usern
 search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
+
+friends-title = Friends list
+friends-add = Add Friend
+friends-unfriend = Unfriend
+friends-block = Block user
+friends-unblock = Unblock
+friends-blocked = Blocked
+friends-pending = Pending invite
+friends-respond-message = This user has sent you a friend invite
+friends-unknown-error = Something went wrong !
+friends-spam-error = You may only have one outgoing invite active
