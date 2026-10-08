@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"transcendance/data"
 	"transcendance/views"
 
@@ -46,11 +47,30 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"Title": "Login",
 			"User":  user,
 		})
-		builder.Add("card", "Content", map[string]any{
+		builder.Add("card-info", "Content", map[string]any{
 			"User":       user,
 			"Card":       card,
 			"Collection": collection,
 			"ID":         id,
+		})
+		dc.Renderer.Render(c, &builder)
+	case "show":
+		loc := dc.Renderer.Localizer.GetLocale(c)
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": "Login",
+			"User":  user,
+		})
+		rarity := dc.Renderer.T(c, "card-rarity-" + card.Rarity)
+		builder.Add("card", "Content", map[string]any{
+			"CardColorPrimary": card.ColorPrimary,
+			"CardColorSecondary": card.ColorSecondary,
+			"CardBadgeColor": "#7fff2f",
+			"CardArtwork": fmt.Sprint("/cards/", id, "/thumbnail"),
+			"CardBadge": strings.ToUpper(rarity),
+			"CardTitle": card.Translate(loc, "title"),
+			"CardDescription": card.Translate(loc, "description"),
+			"CardCollectionTitle": collection.Translate(loc, "title"),
+			"CardCount": "02 / 06",
 		})
 		dc.Renderer.Render(c, &builder)
 	case "artwork":
