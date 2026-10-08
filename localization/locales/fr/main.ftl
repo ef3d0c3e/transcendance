@@ -37,3 +37,7 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
