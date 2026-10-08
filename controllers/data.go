@@ -22,6 +22,40 @@ type DataController struct {
 	Data     *data.Data
 }
 
+func getCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) map[string]any {
+	rarity := renderer.T(c, "card-rarity-"+card.Rarity)
+	var rarity_color string
+	switch card.Rarity {
+	case "common":
+		rarity_color = "rgb(64, 127, 255)"
+	case "rare":
+		rarity_color = "rgb(255, 20, 64)"
+	case "legendary":
+		rarity_color = "rgb(255, 220, 80)"
+	}
+	id := collection.ID*1000 + card.ID
+
+	colFormat := "%d / %d"
+	if len(collection.Cards) >= 100 {
+		colFormat = "%03d / %03d"
+	} else if len(collection.Cards) >= 10 {
+		colFormat = "%02d / %02d"
+	}
+	return map[string]any{
+		"CardContainerData":   template.HTMLAttr(`data-tilt`),
+		"CardColorPrimary":    template.CSS(card.ColorPrimary),
+		"CardColorSecondary":  template.CSS(card.ColorSecondary),
+		"CardBadgeColor":      template.CSS(rarity_color),
+		"CardArtwork":         template.URL(fmt.Sprint("/cards/", id, "/thumbnail")),
+		"CardBadge":           strings.ToUpper(rarity),
+		"CardTitle":           card.Translate(loc, "title"),
+		"CardDescription":     card.Translate(loc, "description"),
+		"CardCollectionTitle": collection.Translate(loc, "title"),
+		"CardCollectionID":    collection.ID,
+		"CardCount":           fmt.Sprintf(colFormat, card.ID, len(collection.Cards)),
+	}
+}
+
 func (dc *DataController) CardGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
@@ -68,31 +102,60 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"Title": "Login",
 			"User":  user,
 		})
-		rarity := dc.Renderer.T(c, "card-rarity-" + card.Rarity)
-		colFormat := "%d / %d"
-		if len(collection.Cards) >= 100 {
-			colFormat = "%03d / %03d"
-		} else if len(collection.Cards) >= 10 {
-			colFormat = "%02d / %02d"
-		}
-		builder.Add("card", "Content", map[string]any{
-			"CardContainerData": template.HTMLAttr(`data-tilt`),
-			"CardColorPrimary": card.ColorPrimary,
-			"CardColorSecondary": card.ColorSecondary,
-			"CardBadgeColor": "#7fff2f",
-			"CardArtwork": fmt.Sprint("/cards/", id, "/thumbnail"),
-			"CardBadge": strings.ToUpper(rarity),
-			"CardTitle": card.Translate(loc, "title"),
-			"CardDescription": card.Translate(loc, "description"),
-			"CardCollectionTitle": collection.Translate(loc, "title"),
-			"CardCount": fmt.Sprintf(colFormat, card.ID, len(collection.Cards)),
-		})
+		builder.Add("card", "Content", getCardData(c, loc, dc.Renderer, collection, card))
 		dc.Renderer.Render(c, &builder)
 	case "artwork":
 		c.File(card.ArtworkPath)
 	case "thumbnail":
 		c.File(card.ThumbnailPath)
 	}
+}
+
+func (dc *DataController) CollectionGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+
+	first := c.Param("FIRST")
+	id, err := strconv.Atoi(first)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "cards-error-collection-not-found"),
+		})
+		return
+	}
+
+	collection := dc.Data.GetCollection(id)
+	if collection == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "cards-error-collection-not-found"),
+		})
+		return
+	}
+
+	builder := views.PageBuilder("base", map[string]any{
+		"Title": "Login",
+		"User":  user,
+	})
+
+	loc := dc.Renderer.Localizer.GetLocale(c)
+	cards := make([]map[string]any, len(collection.Cards))
+	for i := range collection.Cards {
+		card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
+
+		cards[i] = map[string]any{
+			"Data": getCardData(c, loc, dc.Renderer, collection, card),
+		}
+	}
+	for k, v := range cards {
+
+		print(k, " : ", v, "\n")
+	}
+
+	builder.Add("card-collection", "Content", map[string]any{
+		"CollectionTitle": collection.Translate(loc, "title"),
+		"Cards":           cards,
+	})
+
+	dc.Renderer.Render(c, &builder)
 }
 
 // Per (locale, card) entry for bleve search
