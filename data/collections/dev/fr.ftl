@@ -1,2 +1,2 @@
-name = Développement
+title = Développement
 description = Premiere collection
