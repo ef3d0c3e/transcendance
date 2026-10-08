@@ -206,6 +206,11 @@ func (l *Localizer) LocalizeFor(localeName string, id string, kv ...any) (string
 	return msg, nil
 }
 
+func (l *Localizer) GetLocale(c *gin.Context) string {
+	locales := l.requestedLocales(c)
+	return l.chosenLocale(locales)
+}
+
 // Transforms a flat: "key1", val1, "key2", val2 list into map[string]any
 func argsToMap(kv []any) map[string]any {
 	if len(kv) == 0 {
