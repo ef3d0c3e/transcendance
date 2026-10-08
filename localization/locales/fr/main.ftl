@@ -38,6 +38,9 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
+theme-switcher-light = Theme clair
+theme-switcher-dark = Theme sombre
+
 card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire

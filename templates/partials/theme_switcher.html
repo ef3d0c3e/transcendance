@@ -1,0 +1,8 @@
+{{ define "theme_switcher" }}
+<span
+		id="theme-switcher"
+		data-theme-label-light="{{ .T "theme-switcher-light" }}"
+		data-theme-label-dark="{{ .T "theme-switcher-dark" }}"
+		></span>
+<script type="module" src="/frontend/theme_switcher.js"></script>
+{{ end }}
