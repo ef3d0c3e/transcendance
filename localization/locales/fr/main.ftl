@@ -47,3 +47,10 @@ cards-error-collection-not-found = Collection non trouvée
 card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
+
+card-search-title = Rechercher des Cartes
+card-search-placeholder = Rechercher des cartes
+card-search-submit = Rechercher
+card-search-error-internal = Echer de la recherche
+
+card-collection-title = Collection { $collection }
