@@ -59,6 +59,4 @@ func RegisterRoutes(
 	}
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardGet)
 	router.GET("/collections/:FIRST", dataController.CollectionGet)
-
-	router.GET("/search_cards", dataController.CardSearchGet)
 }
