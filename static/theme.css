@@ -604,15 +604,9 @@ section {
         padding-top: 2rem;
     }
 
-<<<<<<< HEAD
-    h1 {
-        margin-bottom: 1.25rem;
-    }
-=======
 	h1 {
 		margin-bottom: 1.25rem;
 	}
->>>>>>> c4315ce (feat: collection rendering)
 }
 
 @media (prefers-reduced-motion: reduce) {

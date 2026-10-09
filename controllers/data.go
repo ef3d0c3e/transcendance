@@ -401,7 +401,7 @@ func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, e
 		tagsM.SetBoost(4)
 
 		collectionM := bleve.NewMatchQuery(term)
-		collectionM.SetField("Collection")
+		collectionM.SetField("CollectionName")
 		collectionM.SetBoost(3)
 
 		rarityM := bleve.NewMatchQuery(term)
