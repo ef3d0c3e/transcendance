@@ -7,7 +7,7 @@ import (
 )
 
 type User struct {
-	ID           uint           `gorm:"primaryKey"`
+	ID uint `gorm:"primaryKey"`
 
 	Username     string         `gorm:"size:16;uniqueIndex;not null"`
 	PasswordHash string         `gorm:"not null"`
@@ -15,14 +15,15 @@ type User struct {
 	UpdatedAt    time.Time      `gorm:"not null"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Avatar       string
+	Rank         uint            `gorm:"not null;default:0"`
 }
 
 type UserSession struct {
-	ID           uint           `gorm:"primaryKey"`
-	UserID       uint           `gorm:"not null;index"`
-	User         User           `gorm:"constraint:OnDelete:CASCADE"`
+	ID     uint `gorm:"primaryKey"`
+	UserID uint `gorm:"not null;index"`
+	User   User `gorm:"constraint:OnDelete:CASCADE"`
 
-	Token        string         `gorm:"not null"`
-	CreatedAt    time.Time      `gorm:"not null"`
-	ExpiresAt    time.Time      `gorm:"not null"`
+	Token     string    `gorm:"not null"`
+	CreatedAt time.Time `gorm:"not null"`
+	ExpiresAt time.Time `gorm:"not null"`
 }

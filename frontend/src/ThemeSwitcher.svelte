@@ -74,7 +74,6 @@
 		align-items: center;
 		justify-content: center;
 
-		vertical-align: -0.25em;
 		line-height: 0;
 
 		border: 0;

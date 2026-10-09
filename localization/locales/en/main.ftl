@@ -29,7 +29,24 @@ logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
+account-delete-success = { $username }'s account has been deleted
+account-delete-success-self = Your account has been deleted
+account-delete-error-generic = Failed to delete account
+account-delete-error-missing = Missing account name
+account-delete-error-permission = You do not have permissions to delete { $username }'s account
+
+search-user-title = Search for users
+search-user-submit = Search
+search-user-form-placeholder = Username
+
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
 index-title = Index
+
+cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
+
+card-rarity-common = Common
+card-rarity-rare = Rare
+card-rarity-legendary = Legendary
