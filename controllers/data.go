@@ -73,11 +73,12 @@ func (dc *DataController) CardGet(c *gin.Context) {
 
 	first := c.Param("FIRST")
 	second := c.Param("SECOND")
-	if first == "assets" {
+	switch first {
+	case "assets":
 		// Return assets
 		c.File("data/assets/" + second)
 		return
-	} else if first == "search" {
+	case "search":
 		// Search cards
 		query := c.Query("query")
 
@@ -388,13 +389,6 @@ func (dc *DataController) BuildSearchSet(locale string) (*SearchSet, error) {
 	return ss, nil
 }
 
-func fieldQuery(field, term string, boost float64) query.Query {
-	mq := bleve.NewMatchQuery(term)
-	mq.SetField(field)
-	mq.SetBoost(boost)
-	return mq
-}
-
 func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, error) {
 	terms := strings.Split(search, " ")
 
@@ -436,7 +430,7 @@ func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, e
 	}
 
 	q := bleve.NewConjunctionQuery(
-		termQueries...
+		termQueries...,
 	)
 
 	req := bleve.NewSearchRequestOptions(q, limit, offset, false)
