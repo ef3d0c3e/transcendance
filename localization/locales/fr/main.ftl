@@ -38,15 +38,20 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
-cards-error-not-found = Carte non trouvée
-cards-error-collection-not-found = Collection non trouvée
-
-card-rarity-common = Commune
-card-rarity-rare = Rare
-card-rarity-legendary = Legendaire
 navbar-label-toggle = Afficher/masquer le menu
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
 
 language-switcher = Choisissez un langage
+
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
+
+card-search-placeholder = Rechercher une carte
+card-search-submit = Rechercher
+card-search-error-internal = Echec de la recherche

@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -20,6 +21,13 @@ type DataController struct {
 	DB       *gorm.DB
 	Renderer *views.Renderer
 	Data     *data.Data
+	// Per-locale search set
+	Search map[string]*SearchSet
+}
+
+type CardPair struct {
+	card       *data.Card
+	collection *data.Collection
 }
 
 func getCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) map[string]any {
@@ -61,9 +69,65 @@ func (dc *DataController) CardGet(c *gin.Context) {
 
 	first := c.Param("FIRST")
 	second := c.Param("SECOND")
-	// Return assets
 	if first == "assets" {
+		// Return assets
 		c.File("data/assets/" + second)
+		return
+	} else if first == "search" {
+		// Search cards
+		query := c.Query("query")
+
+		if query != "" {
+			loc := dc.Renderer.Localizer.GetLocale(c)
+			if dc.Search == nil {
+				dc.Search = map[string]*SearchSet{}
+			}
+
+			if dc.Search[loc] == nil {
+				ss, err := dc.BuildSearchSet(loc)
+				if err != nil {
+					log.Fatalf("Failed to build search set for locale '%s': %s", loc, err)
+					c.JSON(http.StatusInternalServerError, gin.H{
+						"message": dc.Renderer.T(c, "card-search-error-internal"),
+					})
+					return
+				}
+				dc.Search[loc] = ss
+			}
+			results, err := dc.Search[loc].Search(query, 20, 0)
+			if err != nil {
+				log.Fatalf("Search failed for locale: '%s', term '%s': %s", loc, query, err)
+				c.JSON(http.StatusInternalServerError, gin.H{
+					"message": dc.Renderer.T(c, "card-search-error-internal"),
+				})
+				return
+			}
+
+			cards := make([]map[string]any, len(results))
+			for i, pair := range results {
+				cards[i] = map[string]any{
+					"Data": getCardData(c, loc, dc.Renderer, pair.collection, pair.card),
+				}
+			}
+
+			builder := views.PageBuilder("base", map[string]any{
+				"Title": "Login",
+				"User":  user,
+			})
+			builder.Add("card-search", "Content", map[string]any{
+				"Query": query,
+				"Cards": cards,
+			})
+			dc.Renderer.Render(c, &builder)
+			return
+		}
+
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": "Login",
+			"User":  user,
+		})
+		builder.Add("card-search", "Content", map[string]any{})
+		dc.Renderer.Render(c, &builder)
 		return
 	}
 
@@ -84,7 +148,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 	}
 
 	switch second {
-	case "info":
+	case "/info":
 		builder := views.PageBuilder("base", map[string]any{
 			"Title": "Login",
 			"User":  user,
@@ -96,7 +160,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"ID":         id,
 		})
 		dc.Renderer.Render(c, &builder)
-	case "show":
+	case "/show":
 		loc := dc.Renderer.Localizer.GetLocale(c)
 		builder := views.PageBuilder("base", map[string]any{
 			"Title": "Login",
@@ -104,9 +168,9 @@ func (dc *DataController) CardGet(c *gin.Context) {
 		})
 		builder.Add("card", "Content", getCardData(c, loc, dc.Renderer, collection, card))
 		dc.Renderer.Render(c, &builder)
-	case "artwork":
+	case "/artwork":
 		c.File(card.ArtworkPath)
-	case "thumbnail":
+	case "/thumbnail":
 		c.File(card.ThumbnailPath)
 	}
 }
@@ -176,7 +240,7 @@ func (dc *DataController) toIndexable(locale string, card *data.Card, collection
 	tagsLoc := dc.Data.Tags[locale]
 
 	// Card data
-	nameMsg, _ := cardLoc.Message("name")
+	nameMsg, _ := cardLoc.Message("title")
 	name, err := cardLoc.FormatPattern(nameMsg.Value(), map[string]any{})
 	if err != nil {
 		return nil, err
@@ -199,7 +263,7 @@ func (dc *DataController) toIndexable(locale string, card *data.Card, collection
 	}
 
 	// Collection data
-	collectionNameMsg, _ := collectionLoc.Message("name")
+	collectionNameMsg, _ := collectionLoc.Message("title")
 	collectionName, err := collectionLoc.FormatPattern(collectionNameMsg.Value(), map[string]any{})
 	if err != nil {
 		return nil, err
@@ -263,7 +327,7 @@ func buildMapping() *mapping.IndexMappingImpl {
 type SearchSet struct {
 	locale string
 	idx    bleve.Index
-	byID   map[string]*data.Card
+	byID   map[string]CardPair
 }
 
 func (dc *DataController) BuildSearchSet(locale string) (*SearchSet, error) {
@@ -275,7 +339,7 @@ func (dc *DataController) BuildSearchSet(locale string) (*SearchSet, error) {
 	ss := &SearchSet{
 		locale: locale,
 		idx:    idx,
-		byID:   make(map[string]*data.Card, len(dc.Data.Cards)),
+		byID:   make(map[string]CardPair, len(dc.Data.Cards)),
 	}
 
 	batch := idx.NewBatch()
@@ -291,7 +355,10 @@ func (dc *DataController) BuildSearchSet(locale string) (*SearchSet, error) {
 			if err := batch.Index(card.Name, ic); err != nil {
 				return nil, err
 			}
-			ss.byID[card.Name] = card
+			ss.byID[card.Name] = CardPair{
+				card:       card,
+				collection: collection,
+			}
 
 		}
 	}
@@ -310,7 +377,13 @@ func fieldQuery(field, term string, boost float64) query.Query {
 	return mq
 }
 
-func (ss *SearchSet) Search(term string, limit int) ([]*data.Card, error) {
+func (ss *SearchSet) Search(query string, limit int, offset int) ([]CardPair, error) {
+	terms := strings.Split(query, " ")
+	var termQueries []query.Query
+
+	for _, term := range terms {
+	}
+
 	q := bleve.NewDisjunctionQuery(
 		fieldQuery("Name", term, 8),
 		fieldQuery("Tags", term, 4),
@@ -321,14 +394,14 @@ func (ss *SearchSet) Search(term string, limit int) ([]*data.Card, error) {
 		fieldQuery("Rarity", term, 1),
 	)
 
-	req := bleve.NewSearchRequestOptions(q, limit, 0, false)
+	req := bleve.NewSearchRequestOptions(q, limit, offset, false)
 
 	result, err := ss.idx.Search(req)
 	if err != nil {
 		return nil, fmt.Errorf("search: %w", err)
 	}
 
-	cards := make([]*data.Card, 0, len(result.Hits))
+	cards := make([]CardPair, 0, len(result.Hits))
 	for _, hit := range result.Hits {
 		if c, ok := ss.byID[hit.ID]; ok {
 			cards = append(cards, c)
@@ -348,7 +421,7 @@ func (dc *DataController) CardSearchGet(c *gin.Context) {
 		return
 	}
 
-	results, err := ss.Search(q, 20)
+	results, err := ss.Search(q, 20, 0)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": err.Error(),
