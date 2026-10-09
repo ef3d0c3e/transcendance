@@ -454,27 +454,3 @@ func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, e
 	}
 	return cards, nil
 }
-
-func (dc *DataController) CardSearchGet(c *gin.Context) {
-	q := c.Query("search")
-
-	ss, err := dc.BuildSearchSet("fr")
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-
-	results, err := ss.Search(q, 20, 0)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": err.Error(),
-		})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": results,
-	})
-}
