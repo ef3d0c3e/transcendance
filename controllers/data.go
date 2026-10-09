@@ -128,7 +128,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 		}
 
 		builder := views.PageBuilder("base", map[string]any{
-			"Title": "Login",
+			"Title": dc.Renderer.T(c, "card-search-title"),
 			"User":  user,
 		})
 		builder.Add("card-search", "Content", map[string]any{})
@@ -200,12 +200,12 @@ func (dc *DataController) CollectionGet(c *gin.Context) {
 		return
 	}
 
+	loc := dc.Renderer.Localizer.GetLocale(c)
 	builder := views.PageBuilder("base", map[string]any{
-		"Title": "Login",
+		"Title": dc.Renderer.T(c, "card-collection-title", "collection", collection.Translate(loc, "title")),
 		"User":  user,
 	})
 
-	loc := dc.Renderer.Localizer.GetLocale(c)
 	cards := make([]map[string]any, len(collection.Cards))
 	for i := range collection.Cards {
 		card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
@@ -213,10 +213,6 @@ func (dc *DataController) CollectionGet(c *gin.Context) {
 		cards[i] = map[string]any{
 			"Data": getCardData(c, loc, dc.Renderer, collection, card),
 		}
-	}
-	for k, v := range cards {
-
-		print(k, " : ", v, "\n")
 	}
 
 	builder.Add("card-collection", "Content", map[string]any{

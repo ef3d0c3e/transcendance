@@ -52,6 +52,9 @@ card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
 
-card-search-placeholder = Rechercher une carte
+card-search-title = Rechercher des Cartes
+card-search-placeholder = Rechercher des cartes
 card-search-submit = Rechercher
-card-search-error-internal = Echec de la recherche
+card-search-error-internal = Echer de la recherche
+
+card-collection-title = Collection { $collection }
