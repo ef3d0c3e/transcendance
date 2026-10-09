@@ -136,6 +136,12 @@
 		function onPointerDown(e) {
 			if (e.pointerType === "mouse" && e.button !== 0) return;
 
+			// Allow clicking on the link
+			if (e.target instanceof Element && e.target.closest(".card-collection"))
+			{
+				return;
+			}
+
 			const card =
 				e.target instanceof Element
 					? e.target.closest(CARD_SELECTOR)
