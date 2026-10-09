@@ -38,22 +38,20 @@ search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
 
-cards-error-not-found = Card not found
-cards-error-collection-not-found = Collection not found
-
-card-rarity-common = Common
-card-rarity-rare = Rare
-card-rarity-legendary = Legendary
-<<<<<<< HEAD
 navbar-label-toggle = Toggle menu
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
 language-switcher = Choose language
-=======
+
+cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
+
+card-rarity-common = Common
+card-rarity-rare = Rare
+card-rarity-legendary = Legendary
 
 card-search-placeholder = Search for cards
 card-search-submit = Search
 card-search-error-internal = Search failed
->>>>>>> 60371d1 (chore: adapt search)
