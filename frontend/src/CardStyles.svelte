@@ -18,6 +18,9 @@
 
 		position: relative;
 
+		user-select: none;
+		touch-action: none;
+
 		--mouse-x: 50%;
 		--mouse-y: 50%;
 		--mouse-distance: 0%;

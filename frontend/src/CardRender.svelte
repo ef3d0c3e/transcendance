@@ -83,9 +83,24 @@
 	}
 
 	export function initCards() {
-		let active = null; // card currently under cursor
-		let pending = null; // latest pointermove, flushed once per frame
+		let active = null; // card currently hovered
+		let drag = null; // { card, pointerId } while pressed
+		let pending = null;
 		let frame = 0;
+
+		function tiltFrom(card, clientX, clientY) {
+			const rect = card.getBoundingClientRect();
+			const rawX = ((clientX - rect.left) / rect.width) * 100;
+			const rawY = ((clientY - rect.top) / rect.height) * 100;
+
+			// Clamp so dragging past the card edge pins to max tilt
+			// instead of over-rotating.
+			const x = Math.max(0, Math.min(100, rawX));
+			const y = Math.max(0, Math.min(100, rawY));
+
+			const maxTilt = Number(card.dataset.tiltMax) || DEFAULT_MAX_TILT;
+			setPointer(card, x, y, maxTilt);
+		}
 
 		function flush() {
 			frame = 0;
@@ -93,6 +108,9 @@
 
 			const { target, clientX, clientY } = pending;
 			pending = null;
+
+			// While dragging, pointermove drives tilt directly; skip hover.
+			if (drag) return;
 
 			const card =
 				target instanceof Element
@@ -104,15 +122,9 @@
 				active = card;
 				if (active) active.dataset.hovered = "true";
 			}
-
 			if (!active) return;
 
-			const rect = active.getBoundingClientRect();
-			const x = ((clientX - rect.left) / rect.width) * 100;
-			const y = ((clientY - rect.top) / rect.height) * 100;
-			const maxTilt = Number(active.dataset.tiltMax) || DEFAULT_MAX_TILT;
-
-			setPointer(active, x, y, maxTilt);
+			tiltFrom(active, clientX, clientY);
 		}
 
 		function release() {
@@ -121,58 +133,89 @@
 			active = null;
 		}
 
-		document.addEventListener(
-			"pointermove",
-			(e) => {
-				pending = {
-					target: e.target,
-					clientX: e.clientX,
-					clientY: e.clientY,
-				};
-				if (!frame) frame = requestAnimationFrame(flush);
-			},
-			{
-				passive: true,
-			},
-		);
+		function onPointerDown(e) {
+			if (e.pointerType === "mouse" && e.button !== 0) return;
+
+			const card =
+				e.target instanceof Element
+					? e.target.closest(CARD_SELECTOR)
+					: null;
+			if (!card) return;
+
+			if (active && active !== card) resetCard(active);
+			active = card;
+			card.dataset.hovered = "true";
+			card.dataset.dragging = "true";
+
+			drag = { card, pointerId: e.pointerId };
+
+			card.setPointerCapture(e.pointerId);
+
+			// Kill any in-flight selection that started elsewhere.
+			window.getSelection()?.removeAllRanges();
+
+			tiltFrom(card, e.clientX, e.clientY);
+		}
+
 		function onPointerMove(e) {
+			if (drag && e.pointerId === drag.pointerId) {
+				tiltFrom(drag.card, e.clientX, e.clientY);
+				return;
+			}
+
 			pending = {
 				target: e.target,
 				clientX: e.clientX,
 				clientY: e.clientY,
 			};
-
 			if (!frame) frame = requestAnimationFrame(flush);
 		}
 
+		function endDrag(e) {
+			if (!drag || e.pointerId !== drag.pointerId) return;
+
+			const { card } = drag;
+			drag = null;
+
+			try {
+				card.releasePointerCapture(e.pointerId);
+			} catch {}
+			delete card.dataset.dragging;
+
+			// If the pointer was released outside the card, clear hover state.
+			// If inside, keep hover as-is so it transitions back smoothly.
+			const rect = card.getBoundingClientRect();
+			const inside =
+				e.clientX >= rect.left &&
+				e.clientX <= rect.right &&
+				e.clientY >= rect.top &&
+				e.clientY <= rect.bottom;
+
+			if (!inside) {
+				resetCard(card);
+				if (active === card) active = null;
+			}
+		}
+
 		function onPointerOut(e) {
+			if (drag) return; // don't reset while captured
 			if (!e.relatedTarget) release();
 		}
 
 		function onPointerEnd(e) {
+			if (drag) return; // pointerup is handled by endDrag
 			if (e.pointerType !== "mouse") release();
 		}
 
-		function onSelectStart(e) {
-			const target =
-				e.target instanceof Node
-				? e.target instanceof Element
-				? e.target
-				: e.target.parentElement
-				: null;
-
-			if (target?.closest(".card")) {
-				e.preventDefault();
-			}
-		}
-
+		document.addEventListener("pointerdown", onPointerDown);
 		document.addEventListener("pointermove", onPointerMove, {
 			passive: true,
 		});
+		document.addEventListener("pointerup", endDrag);
+		document.addEventListener("pointercancel", endDrag);
 		document.addEventListener("pointerout", onPointerOut);
 		document.addEventListener("pointerup", onPointerEnd);
 		document.addEventListener("pointercancel", onPointerEnd);
-		document.addEventListener("selectstart", onSelectStart);
 
 		// Effects: prepare what's on the page now, then anything added later
 		prepareEffectsIn(document.body);
@@ -185,14 +228,17 @@
 		observer.observe(document.body, { childList: true, subtree: true });
 
 		return () => {
+			document.removeEventListener("pointerdown", onPointerDown);
 			document.removeEventListener("pointermove", onPointerMove);
+			document.removeEventListener("pointerup", endDrag);
+			document.removeEventListener("pointercancel", endDrag);
 			document.removeEventListener("pointerout", onPointerOut);
 			document.removeEventListener("pointerup", onPointerEnd);
 			document.removeEventListener("pointercancel", onPointerEnd);
-			document.removeEventListener("selectstart", onSelectStart);
 			observer.disconnect();
 			if (frame) cancelAnimationFrame(frame);
 			release();
+			drag = null;
 		};
 	}
 </script>
