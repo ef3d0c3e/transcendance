@@ -11,6 +11,10 @@ import (
 	"transcendance/views"
 
 	"github.com/blevesearch/bleve"
+	"github.com/blevesearch/bleve/analysis/analyzer/custom"
+	"github.com/blevesearch/bleve/analysis/char/asciifolding"
+	"github.com/blevesearch/bleve/analysis/token/lowercase"
+	"github.com/blevesearch/bleve/analysis/tokenizer/unicode"
 	"github.com/blevesearch/bleve/mapping"
 	"github.com/blevesearch/bleve/search/query"
 	"github.com/gin-gonic/gin"
@@ -306,10 +310,24 @@ func buildMapping() *mapping.IndexMappingImpl {
 
 	im := bleve.NewIndexMapping()
 	im.DefaultAnalyzer = "standard"
+	if err := im.AddCustomCharFilter("ascii_fold", map[string]interface{}{
+		"type": asciifolding.Name,
+	}); err != nil {
+		log.Fatal("Failed to create ascii_fold filter: ", err)
+	}
+
+	if err := im.AddCustomAnalyzer("accent_insensitive", map[string]interface{}{
+		"type":          custom.Name,
+		"tokenizer":     unicode.Name,
+		"char_filters":  []string{"ascii_fold"},
+		"token_filters": []string{lowercase.Name},
+	}); err != nil {
+		log.Fatal("Failed to create accent_insensitive analyzer: ", err)
+	}
 
 	card := bleve.NewDocumentMapping()
-
 	fm := bleve.NewTextFieldMapping()
+	fm.Analyzer = "accent_insensitive"
 
 	card.AddFieldMappingsAt("Name", fm)
 	card.AddFieldMappingsAt("Tags", fm)
