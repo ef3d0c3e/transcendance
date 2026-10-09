@@ -377,21 +377,48 @@ func fieldQuery(field, term string, boost float64) query.Query {
 	return mq
 }
 
-func (ss *SearchSet) Search(query string, limit int, offset int) ([]CardPair, error) {
-	terms := strings.Split(query, " ")
-	var termQueries []query.Query
+func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, error) {
+	terms := strings.Split(search, " ")
 
-	for _, term := range terms {
+	termQueries := make([]query.Query, len(terms))
+	for i, term := range terms {
+		nameM := bleve.NewMatchQuery(term)
+		nameM.SetField("Name")
+		nameM.SetBoost(8)
+
+		nameP := bleve.NewPrefixQuery(term)
+		nameP.SetField("Name")
+		nameP.SetBoost(6)
+
+		nameF := bleve.NewFuzzyQuery(term)
+		nameF.SetField("Name")
+		nameF.SetBoost(6)
+		nameF.SetFuzziness(2)
+		nameF.SetPrefix(1)
+
+		tagsM := bleve.NewMatchQuery(term)
+		tagsM.SetField("Tags")
+		tagsM.SetBoost(4)
+
+		collectionM := bleve.NewMatchQuery(term)
+		collectionM.SetField("Collection")
+		collectionM.SetBoost(3)
+
+		rarityM := bleve.NewMatchQuery(term)
+		rarityM.SetField("Rarity")
+		rarityM.SetBoost(2)
+
+		descriptionM := bleve.NewMatchQuery(term)
+		descriptionM.SetField("Description")
+		descriptionM.SetBoost(1)
+
+		termQueries[i] = bleve.NewDisjunctionQuery(
+			nameM, nameP, nameF, tagsM, collectionM, rarityM, descriptionM,
+		)
 	}
 
-	q := bleve.NewDisjunctionQuery(
-		fieldQuery("Name", term, 8),
-		fieldQuery("Tags", term, 4),
-		fieldQuery("Description", term, 2),
-		fieldQuery("CollectionName", term, 1),
-		fieldQuery("CollectionTags", term, 0.5),
-		fieldQuery("CollectionDescription", term, 0.25),
-		fieldQuery("Rarity", term, 1),
+	q := bleve.NewConjunctionQuery(
+		termQueries...
 	)
 
 	req := bleve.NewSearchRequestOptions(q, limit, offset, false)
