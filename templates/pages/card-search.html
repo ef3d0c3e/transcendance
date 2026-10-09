@@ -1,22 +1,21 @@
 {{ define "card-search" }}
-<e-center intrisic>
-	<form
-			id="search-form"
-			action="/cards/search"
-			method="get">
-		<input
-			type="text"
-			id="query"
-			name="query"
-			placeholder="{{ .T "card-search-placeholder" }}"
-			value="{{ .Data.Query }}">
-		<button type="submit">{{ .T "card-search-submit" }}</button>
-	</form>
-</e-center>
+<form
+		class="search-form"
+		id="search-form"
+		action="/cards/search"
+		method="get">
+	<input
+		type="text"
+		id="query"
+		name="query"
+		placeholder="{{ .T "card-search-placeholder" }}"
+		value="{{ .Data.Query }}">
+	<button type="submit" aria-label={{ .T "card-search-submit" }}></button>
+</form>
 
 <e-cluster justify="center">
 	{{ range $val := .Data.Cards }}
 		{{ template "card" $val }}
 	{{ end }}
-<e-cluster>
+</e-cluster>
 {{ end }}
