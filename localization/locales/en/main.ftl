@@ -48,6 +48,9 @@ card-rarity-common = Common
 card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
+card-search-title = Search Cards
 card-search-placeholder = Search for cards
 card-search-submit = Search
 card-search-error-internal = Search failed
+
+card-collection-title = { $collection } Collection
