@@ -80,7 +80,11 @@ func (dc *DataController) CardGet(c *gin.Context) {
 		return
 	case "search":
 		// Search cards
-		query := c.Query("query")
+		query := c.Query("q")
+		page, err := strconv.Atoi(c.Query("p"))
+		if err != nil || page < 1 {
+			page = 1
+		}
 
 		if query != "" {
 			loc := dc.Renderer.Localizer.GetLocale(c)
@@ -99,7 +103,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 				}
 				dc.Search[loc] = ss
 			}
-			results, err := dc.Search[loc].Search(query, 20, 0)
+			results, total, err := dc.Search[loc].Search(query, 1, page * 1)
 			if err != nil {
 				log.Fatalf("Search failed for locale: '%s', term '%s': %s", loc, query, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -119,9 +123,14 @@ func (dc *DataController) CardGet(c *gin.Context) {
 				"Title": "Login",
 				"User":  user,
 			})
-			builder.Add("card-search", "Content", map[string]any{
+			content := builder.Add("card-search", "Content", map[string]any{
 				"Query": query,
 				"Cards": cards,
+			})
+			content.Add("paginator", "Paginator", map[string]any{
+				"Current": page,
+				"Total":   int(total / 1),
+				"Url":     "?q=" + query + "&p=",
 			})
 			dc.Renderer.Render(c, &builder)
 			return
@@ -131,7 +140,9 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"Title": dc.Renderer.T(c, "card-search-title"),
 			"User":  user,
 		})
-		builder.Add("card-search", "Content", map[string]any{})
+		builder.Add("card-search", "Content", map[string]any{
+			"Cards": []map[string]any{},
+		})
 		dc.Renderer.Render(c, &builder)
 		return
 	}
@@ -385,7 +396,7 @@ func (dc *DataController) BuildSearchSet(locale string) (*SearchSet, error) {
 	return ss, nil
 }
 
-func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, error) {
+func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, uint64, error) {
 	terms := strings.Split(search, " ")
 
 	termQueries := make([]query.Query, len(terms))
@@ -433,7 +444,7 @@ func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, e
 
 	result, err := ss.idx.Search(req)
 	if err != nil {
-		return nil, fmt.Errorf("search: %w", err)
+		return nil, 0, fmt.Errorf("search: %w", err)
 	}
 
 	cards := make([]CardPair, 0, len(result.Hits))
@@ -442,5 +453,5 @@ func (ss *SearchSet) Search(search string, limit int, offset int) ([]CardPair, e
 			cards = append(cards, c)
 		}
 	}
-	return cards, nil
+	return cards, result.Total, nil
 }
