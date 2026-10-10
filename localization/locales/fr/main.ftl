@@ -44,6 +44,10 @@ theme-switcher-dark = Theme sombre
 cards-error-not-found = Carte non trouvée
 cards-error-collection-not-found = Collection non trouvée
 
+paginator-label-nav = Pagination
+paginator-label-previous = Page précédente
+paginator-label-next = Page suivante
+
 card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
