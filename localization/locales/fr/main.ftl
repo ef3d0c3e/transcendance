@@ -54,6 +54,7 @@ card-rarity-legendary = Legendaire
 
 card-search-title = Rechercher des Cartes
 card-search-placeholder = Rechercher des cartes
+card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echer de la recherche
 
