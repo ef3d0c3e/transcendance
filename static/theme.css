@@ -604,9 +604,9 @@ section {
         padding-top: 2rem;
     }
 
-	h1 {
-		margin-bottom: 1.25rem;
-	}
+    h1 {
+        margin-bottom: 1.25rem;
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
