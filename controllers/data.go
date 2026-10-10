@@ -86,6 +86,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			page = 1
 		}
 
+		pageSize := 20
 		if query != "" {
 			loc := dc.Renderer.Localizer.GetLocale(c)
 			if dc.Search == nil {
@@ -103,7 +104,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 				}
 				dc.Search[loc] = ss
 			}
-			results, total, err := dc.Search[loc].Search(query, 1, page * 1)
+			results, total, err := dc.Search[loc].Search(query, pageSize, (page - 1) * pageSize)
 			if err != nil {
 				log.Fatalf("Search failed for locale: '%s', term '%s': %s", loc, query, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -129,7 +130,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			})
 			content.Add("paginator", "Paginator", map[string]any{
 				"Current": page,
-				"Total":   int(total / 1),
+				"Total":   int(total / uint64(pageSize)),
 				"Url":     "?q=" + query + "&p=",
 			})
 			dc.Renderer.Render(c, &builder)
