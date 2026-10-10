@@ -50,6 +50,7 @@ card-rarity-legendary = Legendary
 
 card-search-title = Search Cards
 card-search-placeholder = Search for cards
+card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
 
