@@ -31,7 +31,7 @@ func TestRegisterOk(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusCreated, rec.Code)
@@ -66,7 +66,7 @@ func TestRegisterUsernameTaken(t *testing.T) {
 
 		rec := httptest.NewRecorder()
 
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		router.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusCreated, rec.Code)
@@ -88,7 +88,7 @@ func TestRegisterUsernameTaken(t *testing.T) {
 
 		rec := httptest.NewRecorder()
 
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		router.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusConflict, rec.Code)
@@ -112,7 +112,7 @@ func TestRegisterUsernameTooShort(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -135,7 +135,7 @@ func TestRegisterUsernameTooLong(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -158,7 +158,7 @@ func TestRegisterUsernameInvalid(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -181,7 +181,7 @@ func TestRegisterPasswordTooShort(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -204,7 +204,7 @@ func TestRegisterPasswordTooLong(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -227,7 +227,7 @@ func TestRegisterPasswordMismatch(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -251,7 +251,7 @@ func TestRegisterLoginOk(t *testing.T) {
 
 		rec := httptest.NewRecorder()
 
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		router.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusCreated, rec.Code)
@@ -271,7 +271,7 @@ func TestRegisterLoginOk(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusOK, rec.Code)
@@ -295,7 +295,7 @@ func TestRegisterBadPassword(t *testing.T) {
 
 		rec := httptest.NewRecorder()
 
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		router.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusCreated, rec.Code)
@@ -315,7 +315,7 @@ func TestRegisterBadPassword(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)
@@ -339,7 +339,7 @@ func TestRegisterBadUsername(t *testing.T) {
 
 		rec := httptest.NewRecorder()
 
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		router.ServeHTTP(rec, req)
 
 		require.Equal(t, http.StatusCreated, rec.Code)
@@ -359,7 +359,7 @@ func TestRegisterBadUsername(t *testing.T) {
 
 	rec := httptest.NewRecorder()
 
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	router.ServeHTTP(rec, req)
 
 	require.Equal(t, http.StatusBadRequest, rec.Code)

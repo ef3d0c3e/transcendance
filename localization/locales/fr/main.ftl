@@ -37,3 +37,25 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+
+theme-switcher-light = Theme clair
+theme-switcher-dark = Theme sombre
+
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
+
+paginator-label-nav = Pagination
+paginator-label-previous = Page précédente
+paginator-label-next = Page suivante
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
+
+card-search-title = Rechercher des Cartes
+card-search-placeholder = Rechercher des cartes
+card-search-empty = Aucune carte trouvée
+card-search-submit = Rechercher
+card-search-error-internal = Echer de la recherche
+
+card-collection-title = Collection { $collection }

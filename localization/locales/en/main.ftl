@@ -37,3 +37,25 @@ account-delete-error-permission = You do not have permissions to delete { $usern
 search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
+
+theme-switcher-light = Switch to light theme
+theme-switcher-dark = Switch to dark theme
+
+cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
+
+paginator-label-nav = Pagination
+paginator-label-previous = Previous page
+paginator-label-next = Next page
+
+card-rarity-common = Common
+card-rarity-rare = Rare
+card-rarity-legendary = Legendary
+
+card-search-title = Search Cards
+card-search-placeholder = Search for cards
+card-search-empty = No cards found
+card-search-submit = Search
+card-search-error-internal = Search failed
+
+card-collection-title = { $collection } Collection

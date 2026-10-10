@@ -1,0 +1,6 @@
+id = 4
+rarity = "legendary"
+tags = [ "vehicle", "car" ]
+
+color-primary = "#c85400"
+color-secondary = "#7f7f7f"
