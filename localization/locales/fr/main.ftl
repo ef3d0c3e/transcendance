@@ -38,5 +38,7 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
+navbar-label-toggle = Afficher/masquer le menu
+
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
