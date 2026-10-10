@@ -37,3 +37,8 @@ account-delete-error-permission = You do not have permissions to delete { $usern
 search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
+
+navbar-label-toggle = Toggle menu
+
+theme-switcher-light = Switch to light theme
+theme-switcher-dark = Switch to dark theme

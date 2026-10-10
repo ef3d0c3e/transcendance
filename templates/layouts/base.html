@@ -1,16 +1,55 @@
 {{ define "base" }}
 <!DOCTYPE html>
-<html>
+<html theme="{{ .Theme }}">
+
 <head>
-	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
 
-	<!--- Temporary -->
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+    <script>
+        if (!document.cookie.includes('theme=')) {
+            const theme = matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light';
+            document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+            document.documentElement.setAttribute("theme", theme);
+        }
+    </script>
+    <link rel="stylesheet" href="/static/theme.css" type="text/css">
 
-	<title>{{ .Data.Title }}</title>
+    <title>{{ .Data.Title }}</title>
 </head>
+
 <body>
-	{{ .Children.Content }}
+    <header>
+        <h1 class="header-title">Transcendance</h1>
+
+        <input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
+        <label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
+            <svg width="24" height="24" viewBox="0 0 24 24">
+                <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                    fill="none" />
+            </svg>
+        </label>
+        <label for="nav-toggle" class="nav-backdrop" aria-hidden="true"></label>
+
+        <nav id="header-nav">
+            <label for="nav-toggle" class="nav-close" aria-hidden="true">
+                <svg width="24" height="24" viewBox="0 0 24 24">
+                    <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        fill="none" />
+                </svg>
+            </label>
+
+            {{ template "theme_switcher" . }}
+            {{ template "login_popup" . }}
+            {{ template "register_popup" . }}
+        </nav>
+        <script type="module" src="/frontend/navbar.js"></script>
+    </header>
+    <main>
+        {{ .Children.Content }}
+    </main>
 </body>
+
 </html>
 {{ end }}
