@@ -1,45 +1,28 @@
 {{ define "paginator" }}
-<style>
-.paginator {
-	display: flex;
-	justify-content: center;
-	list-style: none;
-	padding: 0px;
-}
-
-.paginator li {
-	display: block;
-	padding: 4px 10px;
-	background-color: #eee;
-	margin: 0 1px;
-	border-radius: 5px;
-}
-
-.paginator a {
-	text-decoration: none;
-	color: #55f;
-}
-</style>
-<nav>
-	<ul class="paginator">
-	{{ if ne .Data.Current 1 }}
-		<a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}"><li>«</li></a>
+<nav class="paginator" aria-label={{ .T "paginator-label-nav" }}>
+	<ul>
+	{{ if gt .Data.Current 1 }}
+	<li><a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}" aria-label={{ .T "paginator-label-previous" }} rel="prev">‹</a></li>
+	{{ else }}
+	<li><span aria-disabled="true">‹</span></li>
 	{{ end }}
 	{{ if gt .Data.Current 2 }}
-		<a href="{{ .Data.Url }}{{ sub .Data.Current 2 }}"><li>{{ sub .Data.Current 2 }}</li></a>
+		<li><a href="{{ .Data.Url }}{{ sub .Data.Current 2 }}">{{ sub .Data.Current 2 }}</a></li>
 	{{ end }}
 	{{ if gt .Data.Current 1 }}
-		<a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}"><li>{{ sub .Data.Current 1 }}</li></a>
+		<li><a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}">{{ sub .Data.Current 1 }}</a></li>
 	{{ end }}
-		<li>{{ .Data.Current }}</li>
+		<li><span class="is-current">{{ .Data.Current }}</span></li>
 	{{ if le .Data.Current (sub .Data.Total 1) }}
-		<a href="{{ .Data.Url }}{{ add .Data.Current 1 }}"><li>{{ add .Data.Current 1 }}</li></a>
+		<li><a href="{{ .Data.Url }}{{ add .Data.Current 1 }}">{{ add .Data.Current 1 }}</a></li>
 	{{ end }}
 	{{ if le .Data.Current (sub .Data.Total 2) }}
-		<a href="{{ .Data.Url }}{{ add .Data.Current 2 }}"><li>{{ add .Data.Current 2 }}</li></a>
+		<li><a href="{{ .Data.Url }}{{ add .Data.Current 2 }}">{{ add .Data.Current 2 }}</a></li>
 	{{ end }}
-	{{ if gt .Data.Total .Data.Current  }}
-		<a href="{{ .Data.Url }}{{ add .Data.Current 1 }}"><li>»</li></a>
+	{{ if lt .Data.Current .Data.Total }}
+		<li><a href="{{ .Data.Url }}{{ add .Data.Current 1 }}" aria-label={{ .T "paginator-label-next" }} rel="next">›</a></li>
+	{{ else }}
+		<li><span aria-disabled="true">›</span></li>
 	{{ end }}
 	</ul>
 </nav>
