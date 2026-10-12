@@ -15,6 +15,7 @@ export default defineConfig({
 				login_popup: "src/login-popup.js",
 				register_popup: "src/register-popup.js",
 				theme_switcher: "src/theme-switcher.js",
+				navbar: "src/navbar.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
