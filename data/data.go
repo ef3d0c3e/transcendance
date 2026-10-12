@@ -63,6 +63,7 @@ type Collection struct {
 	Tags           []string
 	ColorPrimary   string
 	ColorSecondary string
+	ContectSheet   string
 }
 
 func (c *Collection) Translate(localeName string, id string) string {
@@ -399,6 +400,15 @@ func LoadCards() (*Data, error) {
 		}
 		card.ThumbnailPath = thumbnail
 		cards[card.Name] = card
+	}
+
+	// Generate contact sheets for collections
+	for _, collection := range collections {
+		contactSheet, err := generateCollectionSheet(collection, cards)
+		if err != nil {
+			return nil, err
+		}
+		collection.ContectSheet = contactSheet
 	}
 
 	log.Printf("Loaded %d cards in %d collections", len(cards), len(collections))
