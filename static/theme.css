@@ -175,6 +175,7 @@ header {
 
 	background: var(--color-bg-2);
 	border-bottom: 1px solid var(--color-border-1);
+	justify-content: space-between;
 }
 
 header>span {
@@ -185,6 +186,18 @@ header>span {
 .header-title {
 	padding: 0;
 	margin: 0 auto 0 0;
+}
+
+/* Footer */
+
+footer {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+	justify-content: space-between;
+	width: 100%;
+	padding:
+		0.75rem max(1rem, env(safe-area-inset-right)) 0.75rem max(1rem, env(safe-area-inset-left));
 }
 
 main {
@@ -442,4 +455,10 @@ section {
 		animation-duration: 0.01ms !important;
 		animation-iteration-count: 1 !important;
 	}
+}
+
+.wrapper {
+	min-height: 100%;
+	display: grid;
+	grid-template-rows: auto 1fr auto;
 }

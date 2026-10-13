@@ -1,8 +1,12 @@
 {{ define "header_base" }}
 <header>
-	<a href="/">logo</a>
+	<a href="/">
+		<h1 class="header-title">Transcendance</h1>
+	</a>
+	<div>
 		{{ template "theme_switcher" . }}
-		{{ template "login_popover" . }}
-		{{ template "register_popover" . }}
+		{{ template "login_popup" . }}
+		{{ template "register_popup" . }}
+	</div>
 </header>
 {{ end }}
