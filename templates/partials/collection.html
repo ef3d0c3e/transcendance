@@ -2,7 +2,7 @@
 <script type="module" src="/frontend/card_render.js"></script>
 <div id="card-rendering"></div>
 
-<div class="card-container" data-tilt>
+<div class="card-container" {{ .Data.CollectionContainerData }}>
 	<article class="collection" style="--c1: {{ .Data.ColorPrimary }}; --c2: {{ .Data.ColorSecondary }};">
 		<div class="collection-crimp" style="top: 0" aria-hidden="true"></div>
 		<div class="collection-crimp" style="bottom: 0" aria-hidden="true"></div>

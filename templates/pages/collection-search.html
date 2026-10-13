@@ -1,0 +1,21 @@
+{{ define "collection-search" }}
+<form class="search-form" id="search-form" action="/collections/search/" method="get">
+	<input type="text" id="q" name="q" placeholder="{{ .T "collection-search-placeholder" }}"
+		value="{{ .Data.Query }}">
+	<button type="submit" aria-label={{ .T "collection-search-submit" }}></button>
+</form>
+
+{{ if ne (len .Data.Collections) 0 }}
+	{{ .Children.Paginator }}
+{{end}}
+
+<e-cluster justify="center">
+	{{ if and (eq (len .Data.Collections) 0) (ne (len .Data.Query) 0) }}
+		<p>{{ .T "collection-search-empty"}}</p>
+	{{ else }}
+		{{ range $val := .Data.Collections }}
+			{{ template "collection" $val }}
+		{{ end }}
+	{{ end }}
+</e-cluster>
+{{ end }}
