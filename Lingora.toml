@@ -1,0 +1,8 @@
+[lingora]
+
+fluent_sources = ["./localization/locales/"]
+canonical = "en"
+
+primaries = [
+	"fr",
+]
