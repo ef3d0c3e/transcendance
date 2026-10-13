@@ -98,3 +98,110 @@ The following tools are recommended for working with the project:
  * [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) language server for js/ts.
  * [gopls](https://go.dev/gopls/) go language server.
  * [LSP-html](https://github.com/sublimelsp/LSP-html) HTML language server.
+
+# Docker
+
+## Test/Production server
+
+To setup a production or testing server you must first have `nginx` setup with a reverse proxy to `127.0.0.1:8080`.
+`nginx` will manage `tls`, you can use [Let's Encrypt](https://letsencrypt.org/) to get a free certificate for your domain.
+
+Then you must create a user, this user will be the one storing files for the project (backend, frontend, database), as well as managing the systemd units.
+The user needs to be in the docker group (`usermod -aG docker user`) and have `linger` enabled: `loginctl enable-linger user`.
+
+ 1. Installing dependencies
+
+The following dependencies are required:
+ - `docker`
+ - `systemd`
+ - `bash`
+ - `git`
+
+ 2. Setup
+
+Install the following systemd unit and timer:
+
+`$HOME/.config/systemd/user/live.service`:
+```ini
+[Unit]
+Description=Check for GitHub updates and deploy transcendance
+Wants=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/transcendance/live.sh
+```
+
+`$HOME/.config/systemd/user/live.timer`:
+```ini
+[Unit]
+Description=Check transcendance for updates every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+Unit=transcendance-deploy.service
+
+[Install]
+WantedBy=timers.target
+```
+
+Then install the following script in `$HOME/live.sh`:
+```bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+REPO_DIR="/home/transcendance/repo"
+BRANCH="testing"
+STATE_DIR="/home/transcendance/app-deploy"
+STATE_FILE="$STATE_DIR/deployed-sha"
+LOCK_FILE="/home/transcendance/app-deploy.lock"
+
+# Prevent overlapping runs
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+mkdir -p "$STATE_DIR"
+cd "$REPO_DIR"
+
+# Fetch the latest branch state from GitHub
+git fetch origin "$BRANCH"
+
+REMOTE_SHA="$(git rev-parse "origin/$BRANCH")"
+DEPLOYED_SHA=""
+
+if [[ -f "$STATE_FILE" ]]; then
+    DEPLOYED_SHA="$(cat "$STATE_FILE")"
+fi
+
+# Nothing new to deploy
+if [[ "$REMOTE_SHA" == "$DEPLOYED_SHA" ]]; then
+    echo "No changes detected."
+    exit 0
+fi
+
+echo "Deploying $REMOTE_SHA..."
+
+# IMPORTANT: use only in a dedicated deployment checkout
+# This discards local tracked changes
+git checkout -B "$BRANCH" "origin/$BRANCH"
+git reset --hard "$REMOTE_SHA"
+
+# Rebuild and start the updated application
+docker compose up -d --build --remove-orphans
+
+# Record success only after deployment succeeds
+echo "$REMOTE_SHA" > "$STATE_FILE"
+
+echo "Deployment successful: $REMOTE_SHA"
+```
+
+Every 5 minutes, the timer will run `live.sh`.
+`live.sh` will check for changes the configured branch and pull the new repo and restart the `docker` images.
+
+ 3. Start
+
+Now that you have setup the systemd services, you need to reload them: `systemd --user daemon-reload`.

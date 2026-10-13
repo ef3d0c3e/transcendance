@@ -9,6 +9,7 @@ services:
     env_file: .env
     volumes:
       - service_data:/opt/transcendance
+      - frontend_node_modules:/opt/transcendance/frontend/node_modules
     networks:
       - transcendance
     ports:
@@ -22,10 +23,13 @@ services:
       MYSQL_USER: ${MYSQL_USER:?}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
       MYSQL_DATABASE: ${MYSQL_DATABASE:?}
+    volumes:
+      - ./db:/var/lib/mysql
     networks:
       - transcendance
 
 volumes:
+  frontend_node_modules:
   service_data:
     driver: local
     driver_opts:
