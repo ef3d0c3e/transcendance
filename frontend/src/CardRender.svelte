@@ -6,7 +6,7 @@
 	onMount(() => initCards());
 
 	const CARD_SELECTOR = ".card-container";
-	const DEFAULT_MAX_TILT = 10; // degrees, overriden by data-tilt-max
+	const DEFAULT_MAX_TILT = 20; // degrees, overriden by data-tilt-max
 
 	// Data attributes
 	const EFFECT_VARS = {
@@ -61,13 +61,13 @@
 
 	/* Tilt and mouse cursor handing */
 	function setPointer(card, x, y, maxTilt) {
-		const dist = Math.hypot(x / 100 - 0.5, y / 100 - 0.5) * 100;
+		const dist = Math.hypot(x / 100 - 0.5, y / 100 - 0.5);
 		const nx = (x - 50) / 50;
 		const ny = (y - 50) / 50;
 
 		card.style.setProperty("--mouse-x", `${x}%`);
 		card.style.setProperty("--mouse-y", `${y}%`);
-		card.style.setProperty("--mouse-distance", `${dist}%`);
+		card.style.setProperty("--mouse-distance", `${dist}`);
 		card.style.setProperty("--tilt-x", `${ny * maxTilt}deg`);
 		card.style.setProperty("--tilt-y", `${-nx * maxTilt}deg`);
 	}
@@ -75,7 +75,7 @@
 	function resetCard(card) {
 		card.dataset.hovered = "false";
 
-		card.style.setProperty("--mouse-distance", "0%");
+		card.style.setProperty("--mouse-distance", "0");
 		card.style.setProperty("--mouse-x", "50%");
 		card.style.setProperty("--mouse-y", "50%");
 		card.style.setProperty("--tilt-x", "0deg");

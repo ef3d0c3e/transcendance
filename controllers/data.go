@@ -142,6 +142,7 @@ func (dc *DataController) CardGet(c *gin.Context) {
 			"User":  user,
 		})
 		builder.Add("card-search", "Content", map[string]any{
+			"Query": query,
 			"Cards": []map[string]any{},
 		})
 		dc.Renderer.Render(c, &builder)
@@ -187,8 +188,10 @@ func (dc *DataController) CardGet(c *gin.Context) {
 		dc.Renderer.Render(c, &builder)
 	case "/artwork":
 		c.File(card.ArtworkPath)
+		return 
 	case "/thumbnail":
 		c.File(card.ThumbnailPath)
+		return 
 	}
 }
 
@@ -196,6 +199,7 @@ func (dc *DataController) CollectionGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	first := c.Param("FIRST")
+	second := c.Param("SECOND")
 	id, err := strconv.Atoi(first)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{
@@ -213,26 +217,49 @@ func (dc *DataController) CollectionGet(c *gin.Context) {
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": dc.Renderer.T(c, "card-collection-title", "collection", collection.Translate(loc, "title")),
-		"User":  user,
-	})
+	if second == "/" || second == "" {
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": dc.Renderer.T(c, "card-collection-title", "collection", collection.Translate(loc, "title")),
+			"User":  user,
+		})
 
-	cards := make([]map[string]any, len(collection.Cards))
-	for i := range collection.Cards {
-		card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
+		cards := make([]map[string]any, len(collection.Cards))
+		for i := range collection.Cards {
+			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
 
-		cards[i] = map[string]any{
-			"Data": getCardData(c, loc, dc.Renderer, collection, card),
+			cards[i] = map[string]any{
+				"Data": getCardData(c, loc, dc.Renderer, collection, card),
+			}
 		}
+
+		builder.Add("card-collection", "Content", map[string]any{
+			"CollectionTitle": collection.Translate(loc, "title"),
+			"Cards":           cards,
+		})
+
+		dc.Renderer.Render(c, &builder)
+		return 
+	} else if second == "/thumbnail" {
+		c.File(collection.ContectSheet)
+		return 
+	} else if second == "/show" {
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": dc.Renderer.T(c, "card-collection-title", "collection", collection.Translate(loc, "title")),
+			"User":  user,
+		})
+		builder.Add("collection", "Content", map[string]any{
+			"CollectionArtwork": "/collections/" + strconv.Itoa(collection.ID) + "/thumbnail",
+			"CollectionTitle": collection.Translate(loc, "title"),
+			"ColorPrimary": template.CSS(collection.ColorPrimary),
+			"ColorSecondary": template.CSS(collection.ColorSecondary),
+			"CollectionDescription": dc.Renderer.T(c, "card-collection-booster", "count", 5),
+			"CollectionCount": dc.Renderer.T(c, "card-collection-count", "count", len(collection.Cards)),
+			"CollectionID": dc.Renderer.T(c, "card-collection-id", "id", fmt.Sprintf("%03d", collection.ID)),
+		})
+
+		dc.Renderer.Render(c, &builder)
+		return 
 	}
-
-	builder.Add("card-collection", "Content", map[string]any{
-		"CollectionTitle": collection.Translate(loc, "title"),
-		"Cards":           cards,
-	})
-
-	dc.Renderer.Render(c, &builder)
 }
 
 // Per (locale, card) entry for bleve search

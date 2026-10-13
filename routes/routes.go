@@ -58,5 +58,5 @@ func RegisterRoutes(
 		Data: data,
 	}
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardGet)
-	router.GET("/collections/:FIRST", dataController.CollectionGet)
+	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionGet)
 }
