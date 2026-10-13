@@ -24,11 +24,13 @@ func ConnectDatabase() (*gorm.DB, error) {
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
 	database := os.Getenv("MYSQL_DATABASE")
+	url := os.Getenv("MYSQL_URL")
 
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user,
 		password,
+		url,
 		database,
 	)
 

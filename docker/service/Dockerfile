@@ -10,6 +10,7 @@ RUN apt-get update \
 	npm \
 	make \
 	libwebp-dev \
+	libc6-dev \
 	gcc \
  && rm -rf /var/lib/apt/lists/*
 
