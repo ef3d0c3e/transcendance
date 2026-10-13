@@ -10,7 +10,7 @@
 {{end}}
 
 <e-cluster justify="center">
-	{{ if eq (len .Data.Cards) 0 }}
+	{{ if and (eq (len .Data.Cards) 0) (ne (len .Data.Query) 0) }}
 		<p>{{ .T "card-search-empty"}}</p>
 	{{ else }}
 		{{ range $val := .Data.Cards }}

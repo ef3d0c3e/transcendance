@@ -19,7 +19,7 @@ import (
 
 const (
 	sheetWidth  = 330 * 2
-	sheetHeight = 480 * 2
+	sheetHeight = 288 * 2
 
 	// A small penalty for extremely wide or tall tiles
 	// Increase this to favor square tiles more strongly
@@ -48,6 +48,11 @@ func generateCollectionSheet(
 ) (string, error) {
 	if len(collection.Cards) == 0 {
 		return "", errors.New("cannot generate a sheet for an empty collection")
+	}
+
+	path := "data/dist/collection-sheet-" + collection.Name + ".webp"
+	if _, err := os.Stat(path); err == nil {
+		return path, nil
 	}
 
 	// First pass: get image dimensions without fully decoding every image
@@ -113,12 +118,10 @@ func generateCollectionSheet(
 	}
 
 	// Return the path of a generated PNG
-	file, err := os.Create("data/dist/collection-sheet-" + collection.Name + ".webp")
+	file, err := os.Create(path)
 	if err != nil {
 		return "", fmt.Errorf("create output file: %w", err)
 	}
-
-	path := file.Name()
 
 	if err := webp.Encode(file, canvas, &webp.Options{Quality: 80}); err != nil {
 		_ = file.Close()
