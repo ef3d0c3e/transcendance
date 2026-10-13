@@ -1,6 +1,6 @@
 id = 1
 tags = ["dev"]
-color-primary = "#3f7f5f"
+color-primary = "#ff7f5f"
 color-secondary = "#7f2fff"
 
 [[cards]]

@@ -63,3 +63,12 @@ card-search-submit = Rechercher
 card-search-error-internal = Echer de la recherche
 
 card-collection-title = Collection { $collection }
+card-collection-booster = { $count ->
+    [one] Booster de { $count } carte
+    *[other] Booster de { $count } cartes
+}
+card-collection-count = { $count ->
+    [one] { $count } CARTE
+    *[other] { $count } CARTES
+}
+card-collection-id = NO. { $id }
