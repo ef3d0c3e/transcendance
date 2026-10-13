@@ -13,6 +13,7 @@
 	let selectedCode = normalizeCode(defaultLanguage);
 	let rootElement;
 	let triggerElement;
+	let label;
 
 	function normalizeCode(code) {
 		return String(code || "fr")
@@ -67,6 +68,10 @@
 	}
 
 	onMount(() => {
+		const target = document.getElementById("language-switcher");
+		if (target) {
+			label = target.dataset.label ?? "";
+		}
 		const cookieLanguage = readLanguageCookie();
 
 		if (cookieLanguage && supportsLanguage(cookieLanguage)) {
@@ -107,7 +112,7 @@
 		bind:this={triggerElement}
 		type="button"
 		class="language-switcher"
-		aria-label={`Language: ${currentLanguage.label}. Choose language`}
+		aria-label={`Language: ${currentLanguage.label}. ${label}`}
 		aria-haspopup="true"
 		aria-expanded={isOpen}
 		aria-controls="language-switcher-menu"
@@ -144,7 +149,7 @@
 		<div
 			id="language-switcher-menu"
 			class="language-switcher-menu"
-			aria-label="Choose language"
+			aria-label={label}
 		>
 			{#each languages as language (language.code)}
 				<button
@@ -238,10 +243,10 @@
 	}
 
 	.language-switcher-menu {
-		position: absolute;
+		position: fixed;
 		z-index: 1000;
-		top: calc(100% + 0.35rem);
-		right: 0;
+		top: auto;
+		right: auto;
 		min-width: 11rem;
 		padding: 0.3rem;
 		border: 1px solid

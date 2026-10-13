@@ -42,3 +42,5 @@ navbar-label-toggle = Afficher/masquer le menu
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
+
+language-switcher = Choisissez un langage
