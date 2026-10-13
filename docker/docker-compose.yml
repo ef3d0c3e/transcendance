@@ -1,7 +1,9 @@
 services:
   # Service
   service:
-    build: ./service
+    build:
+      context: .
+      dockerfile: ./service/Dockerfile
     container_name: transcendance-service
     restart: unless-stopped
     env_file: .env
@@ -9,6 +11,8 @@ services:
       - service_data:/opt/transcendance
     networks:
       - transcendance
+    ports:
+      - "127.0.0.1:8080:8080"
   # Mariadb
   mariadb:
     image: mariadb
@@ -21,13 +25,12 @@ services:
     networks:
       - transcendance
 
-
 volumes:
   service_data:
     driver: local
     driver_opts:
       type: none
-      device: ./testing
+      device: ./repo
       o: bind
 
 networks:
