@@ -1,0 +1,37 @@
+services:
+  # Service
+  service:
+    build: ./service
+    container_name: transcendance-service
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - service_data:/opt/transcendance
+    networks:
+      - transcendance
+  # Mariadb
+  mariadb:
+    image: mariadb
+    container_name: transcendance-db
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQL_USER: ${MYSQL_USER:?}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?}
+    ports:
+      - "127.0.0.1:3306:3306"
+    networks:
+      - transcendance
+
+
+volumes:
+  service_data:
+    driver: local
+    driver_opts:
+      type: none
+      device: ./testing
+      o: bind
+
+networks:
+  transcendance:
+    driver: bridge
