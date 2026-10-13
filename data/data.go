@@ -34,21 +34,21 @@ type Card struct {
 	ColorSecondary string
 }
 
-func (c *Card) Translate(localeName string, id string) string {
+func (c *Card) Translate(localeName string, id string) (string, error) {
 	loc := c.Locales[localeName]
 	if loc == nil {
-		return ""
+		return "", fmt.Errorf("failed to find locale for '%s' card %s", localeName, c.Name)
 	}
 	msg, _ := loc.Message(id)
 	if msg == nil {
-		return ""
+		return "", fmt.Errorf("failed to find message '%s/%s' for card %s", localeName, id, c.Name)
 	}
 	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return value
+	return value, nil
 }
 
 type CollectionCard struct {
@@ -66,21 +66,21 @@ type Collection struct {
 	ContectSheet   string
 }
 
-func (c *Collection) Translate(localeName string, id string) string {
+func (c *Collection) Translate(localeName string, id string) (string, error) {
 	loc := c.Locales[localeName]
 	if loc == nil {
-		return ""
+		return "", fmt.Errorf("failed to find locale for '%s' collection %s", localeName, c.Name)
 	}
 	msg, _ := loc.Message(id)
 	if msg == nil {
-		return ""
+		return "", fmt.Errorf("failed to find message '%s/%s' for collection %s", localeName, id, c.Name)
 	}
 	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
 	if err != nil {
-		return ""
+		return "", err
 	}
 
-	return value
+	return value, nil
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
