@@ -32,7 +32,6 @@
 					fill="none" />
 			</svg>
 		</label>
-		<label for="nav-toggle" class="nav-backdrop" aria-hidden="true"></label>
 
 		<nav id="header-nav">
 			<label for="nav-toggle" class="nav-close" aria-hidden="true">
@@ -42,7 +41,7 @@
 				</svg>
 			</label>
 
-			<div id="language-switcher"></div>
+			<div id="language-switcher" data-label="{{ .T "language-switcher" }}"></div>
 
 			<span id="theme-switcher" data-theme-label-light="{{ .T "theme-switcher-light" }}"
 				data-theme-label-dark="{{ .T "theme-switcher-dark" }}"></span>

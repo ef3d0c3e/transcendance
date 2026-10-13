@@ -1,4 +1,4 @@
-<script lang>
+<script>
 	import { onMount } from 'svelte';
 
 	let { selector = 'header' } = $props();
