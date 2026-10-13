@@ -20,10 +20,6 @@ import (
 const (
 	sheetWidth  = 330 * 2
 	sheetHeight = 288 * 2
-
-	// A small penalty for extremely wide or tall tiles
-	// Increase this to favor square tiles more strongly
-	tileShapeWeight = 0.12
 )
 
 type sheetSource struct {
@@ -143,7 +139,7 @@ func inspectImage(path string) (image.Config, error) {
 	if err != nil {
 		return image.Config{}, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close(); }();
 
 	if strings.EqualFold(filepath.Ext(path), ".webp") {
 		return webp.DecodeConfig(file)
@@ -159,7 +155,7 @@ func decodeImage(path string) (image.Image, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer file.Close()
+	defer func() { _ = file.Close(); }();
 
 	if strings.EqualFold(filepath.Ext(path), ".webp") {
 		return webp.Decode(file)
