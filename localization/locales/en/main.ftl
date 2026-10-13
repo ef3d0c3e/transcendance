@@ -56,19 +56,30 @@ card-rarity-common = Common
 card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
+
 card-search-title = Search Cards
 card-search-placeholder = Search for cards
 card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
 
-card-collection-title = { $collection } Collection
-card-collection-booster = { $count ->
+card-error-not-found = Card not found
+
+collection-title = { $collection } Collection
+collection-booster = { $count ->
     [one] { $count } card booster
     *[other] { $count } cards booster
 }
-card-collection-count = { $count ->
+collection-count = { $count ->
     [one] { $count } CARD
     *[other] { $count } CARDS
 }
-card-collection-id = NO. { $id }
+collection-id = NO. { $id }
+
+collection-search-title = Search Collections
+collection-search-placeholder = Search for collections
+collection-search-empty = No collections found
+collection-search-submit = Search
+collection-search-error-internal = Search failed
+
+collection-error-not-found = Collection not found

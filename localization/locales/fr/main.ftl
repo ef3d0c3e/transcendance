@@ -60,15 +60,25 @@ card-search-title = Rechercher des Cartes
 card-search-placeholder = Rechercher des cartes
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
-card-search-error-internal = Echer de la recherche
+card-search-error-internal = Echec de la recherche
 
-card-collection-title = Collection { $collection }
-card-collection-booster = { $count ->
+card-error-not-found = Carte non trouvée
+
+collection-title = Collection { $collection }
+collection-booster = { $count ->
     [one] Booster de { $count } carte
     *[other] Booster de { $count } cartes
 }
-card-collection-count = { $count ->
+collection-count = { $count ->
     [one] { $count } CARTE
     *[other] { $count } CARTES
 }
-card-collection-id = NO. { $id }
+collection-id = NO. { $id }
+
+collection-search-title = Rechercher des Collections
+collection-search-placeholder = Rechercher des collections
+collection-search-empty = Aucune collection trouvée
+collection-search-submit = Rechercher
+collection-search-error-internal = Echec de la recherche
+
+collection-error-not-found = Collection non trouvée
