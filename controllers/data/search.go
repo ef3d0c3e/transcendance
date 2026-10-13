@@ -151,7 +151,7 @@ func buildCardMapping() (*mapping.IndexMappingImpl, error) {
 	if err := im.AddCustomCharFilter("ascii_fold", map[string]interface{}{
 		"type": asciifolding.Name,
 	}); err != nil {
-		return nil, fmt.Errorf("Failed to create ascii_fold filter: %w", err)
+		return nil, fmt.Errorf("failed to create ascii_fold filter: %w", err)
 	}
 
 	if err := im.AddCustomAnalyzer("accent_insensitive", map[string]interface{}{
@@ -160,7 +160,7 @@ func buildCardMapping() (*mapping.IndexMappingImpl, error) {
 		"char_filters":  []string{"ascii_fold"},
 		"token_filters": []string{lowercase.Name},
 	}); err != nil {
-		return nil, fmt.Errorf("Failed to create accent_insensitive analyzer: ", err)
+		return nil, fmt.Errorf("failed to create accent_insensitive analyzer: %w", err)
 	}
 
 	card := bleve.NewDocumentMapping()
@@ -188,7 +188,7 @@ func buildCollectionMapping() (*mapping.IndexMappingImpl, error) {
 	if err := im.AddCustomCharFilter("ascii_fold", map[string]interface{}{
 		"type": asciifolding.Name,
 	}); err != nil {
-		return nil, fmt.Errorf("Failed to create ascii_fold filter: %w", err)
+		return nil, fmt.Errorf("failed to create ascii_fold filter: %w", err)
 	}
 
 	if err := im.AddCustomAnalyzer("accent_insensitive", map[string]interface{}{
@@ -197,7 +197,7 @@ func buildCollectionMapping() (*mapping.IndexMappingImpl, error) {
 		"char_filters":  []string{"ascii_fold"},
 		"token_filters": []string{lowercase.Name},
 	}); err != nil {
-		return nil, fmt.Errorf("Failed to create accent_insensitive analyzer: ", err)
+		return nil, fmt.Errorf("failed to create accent_insensitive analyzer: %w", err)
 	}
 
 	collection := bleve.NewDocumentMapping()
@@ -417,7 +417,7 @@ func (dc *DataController) GetCardSearchSet(locale string) (*CardSearchSet, error
 	if dc.CardSearch[locale] == nil {
 		ss, err := dc.BuildCardSearchSet(locale)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to build search set for locale '%s': %w", locale, err)
+			return nil, fmt.Errorf("failed to build search set for locale '%s': %w", locale, err)
 		}
 		dc.CardSearch[locale] = ss
 	}
@@ -432,7 +432,7 @@ func (dc *DataController) GetCollectionSearchSet(locale string) (*CollectionSear
 	if dc.CollectionSearch[locale] == nil {
 		ss, err := dc.BuildCollectionSearchSet(locale)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to build search set for locale '%s': %w", locale, err)
+			return nil, fmt.Errorf("failed to build search set for locale '%s': %w", locale, err)
 		}
 		dc.CollectionSearch[locale] = ss
 	}
