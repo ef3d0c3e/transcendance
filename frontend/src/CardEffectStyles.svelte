@@ -4,7 +4,7 @@
 
 <style>
 	:global {
-        /* Base effects data */
+		/* Base effects data */
 		.card-effect {
 			--card-effect-z: 10;
 			--card-effect-opacity: 0.5;
@@ -49,10 +49,9 @@
 			mask-repeat: repeat;
 		}
 
-        /* Effect: glare */
+		/* Effect: glare */
 		.card-glare {
-			background:
-				radial-gradient(
+			background: radial-gradient(
 					circle at var(--fx-ix) var(--fx-iy),
 					rgba(255, 255, 255, 0.55),
 					transparent 70%
@@ -60,7 +59,8 @@
 				radial-gradient(
 					circle at var(--fx-ix) var(--fx-iy),
 					rgba(255, 255, 255, 0.08),
-					transparent max(0%, calc(var(--mouse-distance, 60%) - 10%))
+					transparent
+						max(0%, calc(var(--mouse-distance, 0.6) * 100 - 10%))
 				);
 
 			mix-blend-mode: var(--card-effect-blend, overlay);
@@ -68,7 +68,7 @@
 			transition: opacity 0.3s ease;
 		}
 
-        /* Effect: Watermark */
+		/* Effect: Watermark */
 		.card-watermark {
 			--card-effect-opacity: 0.2;
 			--card-effect-transform: matrix(1, 0, 0, 1, 0, 0);
@@ -84,9 +84,14 @@
 			mix-blend-mode: overlay;
 		}
 
-        /* Effect: Foil */
+		/* Effect: Foil */
 		.card-foil {
 			--card-effect-opacity: 0.5;
+
+			opacity: calc(
+				sqrt(var(--mouse-distance) / 4 + 3/4) *
+					var(--card-effect-opacity) * var(--card-effect-rest)
+			);
 
 			background:
 				/* sheen band following the pointer */
@@ -97,28 +102,33 @@
 					transparent calc(var(--fx-x) + 30%)
 				),
 				/* brushed streaks, opposite parallax */
-				repeating-linear-gradient(
-					90deg,
-					rgba(255, 255, 255, 0.22) 0 1px,
-					rgba(0, 0, 0, 0.22) 1px 3px
-				),
-				/* base metal color */
-				var(--card-effect-color);
+					repeating-linear-gradient(
+						90deg,
+						rgba(255, 255, 255, 0.22) 0 1px,
+						rgba(0, 0, 0, 0.22) 1px 3px
+					),
+				/* base metal color */ var(--card-effect-color);
 
-			background-size: 100% 100%, 140% 140%, auto;
-			background-position: center, var(--fx-ix) var(--fx-iy), center;
+			background-size:
+				100% 100%,
+				140% 140%,
+				auto;
+			background-position:
+				center,
+				var(--fx-ix) var(--fx-iy),
+				center;
 			background-blend-mode: screen, overlay, normal;
 
 			mix-blend-mode: var(--card-effect-blend, overlay);
-			filter: brightness(1.15) contrast(1.35) saturate(1.2) hue-rotate(var(--card-effect-hue));
+			filter: brightness(1.15) contrast(1.35) saturate(1.2)
+				hue-rotate(var(--card-effect-hue));
 		}
 
-        /* Effect: Rainbow */
+		/* Effect: Rainbow */
 		.card-rainbow {
 			--card-effect-opacity: 0.45;
 			--card-effect-band: 0.3;
-			--card-effect-spectrum:
-				#ff2d95 0%,
+			--card-effect-spectrum: #ff2d95 0%,
 				#ffb400 calc(7% * var(--card-effect-band)),
 				#f4ff3a calc(14% * var(--card-effect-band)),
 				#2dff9a calc(21% * var(--card-effect-band)),
@@ -126,23 +136,30 @@
 				#7a4dff calc(35% * var(--card-effect-band)),
 				#ff2d95 calc(42% * var(--card-effect-band));
 
-			background:
-				repeating-linear-gradient(var(--card-effect-angle), var(--card-effect-spectrum)),
+			background: repeating-linear-gradient(
+					var(--card-effect-angle),
+					var(--card-effect-spectrum)
+				),
 				radial-gradient(
 					farthest-corner circle at var(--fx-ix) var(--fx-iy),
 					rgb(235, 235, 235) 0%,
 					rgb(70, 70, 70) 70%
 				);
 
-			background-size: 300% 300%, 100% 100%;
-			background-position: var(--fx-x) var(--fx-y), center;
+			background-size:
+				300% 300%,
+				100% 100%;
+			background-position:
+				var(--fx-x) var(--fx-y),
+				center;
 			background-blend-mode: hard-light, normal;
 
 			mix-blend-mode: var(--card-effect-blend, color-dodge);
-			filter: brightness(0.9) contrast(1.4) saturate(1.5) hue-rotate(var(--card-effect-hue));
+			filter: brightness(0.9) contrast(1.4) saturate(1.5)
+				hue-rotate(var(--card-effect-hue));
 		}
 
-        /* Effect: Point sparkle */
+		/* Effect: Point sparkle */
 		.card-sparkle {
 			--card-effect-opacity: 0.7;
 			--card-effect-rest: 1; /* always on, no hover dependency */
@@ -157,7 +174,8 @@
 			);
 			mask-size: 220% 220%;
 			mask-repeat: no-repeat;
-			animation: sparkle-sweep calc(18s / var(--card-effect-speed)) ease-in-out infinite;
+			animation: sparkle-sweep calc(18s / var(--card-effect-speed))
+				ease-in-out infinite;
 
 			mix-blend-mode: var(--card-effect-blend, plus-lighter);
 			filter: hue-rotate(var(--card-effect-hue));
@@ -165,7 +183,7 @@
 
 		.card-sparkle::before,
 		.card-sparkle::after {
-			content: '';
+			content: "";
 			position: absolute;
 			inset: 0;
 			border-radius: inherit;
@@ -173,35 +191,61 @@
 		}
 
 		.card-sparkle::before {
-			background-image:
-				radial-gradient(circle at 23% 61%, #fff 0 1px, transparent 1.6px),
-				radial-gradient(circle at 71% 18%, #ffe9a8 0 1px, transparent 1.6px);
-			background-size: 31px 37px, 53px 47px;
+			background-image: radial-gradient(
+					circle at 23% 61%,
+					#fff 0 1px,
+					transparent 1.6px
+				),
+				radial-gradient(
+					circle at 71% 18%,
+					#ffe9a8 0 1px,
+					transparent 1.6px
+				);
+			background-size:
+				31px 37px,
+				53px 47px;
 			animation:
-				sparkle-drift-a calc(26s / var(--card-effect-speed)) linear infinite,
-				sparkle-twinkle calc(3.1s / var(--card-effect-speed)) ease-in-out infinite;
+				sparkle-drift-a calc(26s / var(--card-effect-speed)) linear
+					infinite,
+				sparkle-twinkle calc(3.1s / var(--card-effect-speed))
+					ease-in-out infinite;
 		}
 
 		.card-sparkle::after {
-			background-image:
-				radial-gradient(circle at 44% 83%, #a8dcff 0 1.2px, transparent 2px),
-				radial-gradient(circle at 12% 27%, #fff 0 0.8px, transparent 1.3px);
-			background-size: 71px 67px, 23px 29px;
+			background-image: radial-gradient(
+					circle at 44% 83%,
+					#a8dcff 0 1.2px,
+					transparent 2px
+				),
+				radial-gradient(
+					circle at 12% 27%,
+					#fff 0 0.8px,
+					transparent 1.3px
+				);
+			background-size:
+				71px 67px,
+				23px 29px;
 			animation:
-				sparkle-drift-b calc(34s / var(--card-effect-speed)) linear infinite,
-				sparkle-twinkle calc(4.3s / var(--card-effect-speed)) ease-in-out -1.9s infinite;
+				sparkle-drift-b calc(34s / var(--card-effect-speed)) linear
+					infinite,
+				sparkle-twinkle calc(4.3s / var(--card-effect-speed))
+					ease-in-out -1.9s infinite;
 		}
 	}
 
 	@keyframes -global-sparkle-drift-a {
 		to {
-			background-position: 31px 37px, -53px 47px;
+			background-position:
+				31px 37px,
+				-53px 47px;
 		}
 	}
 
 	@keyframes -global-sparkle-drift-b {
 		to {
-			background-position: -71px 67px, 23px -29px;
+			background-position:
+				-71px 67px,
+				23px -29px;
 		}
 	}
 
