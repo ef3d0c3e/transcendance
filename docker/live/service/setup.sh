@@ -1,13 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mkdir -p /etc/nginx/ssl
-
 export PATH="/opt/go/bin:${PATH}"
 export CGO_ENABLED=1
 
+cd /opt/transcendance/frontend
+
+echo "Installing frontend dependencies..."
+npm ci
+
 cd /opt/transcendance
 
-# Build frontend and start go backend
+echo "Building frontend..."
 make frontend
+
+echo "Starting Go backend..."
 exec go run .
