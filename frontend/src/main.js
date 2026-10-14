@@ -13,11 +13,11 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 // Language switcher
 {
-	const target = document.getElementById('language-switcher');
+	const target = document.querySelector('#language-switcher');
 
 	if (target) {
 		mount(LanguageSwitcher, {
-			target
+			target,
 		});
 	}
 }
@@ -75,7 +75,7 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 			target,
 			props: {
 				formSelector: '#login-form',
-				onSuccess: () => { },
+				onSuccess: () => {},
 			},
 		});
 	}
@@ -90,7 +90,7 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 			target,
 			props: {
 				formSelector: '#register-form',
-				onSuccess: () => { },
+				onSuccess: () => {},
 			},
 		});
 	}
