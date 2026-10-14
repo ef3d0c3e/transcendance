@@ -103,13 +103,27 @@ The following tools are recommended for working with the project:
 
 ## Test/Production server
 
+ 1. Setup
 To setup a production or testing server you must first have `nginx` setup with a reverse proxy to `127.0.0.1:8080`.
 `nginx` will manage `tls`, you can use [Let's Encrypt](https://letsencrypt.org/) to get a free certificate for your domain.
 
 Then you must create a user, this user will be the one storing files for the project (backend, frontend, database), as well as managing the systemd units.
 The user needs to be in the docker group (`usermod -aG docker user`) and have `linger` enabled: `loginctl enable-linger user`.
 
- 1. Installing dependencies
+In order to use docker from systemd, you need to tell systemd to add the docker supplementary group to the user's services.
+```
+systemctl edit user@1001.service # Replace with the user's id
+
+# Add this:
+[Service]
+SupplementaryGroups=docker
+
+# Now reload
+sudo systemctl daemon-reload
+sudo systemctl restart user@1001.service
+```
+
+ 2. Installing dependencies
 
 The following dependencies are required:
  - `docker`
@@ -117,7 +131,7 @@ The following dependencies are required:
  - `bash`
  - `git`
 
- 2. Setup
+ 3. Service
 
 Install the following systemd unit and timer:
 
@@ -154,6 +168,7 @@ Then install the following script in `$HOME/live.sh`:
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+DOCKER_DIR="/home/transcendance"
 REPO_DIR="/home/transcendance/repo"
 BRANCH="testing"
 STATE_DIR="/home/transcendance/app-deploy"
@@ -185,13 +200,12 @@ fi
 
 echo "Deploying $REMOTE_SHA..."
 
-# IMPORTANT: use only in a dedicated deployment checkout
-# This discards local tracked changes
 git checkout -B "$BRANCH" "origin/$BRANCH"
 git reset --hard "$REMOTE_SHA"
 
 # Rebuild and start the updated application
-docker compose up -d --build --remove-orphans
+cd "${DOCKER_DIR}"
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build --remove-orphans
 
 # Record success only after deployment succeeds
 echo "$REMOTE_SHA" > "$STATE_FILE"
@@ -199,9 +213,16 @@ echo "$REMOTE_SHA" > "$STATE_FILE"
 echo "Deployment successful: $REMOTE_SHA"
 ```
 
+
+ 4. Start
+
+Enable the `live.timer` service:
+```
+systemctl --user daemon-reload
+systemctl --user enable --now live.timer
+```
+
 Every 5 minutes, the timer will run `live.sh`.
 `live.sh` will check for changes the configured branch and pull the new repo and restart the `docker` images.
 
- 3. Start
-
-Now that you have setup the systemd services, you need to reload them: `systemd --user daemon-reload`.
+You may want to start the server manually once to make sure it's working: either run `live.sh` or the `live.service` systemd (one-shot) service.
