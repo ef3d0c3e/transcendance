@@ -38,6 +38,11 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
+cards-error-not-found = Impossible de trouver la carte
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
 navbar-label-toggle = Afficher/masquer le menu
 
 theme-switcher-light = Theme clair

@@ -1,0 +1,12 @@
+id = 1
+tags = ["dev"]
+
+[[cards]]
+name = "pythagorean-tiling"
+[[cards]]
+name = "flying-scotsman"
+[[cards]]
+name = "mcmurdo"
+[[cards]]
+name = "ford-t"
+
