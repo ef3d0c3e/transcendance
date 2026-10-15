@@ -78,3 +78,10 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+
+inventory-title = Your inventory
+inventory-title-other = { $username }'s inventory
+inventory-unauthenticated = You must be authenticated to access inventories
+inventory-message-empty = Nothing to show here
+inventory-message-user-not-found = User not found
+inventory-message-fetch-fail = Cannot fetch user inventory

@@ -19,7 +19,7 @@ const (
 )
 
 // Get template data for a card
-func getCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) (map[string]any, error) {
+func GetCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) (map[string]any, error) {
 	rarity := renderer.T(c, "card-rarity-"+card.Rarity)
 	var rarity_color string
 	switch card.Rarity {
@@ -104,7 +104,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 
 			cards := make([]map[string]any, len(results))
 			for i, pair := range results {
-				data, err := getCardData(c, loc, dc.Renderer, pair.collection, pair.card)
+				data, err := GetCardData(c, loc, dc.Renderer, pair.collection, pair.card)
 				if err != nil {
 					log.Printf("[WARN] Failed to build data for card '%s': %s", pair.card.Name, err)
 					c.JSON(http.StatusInternalServerError, gin.H{
@@ -301,7 +301,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 		cards := make([]map[string]any, len(collection.Cards))
 		for i := range collection.Cards {
 			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
-			data, err := getCardData(c, loc, dc.Renderer, collection, card)
+			data, err := GetCardData(c, loc, dc.Renderer, collection, card)
 			if err != nil {
 				log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
