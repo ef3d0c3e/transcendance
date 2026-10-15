@@ -15,14 +15,14 @@ import (
 // Renderer holds parsed templates and localization state
 type Renderer struct {
 	templates *template.Template
-	localizer *localization.Localizer
+	Localizer *localization.Localizer
 	themer    *Themer
 }
 
 // T is a method to translate strings
 func (r *Renderer) T(c *gin.Context, id string, kv ...any) string {
-	loc := r.localizer.Localization(c)
-	return r.localizer.Translate(loc, id, kv...)
+	loc := r.Localizer.Localization(c)
+	return r.Localizer.Translate(loc, id, kv...)
 }
 
 // Data passed to templates
@@ -59,7 +59,7 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 
 	return &Renderer{
 		templates: t,
-		localizer: l,
+		Localizer: l,
 		themer: themer,
 	}
 }
@@ -121,7 +121,7 @@ func (r *Renderer) renderPage(
 		Theme:    theme,
 		Children: children,
 		Translator: Translator{
-			localizer: r.localizer,
+			localizer: r.Localizer,
 			loc:       loc,
 		},
 	}
@@ -142,7 +142,7 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		return
 	}
 
-	loc := r.localizer.Localization(c)
+	loc := r.Localizer.Localization(c)
 	theme := r.themer.Theme(c)
 
 	content, err := r.renderPage(theme, loc, b)
