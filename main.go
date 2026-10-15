@@ -31,7 +31,7 @@ func run(data *data.Data, db *gorm.DB) *gin.Engine {
 	router.Use(themer.Middleware())
 	router.Use(controllers.AuthMiddleware(db))
 
-	renderer := views.NewRenderer(l10n)
+	renderer := views.NewRenderer(l10n, themer)
 	routes.RegisterRoutes(router, data, db, renderer)
 
 	return router

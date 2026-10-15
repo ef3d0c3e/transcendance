@@ -16,6 +16,7 @@ import (
 type Renderer struct {
 	templates *template.Template
 	Localizer *localization.Localizer
+	themer    *Themer
 }
 
 // T is a method to translate strings
@@ -59,6 +60,7 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	return &Renderer{
 		templates: t,
 		Localizer: l,
+		themer: themer,
 	}
 }
 
@@ -141,6 +143,7 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 	}
 
 	loc := r.Localizer.Localization(c)
+	theme := r.themer.Theme(c)
 
 	content, err := r.renderPage(theme, loc, b)
 	if err != nil {
