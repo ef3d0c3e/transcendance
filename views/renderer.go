@@ -28,6 +28,8 @@ func (r *Renderer) T(c *gin.Context, id string, kv ...any) string {
 type View struct {
 	// Parameters
 	Data any
+	// Theme
+	Theme string
 	// Child templates
 	Children map[string]template.HTML
 	// Translator instance
@@ -46,7 +48,7 @@ func (t Translator) T(id string, kv ...any) string {
 }
 
 // NewRenderer: parse all templates under templates/**/*.html
-func NewRenderer(l *localization.Localizer) *Renderer {
+func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	t := template.Must(
 		template.New("").Funcs(template.FuncMap{
 			"sub": func(a, b int) int { return a - b },
@@ -96,6 +98,7 @@ func (b *pageBuilder) Add(templateName string, name string, data map[string]any)
 }
 
 func (r *Renderer) renderPage(
+	theme string,
 	loc *fluentloc.Localization,
 	b *pageBuilder,
 ) (template.HTML, error) {
@@ -103,7 +106,7 @@ func (r *Renderer) renderPage(
 
 	// Render children first (DFS)
 	for name, child := range b.children {
-		content, err := r.renderPage(loc, child)
+		content, err := r.renderPage(theme, loc, child)
 		if err != nil {
 			return "", err
 		}
@@ -113,6 +116,7 @@ func (r *Renderer) renderPage(
 
 	view := View{
 		Data:     b.data,
+		Theme:    theme,
 		Children: children,
 		Translator: Translator{
 			localizer: r.Localizer,
@@ -138,7 +142,7 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 
 	loc := r.Localizer.Localization(c)
 
-	content, err := r.renderPage(loc, b)
+	content, err := r.renderPage(theme, loc, b)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

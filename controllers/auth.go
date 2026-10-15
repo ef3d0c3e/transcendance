@@ -85,6 +85,14 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 func (ac *AuthController) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
+	if v := c.Query("fragment"); v == "1" {
+		builder := views.PageBuilder("register", map[string]any{
+			"User":  user,
+		})
+		ac.Renderer.Render(c, &builder)
+		return
+	}
+
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Register",
 		"User":  user,
@@ -180,6 +188,14 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 
 func (ac *AuthController) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
+
+	if v := c.Query("fragment"); v == "1" {
+		builder := views.PageBuilder("login", map[string]any{
+			"User":  user,
+		})
+		ac.Renderer.Render(c, &builder)
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Login",

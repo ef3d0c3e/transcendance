@@ -4,9 +4,9 @@ register-password = Password
 register-password-confirm = Confirm password
 register-tos = I have read and agree to the Terms of Service
 register-submit = Create account
-registed-error-authenticated = You are already logged in.
+register-error-authenticated = You are already logged in.
 register-error-username = Invalid username. Username must be between 3 and 16 characters long and may contain letters, numbers and '_'
-register-error-password = Invalid password. Your password must be between 12 and 72 characters long.
+register-error-password = Invalid password. Your password must be between 8 and 72 characters long.
 register-error-passwords-do-not-match = Passwords do not match
 register-error-tos = You must agree to the Terms of Service
 register-error-username-taken = Username already taken
@@ -43,3 +43,9 @@ cards-error-not-found = Card not found
 card-rarity-common = Common
 card-rarity-rare = Rare
 card-rarity-legendary = Legendary
+navbar-label-toggle = Toggle menu
+
+theme-switcher-light = Switch to light theme
+theme-switcher-dark = Switch to dark theme
+
+language-switcher = Choose language

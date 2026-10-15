@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -37,7 +38,7 @@ type Localizer struct {
 	// Locale cookie name: 'lang'
 	CookieName string
 
-	// Cache of per-user locales
+	// Cache of (locale fallback chain, locale)
 	Cache sync.Map
 }
 
@@ -96,7 +97,8 @@ func (l *Localizer) Middleware() gin.HandlerFunc {
 			// Store cookie
 			requested := l.requestedLocales(c)
 			chosen := l.chosenLocale(requested)
-			c.SetCookie(l.CookieName, chosen, 3600*24*30, "/", "", false, true)
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie(l.CookieName, chosen, 3600*24*30, "/", "", false, false)
 		}
 		c.Next()
 	}
