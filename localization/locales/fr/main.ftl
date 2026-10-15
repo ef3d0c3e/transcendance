@@ -82,3 +82,10 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+inventory-title = Votre inventaire
+inventory-title-other = Inventaire de { $username }
+inventory-unauthenticated = Vous devez être connecté pour acceder aux inventaires
+inventory-message-empty = Rien n'a voir ici
+inventory-message-user-not-found = Utilisateur non trouvé
+inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
