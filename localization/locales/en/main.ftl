@@ -84,6 +84,12 @@ collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
 
+navbar-inventory = Inventory
+
+card-acquired = Acquired { $date }
+card-popup-collection = View in collection
+card-popup-close = Close
+
 inventory-title = Your inventory
 inventory-title-other = { $username }'s inventory
 inventory-unauthenticated = You must be authenticated to access inventories

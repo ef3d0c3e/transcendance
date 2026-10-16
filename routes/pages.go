@@ -15,12 +15,12 @@ type Pages struct {
 
 func (p *Pages) IndexGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
-	_ = user
 
-	builder := views.PageBuilder("base2", map[string]any {
+	builder := views.PageBuilder("base2", map[string]any{
 		"Title": "TEST",
+		"User":  user,
 	})
-	builder.Add("header", "Header", map[string]any {
+	builder.Add("header", "Header", map[string]any{
 		"Hello": "foobar",
 	})
 

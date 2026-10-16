@@ -83,6 +83,12 @@ collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
 
+navbar-inventory = Inventaire
+
+card-acquired = Acquis le { $date }
+card-popup-collection = Voir dans la collection
+card-popup-close = Fermer
+
 inventory-title = Votre inventaire
 inventory-title-other = Inventaire de { $username }
 inventory-unauthenticated = Vous devez être connecté pour acceder aux inventaires

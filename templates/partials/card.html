@@ -1,7 +1,7 @@
 {{ define "card" }}
-<script type="module" src="/frontend/card_render.js"></script>
-<div id="card-rendering"></div>
-<div class="card-container" {{ .Data.CardContainerData }}>
+<div class="card-container" {{ .Data.CardContainerData }}{{ if .Data.CardAcquired }}
+	data-acquired="{{ .Data.CardAcquired }}" data-collection-url="/collections/{{ .Data.CardCollectionID }}"
+	data-collection-title="{{ .Data.CardCollectionTitle }}" data-card-title="{{ .Data.CardTitle }}"{{ end }}>
 	<article class="card"
 		style="--c1: {{ .Data.CardColorPrimary }}; --c2: {{ .Data.CardColorSecondary }}; --badge-color: {{ .Data.CardBadgeColor }}">
 		<img class="card-image" src="{{ .Data.CardArtwork }}" draggable="false">
@@ -15,10 +15,9 @@
 		</div>
 
 		<div class="card-effect card-glare" data-z=11 data-opacity="0.5"></div>
-		<div class="card-effect card-foil" data-z="11" data-opacity=".8" data-scale="0.5" data-color="#ffaf5f"
-			data-mask="/cards/assets/foil6.png"></div>
-		<div class="card-effect card-watermark" data-z="11" data-opacity=".2"
-			data-watermark="/cards/assets/watermark_42.png"></div>
+		{{ range .Data.CardEffects }}
+		<div class="card-effect {{ .Class }}" {{ .Attrs }}></div>
+		{{ end }}
 	</article>
 </div>
 {{ end }}

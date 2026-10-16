@@ -1,6 +1,6 @@
 {{ define "inventory" }}
 <h2>{{ .Data.Title }}</h2>
-{{ if ne .Data.Message nil }}
+{{ if .Data.Message }}
 <p>{{ .Data.Message }}</p>
 {{ end }}
 {{ if ne (len .Data.Cards) 0 }}
