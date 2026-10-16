@@ -23,13 +23,32 @@ import (
 
 type Card struct {
 	// ID in collection
-	ID            int
-	Name          string
-	Locales       map[string]*fluent.Bundle
-	Tags          []string
-	ThumbnailPath string
-	ArtworkPath   string
-	Rarity        string
+	ID             int
+	Name           string
+	Locales        map[string]*fluent.Bundle
+	Tags           []string
+	ThumbnailPath  string
+	ArtworkPath    string
+	Rarity         string
+	ColorPrimary   string
+	ColorSecondary string
+}
+
+func (c *Card) Translate(localeName string, id string) (string, error) {
+	loc := c.Locales[localeName]
+	if loc == nil {
+		return "", fmt.Errorf("failed to find locale for '%s' card %s", localeName, c.Name)
+	}
+	msg, _ := loc.Message(id)
+	if msg == nil {
+		return "", fmt.Errorf("failed to find message '%s/%s' for card %s", localeName, id, c.Name)
+	}
+	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }
 
 type CollectionCard struct {
@@ -37,11 +56,31 @@ type CollectionCard struct {
 }
 
 type Collection struct {
-	ID      int
-	Name    string
-	Locales map[string]*fluent.Bundle
-	Cards   []CollectionCard
-	Tags    []string
+	ID             int
+	Name           string
+	Locales        map[string]*fluent.Bundle
+	Cards          []CollectionCard
+	Tags           []string
+	ColorPrimary   string
+	ColorSecondary string
+	ContectSheet   string
+}
+
+func (c *Collection) Translate(localeName string, id string) (string, error) {
+	loc := c.Locales[localeName]
+	if loc == nil {
+		return "", fmt.Errorf("failed to find locale for '%s' collection %s", localeName, c.Name)
+	}
+	msg, _ := loc.Message(id)
+	if msg == nil {
+		return "", fmt.Errorf("failed to find message '%s/%s' for collection %s", localeName, id, c.Name)
+	}
+	value, err := loc.FormatPattern(msg.Value(), map[string]any{})
+	if err != nil {
+		return "", err
+	}
+
+	return value, nil
 }
 
 func generateThumbnail(imagePath string, cardName string) (string, error) {
@@ -61,22 +100,22 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 		return "", err
 	}
 
-	// Card image size is 330x192
+	// Card image size is 330x192, make the thumbnail a bit larger for zoomed in users
 	// Scale shortest side to image display size, while preserving aspect ratio
 	thumbX := src.Bounds().Max.X
 	thumbY := src.Bounds().Max.Y
 	if thumbX > thumbY {
-		thumbY = 192;
+		thumbY = 192 * 2
 		thumbX = (thumbY * thumbX) / src.Bounds().Max.Y
 	} else {
-		thumbX = 330;
+		thumbX = 330 * 2
 		thumbY = (thumbX * thumbY) / src.Bounds().Max.X
 	}
 
 	dst := image.NewRGBA(image.Rect(0, 0, thumbX, thumbY))
 	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
 
-	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 75}); err != nil {
+	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 95}); err != nil {
 		return "", err
 	}
 	return outputPath, nil
@@ -91,6 +130,7 @@ type Data struct {
 		*Card
 		*Collection
 	}
+	collectionsById map[int]*Collection
 }
 
 // Load cards and collections from the `data/` directory
@@ -172,8 +212,8 @@ func LoadCards() (*Data, error) {
 					return err
 				}
 				// Verify locale contains messages
-				if _, ok := card.Locales[localeName].Message("name"); !ok {
-					return fmt.Errorf("missing 'name' local key in %s", path)
+				if _, ok := card.Locales[localeName].Message("title"); !ok {
+					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
 				if _, ok := card.Locales[localeName].Message("description"); !ok {
 					return fmt.Errorf("missing 'description' local key in %s", path)
@@ -196,6 +236,13 @@ func LoadCards() (*Data, error) {
 
 				card.ID = int(config.Get("id").(int64))
 				card.Rarity = config.Get("rarity").(string)
+
+				if config.Has("color-primary") {
+					card.ColorPrimary = config.Get("color-primary").(string)
+				}
+				if config.Has("color-secondary") {
+					card.ColorSecondary = config.Get("color-secondary").(string)
+				}
 				// TODO: Verify rarity value here
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
@@ -244,8 +291,8 @@ func LoadCards() (*Data, error) {
 					return err
 				}
 				// Verify locale contains messages
-				if _, ok := collection.Locales[localeName].Message("name"); !ok {
-					return fmt.Errorf("missing 'name' local key in %s", path)
+				if _, ok := collection.Locales[localeName].Message("title"); !ok {
+					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
 				if _, ok := collection.Locales[localeName].Message("description"); !ok {
 					return fmt.Errorf("missing 'description' local key in %s", path)
@@ -267,6 +314,15 @@ func LoadCards() (*Data, error) {
 				}
 
 				collection.ID = int(config.Get("id").(int64))
+
+				if !config.Has("color-primary") {
+					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
+				}
+				collection.ColorPrimary = config.Get("color-primary").(string)
+				if !config.Has("color-secondary") {
+					return fmt.Errorf("Collection %s is missing 'color-secondary'", collection.Name)
+				}
+				collection.ColorSecondary = config.Get("color-secondary").(string)
 
 				cardList := config.Get("cards").([]*toml.Tree)
 				for _, entry := range cardList {
@@ -292,6 +348,14 @@ func LoadCards() (*Data, error) {
 			if !ok {
 				return nil, fmt.Errorf("collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
 			}
+			// Set card color if they don't override the collection's color
+			if card.ColorPrimary == "" {
+				card.ColorPrimary = collection.ColorPrimary
+			}
+			if card.ColorSecondary == "" {
+				card.ColorSecondary = collection.ColorSecondary
+			}
+
 			cardsInCollection[card.Name] = collection.Name
 		}
 	}
@@ -322,6 +386,12 @@ func LoadCards() (*Data, error) {
 		}
 	}
 
+	// Build collectionsById
+	collectionsById := make(map[int]*Collection)
+	for _, collection := range collections {
+		collectionsById[collection.ID] = collection
+	}
+
 	// Generate thumbnails
 	for _, card := range cards {
 		thumbnail, err := generateThumbnail(card.ArtworkPath, card.Name)
@@ -332,6 +402,15 @@ func LoadCards() (*Data, error) {
 		cards[card.Name] = card
 	}
 
+	// Generate contact sheets for collections
+	for _, collection := range collections {
+		contactSheet, err := generateCollectionSheet(collection, cards)
+		if err != nil {
+			return nil, err
+		}
+		collection.ContectSheet = contactSheet
+	}
+
 	log.Printf("Loaded %d cards in %d collections", len(cards), len(collections))
 	log.Print("========================================")
 
@@ -340,10 +419,15 @@ func LoadCards() (*Data, error) {
 		Collections: collections,
 		Tags:        tags,
 		cardsById:   cardsById,
+		collectionsById: collectionsById,
 	}, nil
 }
 
 func (dc *Data) GetCard(id int) (*Card, *Collection) {
 	col := dc.cardsById[id]
 	return col.Card, col.Collection
+}
+
+func (dc *Data) GetCollection(id int) *Collection {
+	return dc.collectionsById[id]
 }
