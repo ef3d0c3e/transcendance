@@ -2,13 +2,13 @@ package routes
 
 import (
 	"transcendance/controllers"
+	ctrldata "transcendance/controllers/data"
 	"transcendance/data"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
 
 func RegisterRoutes(
 	router *gin.Engine,
@@ -52,12 +52,14 @@ func RegisterRoutes(
 	router.GET("/search", searchController.SearchUsersGet)
 
 	// Data
-	dataController := controllers.DataController{
+	dataController := ctrldata.DataController{
 		DB:       db,
 		Renderer: renderer,
-		Data: data,
+		Data:     data,
 	}
-	router.GET("/cards/:ID/:METHOD", dataController.CardGet)
+	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
+	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
 
-	router.GET("/search_cards", dataController.CardSearchGet)
+	router.GET("/inventory", dataController.InventoryGet)
+	router.GET("/add", dataController.InventoryAddGet)
 }

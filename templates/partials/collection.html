@@ -1,0 +1,23 @@
+{{ define "collection" }}
+<div class="card-container" {{ .Data.CollectionContainerData }}>
+	<article class="collection" style="--c1: {{ .Data.ColorPrimary }}; --c2: {{ .Data.ColorSecondary }};">
+		<div class="collection-crimp" style="top: 0" aria-hidden="true"></div>
+		<div class="collection-crimp" style="bottom: 0" aria-hidden="true"></div>
+		<div class="collection-rays" aria-hidden="true"></div>
+		<div class="collection-content">
+			<h2 class="collection-title">{{ .Data.CollectionTitle }}</h2>
+			<img class="collection-image" src="{{ .Data.CollectionArtwork }}" draggable="false">
+			<p class="collection-description">{{ .Data.CollectionDescription }}</p>
+			<div class="collection-footer">
+				<span style="margin-right: auto">{{ .Data.CollectionCount }}</span>
+				<span>{{ .Data.CollectionID }}</span>
+			</div>
+
+			<div class="card-effect card-glare" data-z=10 data-opacity="0.5" aria-hidden="true"></div>
+			<div class="card-effect card-foil" data-z="10" data-angle="115deg" data-opacity=".8" data-scale="0.3"
+				data-color="#7f7f7f" data-mask="/cards/assets/foil1.png" aria-hidden="true"></div>
+
+		</div>
+	</article>
+</div>
+{{ end }}

@@ -38,14 +38,61 @@ search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
 
-cards-error-not-found = Card not found
-
-card-rarity-common = Common
-card-rarity-rare = Rare
-card-rarity-legendary = Legendary
 navbar-label-toggle = Toggle menu
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
 language-switcher = Choose language
+
+cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
+
+paginator-label-nav = Pagination
+paginator-label-previous = Previous page
+paginator-label-next = Next page
+
+card-rarity-common = Common
+card-rarity-rare = Rare
+card-rarity-legendary = Legendary
+
+
+card-search-title = Search Cards
+card-search-placeholder = Search for cards
+card-search-empty = No cards found
+card-search-submit = Search
+card-search-error-internal = Search failed
+
+card-error-not-found = Card not found
+
+collection-title = { $collection } Collection
+collection-booster = { $count ->
+    [one] { $count } card booster
+    *[other] { $count } cards booster
+}
+collection-count = { $count ->
+    [one] { $count } CARD
+    *[other] { $count } CARDS
+}
+collection-id = NO. { $id }
+
+collection-search-title = Search Collections
+collection-search-placeholder = Search for collections
+collection-search-empty = No collections found
+collection-search-submit = Search
+collection-search-error-internal = Search failed
+
+collection-error-not-found = Collection not found
+
+navbar-inventory = Inventory
+
+card-acquired = Acquired { $date }
+card-popup-collection = View in collection
+card-popup-close = Close
+
+inventory-title = Your inventory
+inventory-title-other = { $username }'s inventory
+inventory-unauthenticated = You must be authenticated to access inventories
+inventory-message-empty = Nothing to show here
+inventory-message-user-not-found = User not found
+inventory-message-fetch-fail = Cannot fetch user inventory

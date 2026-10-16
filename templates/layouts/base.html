@@ -41,6 +41,10 @@
 				</svg>
 			</label>
 
+			{{ if .Data.User }}
+			<a href="/inventory">{{ .T "navbar-inventory" }}</a>
+			{{ end }}
+
 			<div id="language-switcher" data-label="{{ .T "language-switcher" }}"></div>
 
 			<span id="theme-switcher" data-theme-label-light="{{ .T "theme-switcher-light" }}"
@@ -52,6 +56,12 @@
 	<main>
 		{{ .Children.Content }}
 	</main>
+
+	{{/* Host for the card renderer (styles, tilt and effect handling) */}}
+	<div id="card-rendering"></div>
+	{{/* Host for the inventory card popup (acquisition info on click) */}}
+	<div id="card-inventory-popup" data-label-collection="{{ .T "card-popup-collection" }}"
+		data-label-close="{{ .T "card-popup-close" }}"></div>
 </body>
 
 </html>
