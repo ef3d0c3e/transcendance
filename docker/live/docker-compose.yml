@@ -1,7 +1,12 @@
 services:
   # Service
   service:
-    build: ./service
+    build:
+      context: .
+      dockerfile: ./service/Dockerfile
+      args:
+        USER_ID: ${USER_ID:?}
+        GROUP_ID: ${GROUP_ID:?}
     container_name: transcendance-service
     restart: unless-stopped
     env_file: .env
@@ -9,27 +14,30 @@ services:
       - service_data:/opt/transcendance
     networks:
       - transcendance
+    ports:
+      - "127.0.0.1:8080:8080"
   # Mariadb
   mariadb:
     image: mariadb
     container_name: transcendance-db
     environment:
+      UID: ${USER_ID:?}
+      GID: ${GROUP_ID:?}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
       MYSQL_USER: ${MYSQL_USER:?}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
       MYSQL_DATABASE: ${MYSQL_DATABASE:?}
-    ports:
-      - "127.0.0.1:3306:3306"
+    volumes:
+      - ./db:/var/lib/mysql
     networks:
       - transcendance
-
 
 volumes:
   service_data:
     driver: local
     driver_opts:
       type: none
-      device: ./testing
+      device: ./repo
       o: bind
 
 networks:
