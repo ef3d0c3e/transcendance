@@ -9,13 +9,7 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			input: {
-				register: "src/register.js",
-				login: "src/login.js",
-				card_render: "src/card-render.js",
-				login_popup: "src/login-popup.js",
-				register_popup: "src/register-popup.js",
-				theme_switcher: "src/theme-switcher.js",
-				navbar: "src/navbar.js",
+				main: "src/main.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
