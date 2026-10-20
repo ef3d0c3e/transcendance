@@ -90,3 +90,14 @@ inventory-unauthenticated = You must be authenticated to access inventories
 inventory-message-empty = Nothing to show here
 inventory-message-user-not-found = User not found
 inventory-message-fetch-fail = Cannot fetch user inventory
+inventory-message-no-match = No cards in this inventory match your search
+inventory-search-placeholder = Search this inventory
+inventory-search-submit = Search
+inventory-count = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+inventory-search-count = { $count ->
+    [one] { $count } card found
+    *[other] { $count } cards found
+}
