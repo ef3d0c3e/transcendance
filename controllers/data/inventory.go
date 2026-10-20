@@ -86,6 +86,10 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if user.Username != username {
 		viewed = username
 	}
+	totalPages := total / int64(inventoryPageSize)
+	if total%int64(inventoryPageSize) != 0 {
+		totalPages = totalPages + 1
+	}
 	content := builder.Add("inventory", "Content", map[string]any{
 		"Title":   title,
 		"Message": message,
@@ -93,6 +97,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Cards":   cards,
 		"Query":   query,
 		"Viewed":  viewed,
+		"Pages":   int(totalPages),
 	})
 	params := url.Values{}
 	if viewed != "" {
@@ -104,10 +109,6 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	paginatorUrl := "?p="
 	if len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
-	}
-	totalPages := total / int64(inventoryPageSize)
-	if total%int64(inventoryPageSize) != 0 {
-		totalPages = totalPages + 1
 	}
 	content.Add("paginator", "Paginator", map[string]any{
 		"Current": page,

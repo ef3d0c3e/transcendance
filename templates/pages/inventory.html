@@ -1,23 +1,41 @@
 {{ define "inventory" }}
-<h2>{{ .Data.Title }}</h2>
-<form class="search-form" id="search-form" action="/inventory" method="get">
-	{{ if ne (len .Data.Viewed) 0 }}
-	<input type="hidden" name="u" value="{{ .Data.Viewed }}">
+<div class="inventory">
+	<div class="inventory-header">
+		<div class="inventory-heading">
+			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			{{ if ne (len .Data.Cards) 0 }}
+			<p class="inventory-count">{{ .Data.Count }}</p>
+			{{ end }}
+		</div>
+		<form class="search-form inventory-search" id="search-form" action="/inventory" method="get">
+			{{ if ne (len .Data.Viewed) 0 }}
+			<input type="hidden" name="u" value="{{ .Data.Viewed }}">
+			{{ end }}
+			<input type="text" id="q" name="q" placeholder="{{ .T "inventory-search-placeholder" }}"
+				value="{{ .Data.Query }}">
+			<button type="submit" aria-label={{ .T "inventory-search-submit" }}></button>
+		</form>
+	</div>
+
+	{{ if .Data.Message }}
+	<div class="inventory-message">
+		<p>{{ .Data.Message }}</p>
+		{{ if ne (len .Data.Query) 0 }}
+		<a href="/inventory{{ if ne (len .Data.Viewed) 0 }}?u={{ .Data.Viewed }}{{ end }}">{{ .T "inventory-search-clear" }}</a>
+		{{ end }}
+	</div>
 	{{ end }}
-	<input type="text" id="q" name="q" placeholder="{{ .T "inventory-search-placeholder" }}"
-		value="{{ .Data.Query }}">
-	<button type="submit" aria-label={{ .T "inventory-search-submit" }}></button>
-</form>
-{{ if ne .Data.Message nil }}
-<p>{{ .Data.Message }}</p>
-{{ end }}
-{{ if ne (len .Data.Cards) 0 }}
-	<p class="inventory-count">{{ .Data.Count }}</p>
+
+	{{ if ne (len .Data.Cards) 0 }}
 	{{ .Children.Paginator }}
-    <e-cluster justify="center">
-        {{ range $val := .Data.Cards }}
-        {{ template "card" $val }}
-        {{ end }}
-    </e-cluster>
-{{end}}
+	<e-cluster class="inventory-cards" justify="center">
+		{{ range $val := .Data.Cards }}
+		{{ template "card" $val }}
+		{{ end }}
+	</e-cluster>
+	{{ if gt .Data.Pages 1 }}
+	{{ .Children.Paginator }}
+	{{ end }}
+	{{ end }}
+</div>
 {{ end }}
