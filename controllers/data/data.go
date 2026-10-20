@@ -1,6 +1,7 @@
 package data
 
 import (
+	"sync"
 	"transcendance/data"
 	"transcendance/views"
 
@@ -12,6 +13,8 @@ type DataController struct {
 	Renderer *views.Renderer
 	Data     *data.Data
 
-	CardSearch map[string]*CardSearchSet
+	CardSearch       map[string]*CardSearchSet
 	CollectionSearch map[string]*CollectionSearchSet
+	// Guards lazy building of the search sets
+	searchMu sync.Mutex
 }

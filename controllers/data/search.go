@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 	"transcendance/data"
 
@@ -37,11 +38,11 @@ type IndexableCollection struct {
 	Tags        []string
 }
 
-// Search set for cards
+// Search set for cards, documents are keyed by the card's global ID
 type CardSearchSet struct {
 	locale string
 	idx    bleve.Index
-	byName map[string]CardPair
+	byID   map[string]CardPair
 }
 
 // Search set for collections
@@ -227,7 +228,7 @@ func (dc *DataController) BuildCardSearchSet(locale string) (*CardSearchSet, err
 	ss := &CardSearchSet{
 		locale: locale,
 		idx:    idx,
-		byName: make(map[string]CardPair, len(dc.Data.Cards)),
+		byID:   make(map[string]CardPair, len(dc.Data.Cards)),
 	}
 
 	batch := idx.NewBatch()
@@ -236,14 +237,14 @@ func (dc *DataController) BuildCardSearchSet(locale string) (*CardSearchSet, err
 			card := dc.Data.Cards[colCard.Name]
 
 			ic, err := dc.toIndexableCard(locale, card, collection)
-			id := card.ID + collection.ID*1000
+			id := strconv.Itoa(card.ID + collection.ID*1000)
 			if err != nil {
-				return nil, fmt.Errorf("indexing card %d: %w", id, err)
+				return nil, fmt.Errorf("indexing card %s: %w", id, err)
 			}
-			if err := batch.Index(card.Name, ic); err != nil {
+			if err := batch.Index(id, ic); err != nil {
 				return nil, err
 			}
-			ss.byName[card.Name] = CardPair{
+			ss.byID[id] = CardPair{
 				card:       card,
 				collection: collection,
 			}
@@ -294,9 +295,12 @@ func (dc *DataController) BuildCollectionSearchSet(locale string) (*CollectionSe
 	return ss, nil
 }
 
-// Search function for cards
-func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPair, uint64, error) {
-	terms := strings.Split(search, " ")
+// Build the text query for cards, every term must match at least one field
+func cardTextQuery(search string) query.Query {
+	terms := strings.Fields(search)
+	if len(terms) == 0 {
+		return bleve.NewMatchNoneQuery()
+	}
 
 	termQueries := make([]query.Query, len(terms))
 	for i, term := range terms {
@@ -335,11 +339,14 @@ func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPai
 		)
 	}
 
-	q := bleve.NewConjunctionQuery(
+	return bleve.NewConjunctionQuery(
 		termQueries...,
 	)
+}
 
-	req := bleve.NewSearchRequestOptions(q, limit, offset, false)
+// Search function for cards
+func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPair, uint64, error) {
+	req := bleve.NewSearchRequestOptions(cardTextQuery(search), limit, offset, false)
 
 	result, err := ss.idx.Search(req)
 	if err != nil {
@@ -348,16 +355,49 @@ func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPai
 
 	cards := make([]CardPair, 0, len(result.Hits))
 	for _, hit := range result.Hits {
-		if c, ok := ss.byName[hit.ID]; ok {
+		if c, ok := ss.byID[hit.ID]; ok {
 			cards = append(cards, c)
 		}
 	}
 	return cards, result.Total, nil
 }
 
+// Search among a set of global card IDs, returns every matching ID ordered by score
+func (ss *CardSearchSet) SearchWithin(search string, ids []uint) ([]uint, error) {
+	if len(ids) == 0 {
+		return []uint{}, nil
+	}
+
+	docIDs := make([]string, len(ids))
+	for i, id := range ids {
+		docIDs[i] = strconv.FormatUint(uint64(id), 10)
+	}
+
+	q := bleve.NewConjunctionQuery(cardTextQuery(search), bleve.NewDocIDQuery(docIDs))
+	req := bleve.NewSearchRequestOptions(q, len(ids), 0, false)
+
+	result, err := ss.idx.Search(req)
+	if err != nil {
+		return nil, fmt.Errorf("search: %w", err)
+	}
+
+	matches := make([]uint, 0, len(result.Hits))
+	for _, hit := range result.Hits {
+		id, err := strconv.ParseUint(hit.ID, 10, 0)
+		if err != nil {
+			return nil, fmt.Errorf("invalid card document id '%s': %w", hit.ID, err)
+		}
+		matches = append(matches, uint(id))
+	}
+	return matches, nil
+}
+
 // Search function for collections
 func (ss *CollectionSearchSet) Search(search string, limit int, offset int) ([]*data.Collection, uint64, error) {
-	terms := strings.Split(search, " ")
+	terms := strings.Fields(search)
+	if len(terms) == 0 {
+		return []*data.Collection{}, 0, nil
+	}
 
 	termQueries := make([]query.Query, len(terms))
 	for i, term := range terms {
@@ -370,7 +410,7 @@ func (ss *CollectionSearchSet) Search(search string, limit int, offset int) ([]*
 		nameP.SetBoost(6)
 
 		nameF := bleve.NewFuzzyQuery(term)
-		nameF.SetField("nName")
+		nameF.SetField("Name")
 		nameF.SetBoost(6)
 		nameF.SetFuzziness(2)
 		nameF.SetPrefix(1)
@@ -410,6 +450,9 @@ func (ss *CollectionSearchSet) Search(search string, limit int, offset int) ([]*
 }
 
 func (dc *DataController) GetCardSearchSet(locale string) (*CardSearchSet, error) {
+	dc.searchMu.Lock()
+	defer dc.searchMu.Unlock()
+
 	if dc.CardSearch == nil {
 		dc.CardSearch = map[string]*CardSearchSet{}
 	}
@@ -425,6 +468,9 @@ func (dc *DataController) GetCardSearchSet(locale string) (*CardSearchSet, error
 }
 
 func (dc *DataController) GetCollectionSearchSet(locale string) (*CollectionSearchSet, error) {
+	dc.searchMu.Lock()
+	defer dc.searchMu.Unlock()
+
 	if dc.CollectionSearch == nil {
 		dc.CollectionSearch = map[string]*CollectionSearchSet{}
 	}

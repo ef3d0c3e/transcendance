@@ -89,3 +89,14 @@ inventory-unauthenticated = Vous devez être connecté pour acceder aux inventai
 inventory-message-empty = Rien n'a voir ici
 inventory-message-user-not-found = Utilisateur non trouvé
 inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
+inventory-message-no-match = Aucune carte de cet inventaire ne correspond à votre recherche
+inventory-search-placeholder = Rechercher dans cet inventaire
+inventory-search-submit = Rechercher
+inventory-count = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+inventory-search-count = { $count ->
+    [one] { $count } carte trouvée
+    *[other] { $count } cartes trouvées
+}

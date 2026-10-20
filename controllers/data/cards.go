@@ -87,7 +87,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 			loc := dc.Renderer.Localizer.GetLocale(c)
 			ss, err := dc.GetCardSearchSet(loc)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("[WARN] Failed to get card search set for locale '%s': %s", loc, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"message": dc.Renderer.T(c, "card-search-error-internal"),
 				})
@@ -207,7 +207,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 			loc := dc.Renderer.Localizer.GetLocale(c)
 			ss, err := dc.GetCollectionSearchSet(loc)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("[WARN] Failed to get collection search set for locale '%s': %s", loc, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"message": dc.Renderer.T(c, "collection-search-error-internal"),
 				})
