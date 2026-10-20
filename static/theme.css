@@ -709,4 +709,114 @@ section {
         font-size: 1.25rem;
     }
 }
+
+/* }}} */
+
+/* {{{ Inventory */
+.inventory {
+    width: 100%;
+    max-width: 76rem;
+    margin: 0 auto;
+    padding-inline: 1rem;
+}
+
+.inventory-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+
+    padding-bottom: 1.25rem;
+    margin-bottom: 1.5rem;
+
+    border-bottom: 1px solid var(--color-border-1);
+}
+
+.inventory-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    min-width: 0;
+}
+
+.inventory-title {
+    margin: 0;
+
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+}
+
+.inventory-count {
+    margin: 0;
+    padding: 0.15rem 0.7rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: 999px;
+
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.search-form.inventory-search {
+    flex: 1 1 18rem;
+    width: auto;
+    max-width: 26rem;
+    margin: 0;
+}
+
+.inventory-message {
+    max-width: 32rem;
+    margin: 2rem auto;
+    padding: 2.5rem 1.5rem;
+
+    text-align: center;
+    color: var(--color-text-muted);
+    background: var(--color-bg-2);
+    border: 1px dashed var(--color-border-2);
+    border-radius: 1rem;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+    }
+
+    a {
+        display: inline-block;
+        margin-top: 0.75rem;
+        font-weight: 600;
+    }
+}
+
+.inventory .paginator {
+    margin: 0 0 1.5rem;
+}
+
+.inventory-cards+.paginator {
+    margin: 1.5rem 0 0;
+}
+
+@media (max-width: 480px) {
+    .inventory {
+        padding-inline: 0.75rem;
+    }
+
+    .inventory-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-form.inventory-search {
+        flex-basis: auto;
+        max-width: none;
+    }
+}
+
 /* }}} */
