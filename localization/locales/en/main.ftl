@@ -93,6 +93,7 @@ inventory-message-fetch-fail = Cannot fetch user inventory
 inventory-message-no-match = No cards in this inventory match your search
 inventory-search-placeholder = Search this inventory
 inventory-search-submit = Search
+inventory-search-clear = Clear search
 inventory-count = { $count ->
     [one] { $count } card
     *[other] { $count } cards

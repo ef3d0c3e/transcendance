@@ -92,6 +92,7 @@ inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
 inventory-message-no-match = Aucune carte de cet inventaire ne correspond à votre recherche
 inventory-search-placeholder = Rechercher dans cet inventaire
 inventory-search-submit = Rechercher
+inventory-search-clear = Effacer la recherche
 inventory-count = { $count ->
     [one] { $count } carte
     *[other] { $count } cartes

@@ -89,6 +89,7 @@ func TestInventorySearchEmptyQuery(t *testing.T) {
 	require.Equal(t, 1, countCard(body, "Ford Model T"))
 	require.Equal(t, 1, countCard(body, "Tungsten"))
 	require.Contains(t, body, `<p class="inventory-count">2 cards</p>`)
+	require.Equal(t, 1, strings.Count(body, `<nav class="paginator"`))
 }
 
 func TestInventorySearchPagination(t *testing.T) {
@@ -102,6 +103,8 @@ func TestInventorySearchPagination(t *testing.T) {
 	require.Equal(t, 20, countCard(first, "Ford Model T"))
 	require.Contains(t, first, `href="?q=ford&amp;p=2"`)
 	require.Contains(t, first, `<p class="inventory-count">25 cards found</p>`)
+	// Multiple pages get a second paginator below the cards
+	require.Equal(t, 2, strings.Count(first, `<nav class="paginator"`))
 
 	second := getInventory(t, router, cookie, "/inventory?q=ford&p=2")
 	require.Equal(t, 5, countCard(second, "Ford Model T"))
