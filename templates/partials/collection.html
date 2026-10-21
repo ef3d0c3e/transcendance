@@ -20,5 +20,8 @@
 
 		</div>
 	</article>
+	{{ with .Data.CollectionStack }}
+	<span class="collection-stack">×{{ . }}</span>
+	{{ end }}
 </div>
 {{ end }}

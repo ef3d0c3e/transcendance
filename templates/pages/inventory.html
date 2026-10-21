@@ -3,10 +3,11 @@
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h2 class="inventory-title">{{ .Data.Title }}</h2>
-			{{ if ne (len .Data.Cards) 0 }}
+			{{ if ne (len .Data.Items) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
+		{{ if eq .Data.Tab "cards" }}
 		<form class="search-form inventory-search" id="search-form" action="/inventory" method="get">
 			{{ if ne (len .Data.Viewed) 0 }}
 			<input type="hidden" name="u" value="{{ .Data.Viewed }}">
@@ -15,29 +16,49 @@
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "inventory-search-submit" }}></button>
 		</form>
+		{{ end }}
 	</div>
+
+	<nav class="inventory-tabs" aria-label="{{ .T "inventory-tabs-label" }}">
+		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
+			{{ .T "inventory-tab-cards" }} <span class="inventory-tab-count">{{ .Data.TotalCards }}</span>
+		</a>
+		<a class="inventory-tab-boosters" href="{{ .Data.TabBoostersUrl }}" {{ if eq .Data.Tab "boosters" }}aria-current="page"{{ end }}>
+			{{ .T "inventory-tab-boosters" }} <span class="inventory-tab-count">{{ .Data.TotalBoosters }}</span>
+		</a>
+	</nav>
 
 	{{ if .Data.Message }}
 	<div class="inventory-message">
 		<p>{{ .Data.Message }}</p>
 		{{ if ne (len .Data.Query) 0 }}
-		<a href="/inventory{{ if ne (len .Data.Viewed) 0 }}?u={{ .Data.Viewed }}{{ end }}">{{ .T "inventory-search-clear" }}</a>
+		<a href="{{ .Data.TabCardsUrl }}">{{ .T "inventory-search-clear" }}</a>
 		{{ end }}
 	</div>
 	{{ end }}
 
-	{{ if ne (len .Data.Cards) 0 }}
+	{{ if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
+	{{ if eq .Data.Tab "boosters" }}
+	<e-cluster class="inventory-boosters" justify="center">
+		{{ range $val := .Data.Items }}
+		{{ template "collection" $val }}
+		{{ end }}
+	</e-cluster>
+	{{ else }}
 	<e-cluster class="inventory-cards" justify="center">
-		{{ range $val := .Data.Cards }}
+		{{ range $val := .Data.Items }}
 		{{ template "card" $val }}
 		{{ end }}
 	</e-cluster>
+	{{ end }}
 	{{ if gt .Data.Pages 1 }}
 	{{ .Children.Paginator }}
 	{{ end }}
+	{{ if eq .Data.Tab "cards" }}
 	<div id="inventory-card-popup" data-locale="{{ .Data.Locale }}"
 		data-label-acquired="{{ .T "inventory-card-acquired" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
+	{{ end }}
 	{{ end }}
 </div>
 {{ end }}

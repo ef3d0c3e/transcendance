@@ -183,7 +183,7 @@ func getCollectionData(c *gin.Context, loc string, renderer *views.Renderer, col
 		"CollectionTitle":         title,
 		"ColorPrimary":            template.CSS(collection.ColorPrimary),
 		"ColorSecondary":          template.CSS(collection.ColorSecondary),
-		"CollectionDescription":   renderer.T(c, "collection-booster", "count", 5),
+		"CollectionDescription":   renderer.T(c, "collection-booster", "count", collection.BoosterSize),
 		"CollectionCount":         renderer.T(c, "collection-count", "count", len(collection.Cards)),
 		"CollectionID":            renderer.T(c, "collection-id", "id", fmt.Sprintf("%03d", collection.ID)),
 	}, nil
