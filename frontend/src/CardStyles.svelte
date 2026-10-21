@@ -20,7 +20,6 @@
 		position: relative;
 
 		user-select: none;
-		touch-action: none;
 
 		--mouse-x: 50%;
 		--mouse-y: 50%;
@@ -31,12 +30,18 @@
 
 	:global(.card-container[data-tilt]) {
 		perspective: 1000px;
-
-		cursor: grab;
 	}
 
-	:global(.card-container[data-tilt]:active) {
-		cursor: grabbing;
+	/* Tilting is mouse-only, touch devices keep scrolling over cards */
+	@media (hover: hover) and (pointer: fine) {
+		:global(.card-container[data-tilt]) {
+			touch-action: none;
+			cursor: grab;
+		}
+
+		:global(.card-container[data-tilt]:active) {
+			cursor: grabbing;
+		}
 	}
 
 	:global(.card-container[data-tilt] .card) {

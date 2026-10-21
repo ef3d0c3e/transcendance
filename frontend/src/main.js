@@ -2,6 +2,7 @@ import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
 import CardRender from './CardRender.svelte';
+import InventoryCardPopup from './InventoryCardPopup.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -103,5 +104,14 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Inventory card popup
+{
+	const target = document.querySelector('#inventory-card-popup');
+
+	if (target) {
+		mount(InventoryCardPopup, { target, props: { target } });
 	}
 }

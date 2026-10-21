@@ -133,3 +133,28 @@ func TestInventorySearchOtherUser(t *testing.T) {
 	// The search form keeps the viewed user
 	require.Contains(t, body, `<input type="hidden" name="u" value="invsearch7">`)
 }
+
+func TestInventoryCardAcquiredDate(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invpopup1", "foo-bar-baz-qux", 0)
+
+	var user models.User
+	require.NoError(t, tests.DB.Where("username = ?", "invpopup1").First(&user).Error)
+	require.NoError(t, tests.DB.Create(&models.Card{
+		CardID:   cardTungsten,
+		Acquired: time.Date(2025, time.March, 14, 9, 26, 53, 0, time.Local),
+		OwnerID:  user.ID,
+	}).Error)
+	cookie := login(t, router, "invpopup1", "foo-bar-baz-qux")
+
+	// The card carries its acquisition date for the popup
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Contains(t, body, `data-acquired="2025-03-14T09:26:53`)
+	require.Contains(t, body, `id="inventory-card-popup"`)
+	require.Contains(t, body, `data-label-acquired="Acquired on"`)
+
+	// Cards outside the inventory have no acquisition date
+	search := getInventory(t, router, cookie, "/cards/search/?q=tungsten")
+	require.Equal(t, 1, countCard(search, "Tungsten"))
+	require.NotContains(t, search, "data-acquired")
+}
