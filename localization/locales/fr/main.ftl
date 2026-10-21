@@ -95,6 +95,14 @@ inventory-search-submit = Rechercher
 inventory-search-clear = Effacer la recherche
 inventory-card-acquired = Obtenue le
 inventory-card-close = Fermer
+inventory-tabs-label = Sections de l'inventaire
+inventory-tab-cards = Cartes
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = Aucun booster pour l'instant
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
 inventory-count = { $count ->
     [one] { $count } carte
     *[other] { $count } cartes
