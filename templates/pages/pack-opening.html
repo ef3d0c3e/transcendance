@@ -1,0 +1,22 @@
+{{ define "pack-opening" }}
+<div id="card-rendering"></div>
+
+<h2>{{ .T "pack-opening-title" }}</h2>
+
+<form class="pack-form" id="pack-form" action="/opening" method="post">
+	<div id="form-result"></div>
+	<label for="pack-collection">{{ .T "pack-opening-select" }}</label>
+	<select id="pack-collection" name="collection" required>
+		{{ range .Data.Collections }}
+		<option value="{{ .ID }}">{{ .Title }}</option>
+		{{ end }}
+	</select>
+	<button type="submit">{{ .T "pack-opening-open" }}</button>
+</form>
+
+<div id="pack-opening"
+	data-open-label="{{ .T "pack-opening-open" }}"
+	data-retry-label="{{ .T "pack-opening-open-another" }}"
+	data-error-label="{{ .T "pack-opening-error-internal" }}"
+	data-obtained-label="{{ .T "pack-opening-obtained" }}"></div>
+{{ end }}

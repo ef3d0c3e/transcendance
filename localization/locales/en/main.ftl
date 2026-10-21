@@ -83,3 +83,12 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+
+pack-opening-title = Pack Opening
+pack-opening-select = Choose a booster
+pack-opening-open = Open pack
+pack-opening-open-another = Open another pack
+pack-opening-error-collection = Collection not found
+pack-opening-error-empty = This booster has no cards
+pack-opening-error-internal = Failed to open the pack
+pack-opening-obtained = Cards obtained

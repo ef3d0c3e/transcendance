@@ -59,4 +59,7 @@ func RegisterRoutes(
 	}
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
+
+	router.GET("/opening", dataController.OpeningGet)
+	router.POST("/opening", dataController.OpeningPost)
 }

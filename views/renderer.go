@@ -64,6 +64,18 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	}
 }
 
+// RenderToString executes a named template and returns the result as a string.
+// Useful to embed fragments (like cards) into JSON responses.
+func (r *Renderer) RenderToString(name string, data any) (string, error) {
+	var content bytes.Buffer
+
+	if err := r.templates.ExecuteTemplate(&content, name, data); err != nil {
+		return "", err
+	}
+
+	return content.String(), nil
+}
+
 type pageBuilder struct {
 	templateName string
 	data         map[string]any
