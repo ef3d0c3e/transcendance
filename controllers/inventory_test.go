@@ -158,3 +158,75 @@ func TestInventoryCardAcquiredDate(t *testing.T) {
 	require.Equal(t, 1, countCard(search, "Tungsten"))
 	require.NotContains(t, search, "data-acquired")
 }
+
+// Collection ID of the dev collection
+const collectionDev = 1
+
+func giveBoosters(t *testing.T, username string, collectionID uint, size uint, count int) {
+	var user models.User
+	require.NoError(t, tests.DB.Where("username = ?", username).First(&user).Error)
+
+	for range count {
+		require.NoError(t, tests.DB.Create(&models.Booster{
+			CollectionID: collectionID,
+			Size:         size,
+			Acquired:     time.Now(),
+			OwnerID:      user.ID,
+		}).Error)
+	}
+}
+
+func TestInventoryBoosters(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invbooster1", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "invbooster2", "foo-bar-baz-qux", 0)
+	giveBoosters(t, "invbooster1", collectionDev, 5, 3)
+	// Acquired before the collection's booster size changed
+	giveBoosters(t, "invbooster1", collectionDev, 3, 1)
+	giveCards(t, "invbooster1", cardTungsten, 2)
+	giveBoosters(t, "invbooster2", collectionDev, 5, 7)
+	cookie := login(t, router, "invbooster1", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
+	// One stack per (collection, size)
+	require.Equal(t, 2, strings.Count(body, `<article class="collection"`))
+	require.Contains(t, body, `<span class="collection-stack">×3</span>`)
+	require.Contains(t, body, `<span class="collection-stack">×1</span>`)
+	require.Contains(t, body, "5 cards booster")
+	require.Contains(t, body, "3 cards booster")
+	require.Contains(t, body, `<p class="inventory-count">4 boosters</p>`)
+	// Boosters can't be searched, and tabs show both counts
+	require.NotContains(t, body, `id="search-form"`)
+	require.Contains(t, body, `<span class="inventory-tab-count">2</span>`)
+	require.Contains(t, body, `<span class="inventory-tab-count">4</span>`)
+	require.Zero(t, countCard(body, "Tungsten"))
+
+	// The cards tab is unaffected
+	cards := getInventory(t, router, cookie, "/inventory")
+	require.Equal(t, 2, countCard(cards, "Tungsten"))
+	require.NotContains(t, cards, `class="collection-stack"`)
+}
+
+func TestInventoryBoostersOtherUser(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invbooster3", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "invbooster4", "foo-bar-baz-qux", 0)
+	giveBoosters(t, "invbooster4", collectionDev, 5, 2)
+	cookie := login(t, router, "invbooster3", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?u=invbooster4&tab=boosters")
+	require.Contains(t, body, `<span class="collection-stack">×2</span>`)
+	// Tabs keep the viewed user
+	require.Contains(t, body, `href="/inventory?u=invbooster4"`)
+	require.Contains(t, body, `href="/inventory?tab=boosters&amp;u=invbooster4"`)
+}
+
+func TestInventoryBoostersEmpty(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invbooster5", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "invbooster5", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
+	require.Contains(t, body, "No boosters yet")
+	require.NotContains(t, body, `<article class="collection"`)
+}
