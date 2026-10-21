@@ -111,3 +111,12 @@ inventory-search-count = { $count ->
     [one] { $count } carte trouvée
     *[other] { $count } cartes trouvées
 }
+
+pack-opening-title = Ouverture de booster
+pack-opening-select = Choisir un booster
+pack-opening-open = Ouvrir le booster
+pack-opening-open-another = Ouvrir un autre booster
+pack-opening-error-collection = Collection introuvable
+pack-opening-error-empty = Ce booster ne contient aucune carte
+pack-opening-error-internal = Impossible d'ouvrir le booster
+pack-opening-obtained = Cartes obtenues
