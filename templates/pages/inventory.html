@@ -36,6 +36,8 @@
 	{{ if gt .Data.Pages 1 }}
 	{{ .Children.Paginator }}
 	{{ end }}
+	<div id="inventory-card-popup" data-locale="{{ .Data.Locale }}"
+		data-label-acquired="{{ .T "inventory-card-acquired" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
 	{{ end }}
 </div>
 {{ end }}

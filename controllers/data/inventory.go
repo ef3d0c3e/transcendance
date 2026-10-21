@@ -98,6 +98,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Query":   query,
 		"Viewed":  viewed,
 		"Pages":   int(totalPages),
+		"Locale":  dc.Renderer.Localizer.GetLocale(c),
 	})
 	params := url.Values{}
 	if viewed != "" {
@@ -200,6 +201,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			dc.renderInventory(c, user, nil, 1, 0, username, query, dc.Renderer.T(c, "inventory-message-fetch-fail"))
 			return
 		}
+		// Shown in the card popup, formatted client-side
+		data["CardAcquired"] = invCard.Acquired.Format(time.RFC3339)
 		cardData[i] = map[string]any{
 			"Data": data,
 		}
