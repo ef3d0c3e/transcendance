@@ -3,6 +3,7 @@ import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
+import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
@@ -117,6 +118,15 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 	}
 }
 
+// Inventory booster popup
+{
+	const target = document.querySelector('#inventory-booster-popup');
+
+	if (target) {
+		mount(InventoryBoosterPopup, { target, props: { target } });
+	}
+}
+
 // Pack opening
 {
 	const target = document.querySelector('#pack-opening');
@@ -130,6 +140,10 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				retryLabel: target.dataset.retryLabel,
 				errorLabel: target.dataset.errorLabel,
 				obtainedLabel: target.dataset.obtainedLabel,
+				returnLabel: target.dataset.returnLabel,
+				returnUrl: target.dataset.returnUrl,
+				openAgainLabel: target.dataset.openAgainLabel,
+				autostart: target.dataset.autostart === 'true',
 			},
 		});
 	}
