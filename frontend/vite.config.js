@@ -10,9 +10,6 @@ export default defineConfig({
 		rollupOptions: {
 			input: {
 				main: "src/main.js",
-				register: "src/register.js",
-				login: "src/login.js",
-				profile: "src/profile.js",
 			},
 			output: {
 				entryFileNames: "[name].js",
