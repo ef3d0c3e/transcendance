@@ -38,14 +38,47 @@ search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
-cards-error-not-found = Impossible de trouver la carte
-
-card-rarity-common = Commune
-card-rarity-rare = Rare
-card-rarity-legendary = Legendaire
 navbar-label-toggle = Afficher/masquer le menu
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
 
 language-switcher = Choisissez un langage
+
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
+
+paginator-label-nav = Pagination
+paginator-label-previous = Page précédente
+paginator-label-next = Page suivante
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
+
+card-search-title = Rechercher des Cartes
+card-search-placeholder = Rechercher des cartes
+card-search-empty = Aucune carte trouvée
+card-search-submit = Rechercher
+card-search-error-internal = Echec de la recherche
+
+card-error-not-found = Carte non trouvée
+
+collection-title = Collection { $collection }
+collection-booster = { $count ->
+    [one] Booster de { $count } carte
+    *[other] Booster de { $count } cartes
+}
+collection-count = { $count ->
+    [one] { $count } CARTE
+    *[other] { $count } CARTES
+}
+collection-id = NO. { $id }
+
+collection-search-title = Rechercher des Collections
+collection-search-placeholder = Rechercher des collections
+collection-search-empty = Aucune collection trouvée
+collection-search-submit = Rechercher
+collection-search-error-internal = Echec de la recherche
+
+collection-error-not-found = Collection non trouvée

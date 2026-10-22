@@ -1,6 +1,7 @@
 import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
+import CardRender from './CardRender.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -93,5 +94,14 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				onSuccess: () => {},
 			},
 		});
+	}
+}
+
+// Cards
+{
+	const target = document.querySelector('#card-rendering');
+
+	if (target) {
+		mount(CardRender, {target});
 	}
 }
