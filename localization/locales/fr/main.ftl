@@ -82,37 +82,24 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+notification-title = Notifications
+notification-unread = non lues
 notification-loading = Chargement des notifications...
-notification-none = Pas de nouvelle notification
+notification-none = Vous êtes à jour
+notification-error = Impossible de charger les notifications
 notification-view-all = Voir toutes les notifications
-notification-time-ago-just-now = à l'instant
-notification-time-ago-seconds = { $count ->
-    [one] il y a { $count } seconde
-   *[other] il y a { $count } secondes
-}
-notification-time-ago-minutes = { $count ->
-    [one] il y a { $count } minute
-   *[other] il y a { $count } minutes
-}
-notification-time-ago-hours = { $count ->
-    [one] il y a { $count } heure
-   *[other] il y a { $count } heures
-}
-notification-time-ago-days = { $count ->
-    [one] il y a { $count } jour
-   *[other] il y a { $count } jours
-}
-notification-time-ago-weeks = { $count ->
-    [one] il y a { $count } semaine
-   *[other] il y a { $count } semaines
-}
-notification-time-ago-months = il y a { $count } mois
-notification-time-ago-years = { $count ->
-    [one] il y a { $count } an
-   *[other] il y a { $count } ans
-}
+notification-mark-all-read = Tout marquer comme lu
+notification-mark-read = Marquer comme lue
+notification-mark-unread = Marquer comme non lue
+notification-delete = Supprimer
+notification-tabs-label = Filtrer les notifications
+notification-tab-all = Toutes
+notification-tab-unread = Non lues
+notification-empty-all = Aucune notification pour le moment
+notification-empty-unread = Aucune notification non lue
 
 notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
-notification-friend-request-accept = Accepter
-notification-friend-request-deny = Refuser
+notification-info-title = { $title }
+notification-info-desc = { $description }
