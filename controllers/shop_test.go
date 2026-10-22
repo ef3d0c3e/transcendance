@@ -119,6 +119,7 @@ func TestShopGetAnonymousHidesCheckout(t *testing.T) {
 	body := shopBody(rec)
 	require.Contains(t, body, "Log in to get coins and buy boosters")
 	require.NotContains(t, body, "/shop/topup")
+	require.NotContains(t, body, `id="shop-topup-popup"`)
 	require.NotContains(t, body, "Balance:")
 	// The buy popup must not advertise a balance to guests
 	require.NotContains(t, body, "data-coins")
@@ -178,9 +179,13 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	rec = shopRequest(t, router, http.MethodGet, "/shop?topup=medium", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
-	require.Contains(t, body, "Balance: 500")
+	require.Contains(t, body, "Balance: 500 coins")
 	require.Contains(t, body, "500 coins have been added to your balance")
 	require.Contains(t, body, "/shop/topup")
+	// Packs are sold from a popup, each with a display price in euros
+	require.Contains(t, body, `id="shop-topup-popup"`)
+	require.Contains(t, body, "Buy more coins")
+	require.Contains(t, body, "€4.49")
 
 	// A second pack stacks on top of the first
 	rec = shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
@@ -218,7 +223,7 @@ func TestShopGetLoggedInShowsCoins(t *testing.T) {
 	rec = shopRequest(t, router, http.MethodGet, "/shop", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
-	require.Contains(t, body, "Balance: 1000")
+	require.Contains(t, body, "Balance: 1,000 coins")
 	require.Contains(t, body, `data-coins="1000"`)
 }
 
