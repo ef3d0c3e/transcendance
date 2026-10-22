@@ -48,14 +48,16 @@ func boosterPrice(collectionID int) uint {
 type topupPack struct {
 	ID     string
 	Amount uint
+	// Displayed price in euro cents. Nothing is charged, see shop-topup-note.
+	PriceCents uint
 }
 
 // Coins sold by the demo checkout. Crediting a pack takes no real payment:
 // see shop-topup-note.
 var topupPacks = []topupPack{
-	{ID: "small", Amount: 100},
-	{ID: "medium", Amount: 500},
-	{ID: "large", Amount: 1000},
+	{ID: "small", Amount: 100, PriceCents: 99},
+	{ID: "medium", Amount: 500, PriceCents: 449},
+	{ID: "large", Amount: 1000, PriceCents: 799},
 }
 
 // topupAmount returns the coins a pack credits, if the pack is on sale.
@@ -81,6 +83,7 @@ type shopBooster struct {
 type shopTopup struct {
 	ID    string
 	Label string
+	Price string
 }
 
 // collectionTitle returns the localized title of a collection, falling back
@@ -188,9 +191,13 @@ func (sc *ShopController) ShopGet(c *gin.Context) {
 	topups := make([]shopTopup, 0, len(topupPacks))
 	if user != nil {
 		for _, pack := range topupPacks {
+			// Euros and cents go as strings so they skip number grouping
 			topups = append(topups, shopTopup{
 				ID:    pack.ID,
-				Label: sc.Renderer.T(c, "shop-topup-button", "amount", pack.Amount),
+				Label: sc.Renderer.T(c, "shop-price", "amount", pack.Amount),
+				Price: sc.Renderer.T(c, "shop-topup-price",
+					"euros", strconv.Itoa(int(pack.PriceCents/100)),
+					"cents", fmt.Sprintf("%02d", pack.PriceCents%100)),
 			})
 		}
 	}
@@ -212,6 +219,7 @@ func (sc *ShopController) ShopGet(c *gin.Context) {
 		"Boosters":    boosters,
 		"Topups":      topups,
 		"Coins":       coins,
+		"CoinsLabel":  sc.Renderer.T(c, "shop-price", "amount", coins),
 		"MaxQuantity": maxBuyQuantity,
 	})
 	sc.Renderer.Render(c, &builder)

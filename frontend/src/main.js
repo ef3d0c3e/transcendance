@@ -189,3 +189,32 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 		});
 	}
 }
+
+// Shop coin top-up popup
+{
+	const dialog = document.querySelector('#shop-topup-popup');
+
+	if (dialog) {
+		let returnFocus;
+
+		for (const button of document.querySelectorAll('.shop-topup-open')) {
+			button.addEventListener('click', () => {
+				returnFocus = button;
+				dialog.showModal();
+			});
+		}
+		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {
+			button.addEventListener('click', () => dialog.close());
+		}
+		// Clicking the backdrop targets the dialog itself
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+		dialog.addEventListener('close', () => {
+			returnFocus?.focus();
+			returnFocus = undefined;
+		});
+	}
+}

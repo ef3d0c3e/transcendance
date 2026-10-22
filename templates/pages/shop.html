@@ -1,21 +1,65 @@
 {{ define "shop" }}
 <style>
-	.shop-balance {
+	.shop {
+		width: 100%;
+		padding: 1.25rem clamp(1rem, 3vw, 2rem) 2rem;
+	}
+
+	/* Balance on the left, title centered over the page */
+	.shop-header {
+		display: grid;
+		grid-template-columns: 1fr auto 1fr;
+		align-items: center;
+		gap: 1rem;
+
+		margin-bottom: 1rem;
+	}
+
+	.shop-header h1 {
+		margin: 0;
+	}
+
+	.shop-wallet {
 		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: .5rem;
+
+		justify-self: start;
+	}
+
+	.shop-balance {
+		display: inline-flex;
 		align-items: center;
 		gap: .4em;
 
-		font-weight: 600;
+		min-height: 2.5rem;
+		margin: 0;
+		padding: .35em .9em;
+
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+
+		background: var(--color-bg-4);
+		border-radius: .55rem;
 	}
 
 	.shop-balance .coin-icon {
-		vertical-align: -.12em;
+		width: 1.2em;
+		height: 1.2em;
+	}
+
+	.shop-login-hint {
+		margin: 0;
+
+		color: var(--color-text-muted);
 	}
 
 	.shop-list {
-		display: flex;
-		flex-wrap: wrap;
-		gap: 1.25rem;
+		display: grid;
+		grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr));
+		justify-items: center;
+		gap: 2rem 1.25rem;
 
 		margin: 0;
 		padding: 0;
@@ -84,25 +128,170 @@
 		color: var(--color-error-3);
 	}
 
+	.shop-topup-popup {
+		width: min(100% - 2rem, 34rem);
+		max-height: calc(100% - 2rem);
+		padding: 0;
+
+		overflow: auto;
+
+		color: var(--color-text);
+		background: var(--color-bg-2);
+		border: 1px solid var(--color-border-1);
+		border-radius: 1rem;
+		box-shadow: 0 10px 30px var(--color-shadow);
+	}
+
+	.shop-topup-popup::backdrop {
+		background: rgb(0 0 0 / 55%);
+		backdrop-filter: blur(3px);
+	}
+
+	.shop-topup-popup[open] {
+		animation: shop-topup-popup-in 150ms ease;
+	}
+
+	.shop-topup-content {
+		display: flex;
+		flex-direction: column;
+		gap: 1rem;
+
+		padding: 1.25rem 1.25rem 1rem;
+	}
+
+	.shop-topup-content h2 {
+		margin: 0;
+
+		font-size: 1.25rem;
+	}
+
 	.shop-note {
+		margin: 0;
+
 		color: var(--color-text-muted);
 		font-size: .9em;
 	}
+
+	.shop-topup-packs {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr));
+		gap: .75rem;
+
+		margin: 0;
+		padding: 0;
+
+		list-style: none;
+	}
+
+	.shop-topup-pack {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: .75rem;
+
+		height: 100%;
+		padding: 1rem .75rem .75rem;
+
+		background: var(--color-bg-4);
+		border: 1px solid var(--color-border-1);
+		border-radius: .75rem;
+	}
+
+	.shop-topup-amount {
+		display: inline-flex;
+		align-items: center;
+		gap: .35em;
+
+		font-size: 1.1rem;
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.shop-topup-amount .coin-icon {
+		width: 1.3em;
+		height: 1.3em;
+	}
+
+	.shop-topup-pack button {
+		width: 100%;
+		margin-top: auto;
+
+		font-variant-numeric: tabular-nums;
+	}
+
+	.shop-topup-actions {
+		display: flex;
+		justify-content: flex-end;
+	}
+
+	/* Closing is the neutral action, like the unselected inventory tabs */
+	.shop-topup-actions button {
+		color: var(--color-text);
+		background: var(--color-bg-4);
+	}
+
+	.shop-topup-actions button:hover {
+		background: color-mix(in srgb, var(--color-bg-4), black 10%);
+	}
+
+	@keyframes shop-topup-popup-in {
+		from {
+			opacity: 0;
+			transform: translateY(.5rem) scale(.98);
+		}
+	}
+
+	@media (max-width: 720px) {
+		.shop-header {
+			grid-template-columns: 1fr;
+			justify-items: center;
+		}
+
+		/* Title first on small screens, the wallet right under it */
+		.shop-header h1 {
+			order: -1;
+		}
+
+		.shop-wallet {
+			justify-self: center;
+			justify-content: center;
+		}
+	}
+
+	/* Small screens: bottom sheet, like the other popups */
+	@media (max-width: 480px) {
+		.shop-topup-popup {
+			width: 100%;
+			max-width: 100%;
+			margin: auto 0 0;
+
+			border-radius: 1rem 1rem 0 0;
+			border-bottom: 0;
+		}
+
+		.shop-topup-content {
+			padding-bottom: max(1rem, env(safe-area-inset-bottom));
+		}
+	}
 </style>
 <section class="shop">
-	<h1>{{ .T "shop-title" }}</h1>
+	<div class="shop-header">
+		<div class="shop-wallet">
+			{{ if .Data.User }}
+			<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: {{ .Data.CoinsLabel }}</p>
+			<button type="button" class="shop-topup-open" aria-haspopup="dialog" aria-controls="shop-topup-popup">{{ .T "shop-topup-open" }}</button>
+			{{ else }}
+			<p class="shop-login-hint">{{ .T "shop-login-hint" }}</p>
+			{{ end }}
+		</div>
+		<h1>{{ .T "shop-title" }}</h1>
+	</div>
 
 	{{ if .Data.Notice.Message }}
 	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}">
 		{{ .Data.Notice.Message }}
 		{{ if .Data.Notice.LinkHref }}<a href="{{ .Data.Notice.LinkHref }}">{{ .Data.Notice.LinkLabel }}</a>{{ end }}
 	</p>
-	{{ end }}
-
-	{{ if .Data.User }}
-	<p class="shop-balance">{{ .T "shop-balance" }}: {{ .Data.Coins }} {{ template "coin-icon" }}</p>
-	{{ else }}
-	<p class="shop-balance">{{ .T "shop-login-hint" }}</p>
 	{{ end }}
 
 	<h2>{{ .T "shop-boosters-title" }}</h2>
@@ -136,18 +325,26 @@
 		data-label-coins="{{ .T "shop-coins" }}"></div>
 
 	{{ if .Data.User }}
-	<h2>{{ .T "shop-topup-title" }}</h2>
-	<p class="shop-note">{{ .T "shop-topup-note" }}</p>
-	<ul class="shop-list">
-	{{ range .Data.Topups }}
-		<li class="shop-item">
-			<form action="/shop/topup" method="post">
-				<input type="hidden" name="pack" value="{{ .ID }}">
-				<button type="submit">{{ .Label }}</button>
-			</form>
-		</li>
-	{{ end }}
-	</ul>
+	<dialog id="shop-topup-popup" class="shop-topup-popup" aria-labelledby="shop-topup-popup-title">
+		<div class="shop-topup-content">
+			<h2 id="shop-topup-popup-title">{{ .T "shop-topup-title" }}</h2>
+			<p class="shop-note">{{ .T "shop-topup-note" }}</p>
+			<ul class="shop-topup-packs">
+			{{ range .Data.Topups }}
+				<li>
+					<form class="shop-topup-pack" action="/shop/topup" method="post">
+						<input type="hidden" name="pack" value="{{ .ID }}">
+						<span class="shop-topup-amount">{{ template "coin-icon" }} {{ .Label }}</span>
+						<button type="submit">{{ .Price }}</button>
+					</form>
+				</li>
+			{{ end }}
+			</ul>
+			<div class="shop-topup-actions">
+				<button type="button" data-shop-topup-close>{{ .T "shop-buy-close" }}</button>
+			</div>
+		</div>
+	</dialog>
 	{{ end }}
 </section>
 {{ end }}
