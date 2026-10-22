@@ -102,3 +102,131 @@ The following tools are recommended for working with the project:
  * [typescript-language-server](https://github.com/typescript-language-server/typescript-language-server) language server for js/ts.
  * [gopls](https://go.dev/gopls/) go language server.
  * [LSP-html](https://github.com/sublimelsp/LSP-html) HTML language server.
+
+# Docker
+
+## Test/Production server
+
+ 1. Setup
+To setup a production or testing server you must first have `nginx` setup with a reverse proxy to `127.0.0.1:8080`.
+`nginx` will manage `tls`, you can use [Let's Encrypt](https://letsencrypt.org/) to get a free certificate for your domain.
+
+Then you must create a user, this user will be the one storing files for the project (backend, frontend, database), as well as managing the systemd units.
+The user needs to be in the docker group (`usermod -aG docker user`) and have `linger` enabled: `loginctl enable-linger user`.
+
+In order to use docker from systemd, you need to tell systemd to add the docker supplementary group to the user's services.
+```
+systemctl edit user@1001.service # Replace with the user's id
+
+# Add this:
+[Service]
+SupplementaryGroups=docker
+
+# Now reload
+sudo systemctl daemon-reload
+sudo systemctl restart user@1001.service
+```
+
+ 2. Installing dependencies
+
+The following dependencies are required:
+ - `docker`
+ - `systemd`
+ - `bash`
+ - `git`
+
+ 3. Service
+
+Install the following systemd unit and timer:
+
+`$HOME/.config/systemd/user/live.service`:
+```ini
+[Unit]
+Description=Check for GitHub updates and deploy transcendance
+Wants=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/transcendance/live.sh
+```
+
+`$HOME/.config/systemd/user/live.timer`:
+```ini
+[Unit]
+Description=Check transcendance for updates every 5 minutes
+
+[Timer]
+OnBootSec=1min
+OnUnitInactiveSec=5min
+AccuracySec=15s
+Unit=transcendance-deploy.service
+
+[Install]
+WantedBy=timers.target
+```
+
+Then install the following script in `$HOME/live.sh`:
+```bash
+#!/usr/bin/env bash
+set -Eeuo pipefail
+
+DOCKER_DIR="/home/transcendance"
+REPO_DIR="/home/transcendance/repo"
+BRANCH="testing"
+STATE_DIR="/home/transcendance/app-deploy"
+STATE_FILE="$STATE_DIR/deployed-sha"
+LOCK_FILE="/home/transcendance/app-deploy.lock"
+
+# Prevent overlapping runs
+exec 9>"$LOCK_FILE"
+flock -n 9 || exit 0
+
+mkdir -p "$STATE_DIR"
+cd "$REPO_DIR"
+
+# Fetch the latest branch state from GitHub
+git fetch origin "$BRANCH"
+
+REMOTE_SHA="$(git rev-parse "origin/$BRANCH")"
+DEPLOYED_SHA=""
+
+if [[ -f "$STATE_FILE" ]]; then
+    DEPLOYED_SHA="$(cat "$STATE_FILE")"
+fi
+
+# Nothing new to deploy
+if [[ "$REMOTE_SHA" == "$DEPLOYED_SHA" ]]; then
+    echo "No changes detected."
+    exit 0
+fi
+
+echo "Deploying $REMOTE_SHA..."
+
+git checkout -B "$BRANCH" "origin/$BRANCH"
+git reset --hard "$REMOTE_SHA"
+
+# Rebuild and start the updated application
+cd "${DOCKER_DIR}"
+USER_ID=$(id -u) GROUP_ID=$(id -g) docker compose up -d --build --remove-orphans
+
+# Record success only after deployment succeeds
+echo "$REMOTE_SHA" > "$STATE_FILE"
+
+echo "Deployment successful: $REMOTE_SHA"
+```
+
+
+ 4. Start
+
+Enable the `live.timer` service:
+```
+systemctl --user daemon-reload
+systemctl --user enable --now live.timer
+```
+
+Every 5 minutes, the timer will run `live.sh`.
+`live.sh` will check for changes the configured branch and pull the new repo and restart the `docker` images.
+
+You may want to start the server manually once to make sure it's working: either run `live.sh` or the `live.service` systemd (one-shot) service.
