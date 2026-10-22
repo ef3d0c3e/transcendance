@@ -83,3 +83,21 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+profile-title = Profile
+profile-error-user = User doesn't exist
+profile-error-username = Invalid username. Username must be between 3 and 16 characters long and may contain letters, numbers and '_'
+profile-error-username-taken = Username already taken
+profile-error-bio = Bio must be no more than 244 characters long
+profile-error-birthdate = Birthdate must be between year 0 and the present day
+profile-error-contactinfo = Contact must be no more than 256 characters long
+profile-error-password = Password doesn't not match the current password
+profile-error-new_password = Invalid password. Your password must be between 8 and 72 characters long
+profile-error-passwords-do-not-match = Passwords do not match
+profile-error-password-missing = Must provide this field to change password
+profile-empty-field = Not Specified
+profile-submit = Save
+
+error-unexpected = An error occured
+error-unauthorized = You must be logged in to access this ressource
+
+Error = Error

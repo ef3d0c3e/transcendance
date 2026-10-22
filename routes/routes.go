@@ -20,6 +20,7 @@ func RegisterRoutes(
 		DB:       db,
 		Renderer: renderer,
 	}
+	profileController := controllers.ProfileController(authController)
 
 	router.Static("/frontend", "./frontend/dist")
 	router.Static("/static", "./static")
@@ -38,6 +39,10 @@ func RegisterRoutes(
 		Renderer: renderer,
 	}
 	router.GET("/api/account_delete", accountController.AccountDeleteGet)
+
+	router.GET("/profile", profileController.ProfileGet)
+	router.GET("/profile/:username", profileController.ProfileGet)
+	router.POST("/profile", profileController.ProfilePost)
 
 	pages := Pages{
 		DB:       db,

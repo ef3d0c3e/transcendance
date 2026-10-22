@@ -64,7 +64,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID: session.UserID,
+			ID:       session.UserID,
 			Username: user.Username,
 			Rank: user.Rank,
 		})
@@ -98,7 +98,7 @@ func (ac *AuthController) RegisterGet(c *gin.Context) {
 		"User":  user,
 	})
 	builder.Add("register", "Content", map[string]any{
-		"User":  user,
+		"User": user,
 	})
 	ac.Renderer.Render(c, &builder)
 }
@@ -174,7 +174,15 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 		UpdatedAt:    now,
 	}
 
-	if err := ac.DB.Create(&user).Error; err != nil {
+	err = ac.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+		return tx.Create(&models.UserProfile{
+			UserID: user.ID,
+		}).Error
+	})
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": ac.Renderer.T(c, "register-error-user"),
 		})
@@ -202,7 +210,7 @@ func (ac *AuthController) LoginGet(c *gin.Context) {
 		"User":  user,
 	})
 	builder.Add("login", "Content", map[string]any{
-		"User":  user,
+		"User": user,
 	})
 	ac.Renderer.Render(c, &builder)
 }
