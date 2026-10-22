@@ -15,7 +15,7 @@ type User struct {
 	UpdatedAt    time.Time      `gorm:"not null"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Avatar       string
-	Rank         uint            `gorm:"not null;default:0"`
+	Rank         uint `gorm:"not null;default:0"`
 }
 
 type UserSession struct {
@@ -26,4 +26,13 @@ type UserSession struct {
 	Token     string    `gorm:"not null"`
 	CreatedAt time.Time `gorm:"not null"`
 	ExpiresAt time.Time `gorm:"not null"`
+}
+
+type UserProfile struct {
+	UserID uint `gorm:"primaryKey"`
+	User   User `gorm:"constraint:OnDelete:CASCADE"`
+
+	Bio         string
+	BirthDate   time.Time
+	ContactInfo string
 }

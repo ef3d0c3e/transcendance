@@ -6,6 +6,7 @@ import CardRender from './CardRender.svelte';
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
+import Profile from './ProfileEnhancement.svelte';
 
 // Navbar
 {
@@ -103,5 +104,16 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Profile form
+{
+	const target = document.querySelector('#profile-enhancement');
+
+	if (target) {
+		mount(Profile, {
+			target,
+		});
 	}
 }

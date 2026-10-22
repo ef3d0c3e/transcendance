@@ -5,6 +5,8 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	fluentloc "github.com/hakastein/gofluent/localization"
@@ -54,13 +56,16 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 		template.New("").Funcs(template.FuncMap{
 			"sub": func(a, b int) int { return a - b },
 			"add": func(a, b int) int { return a + b },
+			"today": func() string {
+				return time.Now().UTC().Format("2006-01-02")
+			},
 		}).ParseGlob("templates/**/*.html"),
 	)
 
 	return &Renderer{
 		templates: t,
 		Localizer: l,
-		themer: themer,
+		themer:    themer,
 	}
 }
 
@@ -157,4 +162,36 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
 		return
 	}
+}
+
+type ErrorPage struct {
+	User       any
+	Title      string
+	Message    string
+	StatusCode int
+}
+
+func (r *Renderer) RenderError(
+	c *gin.Context,
+	data ErrorPage,
+) {
+	if data.StatusCode != 0 {
+		c.Status(data.StatusCode)
+	}
+	if data.Title == "" {
+		if data.StatusCode != 0 {
+			data.Title = strconv.Itoa(data.StatusCode) + " " + http.StatusText(data.StatusCode)
+		} else {
+			data.Title = r.T(c, "Error")
+		}
+	}
+	builder := PageBuilder("base", gin.H{
+		"Title": data.Title,
+		"User":  data.User,
+	})
+	builder.Add("error", "Content", gin.H{
+		"StatusCode":   data.StatusCode,
+		"ErrorMessage": data.Message,
+	})
+	r.Render(c, &builder)
 }

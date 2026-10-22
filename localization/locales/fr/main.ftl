@@ -82,3 +82,21 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+profile-title = Profil
+profile-error-user = L'utilisateur n'existe pas
+profile-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit faire entre 3 et 16 caractères et peut être composé de lettres, chiffres et '_'
+profile-error-username-taken = Nom d'utilisateur déjà utilisé
+profile-error-bio = La bio ne doit faire pas plus de 244 caractères de long
+profile-error-birthdate = La date de naissance doit être entre l'an 0 et le jour présent
+profile-error-contactinfo = Le contact ne doit faire pas plus de 256 caractères de long
+profile-error-password = Le mot de passe ne correspond pas avec le mot de passe actuel
+profile-error-new_password = Le mot de passe est invalide. Le mot de passe doit faire entre 8 et 72 caractères
+profile-error-passwords-do-not-match = Les mots de passe doivent correspondre
+profile-error-password-missing = Veuillez remplir ce champ pour changer de mot de passe
+profile-empty-field = Non Spécifié
+profile-submit = Sauvegarder
+
+error-unexpected = Une erreur est survenue
+error-unauthorized = Vous devez être connecté pour accéder au contenu
+
+Error = Erreur
