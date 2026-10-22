@@ -123,14 +123,22 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 	const forms = new Set();
 	for (const select of document.querySelectorAll('select[data-autosubmit]')) {
 		select.addEventListener('change', () => select.form?.requestSubmit());
-		if (select.form) forms.add(select.form);
+		if (select.form) {
+			forms.add(select.form);
+		}
 	}
 
-	// Leave unset fields out of the URL
+	// Leave unset fields out of the URL, collected first since deleting while iterating skips entries
 	for (const form of forms) {
-		form.addEventListener('formdata', (e) => {
-			for (const [name, value] of [...e.formData]) {
-				if (value === '') e.formData.delete(name);
+		form.addEventListener('formdata', (event) => {
+			const empty = [];
+			for (const [name, value] of event.formData) {
+				if (value === '') {
+					empty.push(name);
+				}
+			}
+			for (const name of empty) {
+				event.formData.delete(name);
 			}
 		});
 	}
