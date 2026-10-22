@@ -92,8 +92,11 @@
 <section class="shop">
 	<h1>{{ .T "shop-title" }}</h1>
 
-	{{ if .Data.Message }}
-	<p class="shop-message {{ if .Data.MessageError }}shop-message-error{{ else }}shop-message-success{{ end }}">{{ .Data.Message }}</p>
+	{{ if .Data.Notice.Message }}
+	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}">
+		{{ .Data.Notice.Message }}
+		{{ if .Data.Notice.LinkHref }}<a href="{{ .Data.Notice.LinkHref }}">{{ .Data.Notice.LinkLabel }}</a>{{ end }}
+	</p>
 	{{ end }}
 
 	{{ if .Data.User }}
@@ -107,7 +110,7 @@
 	<ul class="shop-list shop-booster-list">
 	{{ range .Data.Boosters }}
 		<li class="shop-item">
-			<div class="shop-booster" data-collection="{{ .ID }}" data-title="{{ .Title }}" data-price-label="{{ .PriceLabel }}">
+			<div class="shop-booster" data-collection="{{ .ID }}" data-title="{{ .Title }}" data-price="{{ .Price }}" data-price-label="{{ .PriceLabel }}">
 				<div class="shop-booster-display">
 					{{ template "collection" . }}
 					<span class="shop-price-pill">{{ template "coin-icon" }} {{ .PriceLabel }}</span>
@@ -121,10 +124,16 @@
 	{{ end }}
 
 	<div id="shop-buy-popup" {{ if .Data.User }}data-coins="{{ .Data.Coins }}"{{ end }}
+		data-max-quantity="{{ .Data.MaxQuantity }}"
 		data-label-buy="{{ .T "shop-booster-buy" }}"
-		data-label-coming-soon="{{ .T "shop-booster-coming-soon" }}"
 		data-label-balance="{{ .T "shop-balance" }}"
-		data-label-close="{{ .T "shop-buy-close" }}"></div>
+		data-label-funds="{{ .T "shop-error-funds" }}"
+		data-label-login="{{ .T "login-submit" }}"
+		data-label-login-hint="{{ .T "shop-login-hint" }}"
+		data-label-close="{{ .T "shop-buy-close" }}"
+		data-label-quantity="{{ .T "shop-buy-quantity" }}"
+		data-label-total="{{ .T "shop-buy-total" }}"
+		data-label-coins="{{ .T "shop-coins" }}"></div>
 
 	{{ if .Data.User }}
 	<h2>{{ .T "shop-topup-title" }}</h2>

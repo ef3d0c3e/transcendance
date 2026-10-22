@@ -1,9 +1,11 @@
 <!--
-    Popup to buy a booster when clicking one in the shop
+    Popup to buy boosters when clicking one in the shop
 
     Boosters must be `.shop-booster` elements holding a `.shop-booster-display`
-    (the collection tile and its price pill). The buy button stays disabled
-    until pack opening lands (see TRANS-30).
+    (the collection tile and its price pill) and advertising `data-collection`
+    and `data-price`. The popup picks one of the preset quantities and posts to
+    /shop/buy, landing that many boosters in the inventory (see TRANS-30 for the
+    purchase and TRANS-35 for the bulk quantity).
 -->
 
 <script>
@@ -15,21 +17,40 @@
 	const DISPLAY_SELECTOR = ".shop-booster-display";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
+	// The only quantities the shop sells at once
+	const QUANTITY_PRESETS = [1, 5, 10];
 
 	let dialog;
 	let preview;
 	let title = $state("");
+	let collection = $state("");
+	let price = $state(0);
+	let quantity = $state(1);
 	let returnFocus = null;
 
 	const labelBuy = $derived(target.dataset.labelBuy ?? "");
-	const labelComingSoon = $derived(target.dataset.labelComingSoon ?? "");
 	const labelBalance = $derived(target.dataset.labelBalance ?? "");
+	const labelFunds = $derived(target.dataset.labelFunds ?? "");
+	const labelLogin = $derived(target.dataset.labelLogin ?? "");
+	const labelLoginHint = $derived(target.dataset.labelLoginHint ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
+	const labelQuantity = $derived(target.dataset.labelQuantity ?? "");
+	const labelTotal = $derived(target.dataset.labelTotal ?? "");
+	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	// Cap of one checkout, advertised by the shop page (maxBuyQuantity in Go)
+	const maxQuantity = $derived(Number(target.dataset.maxQuantity ?? 10));
 	// Coin balance is only advertised when logged in
 	const coins = $derived(target.dataset.coins);
+	const total = $derived(price * quantity);
+	const canAfford = $derived(
+		coins !== undefined && Number(coins) >= total,
+	);
 
 	function show(booster) {
 		title = booster.dataset.title ?? "";
+		collection = booster.dataset.collection ?? "";
+		price = Number(booster.dataset.price ?? 0);
+		quantity = 1;
 
 		preview.replaceChildren();
 		const display = booster.querySelector(DISPLAY_SELECTOR);
@@ -114,14 +135,45 @@
 	<div class="shop-buy-popup-content">
 		<div class="shop-buy-preview" bind:this={preview}></div>
 		<h3 id="shop-buy-popup-title">{title}</h3>
-		{#if coins !== undefined}
+		{#if coins === undefined}
+			<p class="shop-buy-note">{labelLoginHint}</p>
+			<div class="shop-buy-actions">
+				<a href="/login">{labelLogin}</a>
+				<button type="button" onclick={close}>{labelClose}</button>
+			</div>
+		{:else}
 			<p class="shop-buy-balance">{labelBalance}: {coins}</p>
+			<div class="shop-buy-quantity">
+				<span class="shop-buy-quantity-label" id="shop-buy-quantity-label">{labelQuantity}</span>
+				<div class="shop-buy-presets" role="group" aria-labelledby="shop-buy-quantity-label">
+					{#each QUANTITY_PRESETS as preset}
+						<button
+							type="button"
+							class="shop-buy-preset"
+							aria-pressed={quantity === preset}
+							disabled={preset > maxQuantity}
+							onclick={() => (quantity = preset)}
+						>{preset}</button>
+					{/each}
+				</div>
+			</div>
+			<p class="shop-buy-total">{labelTotal}: {total} {labelCoins}</p>
+			{#if !canAfford}
+				<p class="shop-buy-note">{labelFunds}</p>
+			{/if}
+			<div class="shop-buy-actions">
+				{#if canAfford}
+					<form action="/shop/buy" method="post">
+						<input type="hidden" name="collection" value={collection} />
+						<input type="hidden" name="quantity" value={quantity} />
+						<button type="submit">{labelBuy}</button>
+					</form>
+				{:else}
+					<button type="button" disabled>{labelBuy}</button>
+				{/if}
+				<button type="button" onclick={close}>{labelClose}</button>
+			</div>
 		{/if}
-		<p class="shop-buy-note">{labelComingSoon}</p>
-		<div class="shop-buy-actions">
-			<button type="button" disabled>{labelBuy}</button>
-			<button type="button" onclick={close}>{labelClose}</button>
-		</div>
 	</div>
 </dialog>
 
@@ -200,6 +252,54 @@
 		font-variant-numeric: tabular-nums;
 	}
 
+	.shop-buy-quantity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.5rem;
+	}
+
+	.shop-buy-quantity-label {
+		color: var(--color-text-muted);
+		font-size: 0.9em;
+	}
+
+	.shop-buy-presets {
+		display: flex;
+		gap: 0.5rem;
+	}
+
+	.shop-buy-preset {
+		min-width: 2.25rem;
+		height: 2.25rem;
+		padding: 0 0.5rem;
+
+		color: var(--color-text);
+		font-variant-numeric: tabular-nums;
+
+		background: var(--color-bg-2);
+		border: 1px solid var(--color-border-1);
+		border-radius: 0.5rem;
+
+		cursor: pointer;
+	}
+
+	.shop-buy-preset:disabled {
+		cursor: default;
+		opacity: 0.45;
+	}
+
+	.shop-buy-preset[aria-pressed="true"] {
+		border-color: var(--color-accent-primary);
+		color: var(--color-accent-primary);
+	}
+
+	.shop-buy-total {
+		margin: 0;
+
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+	}
+
 	.shop-buy-note {
 		margin: 0;
 
@@ -209,8 +309,19 @@
 
 	.shop-buy-actions {
 		display: flex;
+		align-items: center;
 		justify-content: flex-end;
 		gap: 0.75rem;
+	}
+
+	.shop-buy-actions form {
+		display: contents;
+	}
+
+	.shop-buy-actions a {
+		margin-right: auto;
+
+		color: var(--color-accent-primary);
 	}
 
 	@keyframes shop-buy-popup-in {
