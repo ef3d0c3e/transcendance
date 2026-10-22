@@ -9,6 +9,8 @@ type Card struct {
 
 	CardID   uint      `gorm:"not null"`
 	Acquired time.Time `gorm:"not null"`
+	// Foil pattern the card was obtained with, empty when not foil
+	Foil string `gorm:"size:32;not null;default:''"`
 
 	OwnerID uint `gorm:"not null;index"`
 	Owner   User `gorm:"constraint:OnDelete:CASCADE"`

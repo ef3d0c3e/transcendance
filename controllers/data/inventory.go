@@ -291,6 +291,7 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 		}
 		// Shown in the card popup, formatted client-side
 		data["CardAcquired"] = invCard.Acquired.Format(time.RFC3339)
+		setCardFoil(data, invCard.Foil)
 		v.Items[i] = map[string]any{
 			"Data": data,
 		}
@@ -303,13 +304,15 @@ type boosterStack struct {
 	CollectionID uint
 	Size         uint
 	Count        int64
+	// Oldest booster of the stack, opened first
+	BoosterID uint
 }
 
 // Fill the view with the user's boosters, stacked by collection and size
 func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, v *inventoryView) error {
 	stacksQuery := dc.DB.
 		Model(&models.Booster{}).
-		Select("collection_id, size, COUNT(*) AS count").
+		Select("collection_id, size, COUNT(*) AS count, MIN(id) AS booster_id").
 		Where("owner_id = ?", userID).
 		Group("collection_id, size")
 
@@ -347,7 +350,10 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, v *inve
 		data["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(stack.Size))
 		data["CollectionStack"] = stack.Count
 		v.Items = append(v.Items, map[string]any{
-			"Data": data,
+			"Data":      data,
+			"BoosterID": stack.BoosterID,
+			// Asked before opening the stack's oldest booster
+			"BoosterConfirm": dc.Renderer.T(c, "inventory-booster-open-confirm", "name", data["CollectionTitle"]),
 		})
 	}
 	return nil

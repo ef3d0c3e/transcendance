@@ -99,6 +99,9 @@ inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
 inventory-message-no-boosters = Aucun booster pour l'instant
+inventory-booster-open-confirm = Ouvrir le booster { $name } ?
+inventory-booster-open-yes = Oui
+inventory-booster-open-no = Non
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -113,10 +116,18 @@ inventory-search-count = { $count ->
 }
 
 pack-opening-title = Ouverture de booster
-pack-opening-select = Choisir un booster
 pack-opening-open = Ouvrir le booster
 pack-opening-open-another = Ouvrir un autre booster
 pack-opening-error-collection = Collection introuvable
 pack-opening-error-empty = Ce booster ne contient aucune carte
 pack-opening-error-internal = Impossible d'ouvrir le booster
 pack-opening-obtained = Cartes obtenues
+pack-opening-back = Retour à l'inventaire
+pack-opening-return = Retour
+pack-opening-open-again = Ouvrir à nouveau
+pack-opening-remaining = { $count ->
+    [0] Plus aucun booster
+    [one] { $count } booster restant
+    *[other] { $count } boosters restants
+}
+pack-opening-error-booster = Ce booster n'est pas dans votre inventaire

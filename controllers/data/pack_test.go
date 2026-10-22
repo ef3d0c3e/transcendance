@@ -7,6 +7,9 @@ import (
 	"transcendance/data"
 )
 
+// Size of the packs drawn in tests
+const testPackSize = 5
+
 func testCard(name string, rarity string) *data.Card {
 	return &data.Card{Name: name, Rarity: rarity}
 }
@@ -105,7 +108,7 @@ func TestPickTierFallsBackToLower(t *testing.T) {
 	}
 }
 
-func TestDrawPackSize(t *testing.T) {
+func TestDrawtestPackSize(t *testing.T) {
 	byRarity := map[string][]*data.Card{
 		"common":    {testCard("a", "common"), testCard("b", "common")},
 		"rare":      {testCard("c", "rare")},
@@ -114,13 +117,13 @@ func TestDrawPackSize(t *testing.T) {
 
 	for _, seed := range []uint64{1, 2, 42, 1000} {
 		rnd := rand.New(rand.NewPCG(seed, seed))
-		pack := drawPack(rnd, byRarity)
+		pack := drawPack(rnd, byRarity, testPackSize)
 
 		if pack == nil {
 			t.Fatalf("seed %d: drawPack returned nil", seed)
 		}
-		if len(pack) != PackSize {
-			t.Fatalf("seed %d: drawPack returned %d cards, want %d", seed, len(pack), PackSize)
+		if len(pack) != testPackSize {
+			t.Fatalf("seed %d: drawPack returned %d cards, want %d", seed, len(pack), testPackSize)
 		}
 	}
 }
@@ -135,7 +138,7 @@ func TestDrawPackOnlyYieldsCardsFromCollection(t *testing.T) {
 
 	rnd := rand.New(rand.NewPCG(7, 7))
 	for i := 0; i < 500; i++ {
-		for _, card := range drawPack(rnd, byRarity) {
+		for _, card := range drawPack(rnd, byRarity, testPackSize) {
 			if !pool[card.Name] {
 				t.Fatalf("drew card %q which is not in the collection", card.Name)
 			}
@@ -150,7 +153,7 @@ func TestDrawPackRespectsSingleRarityPool(t *testing.T) {
 
 	rnd := rand.New(rand.NewPCG(3, 3))
 	for i := 0; i < 100; i++ {
-		for _, card := range drawPack(rnd, byRarity) {
+		for _, card := range drawPack(rnd, byRarity, testPackSize) {
 			if card.Rarity != "common" {
 				t.Fatalf("drew rarity %q from a common-only collection", card.Rarity)
 			}
@@ -160,7 +163,7 @@ func TestDrawPackRespectsSingleRarityPool(t *testing.T) {
 
 func TestDrawPackEmptyCollection(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(1, 2))
-	if pack := drawPack(rnd, map[string][]*data.Card{}); pack != nil {
+	if pack := drawPack(rnd, map[string][]*data.Card{}, testPackSize); pack != nil {
 		t.Fatalf("drawPack on an empty collection = %v, want nil", pack)
 	}
 }
@@ -228,7 +231,7 @@ func TestPackReelsHoldOneWinnerEach(t *testing.T) {
 	}
 
 	rnd := rand.New(rand.NewPCG(21, 21))
-	pack := drawPack(rnd, byRarity)
+	pack := drawPack(rnd, byRarity, testPackSize)
 	if pack == nil {
 		t.Fatal("drawPack returned nil")
 	}

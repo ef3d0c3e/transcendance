@@ -1,35 +1,5 @@
 {{ define "pack-card" }}
 <div class="pack-slot-card" data-rarity="{{ .Data.CardRarity }}">
-	<div class="card-container" {{ .Data.CardContainerData }}>
-		<article class="card"
-			style="--c1: {{ .Data.CardColorPrimary }}; --c2: {{ .Data.CardColorSecondary }}; --badge-color: {{ .Data.CardBadgeColor }}">
-			<img class="card-image" src="{{ .Data.CardArtwork }}" draggable="false">
-			<span class="card-badge">{{ .Data.CardBadge }}</span>
-			<h2 class="card-title">{{ .Data.CardTitle }}</h2>
-			<p class="card-description">{{ .Data.CardDescription }}</p>
-			<div class="card-footer">
-				<a class="card-collection" href="/collections/{{ .Data.CardCollectionID }}">{{ .Data.CardCollectionTitle
-					}}</a>
-				<span class="card-number">{{ .Data.CardCount }}</span>
-			</div>
-
-			{{/* Effects are derived from the rarity: common stays plain, rare
-				picks up sparkle + foil, legendary gets the full rainbow treatment */}}
-			{{ if eq .Data.CardRarity "legendary" }}
-			<div class="card-effect card-glare" data-z="11" data-opacity="0.5"></div>
-			<div class="card-effect card-rainbow" data-z="12" data-opacity="0.5" data-scale="0.6"
-				data-mask="/cards/assets/foil2.png"></div>
-			<div class="card-effect card-foil" data-z="13" data-opacity="0.85" data-scale="0.5" data-color="#ffdc50"
-				data-mask="/cards/assets/foil6.png"></div>
-			{{ else if eq .Data.CardRarity "rare" }}
-			<div class="card-effect card-glare" data-z="11" data-opacity="0.5"></div>
-			<div class="card-effect card-sparkle" data-z="12" data-opacity="0.8" data-speed="2.5"></div>
-			<div class="card-effect card-foil" data-z="13" data-opacity="0.7" data-scale="0.5" data-color="#ff1440"
-				data-mask="/cards/assets/foil3.png"></div>
-			{{ else }}
-			<div class="card-effect card-glare" data-z="11" data-opacity="0.45"></div>
-			{{ end }}
-		</article>
-	</div>
+	{{ template "card" . }}
 </div>
 {{ end }}
