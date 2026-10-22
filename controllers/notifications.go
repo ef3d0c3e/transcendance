@@ -341,7 +341,7 @@ func (nc *NotificationController) AddNotificationPost(c *gin.Context) {
 	switch notif.Type {
 	case models.NotificationFriendRequest:
 		notif.Data = datatypes.JSONMap{"username": c.PostForm("username")}
-		notif.Action = "/search?username=" + url.QueryEscape(c.PostForm("username"))
+		notif.Action = "/profile/" + url.PathEscape(c.PostForm("username"))
 	case models.NotificationInfo:
 		notif.Data = datatypes.JSONMap{"title": c.PostForm("title"), "description": c.PostForm("description")}
 	default:

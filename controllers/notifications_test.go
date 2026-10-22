@@ -145,7 +145,7 @@ func TestNotificationsRead(t *testing.T) {
 	// Opening a notification reads it and goes to its page
 	rec = notificationRequest(t, router, cookie, http.MethodGet, fmt.Sprintf("/notification/%d", bob), nil)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/search?username=bob", rec.Header().Get("Location"))
+	require.Equal(t, "/profile/bob", rec.Header().Get("Location"))
 
 	// Read notifications are still listed
 	res = getNotifications(t, router, cookie, "")
