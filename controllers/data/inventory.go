@@ -1,20 +1,23 @@
 package data
 
 import (
+	"cmp"
 	"fmt"
 	"log"
 	"net/http"
 	"net/url"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
 	"transcendance/controllers"
+	"transcendance/data"
 	"transcendance/models"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 )
 
 const (
@@ -57,6 +60,61 @@ const (
 	inventoryTabBoosters = "boosters"
 )
 
+// Effect filter values, "" shows every card
+const (
+	inventoryEffectNone = "none"
+	inventoryEffectFoil = "foil"
+)
+
+var inventoryEffects = []string{inventoryEffectNone, inventoryEffectFoil}
+
+// Card sorts, relevance is only available when searching
+const (
+	inventorySortRelevance = "relevance"
+	inventorySortRecent    = "recent"
+	inventorySortOldest    = "oldest"
+	inventorySortRarity    = "rarity"
+	inventorySortCount     = "count"
+	inventorySortName      = "name"
+	inventorySortNameDesc  = "name-desc"
+)
+
+var inventorySorts = []string{
+	inventorySortRelevance,
+	inventorySortRecent,
+	inventorySortOldest,
+	inventorySortRarity,
+	inventorySortCount,
+	inventorySortName,
+	inventorySortNameDesc,
+}
+
+// Rarities offered by the rarity filter, lowest first
+var inventoryRarities = []string{"common", "rare", "legendary"}
+
+// Sort used when none is picked: search relevance, or newest cards
+func defaultInventorySort(query string) string {
+	if strings.TrimSpace(query) != "" {
+		return inventorySortRelevance
+	}
+	return inventorySortRecent
+}
+
+// An option of the filter and sort selects
+type inventoryOption struct {
+	Value    string
+	Label    string
+	Selected bool
+}
+
+func inventoryOptions(values []string, current string, label func(value string) string) []inventoryOption {
+	options := make([]inventoryOption, len(values))
+	for i, value := range values {
+		options[i] = inventoryOption{Value: value, Label: label(value), Selected: value == current}
+	}
+	return options
+}
+
 // Everything needed to render the inventory page
 type inventoryView struct {
 	// Displayed tab, cards or boosters
@@ -64,12 +122,17 @@ type inventoryView struct {
 	// Viewed user
 	Username string
 	Query    string
+	// Card filters, "" when unfiltered
+	Rarity string
+	Effect string
+	// Card sort, always set on the cards tab
+	Sort string
 	// Error or empty state message
 	Message string
 	// Rendered cards or boosters
 	Items []map[string]any
 	Page  int
-	// Number of items to paginate (cards, or booster stacks)
+	// Number of items to paginate (card stacks, or booster stacks)
 	PageItems int64
 	// Count shown next to the title (cards, or boosters)
 	Count int64
@@ -92,7 +155,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.Items == nil {
 		v.Items = make([]map[string]any, 0)
 	}
-	searching := v.Tab == inventoryTabCards && strings.TrimSpace(v.Query) != ""
+	searching := v.Tab == inventoryTabCards && (strings.TrimSpace(v.Query) != "" || v.Rarity != "" || v.Effect != "")
 	if v.Message == "" && len(v.Items) == 0 {
 		switch {
 		case searching:
@@ -137,7 +200,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.PageItems%int64(inventoryPageSize) != 0 {
 		totalPages = totalPages + 1
 	}
-	content := builder.Add("inventory", "Content", map[string]any{
+	fields := map[string]any{
 		"Title":          title,
 		"Message":        v.Message,
 		"Count":          count,
@@ -148,10 +211,41 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TotalBoosters":  v.TotalBoosters,
 		"Items":          v.Items,
 		"Query":          v.Query,
+		"Filtered":       searching,
 		"Viewed":         viewed,
 		"Pages":          int(totalPages),
 		"Locale":         dc.Renderer.Localizer.GetLocale(c),
-	})
+	}
+	if v.Tab == inventoryTabCards {
+		fields["RarityOptions"] = inventoryOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-filter-rarity-all")
+			}
+			return dc.Renderer.T(c, "card-rarity-"+value)
+		})
+		fields["EffectOptions"] = inventoryOptions(append([]string{""}, inventoryEffects...), v.Effect, func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-filter-effect-all")
+			}
+			return dc.Renderer.T(c, "inventory-filter-effect-"+value)
+		})
+		defaultSort := defaultInventorySort(v.Query)
+		sorts := inventorySorts
+		if defaultSort != inventorySortRelevance {
+			sorts = sorts[1:]
+		}
+		sortOptions := inventoryOptions(sorts, v.Sort, func(value string) string {
+			return dc.Renderer.T(c, "inventory-sort-"+value)
+		})
+		// The default sort isn't submitted, so a new search ranks by relevance
+		for i := range sortOptions {
+			if sortOptions[i].Value == defaultSort {
+				sortOptions[i].Value = ""
+			}
+		}
+		fields["SortOptions"] = sortOptions
+	}
+	content := builder.Add("inventory", "Content", fields)
 	params := url.Values{}
 	if viewed != "" {
 		params.Set("u", viewed)
@@ -161,6 +255,15 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	}
 	if v.Query != "" {
 		params.Set("q", v.Query)
+	}
+	if v.Rarity != "" {
+		params.Set("rarity", v.Rarity)
+	}
+	if v.Effect != "" {
+		params.Set("effect", v.Effect)
+	}
+	if v.Tab == inventoryTabCards && v.Sort != defaultInventorySort(v.Query) {
+		params.Set("sort", v.Sort)
 	}
 	paginatorUrl := "?p="
 	if len(params) != 0 {
@@ -197,6 +300,18 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Tab = inventoryTabBoosters
 		// Boosters can't be searched
 		v.Query = ""
+	} else {
+		if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
+			v.Rarity = rarity
+		}
+		if effect := c.Query("effect"); slices.Contains(inventoryEffects, effect) {
+			v.Effect = effect
+		}
+		v.Sort = defaultInventorySort(v.Query)
+		if sort := c.Query("sort"); slices.Contains(inventorySorts, sort) &&
+			(sort != inventorySortRelevance || v.Sort == inventorySortRelevance) {
+			v.Sort = sort
+		}
 	}
 	if v.Username == "" {
 		v.Username = user.Username
@@ -217,7 +332,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 
 	fail := func(what string, err error) {
 		log.Printf("WARN failed to get %s for user '%s': %s", what, v.Username, err)
-		*v = inventoryView{Tab: v.Tab, Username: v.Username, Query: v.Query, Page: 1}
+		*v = inventoryView{Tab: v.Tab, Username: v.Username, Query: v.Query, Rarity: v.Rarity, Effect: v.Effect, Sort: v.Sort, Page: 1}
 		v.Message = dc.Renderer.T(c, "inventory-message-fetch-fail")
 		dc.renderInventory(c, user, v)
 	}
@@ -245,9 +360,72 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	dc.renderInventory(c, user, v)
 }
 
-// Fill the view with the user's cards, restricted to the search if any
+// Copies of the same card with the same foil, displayed as one tile
+type cardStack struct {
+	CardID        uint
+	Foil          string
+	Count         int64
+	FirstAcquired time.Time
+	LastAcquired  time.Time
+
+	card       *data.Card
+	collection *data.Collection
+}
+
+// Order card stacks with the given sort, newest stacks first on ties
+func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[uint]int) {
+	var titles map[uint]string
+	var collator *collate.Collator
+	if sort == inventorySortName || sort == inventorySortNameDesc {
+		titles = make(map[uint]string, len(stacks))
+		for _, stack := range stacks {
+			title, err := stack.card.Translate(loc, "title")
+			if err != nil {
+				log.Printf("WARN card %d has no title: %s", stack.CardID, err)
+			}
+			titles[stack.CardID] = title
+		}
+		collator = collate.New(language.Make(loc), collate.IgnoreCase)
+	}
+
+	slices.SortStableFunc(stacks, func(a, b cardStack) int {
+		var order int
+		switch sort {
+		case inventorySortRelevance:
+			order = cmp.Compare(relevance[a.CardID], relevance[b.CardID])
+		case inventorySortOldest:
+			order = a.FirstAcquired.Compare(b.FirstAcquired)
+		case inventorySortRarity:
+			// Highest rarity first, unknown rarities last
+			rank := func(s cardStack) int {
+				if i := indexOfTier(s.card.Rarity); i >= 0 {
+					return i
+				}
+				return len(rarityTiers)
+			}
+			order = cmp.Compare(rank(a), rank(b))
+		case inventorySortCount:
+			order = cmp.Compare(b.Count, a.Count)
+		case inventorySortName:
+			order = collator.CompareString(titles[a.CardID], titles[b.CardID])
+		case inventorySortNameDesc:
+			order = collator.CompareString(titles[b.CardID], titles[a.CardID])
+		}
+		return cmp.Or(
+			order,
+			b.LastAcquired.Compare(a.LastAcquired),
+			cmp.Compare(a.CardID, b.CardID),
+			cmp.Compare(a.Foil, b.Foil),
+		)
+	})
+}
+
+// Fill the view with the user's cards folded by card and foil, restricted to the search and filters if any
 func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *inventoryView) error {
+	loc := dc.Renderer.Localizer.GetLocale(c)
+
 	cardsQuery := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID)
+	var relevance map[uint]int
 	if strings.TrimSpace(v.Query) != "" {
 		matches, err := dc.searchInventory(c, userID, v.Query)
 		if err != nil {
@@ -256,45 +434,62 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 		if len(matches) == 0 {
 			return nil
 		}
-		cardsQuery = cardsQuery.
-			Where("card_id IN ?", matches).
-			Order(clause.Expr{SQL: "FIELD(card_id, ?)", Vars: []any{matches}, WithoutParentheses: true}).
-			Order("acquired DESC")
+		cardsQuery = cardsQuery.Where("card_id IN ?", matches)
+		relevance = make(map[uint]int, len(matches))
+		for i, id := range matches {
+			relevance[id] = i
+		}
+	}
+	switch v.Effect {
+	case inventoryEffectNone:
+		cardsQuery = cardsQuery.Where("foil = ''")
+	case inventoryEffectFoil:
+		cardsQuery = cardsQuery.Where("foil <> ''")
 	}
 
+	// Rarity and titles live in the card data, so stacks are filtered, sorted and paginated here
+	var all []cardStack
 	if err := cardsQuery.
-		Session(&gorm.Session{}).
-		Count(&v.PageItems).
+		Select("card_id, foil, COUNT(*) AS count, MIN(acquired) AS first_acquired, MAX(acquired) AS last_acquired").
+		Group("card_id, foil").
+		Scan(&all).
 		Error; err != nil {
 		return err
 	}
-	v.Count = v.PageItems
-
-	var cards []models.Card
-	if err := cardsQuery.
-		Session(&gorm.Session{}).
-		Offset((v.Page - 1) * inventoryPageSize).
-		Limit(inventoryPageSize).
-		Find(&cards).
-		Error; err != nil {
-		return err
+	stacks := all[:0]
+	for _, stack := range all {
+		stack.card, stack.collection = dc.Data.GetCard(int(stack.CardID))
+		if stack.card == nil || stack.collection == nil {
+			log.Printf("WARN user %d owns unknown card %d", userID, stack.CardID)
+			continue
+		}
+		if v.Rarity != "" && stack.card.Rarity != v.Rarity {
+			continue
+		}
+		stacks = append(stacks, stack)
+		v.Count += stack.Count
 	}
+	v.PageItems = int64(len(stacks))
+	sortCardStacks(stacks, v.Sort, loc, relevance)
+
+	start := min((v.Page-1)*inventoryPageSize, len(stacks))
+	end := min(start+inventoryPageSize, len(stacks))
 
 	// Build card data
-	loc := dc.Renderer.Localizer.GetLocale(c)
-	v.Items = make([]map[string]any, len(cards))
-	for i, invCard := range cards {
-		card, collection := dc.Data.GetCard(int(invCard.CardID))
-		data, err := GetCardData(c, loc, dc.Renderer, collection, card)
+	v.Items = make([]map[string]any, 0, end-start)
+	for _, stack := range stacks[start:end] {
+		data, err := GetCardData(c, loc, dc.Renderer, stack.collection, stack.card)
 		if err != nil {
-			return fmt.Errorf("card %d: %w", invCard.CardID, err)
+			return fmt.Errorf("card %d: %w", stack.CardID, err)
 		}
 		// Shown in the card popup, formatted client-side
-		data["CardAcquired"] = invCard.Acquired.Format(time.RFC3339)
-		setCardFoil(data, invCard.Foil)
-		v.Items[i] = map[string]any{
+		data["CardCopies"] = stack.Count
+		data["CardAcquiredFirst"] = stack.FirstAcquired.Format(time.RFC3339)
+		data["CardAcquiredLast"] = stack.LastAcquired.Format(time.RFC3339)
+		setCardFoil(data, stack.Foil)
+		v.Items = append(v.Items, map[string]any{
 			"Data": data,
-		}
+		})
 	}
 	return nil
 }

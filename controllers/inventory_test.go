@@ -3,6 +3,7 @@ package controllers_test
 import (
 	"net/http"
 	"net/http/httptest"
+	"slices"
 	"strings"
 	"testing"
 	"time"
@@ -16,7 +17,9 @@ import (
 
 // Global IDs of cards in the dev collection
 const (
+	cardPythagorean    = 1001
 	cardFlyingScotsman = 1002
+	cardMcMurdo        = 1003
 	cardFordT          = 1004
 	cardTungsten       = 1005
 )
@@ -32,6 +35,25 @@ func giveCards(t *testing.T, username string, cardID uint, count int) {
 			OwnerID:  user.ID,
 		}).Error)
 	}
+}
+
+// Give one copy of a card with a foil and acquisition date
+func giveCardAt(t *testing.T, username string, cardID uint, foil string, acquired time.Time) {
+	require.NoError(t, tests.DB.Create(&models.Card{
+		CardID:   cardID,
+		Acquired: acquired,
+		Foil:     foil,
+		OwnerID:  userID(t, username),
+	}).Error)
+}
+
+// Titles of the displayed cards, in order
+func cardTitles(body string) []string {
+	var titles []string
+	for _, match := range cardTitleRe.FindAllStringSubmatch(body, -1) {
+		titles = append(titles, match[1])
+	}
+	return titles
 }
 
 func getInventory(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string) string {
@@ -60,7 +82,9 @@ func TestInventorySearchOwnedOnly(t *testing.T) {
 
 	// Both the Ford Model T and the Flying Scotsman are vehicles, only the owned one is returned
 	body := getInventory(t, router, cookie, "/inventory?q=vehicle")
-	require.Equal(t, 2, countCard(body, "Ford Model T"))
+	// Both copies are folded together
+	require.Equal(t, 1, countCard(body, "Ford Model T"))
+	require.Contains(t, body, `<span class="card-stack">×2</span>`)
 	require.Zero(t, countCard(body, "Flying Scotsman"))
 	require.Zero(t, countCard(body, "Tungsten"))
 	require.Contains(t, body, `<p class="inventory-count">2 cards found</p>`)
@@ -95,25 +119,37 @@ func TestInventorySearchEmptyQuery(t *testing.T) {
 func TestInventorySearchPagination(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "invsearch5", "foo-bar-baz-qux", 0)
-	giveCards(t, "invsearch5", cardFordT, 25)
-	giveCards(t, "invsearch5", cardTungsten, 3)
+	// Every foil pattern folds separately: 5 cards × 7 looks = 35 stacks
+	for _, card := range []uint{cardPythagorean, cardFlyingScotsman, cardMcMurdo, cardFordT, cardTungsten} {
+		for _, foil := range []string{"", "foil1", "foil2", "foil3", "foil4", "foil5", "foil6"} {
+			giveCardAt(t, "invsearch5", card, foil, time.Now())
+		}
+	}
+	giveCards(t, "invsearch5", cardTungsten, 2)
 	cookie := login(t, router, "invsearch5", "foo-bar-baz-qux")
 
-	first := getInventory(t, router, cookie, "/inventory?q=ford")
-	require.Equal(t, 20, countCard(first, "Ford Model T"))
-	require.Contains(t, first, `href="?q=ford&amp;p=2"`)
-	require.Contains(t, first, `<p class="inventory-count">25 cards found</p>`)
-	// Multiple pages get a second paginator below the cards
-	require.Equal(t, 2, strings.Count(first, `<nav class="paginator"`))
-
-	second := getInventory(t, router, cookie, "/inventory?q=ford&p=2")
-	require.Equal(t, 5, countCard(second, "Ford Model T"))
-	require.Zero(t, countCard(second, "Tungsten"))
-	require.Contains(t, second, `<p class="inventory-count">25 cards found</p>`)
-
-	// Without a search, the count covers the whole inventory
 	all := getInventory(t, router, cookie, "/inventory")
-	require.Contains(t, all, `<p class="inventory-count">28 cards</p>`)
+	require.Len(t, cardTitles(all), 20)
+	require.Contains(t, all, `href="?p=2"`)
+	require.Contains(t, all, `<p class="inventory-count">37 cards</p>`)
+	// Multiple pages get a second paginator below the cards
+	require.Equal(t, 2, strings.Count(all, `<nav class="paginator"`))
+
+	second := getInventory(t, router, cookie, "/inventory?p=2")
+	require.Len(t, cardTitles(second), 15)
+
+	// Searches count matching copies
+	search := getInventory(t, router, cookie, "/inventory?q=ford")
+	require.Equal(t, 7, countCard(search, "Ford Model T"))
+	require.Zero(t, countCard(search, "Tungsten"))
+	require.Contains(t, search, `<p class="inventory-count">7 cards found</p>`)
+	require.Equal(t, 1, strings.Count(search, `<nav class="paginator"`))
+
+	// Filters and sorts are kept in the paginator: 3 common cards × 7 looks
+	filtered := getInventory(t, router, cookie, "/inventory?rarity=common&sort=name")
+	require.Len(t, cardTitles(filtered), 20)
+	require.Contains(t, filtered, `href="?rarity=common&amp;sort=name&amp;p=2"`)
+	require.Contains(t, filtered, `<p class="inventory-count">23 cards found</p>`)
 }
 
 func TestInventorySearchOtherUser(t *testing.T) {
@@ -149,7 +185,9 @@ func TestInventoryCardAcquiredDate(t *testing.T) {
 
 	// The card carries its acquisition date for the popup
 	body := getInventory(t, router, cookie, "/inventory")
-	require.Contains(t, body, `data-acquired="2025-03-14T09:26:53`)
+	require.Contains(t, body, `data-copies="1"`)
+	require.Contains(t, body, `data-acquired-first="2025-03-14T09:26:53`)
+	require.Contains(t, body, `data-acquired-last="2025-03-14T09:26:53`)
 	require.Contains(t, body, `id="inventory-card-popup"`)
 	require.Contains(t, body, `data-label-acquired="Acquired on"`)
 
@@ -157,6 +195,7 @@ func TestInventoryCardAcquiredDate(t *testing.T) {
 	search := getInventory(t, router, cookie, "/cards/search/?q=tungsten")
 	require.Equal(t, 1, countCard(search, "Tungsten"))
 	require.NotContains(t, search, "data-acquired")
+	require.NotContains(t, search, "data-copies")
 }
 
 // Collection ID of the dev collection
@@ -203,7 +242,7 @@ func TestInventoryBoosters(t *testing.T) {
 
 	// The cards tab is unaffected
 	cards := getInventory(t, router, cookie, "/inventory")
-	require.Equal(t, 2, countCard(cards, "Tungsten"))
+	require.Equal(t, 1, countCard(cards, "Tungsten"))
 	require.NotContains(t, cards, `class="collection-stack"`)
 }
 
@@ -250,4 +289,137 @@ func TestInventoryCardFoil(t *testing.T) {
 	// Glare is the base look of every card, the watermark is reserved
 	require.Equal(t, 2, strings.Count(body, "card-effect card-glare"))
 	require.NotContains(t, body, "card-watermark")
+}
+
+func TestInventoryFoldsCopies(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invfold1", "foo-bar-baz-qux", 0)
+	first := time.Date(2025, time.January, 2, 10, 0, 0, 0, time.Local)
+	last := time.Date(2025, time.June, 7, 18, 30, 0, 0, time.Local)
+	giveCardAt(t, "invfold1", cardFordT, "", last)
+	giveCardAt(t, "invfold1", cardFordT, "", first)
+	giveCardAt(t, "invfold1", cardFordT, "", first.AddDate(0, 1, 0))
+	giveCardAt(t, "invfold1", cardFordT, "foil3", first)
+	giveCardAt(t, "invfold1", cardTungsten, "", first)
+	cookie := login(t, router, "invfold1", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory")
+	// Copies fold by card and foil
+	require.Equal(t, 2, countCard(body, "Ford Model T"))
+	require.Equal(t, 1, countCard(body, "Tungsten"))
+	require.Equal(t, 1, strings.Count(body, "card-effect card-foil"))
+	require.Equal(t, 1, strings.Count(body, `class="card-stack"`))
+	require.Contains(t, body, `<span class="card-stack">×3</span>`)
+	require.Contains(t, body, `data-copies="3"`)
+	require.Contains(t, body, `data-acquired-first="2025-01-02T10:00:00`)
+	require.Contains(t, body, `data-acquired-last="2025-06-07T18:30:00`)
+	// The count still covers every copy
+	require.Contains(t, body, `<p class="inventory-count">5 cards</p>`)
+	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
+}
+
+func TestInventoryFilters(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invfilter1", "foo-bar-baz-qux", 0)
+	giveCardAt(t, "invfilter1", cardFordT, "", time.Now())
+	giveCardAt(t, "invfilter1", cardFordT, "foil1", time.Now())
+	giveCardAt(t, "invfilter1", cardMcMurdo, "", time.Now())
+	giveCardAt(t, "invfilter1", cardTungsten, "foil2", time.Now())
+	giveCardAt(t, "invfilter1", cardTungsten, "foil2", time.Now())
+	cookie := login(t, router, "invfilter1", "foo-bar-baz-qux")
+
+	legendary := getInventory(t, router, cookie, "/inventory?rarity=legendary")
+	require.Equal(t, 2, countCard(legendary, "Ford Model T"))
+	require.Zero(t, countCard(legendary, "McMurdo Station"))
+	require.Zero(t, countCard(legendary, "Tungsten"))
+	require.Contains(t, legendary, `<p class="inventory-count">2 cards found</p>`)
+	require.Contains(t, legendary, `<option value="legendary" selected>Legendary</option>`)
+
+	foil := getInventory(t, router, cookie, "/inventory?effect=foil")
+	require.Equal(t, []string{"Ford Model T", "Tungsten"}, sortedTitles(foil))
+	require.Contains(t, foil, `<p class="inventory-count">3 cards found</p>`)
+
+	none := getInventory(t, router, cookie, "/inventory?effect=none")
+	require.Equal(t, []string{"Ford Model T", "McMurdo Station"}, sortedTitles(none))
+	require.NotContains(t, none, "card-effect card-foil")
+
+	// Filters combine with each other and the search
+	combined := getInventory(t, router, cookie, "/inventory?q=ford&effect=foil&rarity=legendary")
+	require.Equal(t, 1, countCard(combined, "Ford Model T"))
+	require.Contains(t, combined, "card-effect card-foil")
+
+	empty := getInventory(t, router, cookie, "/inventory?rarity=rare&effect=foil")
+	require.Contains(t, empty, "No cards in this inventory match your search")
+	require.Contains(t, empty, `<a href="/inventory">Clear search</a>`)
+
+	// Unknown values are ignored
+	unknown := getInventory(t, router, cookie, "/inventory?rarity=mythic&effect=sparkles")
+	require.Contains(t, unknown, `<p class="inventory-count">5 cards</p>`)
+}
+
+// Titles in alphabetical order, for checks that don't depend on the sort
+func sortedTitles(body string) []string {
+	titles := cardTitles(body)
+	slices.Sort(titles)
+	return titles
+}
+
+func TestInventorySorts(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invsort1", "foo-bar-baz-qux", 0)
+	day := func(d int) time.Time { return time.Date(2025, time.May, d, 12, 0, 0, 0, time.Local) }
+	// Tungsten: newest, Pythagorean: oldest, McMurdo: most copies
+	giveCardAt(t, "invsort1", cardTungsten, "", day(20))
+	giveCardAt(t, "invsort1", cardPythagorean, "", day(1))
+	giveCardAt(t, "invsort1", cardFordT, "", day(10))
+	giveCardAt(t, "invsort1", cardMcMurdo, "", day(5))
+	giveCardAt(t, "invsort1", cardMcMurdo, "", day(6))
+	giveCardAt(t, "invsort1", cardMcMurdo, "", day(7))
+	cookie := login(t, router, "invsort1", "foo-bar-baz-qux")
+
+	cases := map[string][]string{
+		// Last acquired by default
+		"":             {"Tungsten", "Ford Model T", "McMurdo Station", "Pythagorean tiling"},
+		"?sort=recent": {"Tungsten", "Ford Model T", "McMurdo Station", "Pythagorean tiling"},
+		"?sort=oldest": {"Pythagorean tiling", "McMurdo Station", "Ford Model T", "Tungsten"},
+		// Ties are broken by last acquired
+		"?sort=rarity":    {"Ford Model T", "McMurdo Station", "Tungsten", "Pythagorean tiling"},
+		"?sort=count":     {"McMurdo Station", "Tungsten", "Ford Model T", "Pythagorean tiling"},
+		"?sort=name":      {"Ford Model T", "McMurdo Station", "Pythagorean tiling", "Tungsten"},
+		"?sort=name-desc": {"Tungsten", "Pythagorean tiling", "McMurdo Station", "Ford Model T"},
+		// Relevance needs a search
+		"?sort=relevance": {"Tungsten", "Ford Model T", "McMurdo Station", "Pythagorean tiling"},
+		"?sort=unknown":   {"Tungsten", "Ford Model T", "McMurdo Station", "Pythagorean tiling"},
+	}
+	for query, titles := range cases {
+		body := getInventory(t, router, cookie, "/inventory"+query)
+		require.Equal(t, titles, cardTitles(body), query)
+	}
+
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Contains(t, body, `<option value="" selected>Last acquired</option>`)
+	require.NotContains(t, body, `value="relevance"`)
+
+	// Searches rank by relevance unless a sort is picked
+	search := getInventory(t, router, cookie, "/inventory?q=tungsten")
+	require.Contains(t, search, `<option value="" selected>Relevance</option>`)
+	require.Contains(t, search, `<option value="recent" >Last acquired</option>`)
+	require.NotContains(t, search, `sort=`)
+}
+
+func TestInventorySortNameLocalized(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invsort2", "foo-bar-baz-qux", 0)
+	giveCards(t, "invsort2", cardTungsten, 1)
+	giveCards(t, "invsort2", cardFordT, 1)
+	cookie := login(t, router, "invsort2", "foo-bar-baz-qux")
+
+	en := cardTitles(getInventory(t, router, cookie, "/inventory?sort=name"))
+	fr := cardTitles(getInventory(t, router, cookie, "/inventory?sort=name&lang=fr"))
+	require.Len(t, fr, 2)
+	// Titles are sorted in the page's language
+	require.True(t, slices.IsSorted(en))
+	require.True(t, slices.IsSortedFunc(fr, func(a, b string) int {
+		return strings.Compare(strings.ToLower(a), strings.ToLower(b))
+	}))
 }
