@@ -1,6 +1,7 @@
 package data
 
 import (
+	"errors"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -10,13 +11,12 @@ import (
 
 	"transcendance/controllers"
 	"transcendance/data"
+	"transcendance/models"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
-
-// Number of cards in a booster pack. Each one gets its own opening reel.
-const PackSize = 5
 
 // Reel stack around the won card. The reel drops, so the cards stacked
 // beneath the winner run past the window first — reelBelow is the spin
@@ -24,7 +24,7 @@ const PackSize = 5
 // settle against.
 const (
 	reelAbove = 2
-	reelBelow = 12
+	reelBelow = 24
 )
 
 // Rarity tiers ordered from highest to lowest. Used to fall back to a lower
@@ -133,17 +133,17 @@ func buildReel(rnd *rand.Rand, pool []*data.Card, winner *data.Card) []stripEntr
 	return strip
 }
 
-// drawPack draws PackSize cards from a collection. The rarity of each card is
+// drawPack draws `size` cards from a collection. The rarity of each card is
 // rolled first, then a card is picked uniformly among that tier's cards.
 // Duplicates are allowed. Returns nil when the collection holds no card.
-func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card) []*data.Card {
+func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*data.Card {
 	available := make(map[string]bool, len(rarityTiers))
 	for _, tier := range rarityTiers {
 		available[tier] = len(byRarity[tier]) > 0
 	}
 
-	pack := make([]*data.Card, 0, PackSize)
-	for i := 0; i < PackSize; i++ {
+	pack := make([]*data.Card, 0, size)
+	for i := 0; i < size; i++ {
 		tier := pickTier(rollRarity(rnd), available)
 		if tier == "" {
 			return nil
@@ -153,9 +153,235 @@ func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card) []*data.Card {
 	return pack
 }
 
-// /opening GET: booster picker
+// Oldest booster of a stack (same collection and size) owned by a user, nil when none is left
+func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint) (*models.Booster, error) {
+	var booster models.Booster
+	err := dc.DB.
+		Where("owner_id = ? AND collection_id = ? AND size = ?", ownerID, collectionID, size).
+		Order("id").
+		First(&booster).
+		Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &booster, nil
+}
+
+// /opening GET: open one of the user's boosters (?booster=ID)
 func (dc *DataController) OpeningGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// Unknown, already opened or someone else's booster: back to the inventory
+	var booster models.Booster
+	if err := dc.DB.
+		Where("id = ? AND owner_id = ?", c.Query("booster"), user.ID).
+		First(&booster).
+		Error; err != nil {
+		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
+		return
+	}
+	collection := dc.Data.GetCollection(int(booster.CollectionID))
+	if collection == nil {
+		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
+		return
+	}
+
+	loc := dc.Renderer.Localizer.GetLocale(c)
+	boosterData, err := getCollectionData(c, loc, dc.Renderer, collection)
+	if err != nil {
+		log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
+		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
+		return
+	}
+	boosterData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(booster.Size))
+
+	builder := views.PageBuilder("base", map[string]any{
+		"Title": dc.Renderer.T(c, "pack-opening-title"),
+		"User":  user,
+	})
+	builder.Add("pack-opening", "Content", map[string]any{
+		"BoosterID": booster.ID,
+		"Booster":   map[string]any{"Data": boosterData},
+	})
+	dc.Renderer.Render(c, &builder)
+}
+
+// packCard renders one drawn card with its foil ("" for none) as an HTML fragment, or writes the failure
+func packCard(dc *DataController, c *gin.Context, collection *data.Collection, card *data.Card, foil string) (string, bool) {
+	loc := dc.Renderer.Localizer.GetLocale(c)
+
+	cardData, err := GetCardData(c, loc, dc.Renderer, collection, card)
+	if err != nil {
+		log.Printf("[WARN] Failed to build data for card '%s': %s", card.Name, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+		})
+		return "", false
+	}
+	cardData["CardRarity"] = card.Rarity
+	setCardFoil(cardData, foil)
+
+	html, err := dc.Renderer.RenderToString("pack-card", map[string]any{"Data": cardData})
+	if err != nil {
+		log.Printf("[WARN] Failed to render pack card '%s': %s", card.Name, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+		})
+		return "", false
+	}
+	return html, true
+}
+
+// /opening POST: open one of the user's boosters, its cards are added to the inventory
+func (dc *DataController) OpeningPost(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": dc.Renderer.T(c, "inventory-unauthenticated"),
+		})
+		return
+	}
+
+	var booster models.Booster
+	if err := dc.DB.
+		Where("id = ? AND owner_id = ?", c.PostForm("booster"), user.ID).
+		First(&booster).
+		Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-booster"),
+		})
+		return
+	}
+
+	collection := dc.Data.GetCollection(int(booster.CollectionID))
+	if collection == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-collection"),
+		})
+		return
+	}
+
+	// Draw before touching the inventory, an empty collection keeps the booster
+	rnd := rand.New(rand.NewPCG(
+		uint64(time.Now().UnixNano()),
+		uint64(time.Now().UnixNano()),
+	))
+	byRarity := groupByRarity(dc.Data.Cards, collection)
+	pack := drawPack(rnd, byRarity, int(booster.Size))
+	if pack == nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-empty"),
+		})
+		return
+	}
+	foils := make([]string, len(pack))
+	for i := range pack {
+		foils[i] = rollFoil(rnd)
+	}
+
+	// Consume the booster and award its cards at once. Deleting with the
+	// owner check first means a booster can only be opened once, even when
+	// the request is sent twice.
+	now := time.Now()
+	err := dc.DB.Transaction(func(tx *gorm.DB) error {
+		deleted := tx.Where("id = ? AND owner_id = ?", booster.ID, user.ID).Delete(&models.Booster{})
+		if deleted.Error != nil {
+			return deleted.Error
+		}
+		if deleted.RowsAffected != 1 {
+			return errBoosterOpened
+		}
+
+		cards := make([]models.Card, len(pack))
+		for i, card := range pack {
+			cards[i] = models.Card{
+				CardID:   uint(collection.ID*1000 + card.ID),
+				Acquired: now,
+				Foil:     foils[i],
+				OwnerID:  user.ID,
+			}
+		}
+		return tx.Create(&cards).Error
+	})
+	if errors.Is(err, errBoosterOpened) {
+		c.JSON(http.StatusConflict, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-booster"),
+		})
+		return
+	}
+	if err != nil {
+		log.Printf("[WARN] Failed to open booster %d for user '%s': %s", booster.ID, user.Username, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+		})
+		return
+	}
+
+	// The cards are in the inventory, what follows is only the animation
+	pool := flattenByRarity(byRarity)
+	reels := make([][]gin.H, 0, len(pack))
+	for i, winner := range pack {
+		strip := buildReel(rnd, pool, winner)
+
+		slots := make([]gin.H, 0, len(strip))
+		for _, entry := range strip {
+			// Only the won card shows the foil it was obtained with
+			foil := ""
+			if entry.Win {
+				foil = foils[i]
+			}
+			html, ok := packCard(dc, c, collection, entry.Card, foil)
+			if !ok {
+				return
+			}
+			slots = append(slots, gin.H{
+				"rarity": entry.Card.Rarity,
+				"html":   html,
+				"win":    entry.Win,
+			})
+		}
+		reels = append(reels, slots)
+	}
+
+	// Let the page chain into the next booster of the same stack
+	next := uint(0)
+	if nextBooster, err := dc.nextBooster(user.ID, booster.CollectionID, booster.Size); err != nil {
+		log.Printf("[WARN] Failed to find next booster for user '%s': %s", user.Username, err)
+	} else if nextBooster != nil {
+		next = nextBooster.ID
+	}
+	var remaining int64
+	if err := dc.DB.
+		Model(&models.Booster{}).
+		Where("owner_id = ? AND collection_id = ? AND size = ?", user.ID, booster.CollectionID, booster.Size).
+		Count(&remaining).
+		Error; err != nil {
+		log.Printf("[WARN] Failed to count boosters for user '%s': %s", user.Username, err)
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"reels":          reels,
+		"next":           next,
+		"remaining":      remaining,
+		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
+		"colors": gin.H{
+			"primary":   collection.ColorPrimary,
+			"secondary": collection.ColorSecondary,
+		},
+	})
+}
+
+var errBoosterOpened = errors.New("booster already opened")
+
+// Collections sorted by ID, with their translated title
+func (dc *DataController) collectionChoices(c *gin.Context) []map[string]any {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
 	sorted := make([]*data.Collection, 0, len(dc.Data.Collections))
@@ -178,104 +404,57 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 			"Title": title,
 		})
 	}
+	return collections
+}
+
+// /add_booster GET: debug page to add a booster to the user's inventory
+func (dc *DataController) AddBoosterGet(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
-		"Title": dc.Renderer.T(c, "pack-opening-title"),
+		// Debug page, not localized
+		"Title": "Add a booster (debug)",
 		"User":  user,
 	})
-	builder.Add("pack-opening", "Content", map[string]any{
-		"Collections": collections,
+	builder.Add("add-booster", "Content", map[string]any{
+		"Collections": dc.collectionChoices(c),
 	})
 	dc.Renderer.Render(c, &builder)
 }
 
-// packCard renders one drawn card as an HTML fragment, or writes the failure
-func packCard(dc *DataController, c *gin.Context, collection *data.Collection, card *data.Card) (string, bool) {
-	loc := dc.Renderer.Localizer.GetLocale(c)
-
-	cardData, err := GetCardData(c, loc, dc.Renderer, collection, card)
-	if err != nil {
-		log.Printf("[WARN] Failed to build data for card '%s': %s", card.Name, err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
-		})
-		return "", false
+// /add_booster POST: add a booster of a collection, then show the boosters
+func (dc *DataController) AddBoosterPost(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	if user == nil {
+		c.String(http.StatusForbidden, "You must be authenticated")
+		return
 	}
-	cardData["CardRarity"] = card.Rarity
 
-	html, err := dc.Renderer.RenderToString("pack-card", map[string]any{"Data": cardData})
-	if err != nil {
-		log.Printf("[WARN] Failed to render pack card '%s': %s", card.Name, err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
-		})
-		return "", false
-	}
-	return html, true
-}
-
-// /opening POST: draw a pack of cards from a collection
-func (dc *DataController) OpeningPost(c *gin.Context) {
 	id, err := strconv.Atoi(c.PostForm("collection"))
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": dc.Renderer.T(c, "pack-opening-error-collection"),
-		})
+		c.String(http.StatusBadRequest, "invalid collection")
 		return
 	}
-
 	collection := dc.Data.GetCollection(id)
 	if collection == nil {
-		c.JSON(http.StatusNotFound, gin.H{
-			"message": dc.Renderer.T(c, "pack-opening-error-collection"),
-		})
+		c.String(http.StatusBadRequest, "invalid collection")
 		return
 	}
 
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
-	byRarity := groupByRarity(dc.Data.Cards, collection)
-	pack := drawPack(rnd, byRarity)
-	if pack == nil {
-		c.JSON(http.StatusUnprocessableEntity, gin.H{
-			"message": dc.Renderer.T(c, "pack-opening-error-empty"),
-		})
+	booster := models.Booster{
+		CollectionID: uint(collection.ID),
+		Size:         uint(collection.BoosterSize),
+		Acquired:     time.Now(),
+		OwnerID:      user.ID,
+	}
+	if err := dc.DB.Create(&booster).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to insert booster: %s", err)
 		return
 	}
 
-	pool := flattenByRarity(byRarity)
-	reels := make([][]gin.H, 0, PackSize)
-	for _, winner := range pack {
-		strip := buildReel(rnd, pool, winner)
-		if strip == nil {
-			c.JSON(http.StatusUnprocessableEntity, gin.H{
-				"message": dc.Renderer.T(c, "pack-opening-error-empty"),
-			})
-			return
-		}
-
-		slots := make([]gin.H, 0, len(strip))
-		for _, entry := range strip {
-			html, ok := packCard(dc, c, collection, entry.Card)
-			if !ok {
-				return
-			}
-			slots = append(slots, gin.H{
-				"rarity": entry.Card.Rarity,
-				"html":   html,
-				"win":    entry.Win,
-			})
-		}
-		reels = append(reels, slots)
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"reels": reels,
-		"colors": gin.H{
-			"primary":   collection.ColorPrimary,
-			"secondary": collection.ColorSecondary,
-		},
-	})
+	c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
 }

@@ -1,7 +1,17 @@
 <script>
 	import { onMount, tick } from "svelte";
 
-	let { formSelector, openLabel, retryLabel, errorLabel, obtainedLabel } = $props();
+	let {
+		formSelector,
+		openLabel,
+		retryLabel,
+		errorLabel,
+		obtainedLabel,
+		returnLabel,
+		returnUrl,
+		openAgainLabel,
+		autostart = false,
+	} = $props();
 
 	let reels = $state([]);
 	let showcase = $state([]);
@@ -9,21 +19,67 @@
 	let failed = $state(false);
 	let colors = $state({ primary: "#407fff", secondary: "#7f2fff" });
 	let busy = $state(false);
+	// Card scale in the reels, fitted to the viewport once they are mounted
+	let reelScale = $state(null);
 
 	let stageElement = $state();
+	let resultDialog;
+	// Boosters left in the opened stack, shown on the popup's open again button
+	let remaining = $state(0);
+	let remainingLabel = $state("");
+	let remainingBadge = $derived(remaining > 9 ? "9+" : String(remaining));
+	// Form and button of the page, reused to open again from the popup
+	let pageForm;
+	let pageButton;
 	let timers = [];
 
 	// Slot machine: five vertical reels side by side. Each drops past its
 	// window on its own clock, overshoots the payline, then springs back up
 	// onto the card it landed on.
-	const SPIN_MIN_MS = 3500;
-	const SPIN_MAX_MS = 6500;
+	const SPIN_MIN_MS = 6000;
+	const SPIN_MAX_MS = 11000;
 	const SPIN_EASE = "cubic-bezier(0.08, 0.72, 0.16, 1)";
 	const BOUNCE_MS = 280;
 	const BOUNCE_EASE = "cubic-bezier(0.34, 1.3, 0.64, 1)";
-	const OVERSHOOT_CELLS = 0.55;
-	// How far the stack is pulled up before it starts its drop, in cards
-	const RUN_CELLS = 12;
+	// How far the reel drops past the won card before springing back, in cards.
+	// Must stay under half a card, so the won card never leaves the payline.
+	const OVERSHOOT_CELLS = 0.3;
+	// How far the stack is pulled up before it starts its drop, in cards.
+	// Matches reelBelow on the server, the cards stacked beneath the winner
+	const RUN_CELLS = 24;
+	// Share of the viewport the reels may use
+	const REELS_MAX_WIDTH = 0.92;
+	const REELS_MAX_HEIGHT = 0.7;
+	const REELS_MAX_SCALE = 1;
+
+	// Scale the cards so the reels fill the viewport width, while a whole
+	// card stays visible in height
+	function fitReels() {
+		const inner = stageElement.querySelector(".pack-cell-inner");
+		if (!inner) {
+			return;
+		}
+
+		// offsetWidth/Height ignore the transform: the unscaled card size
+		const cardWidth = inner.offsetWidth;
+		const cardHeight = inner.offsetHeight;
+		const gap = Number.parseFloat(getComputedStyle(stageElement).columnGap) || 0;
+		const count = reels.length;
+
+		const width = Math.min(window.innerWidth * REELS_MAX_WIDTH, window.innerWidth - 32);
+		const byWidth = (width - (count - 1) * gap) / count / cardWidth;
+		const byHeight = (window.innerHeight * REELS_MAX_HEIGHT) / cardHeight;
+
+		reelScale = Math.min(byWidth, byHeight, REELS_MAX_SCALE);
+	}
+
+	function scrollToReels() {
+		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		stageElement.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+	}
+
+	// Failure reported by the server, its message is shown as is
+	class PackError extends Error {}
 
 	function showFailure(text) {
 		failed = true;
@@ -53,14 +109,17 @@
 		const data = await response.json();
 
 		if (!response.ok) {
-			return null;
+			throw new PackError(data.message ?? errorLabel);
 		}
 
-		const { reels: stacks, colors: palette } = data;
+		const { reels: stacks, colors: palette, next, remaining: left, remainingLabel: leftLabel } = data;
 
 		return {
 			reels: stacks ?? [],
 			palette: palette ?? colors,
+			next: next ?? 0,
+			remaining: left ?? 0,
+			remainingLabel: leftLabel ?? "",
 		};
 	}
 
@@ -152,6 +211,7 @@
 
 		busy = true;
 		clearTimers();
+		resultDialog?.close();
 		// Clear the stage so the previous reels cannot flash back into view
 		reels = [];
 		showcase = [];
@@ -162,31 +222,59 @@
 		try {
 			const result = await requestPack(form);
 
-			if (result === null || result.reels.length === 0) {
+			if (result.reels.length === 0) {
 				showFailure(errorLabel);
 				return;
+			}
+
+			// The booster is consumed: chain into the next one of the stack, if any
+			const input = form.querySelector("input[name=booster]");
+			remaining = result.remaining;
+			remainingLabel = result.remainingLabel;
+			if (result.next && input) {
+				input.value = result.next;
+			} else {
+				button.hidden = true;
 			}
 
 			reels = buildReels(result.reels);
 			colors = result.palette;
 
-			// Wait for the stacks to mount before measuring them
+			// Wait for the stacks to mount, size them, then measure them
 			await tick();
+			fitReels();
+			await tick();
+			scrollToReels();
 			const durations = spinReels(result.reels);
 
 			await delay(Math.max(...durations) + BOUNCE_MS + 80);
 			showcase = buildShowcase(result.reels);
 			button.textContent = retryLabel ?? openLabel;
-		} catch {
-			showFailure(errorLabel);
+
+			// Obtained cards are shown in a popup
+			await tick();
+			resultDialog.showModal();
+		} catch (error) {
+			showFailure(error instanceof PackError ? error.message : errorLabel);
 		} finally {
 			busy = false;
 			button.disabled = false;
 		}
 	}
 
+	// Open the next booster of the stack, the page form already points to it
+	function openAgain() {
+		if (remaining === 0 || !pageForm) {
+			return;
+		}
+		resultDialog.close();
+		openPack(pageForm, pageButton);
+	}
+
 	onMount(() => {
 		const form = document.querySelector(formSelector);
+		pageForm = form;
+		pageButton = form?.querySelector("button[type=submit]");
 
 		if (!form) {
 			return;
@@ -198,6 +286,11 @@
 		}
 
 		form.addEventListener("submit", handleSubmit);
+
+		// Coming from the inventory's open button: no need to click again
+		if (autostart) {
+			openPack(form, form.querySelector("button[type=submit]"));
+		}
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
@@ -212,7 +305,7 @@
 
 {#if reels.length > 0}
 	<div class="pack-reels" bind:this={stageElement}
-		style="--c1: {colors.primary}; --c2: {colors.secondary}">
+		style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
 		{#each reels as reel}
 			<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity}>
 				<div class="pack-strip">
@@ -232,10 +325,11 @@
 	</div>
 {/if}
 
-{#if showcase.length > 0}
+<dialog class="pack-result" aria-labelledby="pack-result-title" bind:this={resultDialog}>
+	{#if showcase.length > 0}
 	<section class="pack-showcase">
-		<h3 class="pack-showcase-title">{obtainedLabel}</h3>
-		<div class="pack-showcase-row">
+		<h3 class="pack-showcase-title" id="pack-result-title">{obtainedLabel}</h3>
+		<div class="pack-showcase-row" style="--pack-count: {showcase.length}">
 			{#each showcase as card, index}
 				<div class="pack-showcase-card" data-rarity={card.rarity}
 					style="animation-delay: {index * 90}ms">
@@ -245,8 +339,18 @@
 				</div>
 			{/each}
 		</div>
+		<div class="pack-result-actions">
+			<button type="button" class="pack-result-again" disabled={remaining === 0}
+				title={remainingLabel} onclick={openAgain}>
+				{openAgainLabel}
+				<span class="pack-result-count" aria-label={remainingLabel}>{remainingBadge}</span>
+			</button>
+			<!-- svelte-ignore a11y_autofocus -->
+			<a class="pack-result-return" href={returnUrl} autofocus>{returnLabel}</a>
+		</div>
 	</section>
-{/if}
+	{/if}
+</dialog>
 
 <style>
 	.pack-reels {
@@ -254,13 +358,14 @@
 		--pack-cell: calc(30ch * var(--pack-scale));
 		--pack-cell-height: calc(30em * var(--pack-scale));
 		--pack-gap: 0.75rem;
+		--pack-width: calc(var(--pack-count) * var(--pack-cell) + (var(--pack-count) - 1) * var(--pack-gap));
 
 		position: relative;
 		display: flex;
 		gap: var(--pack-gap);
-		width: calc(5 * var(--pack-cell) + 4 * var(--pack-gap));
-		max-width: 100%;
-		margin: 1.5rem auto;
+		width: var(--pack-width);
+		/* Centered on the page column, overflowing it on both sides when wider */
+		margin: 1.5rem calc((100% - var(--pack-width)) / 2);
 	}
 
 	/* Each column is a reel window: one card tall, the stack turning behind it */
@@ -402,13 +507,152 @@
 	}
 
 	/* The prize: the five obtained cards, bigger and fully interactive */
+	/* Popup with the obtained cards */
+	/* The dialog is the panel, it scrolls when the cards don't fit */
+	.pack-result {
+		width: min(100% - 2rem, 90rem);
+		max-width: none;
+		max-height: min(100dvh - 2rem, 60rem);
+		padding: 0;
+		overflow: auto;
+		overscroll-behavior: contain;
+
+		color: var(--color-text);
+		background: var(--color-bg-2);
+		border: 1px solid var(--color-border-1);
+		border-radius: 1rem;
+		box-shadow: 0 10px 30px var(--color-shadow);
+	}
+
+	/* Without the global section panel, the dialog already draws it */
+	.pack-result .pack-showcase {
+		padding: 1.5rem 1rem 0;
+
+		background: none;
+		border: 0;
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	/* Small or zoomed in screens: the popup takes the whole screen */
+	@media (max-width: 640px), (max-height: 600px) {
+		.pack-result {
+			inset: 0;
+			width: auto;
+			height: auto;
+			max-height: none;
+			margin: 0;
+
+			border: 0;
+			border-radius: 0;
+		}
+	}
+
+	.pack-result::backdrop {
+		background: rgb(0 0 0 / 55%);
+		backdrop-filter: blur(3px);
+	}
+
+	/* The page behind the popup doesn't scroll */
+	:global(html:has(.pack-result[open])) {
+		overflow: hidden;
+	}
+
+	/* Stays visible at the bottom while the cards scroll */
+	.pack-result-actions {
+		position: sticky;
+		bottom: 0;
+
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 0.75rem;
+
+		margin-top: 0.5rem;
+		padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
+
+		background: var(--color-bg-2);
+	}
+
+	/* Looks like the page's open button */
+	.pack-result-again {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.6rem;
+
+		min-height: 2.5rem;
+		padding: 0.45rem 0.75rem 0.45rem 1.25rem;
+
+		color: var(--color-text-alt);
+		background: var(--color-accent-primary);
+
+		&:hover:not(:disabled) {
+			background: var(--color-accent-primary-dark);
+		}
+
+		&:disabled {
+			color: var(--color-text-muted);
+			background: var(--color-bg-4);
+			opacity: 1;
+		}
+	}
+
+	.pack-result-count {
+		min-width: 1.6rem;
+		padding: 0.1rem 0.45rem;
+
+		background: rgb(255 255 255 / 22%);
+		border-radius: 999px;
+
+		font-size: 0.8rem;
+		font-weight: 700;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+	}
+
+	.pack-result-again:disabled .pack-result-count {
+		background: var(--color-bg-2);
+	}
+
+	/* Looks like the generic buttons */
+	.pack-result-return {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		min-height: 2.5rem;
+		min-width: 8rem;
+		padding: 0.45rem 1.25rem;
+
+		color: var(--color-text-alt);
+		background: var(--color-accent-secondary);
+		border-radius: 0.55rem;
+
+		font-weight: 600;
+		line-height: 1.3;
+		text-decoration: none;
+
+		transition: background-color 120ms ease;
+	}
+
+	.pack-result-return:hover {
+		color: var(--color-text-alt);
+		background: var(--color-accent-secondary-dark);
+	}
+
+	.pack-result-return:focus-visible {
+		outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+		outline-offset: 2px;
+	}
+
 	.pack-showcase {
 		--showcase-scale: 0.8;
 		--showcase-cell: calc(30ch * var(--showcase-scale));
 		--showcase-cell-height: calc(30em * var(--showcase-scale));
 		--showcase-gap: 1.15rem;
 
-		margin: 1.75rem auto 2.25rem;
+		margin: 0 auto;
 	}
 
 	.pack-showcase-title {
@@ -421,7 +665,7 @@
 		flex-wrap: wrap;
 		justify-content: center;
 		gap: var(--showcase-gap);
-		width: calc(5 * var(--showcase-cell) + 4 * var(--showcase-gap));
+		width: calc(var(--pack-count) * var(--showcase-cell) + (var(--pack-count) - 1) * var(--showcase-gap));
 		max-width: 100%;
 		margin: 0 auto;
 	}

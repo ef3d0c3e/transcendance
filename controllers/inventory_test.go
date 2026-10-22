@@ -230,3 +230,24 @@ func TestInventoryBoostersEmpty(t *testing.T) {
 	require.Contains(t, body, "No boosters yet")
 	require.NotContains(t, body, `<article class="collection"`)
 }
+
+func TestInventoryCardFoil(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invfoil1", "foo-bar-baz-qux", 0)
+
+	var user models.User
+	require.NoError(t, tests.DB.Where("username = ?", "invfoil1").First(&user).Error)
+	require.NoError(t, tests.DB.Create(&[]models.Card{
+		{CardID: cardTungsten, Acquired: time.Now(), Foil: "foil3", OwnerID: user.ID},
+		{CardID: cardFordT, Acquired: time.Now(), OwnerID: user.ID},
+	}).Error)
+	cookie := login(t, router, "invfoil1", "foo-bar-baz-qux")
+
+	// Only the foil card has the foil effect, with its own pattern
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Equal(t, 1, strings.Count(body, "card-effect card-foil"))
+	require.Contains(t, body, `data-mask="/cards/assets/foil3.png"`)
+	// Glare is the base look of every card, the watermark is reserved
+	require.Equal(t, 2, strings.Count(body, "card-effect card-glare"))
+	require.NotContains(t, body, "card-watermark")
+}
