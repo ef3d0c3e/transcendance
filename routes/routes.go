@@ -59,4 +59,24 @@ func RegisterRoutes(
 	}
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
+
+	router.GET("/inventory", dataController.InventoryGet)
+	router.GET("/add", dataController.InventoryAddGet)
+
+	router.GET("/opening", dataController.OpeningGet)
+	router.POST("/opening", dataController.OpeningPost)
+
+	// Debug: add a booster to the authenticated user's inventory
+	router.GET("/add_booster", dataController.AddBoosterGet)
+	router.POST("/add_booster", dataController.AddBoosterPost)
+
+	// Shop
+	shopController := controllers.ShopController{
+		DB:       db,
+		Renderer: renderer,
+		Data:     data,
+	}
+	router.GET("/shop", shopController.ShopGet)
+	router.POST("/shop/topup", shopController.ShopTopupPost)
+	router.POST("/shop/buy", shopController.ShopBuyPost)
 }

@@ -39,6 +39,7 @@ search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
 navbar-label-toggle = Afficher/masquer le menu
+navbar-shop = Boutique
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
@@ -82,3 +83,95 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+inventory-title = Votre inventaire
+inventory-title-other = Inventaire de { $username }
+inventory-unauthenticated = Vous devez être connecté pour acceder aux inventaires
+inventory-message-empty = Rien n'a voir ici
+inventory-message-user-not-found = Utilisateur non trouvé
+inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
+inventory-message-no-match = Aucune carte de cet inventaire ne correspond à votre recherche
+inventory-search-placeholder = Rechercher dans cet inventaire
+inventory-search-submit = Rechercher
+inventory-search-clear = Effacer la recherche
+inventory-card-acquired = Obtenue le
+inventory-card-close = Fermer
+inventory-card-acquired-first = Première obtenue le
+inventory-card-acquired-last = Dernière obtenue le
+inventory-card-copies = Exemplaires
+inventory-filter-rarity = Rareté
+inventory-filter-rarity-all = Toutes les raretés
+inventory-filter-effect = Effet
+inventory-filter-effect-all = Tous les effets
+inventory-filter-effect-none = Sans effet
+inventory-filter-effect-foil = Holographique
+inventory-sort = Trier par
+inventory-sort-relevance = Pertinence
+inventory-sort-recent = Dernière obtention
+inventory-sort-oldest = Première obtention
+inventory-sort-rarity = Rareté
+inventory-sort-count = Nombre
+inventory-sort-name = Nom (A-Z)
+inventory-sort-name-desc = Nom (Z-A)
+inventory-tabs-label = Sections de l'inventaire
+inventory-tab-cards = Cartes
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = Aucun booster pour l'instant
+inventory-booster-open-confirm = Ouvrir le booster { $name } ?
+inventory-booster-open-yes = Oui
+inventory-booster-open-no = Non
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+inventory-search-count = { $count ->
+    [one] { $count } carte trouvée
+    *[other] { $count } cartes trouvées
+}
+
+pack-opening-title = Ouverture de booster
+pack-opening-open = Ouvrir le booster
+pack-opening-open-another = Ouvrir un autre booster
+pack-opening-error-collection = Collection introuvable
+pack-opening-error-empty = Ce booster ne contient aucune carte
+pack-opening-error-internal = Impossible d'ouvrir le booster
+pack-opening-obtained = Cartes obtenues
+pack-opening-back = Retour à l'inventaire
+pack-opening-return = Retour
+pack-opening-open-again = Ouvrir à nouveau
+pack-opening-remaining = { $count ->
+    [0] Plus aucun booster
+    [one] { $count } booster restant
+    *[other] { $count } boosters restants
+}
+pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+
+shop-title = Boutique
+shop-balance = Solde
+shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = Aucun booster n'est en vente pour le moment
+shop-booster-buy = Acheter
+shop-price = { $amount } pièces
+shop-topup-title = Obtenir des pièces
+shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-button = Obtenir { $amount } pièces
+shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
+shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
+shop-error-pack = Paquet de pièces inconnu
+shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
+shop-error-quantity = Saisissez une quantité entre 1 et { $max }
+shop-error-internal = Impossible de mettre à jour votre solde
+shop-buy-close = Fermer
+shop-buy-success = { $count ->
+    [one] Un booster { $collection } a été ajouté à votre inventaire
+   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
+}
+shop-buy-view-inventory = Voir l'inventaire
+shop-buy-quantity = Quantité
+shop-buy-total = Total
+shop-coins = pièces
