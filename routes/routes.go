@@ -78,4 +78,5 @@ func RegisterRoutes(
 	}
 	router.GET("/shop", shopController.ShopGet)
 	router.POST("/shop/topup", shopController.ShopTopupPost)
+	router.POST("/shop/buy", shopController.ShopBuyPost)
 }

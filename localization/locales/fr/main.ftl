@@ -156,7 +156,6 @@ shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des booster
 shop-boosters-title = Boosters
 shop-boosters-empty = Aucun booster n'est en vente pour le moment
 shop-booster-buy = Acheter
-shop-booster-coming-soon = Bientôt disponible
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
@@ -164,5 +163,15 @@ shop-topup-button = Obtenir { $amount } pièces
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
 shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
 shop-error-pack = Paquet de pièces inconnu
-shop-error-internal = Impossible d'ajouter des pièces à votre solde
+shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
+shop-error-quantity = Saisissez une quantité entre 1 et { $max }
+shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
+shop-buy-success = { $count ->
+    [one] Un booster { $collection } a été ajouté à votre inventaire
+   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
+}
+shop-buy-view-inventory = Voir l'inventaire
+shop-buy-quantity = Quantité
+shop-buy-total = Total
+shop-coins = pièces
