@@ -1,124 +1,127 @@
 {{ define "profile" }}
-<script type="module" src="/frontend/profile.js"></script>
 <h1>{{ .T "profile-title" }}</h1>
 {{ if .Data.Edit }}
-<div class="profile-error" id="profile-result"></div>
-<form id="profile-form" method="post">
-	<div id="avatar">
-		<img src="{{ .Data.Profile.Avatar }}" alt="Avatar" />
-	</div>
-	<div class="field field-disabled">
-		<label for="username">Username</label>
-		<input
-			type="text"
-			name="username"
-			id="username"
-			autocomplete="username"
-			minlength="3"
-			maxlength="16"
-			pattern="[a-zA-Z0-9_]{3,16}"
-			title="3–16 chars, letters/digits/underscore"
-			value="{{ .Data.Profile.User.Username }}">
-		<p class="profile-error" id="profile-error-username" hidden></p>
-	</div>
-	<div class="field field-disabled">
-		<label for="bio">Bio</label>
-		<textarea
-			type="text"
-			name="bio"
-			id="bio"
-			maxlength="244"
-			placeholder="{{ .T "profile-empty-field" }}">{{ .Data.Profile.Bio }}</textarea>
-		<p class="profile-error" id="profile-error-bio" hidden></p>
-	</div>
-	<div class="field field-disabled">
-		<label for="birthdate">Birth date</label>
-		<input
-			type="date"
-			name="birthdate"
-			id="birthdate"
-			autocomplete="bday"
-			max="{{ today }}"
-			value="{{ if not .Data.Profile.BirthDate.IsZero }}{{ .Data.Profile.BirthDate.Format "2006-01-02" }}{{ end }}">
-		<p class="profile-error" id="profile-error-birthdate" hidden></p>
-	</div>
-	<div class="field field-disabled">
-		<label for="contact">Contact Info</label>
-		<input
-			type="text"
-			name="contact"
-			id="contact"
-			autocomplete="email"
-			maxlength="256"
-			placeholder="{{ .T "profile-empty-field" }}"
-			value="{{ .Data.Profile.ContactInfo }}">
-		<p class="profile-error" id="profile-error-contact" hidden></p>
-	</div>
-	<div class="field field-disabled">
-		<label for="new_password">New Password</label>
-		<input
-			type="password"
-			name="new_password"
-			id="new_password"
-			autocomplete="new-password"
-			minlength="8">
-			<p class="profile-error" id="profile-error-new_password" hidden></p>
-	</div>
-	<div class="field field-disabled" hidden>
-		<label for="confirm_password">Confirm Password</label>
-		<input
-			required
-			disabled
-			type="password"
-			name="confirm_password"
-			id="confirm_password"
-			autocomplete="new-password"
-			minlength="8">
-			<p class="profile-error" id="profile-error-confirm_password" hidden></p>
-	</div>
-	<div class="field field-disabled" hidden>
-		<label for="password">Current Password</label>
-		<input
-			required
-			disabled
-			type="password"
-			name="password"
-			id="password"
-			autocomplete="current-password"
-			placeholder="********">
-			<p class="profile-error" id="profile-error-password" hidden></p>
-	</div>
-	<button type="submit" hidden>{{ .T "profile-submit" }}</button>
-</form>
+<section>
+	<div class="profile-error" id="profile-result"></div>
+	<form id="profile-form" method="post">
+		<div id="avatar">
+			<img src="{{ .Data.Profile.User.Avatar }}" alt="Avatar" />
+		</div>
+		<div class="field field-disabled">
+			<label for="username">Username</label>
+			<input
+				type="text"
+				name="username"
+				id="username"
+				autocomplete="username"
+				minlength="3"
+				maxlength="16"
+				pattern="[a-zA-Z0-9_]{3,16}"
+				title="3–16 chars, letters/digits/underscore"
+				value="{{ .Data.Profile.User.Username }}">
+			<p class="profile-error" id="profile-error-username" hidden></p>
+		</div>
+		<div class="field field-disabled">
+			<label for="bio">Bio</label>
+			<textarea
+				type="text"
+				name="bio"
+				id="bio"
+				maxlength="244"
+				placeholder="{{ .T "profile-empty-field" }}">{{ .Data.Profile.Bio }}</textarea>
+			<p class="profile-error" id="profile-error-bio" hidden></p>
+		</div>
+		<div class="field field-disabled">
+			<label for="birthdate">Birth date</label>
+			<input
+				type="date"
+				name="birthdate"
+				id="birthdate"
+				autocomplete="bday"
+				max="{{ today }}"
+				value="{{ if not .Data.Profile.BirthDate.IsZero }}{{ .Data.Profile.BirthDate.Format "2006-01-02" }}{{ end }}">
+			<p class="profile-error" id="profile-error-birthdate" hidden></p>
+		</div>
+		<div class="field field-disabled">
+			<label for="contact">Contact Info</label>
+			<input
+				type="text"
+				name="contact"
+				id="contact"
+				autocomplete="email"
+				maxlength="256"
+				placeholder="{{ .T "profile-empty-field" }}"
+				value="{{ .Data.Profile.ContactInfo }}">
+			<p class="profile-error" id="profile-error-contact" hidden></p>
+		</div>
+		<div class="field field-disabled">
+			<label for="new_password">New Password</label>
+			<input
+				type="password"
+				name="new_password"
+				id="new_password"
+				autocomplete="new-password"
+				minlength="8">
+				<p class="profile-error" id="profile-error-new_password" hidden></p>
+		</div>
+		<div class="field field-disabled" hidden>
+			<label for="confirm_password">Confirm Password</label>
+			<input
+				required
+				disabled
+				type="password"
+				name="confirm_password"
+				id="confirm_password"
+				autocomplete="new-password"
+				minlength="8">
+				<p class="profile-error" id="profile-error-confirm_password" hidden></p>
+		</div>
+		<div class="field field-disabled" hidden>
+			<label for="password">Current Password</label>
+			<input
+				required
+				disabled
+				type="password"
+				name="password"
+				id="password"
+				autocomplete="current-password"
+				placeholder="********">
+				<p class="profile-error" id="profile-error-password" hidden></p>
+		</div>
+		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
+	</form>
+</section>
 <div id="profile-enhancement"></div>
 {{ else }}
-<div id="avatar">
-	<img src="{{ .Data.Profile.Avatar }}" alt="Avatar" />
-</div>
-<div>
-	<p id="username">{{ .Data.Profile.User.Username }}</p>
-</div>
-<div>
-	{{ if not .Data.Profile.BirthDate.IsZero }}
-	<p id="birthdate">{{ .Data.Profile.BirthDate.Format "2006-01-02" }}</p>
-	{{ else }}
-	<p id="birthdate">{{ .T "profile-empty-field" }}</p>
-	{{ end }}
-</div>
-<div>
-	{{ if .Data.Profile.ContactInfo }}
-	<p id="contact">{{ .Data.Profile.ContactInfo }}</p>
-	{{ else }}
-	<p id="contact">{{ .T "profile-empty-field" }}</p>
-	{{ end }}
-</div>
-<div>
-	<p id="bio-label">Bio</p>
-	{{ if .Data.Profile.Bio }}
-	<p id="bio" aria-labelledby="bio-label">{{ .Data.Profile.Bio }}</p>
-	{{ else }}
-	<p id="bio" aria-labelledby="bio-label">{{ .T "profile-empty-field" }}</p>
-	{{ end }}
-</div>
+<section>
+	<div id="avatar">
+		<img src="{{ .Data.Profile.User.Avatar }}" alt="Avatar" />
+	</div>
+	<div>
+		<p id="username">{{ .Data.Profile.User.Username }}</p>
+	</div>
+	<div>
+		{{ if not .Data.Profile.BirthDate.IsZero }}
+		<p id="birthdate">{{ .Data.Profile.BirthDate.Format "2006-01-02" }}</p>
+		{{ else }}
+		<p id="birthdate">{{ .T "profile-empty-field" }}</p>
+		{{ end }}
+	</div>
+	<div>
+		{{ if .Data.Profile.ContactInfo }}
+		<p id="contact">{{ .Data.Profile.ContactInfo }}</p>
+		{{ else }}
+		<p id="contact">{{ .T "profile-empty-field" }}</p>
+		{{ end }}
+	</div>
+	<div>
+		<p id="bio-label">Bio</p>
+		{{ if .Data.Profile.Bio }}
+		<p id="bio" aria-labelledby="bio-label">{{ .Data.Profile.Bio }}</p>
+		{{ else }}
+		<p id="bio" aria-labelledby="bio-label">{{ .T "profile-empty-field" }}</p>
+		{{ end }}
+	</div>
+</section>
 {{ end }}
 {{ end }}
