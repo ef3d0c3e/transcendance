@@ -1,2 +1,2 @@
-name = Development
+title = Development
 description = First collection

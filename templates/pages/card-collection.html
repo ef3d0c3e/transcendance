@@ -1,0 +1,8 @@
+{{ define "card-collection" }}
+<h2>{{ .Data.CollectionTitle }}</h2>
+<e-cluster justify="center">
+    {{ range $val := .Data.Cards }}
+        {{ template "card" $val }}
+    {{ end }}
+</e-cluster>
+{{ end }}
