@@ -36,8 +36,8 @@
 	// Slot machine: five vertical reels side by side. Each drops past its
 	// window on its own clock, overshoots the payline, then springs back up
 	// onto the card it landed on.
-	const SPIN_MIN_MS = 6000;
-	const SPIN_MAX_MS = 11000;
+	const SPIN_MIN_MS = 5000;
+	const SPIN_MAX_MS = 9000;
 	const SPIN_EASE = "cubic-bezier(0.08, 0.72, 0.16, 1)";
 	const BOUNCE_MS = 280;
 	const BOUNCE_EASE = "cubic-bezier(0.34, 1.3, 0.64, 1)";
