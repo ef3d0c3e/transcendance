@@ -1,138 +1,357 @@
 package controllers
 
 import (
-	"math"
+	"errors"
 	"net/http"
+	"net/url"
+	"strconv"
+	"strings"
 	"time"
 	"transcendance/models"
 	"transcendance/views"
-
-	"encoding/json"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/datatypes"
 	"gorm.io/gorm"
 )
 
-func (ac *AuthController) NotificationsGet(c *gin.Context) {
-	user := GetAuthenticatedUser(c);
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": "notifications",
-		"User":  user,
-	})
-	builder.Add("notifications", "Content", map[string]any{
-	})
-	ac.Renderer.Render(c, &builder)
+type NotificationController struct {
+	DB       *gorm.DB
+	Renderer *views.Renderer
 }
 
-// Only for testing purposes to add notifications in real time
-func (ac *AuthController) GetANotifGet(c *gin.Context) {
-	user := GetAuthenticatedUser(c)
-	dataJson, _ := json.Marshal(gin.H{"UserID": 555, "Username": "foobar"})
-	var data datatypes.JSONMap
-	if err := data.UnmarshalJSON(dataJson); err != nil {
+const (
+	notificationPageSize    = 15
+	notificationMaxPageSize = 50
+
+	notificationFilterUnread = "unread"
+)
+
+// Translate a notification's title and description, using its data as arguments
+func (nc *NotificationController) translate(c *gin.Context, notif *models.Notification) (string, string) {
+	args := make([]any, 0, len(notif.Data)*2)
+	for key, value := range notif.Data {
+		args = append(args, key, value)
+	}
+	title := nc.Renderer.T(c, "notification-"+notif.Type+"-title", args...)
+	desc := nc.Renderer.T(c, "notification-"+notif.Type+"-desc", args...)
+	return title, desc
+}
+
+// Get the user's notification by the `ID` param, writes the error response if any
+func (nc *NotificationController) find(c *gin.Context, userID uint) (*models.Notification, bool) {
+	notif, err := gorm.G[models.Notification](nc.DB).
+		Where("id = ? AND user_id = ?", c.Param("ID"), userID).
+		First(c.Request.Context())
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.String(http.StatusNotFound, "notification not found")
+		return nil, false
+	}
+	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
+		return nil, false
 	}
-	notif := models.Notif{
-		UserID: user.ID,
-		Icon: "",
-		Type: "FriendRequest",
-		Data: data,
-		Status: "unread",
-		Action: "/friendRequest",
-	}
-	if err := ac.DB.Create(&notif).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": ac.Renderer.T(c, err.Error()),
-		})
-		return
-	}
+	return &notif, true
 }
 
-func (ac *AuthController) NotificationGet(c *gin.Context) {
-	user := GetAuthenticatedUser(c)
-	notifID := c.Param("ID")
-	act := c.Param("action")
-	if user != nil {
-		ctx := c.Request.Context()
-		_, err := gorm.G[models.Notif](ac.DB).
-			Where("id = ? and user_id = ?", notifID, user.ID).
-			Update(ctx, "Status", "read")
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-		}
-		notif, err := gorm.G[models.Notif](ac.DB).
-			Where("id = ? and user_id = ?", notifID, user.ID).
-			First(ctx)
-		if err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
-		} else {
-			c.Redirect(http.StatusFound, notif.Action + act)
-		}
-	}
-}
-
-func (ac *AuthController) ApiNotifGet(c *gin.Context) {
+// /notifications GET: notifications page
+func (nc *NotificationController) NotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		c.JSON(http.StatusOK, gin.H{
-			"notifications": []map[string]any{
-			},
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	filter := c.Query("filter")
+	if filter != notificationFilterUnread {
+		filter = ""
+	}
+	page, err := strconv.Atoi(c.Query("p"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+
+	list, err := nc.list(c, user.ID, filter, page, notificationPageSize)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	// The last page can empty out after dismissing or reading notifications
+	if list.Pages > 0 && int64(page) > list.Pages {
+		c.Redirect(http.StatusSeeOther, "/notifications?filter="+filter+"&p="+strconv.FormatInt(list.Pages, 10))
+		return
+	}
+	var all int64
+	if err := nc.DB.Model(&models.Notification{}).Where("user_id = ?", user.ID).Count(&all).Error; err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	// Actions come back to the page being viewed
+	current := "/notifications?filter=" + filter + "&p=" + strconv.Itoa(page)
+	builder := views.PageBuilder("base", map[string]any{
+		"Title": nc.Renderer.T(c, "notification-title"),
+		"User":  user,
+	})
+	content := builder.Add("notifications", "Content", map[string]any{
+		"Locale":        nc.Renderer.Localizer.GetLocale(c),
+		"Filter":        filter,
+		"Notifications": list.Items,
+		"Unread":        list.Unread,
+		"All":           all,
+		"Redirect":      current,
+	})
+	if list.Pages > 1 {
+		content.Add("paginator", "Paginator", map[string]any{
+			"Current": page,
+			"Total":   int(list.Pages),
+			"Url":     "?filter=" + filter + "&p=",
 		})
-	} else {
-		ctx := c.Request.Context()
-		notifs, err := gorm.G[models.Notif](ac.DB).
-			Where("user_id = ? and status = ?", user.ID, "unread").
-			Order("created_at DESC").
-			Limit(15).
-			Find(ctx)
-		if err != nil {
+	}
+	nc.Renderer.Render(c, &builder)
+}
+
+// /notification/:ID GET: mark the notification as read and open its page
+func (nc *NotificationController) NotificationGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	notif, ok := nc.find(c, user.ID)
+	if !ok {
+		return
+	}
+	if notif.ReadAt == nil {
+		if err := nc.DB.Model(notif).Update("read_at", time.Now()).Error; err != nil {
 			c.String(http.StatusInternalServerError, err.Error())
-		} else {
-			// Only expose what's required + expose localized data
-			result := make([]map[string]any, 0)
-			for _, notif := range notifs {
-				data := make(map[string]any)
-				data["ID"] = notif.ID
-				data["Type"] = notif.Type
-				data["Status"] = notif.Status
-				data["Data"] = notif.Data
-				data["CreatedAt"] = notif.CreatedAt
-				data["Icon"] = notif.Icon
-				data["Action"] = notif.Action
-				locale := make(map[string]string)
-				elapsed := time.Now().Sub(notif.CreatedAt).Seconds()
-				if elapsed < 60 {
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-just-now")
-				} else if elapsed < 60 * 60 {
-					count := math.Floor(elapsed / 60)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-minutes", "count", count)
-				} else if elapsed < 60 * 60 * 24 {
-					count := math.Floor(elapsed / 60 / 60)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-hours", "count", count)
-				} else if elapsed < 60 * 60 * 24 * 7 {
-					count := math.Floor(elapsed / 60 / 60 / 24)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-days", "count", count)
-				} else if elapsed < 60 * 60 * 24 * 30 {
-					count := math.Floor(elapsed / 60 / 60 / 24 / 7)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-weeks", "count", count)
-				} else if elapsed < 60 * 60 * 24 * 365 {
-					count := math.Floor(elapsed / 60 / 60 / 24 / 30)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-months", "count", count)
-				} else {
-					count := math.Floor(elapsed / 60 / 60 / 24 / 365)
-					locale["Time"] = ac.Renderer.T(c, "notification-time-ago-years", "count", count)
-				}
-				if notif.Type == "FriendRequest" {
-					locale["Title"] = ac.Renderer.T(c, "notification-friend-request-title")
-					locale["Desc"] = ac.Renderer.T(c, "notification-friend-request-desc", "username", notif.Data["Username"])
-					locale["Accept"] = ac.Renderer.T(c, "notification-friend-request-accept")
-					locale["Deny"] = ac.Renderer.T(c, "notification-friend-request-deny")
-				}
-				data["Locale"] = locale
-				result = append(result, data)
-			}
-			c.JSON(http.StatusOK, gin.H{"notifications": result})
+			return
 		}
 	}
+
+	target := notif.Action
+	if target == "" {
+		target = "/notifications"
+	}
+	c.Redirect(http.StatusSeeOther, target)
+}
+
+type notificationList struct {
+	Items  []map[string]any
+	Unread int64
+	Total  int64
+	Pages  int64
+}
+
+// A page of the user's notifications, newest first, with the user's unread count
+func (nc *NotificationController) list(c *gin.Context, userID uint, filter string, page int, limit int) (notificationList, error) {
+	var list notificationList
+
+	query := nc.DB.Model(&models.Notification{}).Where("user_id = ?", userID)
+	if filter == notificationFilterUnread {
+		query = query.Where("read_at IS NULL")
+	}
+	if err := query.Session(&gorm.Session{}).Count(&list.Total).Error; err != nil {
+		return list, err
+	}
+	if err := nc.DB.Model(&models.Notification{}).
+		Where("user_id = ? AND read_at IS NULL", userID).
+		Count(&list.Unread).
+		Error; err != nil {
+		return list, err
+	}
+	list.Pages = (list.Total + int64(limit) - 1) / int64(limit)
+
+	var notifs []models.Notification
+	if err := query.
+		Order("created_at DESC").
+		Order("id DESC").
+		Offset((page - 1) * limit).
+		Limit(limit).
+		Find(&notifs).
+		Error; err != nil {
+		return list, err
+	}
+
+	// Only expose what's required, relative times are formatted client-side
+	list.Items = make([]map[string]any, 0, len(notifs))
+	for i := range notifs {
+		title, desc := nc.translate(c, &notifs[i])
+		list.Items = append(list.Items, map[string]any{
+			"ID":        notifs[i].ID,
+			"Type":      notifs[i].Type,
+			"Data":      notifs[i].Data,
+			"Read":      notifs[i].ReadAt != nil,
+			"CreatedAt": notifs[i].CreatedAt.Format(time.RFC3339),
+			"Title":     title,
+			"Desc":      desc,
+		})
+	}
+	return list, nil
+}
+
+// Respond to a successful action: go back to the `redirect` form value if it is a local page, nothing otherwise
+func respondAction(c *gin.Context) {
+	target := c.PostForm("redirect")
+	if strings.HasPrefix(target, "/") && !strings.HasPrefix(target, "//") && !strings.HasPrefix(target, "/\\") {
+		c.Redirect(http.StatusSeeOther, target)
+		return
+	}
+	c.Status(http.StatusNoContent)
+}
+
+// /api/notifications GET: a page of the user's notifications, newest first
+//
+// Query: `page` (from 1), `limit` (page size), `filter=unread` to only list unread ones
+func (nc *NotificationController) ApiNotificationsGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
+		return
+	}
+
+	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
+	if err != nil || page < 1 {
+		page = 1
+	}
+	limit, err := strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(notificationPageSize)))
+	if err != nil || limit < 1 {
+		limit = notificationPageSize
+	}
+	limit = min(limit, notificationMaxPageSize)
+
+	list, err := nc.list(c, user.ID, c.Query("filter"), page, limit)
+	if err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"locale":        nc.Renderer.Localizer.GetLocale(c),
+		"notifications": list.Items,
+		"unread":        list.Unread,
+		"total":         list.Total,
+		"page":          page,
+		"pages":         list.Pages,
+	})
+}
+
+// Set whether a notification is read
+func (nc *NotificationController) setRead(c *gin.Context, read bool) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
+		return
+	}
+
+	notif, ok := nc.find(c, user.ID)
+	if !ok {
+		return
+	}
+	if (notif.ReadAt != nil) != read {
+		var readAt *time.Time
+		if read {
+			now := time.Now()
+			readAt = &now
+		}
+		if err := nc.DB.Model(notif).Update("read_at", readAt).Error; err != nil {
+			c.String(http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+	respondAction(c)
+}
+
+// /api/notifications/:ID/read POST: mark a notification as read
+func (nc *NotificationController) ApiNotificationReadPost(c *gin.Context) {
+	nc.setRead(c, true)
+}
+
+// /api/notifications/:ID/unread POST: mark a notification as unread
+func (nc *NotificationController) ApiNotificationUnreadPost(c *gin.Context) {
+	nc.setRead(c, false)
+}
+
+// /api/notifications/:ID/delete POST: dismiss a notification
+func (nc *NotificationController) ApiNotificationDeletePost(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
+		return
+	}
+
+	notif, ok := nc.find(c, user.ID)
+	if !ok {
+		return
+	}
+	if err := nc.DB.Delete(notif).Error; err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondAction(c)
+}
+
+// /api/notifications/read_all POST: mark all of the user's notifications as read
+func (nc *NotificationController) ApiNotificationsReadAllPost(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
+		return
+	}
+
+	if err := nc.DB.Model(&models.Notification{}).
+		Where("user_id = ? AND read_at IS NULL", user.ID).
+		Update("read_at", time.Now()).
+		Error; err != nil {
+		c.String(http.StatusInternalServerError, err.Error())
+		return
+	}
+	respondAction(c)
+}
+
+// /add_notification GET: debug page to send a notification to yourself
+func (nc *NotificationController) AddNotificationGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	builder := views.PageBuilder("base", map[string]any{
+		// Debug page, not localized
+		"Title": "Add a notification (debug)",
+		"User":  user,
+	})
+	builder.Add("add-notification", "Content", map[string]any{})
+	nc.Renderer.Render(c, &builder)
+}
+
+// /add_notification POST: send a notification to yourself, then show the notifications
+func (nc *NotificationController) AddNotificationPost(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.String(http.StatusForbidden, "You must be authenticated")
+		return
+	}
+
+	notif := models.Notification{
+		UserID: user.ID,
+		Type:   c.PostForm("type"),
+	}
+	switch notif.Type {
+	case models.NotificationFriendRequest:
+		notif.Data = datatypes.JSONMap{"username": c.PostForm("username")}
+		notif.Action = "/search?username=" + url.QueryEscape(c.PostForm("username"))
+	case models.NotificationInfo:
+		notif.Data = datatypes.JSONMap{"title": c.PostForm("title"), "description": c.PostForm("description")}
+	default:
+		c.String(http.StatusBadRequest, "invalid notification type")
+		return
+	}
+	if err := nc.DB.Create(&notif).Error; err != nil {
+		c.String(http.StatusInternalServerError, "failed to insert notification: %s", err)
+		return
+	}
+
+	c.Redirect(http.StatusSeeOther, "/notifications")
 }

@@ -60,8 +60,20 @@ func RegisterRoutes(
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
 
-	router.GET("/notifications", authController.NotificationsGet)
-	router.GET("/notification/:ID/*action", authController.NotificationGet)
-	router.GET("/getanotif", authController.GetANotifGet)
-	router.GET("/api/notifications", authController.ApiNotifGet)
+	// Notifications
+	notificationController := controllers.NotificationController{
+		DB:       db,
+		Renderer: renderer,
+	}
+	router.GET("/notifications", notificationController.NotificationsGet)
+	router.GET("/notification/:ID", notificationController.NotificationGet)
+	router.GET("/api/notifications", notificationController.ApiNotificationsGet)
+	router.POST("/api/notifications/read_all", notificationController.ApiNotificationsReadAllPost)
+	router.POST("/api/notifications/:ID/read", notificationController.ApiNotificationReadPost)
+	router.POST("/api/notifications/:ID/unread", notificationController.ApiNotificationUnreadPost)
+	router.POST("/api/notifications/:ID/delete", notificationController.ApiNotificationDeletePost)
+
+	// Debug: send a notification to the authenticated user
+	router.GET("/add_notification", notificationController.AddNotificationGet)
+	router.POST("/add_notification", notificationController.AddNotificationPost)
 }

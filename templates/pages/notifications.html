@@ -1,46 +1,63 @@
 {{ define "notifications" }}
+<section class="notifications-page">
+	<div class="notifications-head">
+		<h1>{{ .T "notification-title" }}</h1>
+		{{ if gt .Data.Unread 0 }}
+		<form action="/api/notifications/read_all" method="post">
+			<input type="hidden" name="redirect" value="{{ .Data.Redirect }}">
+			<button type="submit" class="notification-text-button">{{ .T "notification-mark-all-read" }}</button>
+		</form>
+		{{ end }}
+	</div>
 
-<div id="container">
-	<h2>
-		Notifications
-		<span id="notifications-badge">3</span>
-		<div style="float: right; font-size: medium;">Mark all as Read</div>
-	</h2>
-	<ul style="display:inline-block">
-		<li style="display:inline"><a>1</a></li>
-		<li style="display:inline"><a>2</a></li>
-		<li style="display:inline"><a>3</a></li>
-		<li style="display:inline"><a>4</a></li>
-		<li style="display:inline"><a>5</a></li>
+	<nav class="notification-tabs" aria-label="{{ .T "notification-tabs-label" }}">
+		<a href="?filter=" {{ if eq .Data.Filter "" }}aria-current="page"{{ end }}>
+			{{ .T "notification-tab-all" }} <span class="notification-tab-count">{{ .Data.All }}</span>
+		</a>
+		<a href="?filter=unread" {{ if eq .Data.Filter "unread" }}aria-current="page"{{ end }}>
+			{{ .T "notification-tab-unread" }} <span class="notification-tab-count">{{ .Data.Unread }}</span>
+		</a>
+	</nav>
+
+	{{ if .Data.Notifications }}
+	<ul class="notification-list" id="notification-list" data-locale="{{ .Data.Locale }}">
+		{{ range .Data.Notifications }}
+		<li class="notification-item{{ if not .Read }} is-unread{{ end }}" data-created="{{ .CreatedAt }}">
+			<span class="notification-icon" data-type="{{ .Type }}" aria-hidden="true"></span>
+			<a class="notification-body" href="/notification/{{ .ID }}">
+				<span class="notification-title">{{ .Title }}</span>
+				<span class="notification-desc">{{ .Desc }}</span>
+				<time class="notification-time" datetime="{{ .CreatedAt }}">{{ .CreatedAt }}</time>
+			</a>
+			<div class="notification-actions">
+				{{ if .Read }}
+				<form action="/api/notifications/{{ .ID }}/unread" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-unread"
+						aria-label="{{ $.T "notification-mark-unread" }}" title="{{ $.T "notification-mark-unread" }}"></button>
+				</form>
+				{{ else }}
+				<form action="/api/notifications/{{ .ID }}/read" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-read"
+						aria-label="{{ $.T "notification-mark-read" }}" title="{{ $.T "notification-mark-read" }}"></button>
+				</form>
+				{{ end }}
+				<form action="/api/notifications/{{ .ID }}/delete" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-delete"
+						aria-label="{{ $.T "notification-delete" }}" title="{{ $.T "notification-delete" }}"></button>
+				</form>
+			</div>
+		</li>
+		{{ end }}
 	</ul>
-	<e-stack style="border: solid; border-radius:20px; border-width: 15px; border-color: gray;">
-		<a>
-			<div style="background-color: rgb(130, 190, 0);">
-				<h2>Titre</h2>
-				<p>Some time ago</p>
-				<p>Very very long description, cool event, abonne toi sonne la cloche</p>
-			</div>
-		</a>
-		<a>
-			<div style="background-color: rgb(0, 136, 206); border: none; font-family: Avenir;">
-				<span class="wrapper-time" style="display: inline; color: rgb(255, 182, 18);">
-					<p style="font-weight: bold;">10/29/2026</p>
-					<p style="font-size: small;">20 minutes ago</p>
-				</span>
-				<span class="wrapper-text" style="display: inline; color: white;">
-					<h2>Titre</h2>
-					<p>Very very long description, cool event, abonne toi sonne la cloche</p>
-				</span>
-			</div>
-		</a>
-		<a>
-			<div>
-				<h2>Titre</h2>
-				<p>Some time ago</p>
-				<p>Very very long description, cool event, abonne toi sonne la cloche</p>
-			</div>
-		</a>
-	</e-stack>
-</div>
+	{{ else }}
+	<p class="notification-empty">
+		{{ if eq .Data.Filter "unread" }}{{ .T "notification-empty-unread" }}{{ else }}{{ .T "notification-empty-all" }}{{ end }}
+	</p>
+	{{ end }}
 
+	{{ .Children.Paginator }}
+</section>
 {{ end }}
