@@ -26,6 +26,8 @@ type AuthenticatedUser struct {
 	Username string
 	// 2: Admin, 1: Moderator, 0: User
 	Rank     uint
+	// In-shop currency balance
+	Coins    uint
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -67,6 +69,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			ID: session.UserID,
 			Username: user.Username,
 			Rank: user.Rank,
+			Coins: user.Coins,
 		})
 
 		c.Next()

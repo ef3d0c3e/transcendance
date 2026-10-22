@@ -5,6 +5,7 @@ import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
+import ShopBuyPopup from './ShopBuyPopup.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -170,6 +171,20 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				returnUrl: target.dataset.returnUrl,
 				openAgainLabel: target.dataset.openAgainLabel,
 				autostart: target.dataset.autostart === 'true',
+			},
+		});
+	}
+}
+
+// Shop booster buy popup
+{
+	const target = document.querySelector('#shop-buy-popup');
+
+	if (target) {
+		mount(ShopBuyPopup, {
+			target,
+			props: {
+				target,
 			},
 		});
 	}

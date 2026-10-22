@@ -39,6 +39,7 @@ search-user-submit = Search
 search-user-form-placeholder = Username
 
 navbar-label-toggle = Toggle menu
+navbar-shop = Shop
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
@@ -149,3 +150,20 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+
+shop-title = Shop
+shop-balance = Balance
+shop-login-hint = Log in to get coins and buy boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = No boosters are on sale right now
+shop-booster-buy = Buy
+shop-booster-coming-soon = Coming soon
+shop-price = { $amount } coins
+shop-topup-title = Get coins
+shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-button = Get { $amount } coins
+shop-topup-success = { $amount } coins have been added to your balance
+shop-error-unauthenticated = You must be logged in to get coins
+shop-error-pack = Unknown coin pack
+shop-error-internal = Failed to add coins to your balance
+shop-buy-close = Close
