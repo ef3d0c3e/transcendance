@@ -175,6 +175,9 @@ func (r *Renderer) RenderError(
 	c *gin.Context,
 	data ErrorPage,
 ) {
+	if data.StatusCode != 0 {
+		c.Status(data.StatusCode)
+	}
 	if data.Title == "" {
 		if data.StatusCode != 0 {
 			data.Title = strconv.Itoa(data.StatusCode) + " " + http.StatusText(data.StatusCode)
