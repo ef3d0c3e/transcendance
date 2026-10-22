@@ -1,0 +1,63 @@
+{{ define "notifications" }}
+<section class="notifications-page">
+	<div class="notifications-head">
+		<h1>{{ .T "notification-title" }}</h1>
+		{{ if gt .Data.Unread 0 }}
+		<form action="/api/notifications/read_all" method="post">
+			<input type="hidden" name="redirect" value="{{ .Data.Redirect }}">
+			<button type="submit" class="notification-text-button">{{ .T "notification-mark-all-read" }}</button>
+		</form>
+		{{ end }}
+	</div>
+
+	<nav class="notification-tabs" aria-label="{{ .T "notification-tabs-label" }}">
+		<a href="?filter=" {{ if eq .Data.Filter "" }}aria-current="page"{{ end }}>
+			{{ .T "notification-tab-all" }} <span class="notification-tab-count">{{ .Data.All }}</span>
+		</a>
+		<a href="?filter=unread" {{ if eq .Data.Filter "unread" }}aria-current="page"{{ end }}>
+			{{ .T "notification-tab-unread" }} <span class="notification-tab-count">{{ .Data.Unread }}</span>
+		</a>
+	</nav>
+
+	{{ if .Data.Notifications }}
+	<ul class="notification-list" id="notification-list" data-locale="{{ .Data.Locale }}">
+		{{ range .Data.Notifications }}
+		<li class="notification-item{{ if not .Read }} is-unread{{ end }}" data-created="{{ .CreatedAt }}">
+			<span class="notification-icon" data-type="{{ .Type }}" aria-hidden="true"></span>
+			<a class="notification-body" href="/notification/{{ .ID }}">
+				<span class="notification-title">{{ .Title }}</span>
+				<span class="notification-desc">{{ .Desc }}</span>
+				<time class="notification-time" datetime="{{ .CreatedAt }}">{{ .CreatedAt }}</time>
+			</a>
+			<div class="notification-actions">
+				{{ if .Read }}
+				<form action="/api/notifications/{{ .ID }}/unread" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-unread"
+						aria-label="{{ $.T "notification-mark-unread" }}" title="{{ $.T "notification-mark-unread" }}"></button>
+				</form>
+				{{ else }}
+				<form action="/api/notifications/{{ .ID }}/read" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-read"
+						aria-label="{{ $.T "notification-mark-read" }}" title="{{ $.T "notification-mark-read" }}"></button>
+				</form>
+				{{ end }}
+				<form action="/api/notifications/{{ .ID }}/delete" method="post">
+					<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+					<button type="submit" class="notification-action notification-action-delete"
+						aria-label="{{ $.T "notification-delete" }}" title="{{ $.T "notification-delete" }}"></button>
+				</form>
+			</div>
+		</li>
+		{{ end }}
+	</ul>
+	{{ else }}
+	<p class="notification-empty">
+		{{ if eq .Data.Filter "unread" }}{{ .T "notification-empty-unread" }}{{ else }}{{ .T "notification-empty-all" }}{{ end }}
+	</p>
+	{{ end }}
+
+	{{ .Children.Paginator }}
+</section>
+{{ end }}
