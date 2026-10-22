@@ -69,4 +69,13 @@ func RegisterRoutes(
 	// Debug: add a booster to the authenticated user's inventory
 	router.GET("/add_booster", dataController.AddBoosterGet)
 	router.POST("/add_booster", dataController.AddBoosterPost)
+
+	// Shop
+	shopController := controllers.ShopController{
+		DB:       db,
+		Renderer: renderer,
+		Data:     data,
+	}
+	router.GET("/shop", shopController.ShopGet)
+	router.POST("/shop/topup", shopController.ShopTopupPost)
 }

@@ -39,6 +39,7 @@ search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
 navbar-label-toggle = Afficher/masquer le menu
+navbar-shop = Boutique
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
@@ -148,3 +149,20 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+
+shop-title = Boutique
+shop-balance = Solde
+shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = Aucun booster n'est en vente pour le moment
+shop-booster-buy = Acheter
+shop-booster-coming-soon = Bientôt disponible
+shop-price = { $amount } pièces
+shop-topup-title = Obtenir des pièces
+shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-button = Obtenir { $amount } pièces
+shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
+shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
+shop-error-pack = Paquet de pièces inconnu
+shop-error-internal = Impossible d'ajouter des pièces à votre solde
+shop-buy-close = Fermer
