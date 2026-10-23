@@ -58,6 +58,7 @@ func (dc *DataController) InventoryAddGet(c *gin.Context) {
 const (
 	inventoryTabCards    = "cards"
 	inventoryTabBoosters = "boosters"
+	inventoryTabTradeup  = "tradeup"
 )
 
 // Effect filter values, "" shows every card
@@ -127,8 +128,12 @@ type inventoryView struct {
 	Effect string
 	// Card sort, always set on the cards tab
 	Sort string
+	// Collections the tradeup grid holds, for its filter
+	Collections []inventoryOption
 	// Error or empty state message
 	Message string
+	// Card the last tradeup awarded, nil until one completes
+	Result map[string]any
 	// Rendered cards or boosters
 	Items []map[string]any
 	Page  int
@@ -162,6 +167,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			v.Message = dc.Renderer.T(c, "inventory-message-no-match")
 		case v.Tab == inventoryTabBoosters:
 			v.Message = dc.Renderer.T(c, "inventory-message-no-boosters")
+		case v.Tab == inventoryTabTradeup:
+			v.Message = dc.Renderer.T(c, "tradeup-empty")
 		default:
 			v.Message = dc.Renderer.T(c, "inventory-message-empty")
 		}
@@ -207,6 +214,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Tab":            v.Tab,
 		"TabCardsUrl":    tabUrl(inventoryTabCards),
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
+		"TabTradeupUrl":  tabUrl(inventoryTabTradeup),
 		"TotalCards":     v.TotalCards,
 		"TotalBoosters":  v.TotalBoosters,
 		"Items":          v.Items,
@@ -215,6 +223,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Viewed":         viewed,
 		"Pages":          int(totalPages),
 		"Locale":         dc.Renderer.Localizer.GetLocale(c),
+		"TradeupCost":    tradeupCost,
+		"Result":         v.Result,
 	}
 	if v.Tab == inventoryTabCards {
 		fields["RarityOptions"] = inventoryOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
@@ -245,6 +255,9 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		fields["SortOptions"] = sortOptions
 	}
+	if v.Tab == inventoryTabTradeup {
+		fields["CollectionOptions"] = v.Collections
+	}
 	content := builder.Add("inventory", "Content", fields)
 	params := url.Values{}
 	if viewed != "" {
@@ -265,15 +278,19 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.Tab == inventoryTabCards && v.Sort != defaultInventorySort(v.Query) {
 		params.Set("sort", v.Sort)
 	}
-	paginatorUrl := "?p="
-	if len(params) != 0 {
-		paginatorUrl = "?" + params.Encode() + "&p="
+	// The tradeup tab shows every eligible stack at once: a contract is built
+	// across stacks, and paging away would drop the selection
+	if v.Tab != inventoryTabTradeup {
+		paginatorUrl := "?p="
+		if len(params) != 0 {
+			paginatorUrl = "?" + params.Encode() + "&p="
+		}
+		content.Add("paginator", "Paginator", map[string]any{
+			"Current": v.Page,
+			"Total":   int(totalPages),
+			"Url":     paginatorUrl,
+		})
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   int(totalPages),
-		"Url":     paginatorUrl,
-	})
 	dc.Renderer.Render(c, &builder)
 }
 
@@ -299,6 +316,10 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	if c.Query("tab") == inventoryTabBoosters {
 		v.Tab = inventoryTabBoosters
 		// Boosters can't be searched
+		v.Query = ""
+	} else if c.Query("tab") == inventoryTabTradeup {
+		v.Tab = inventoryTabTradeup
+		// Tradeup cards can't be searched
 		v.Query = ""
 	} else {
 		if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
@@ -330,6 +351,12 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		userID = otherUser.ID
 	}
 
+	// Trading up spends the cards, so it only opens on your own inventory
+	if v.Tab == inventoryTabTradeup && userID != user.ID {
+		v.Tab = inventoryTabCards
+		v.Sort = defaultInventorySort(v.Query)
+	}
+
 	fail := func(what string, err error) {
 		log.Printf("WARN failed to get %s for user '%s': %s", what, v.Username, err)
 		*v = inventoryView{Tab: v.Tab, Username: v.Username, Query: v.Query, Rarity: v.Rarity, Effect: v.Effect, Sort: v.Sort, Page: 1}
@@ -347,14 +374,22 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		return
 	}
 
-	if v.Tab == inventoryTabBoosters {
+	switch v.Tab {
+	case inventoryTabBoosters:
 		if err := dc.inventoryBoosters(c, userID, v); err != nil {
 			fail("boosters", err)
 			return
 		}
-	} else if err := dc.inventoryCards(c, userID, v); err != nil {
-		fail("cards", err)
-		return
+	case inventoryTabTradeup:
+		if err := dc.inventoryTradeup(c, userID, v); err != nil {
+			fail("tradeup", err)
+			return
+		}
+	default:
+		if err := dc.inventoryCards(c, userID, v); err != nil {
+			fail("cards", err)
+			return
+		}
 	}
 
 	dc.renderInventory(c, user, v)
@@ -372,8 +407,17 @@ type cardStack struct {
 	collection *data.Collection
 }
 
+// Highest rarity first, unknown rarities last
+func rarityRank(s cardStack) int {
+	if i := indexOfTier(s.card.Rarity); i >= 0 {
+		return i
+	}
+	return len(rarityTiers)
+}
+
 // Order card stacks with the given sort, newest stacks first on ties
 func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[uint]int) {
+	// The name sorts compare localized titles
 	var titles map[uint]string
 	var collator *collate.Collator
 	if sort == inventorySortName || sort == inventorySortNameDesc {
@@ -396,14 +440,7 @@ func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[u
 		case inventorySortOldest:
 			order = a.FirstAcquired.Compare(b.FirstAcquired)
 		case inventorySortRarity:
-			// Highest rarity first, unknown rarities last
-			rank := func(s cardStack) int {
-				if i := indexOfTier(s.card.Rarity); i >= 0 {
-					return i
-				}
-				return len(rarityTiers)
-			}
-			order = cmp.Compare(rank(a), rank(b))
+			order = cmp.Compare(rarityRank(a), rarityRank(b))
 		case inventorySortCount:
 			order = cmp.Compare(b.Count, a.Count)
 		case inventorySortName:
@@ -413,6 +450,31 @@ func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[u
 		}
 		return cmp.Or(
 			order,
+			b.LastAcquired.Compare(a.LastAcquired),
+			cmp.Compare(a.CardID, b.CardID),
+			cmp.Compare(a.Foil, b.Foil),
+		)
+	})
+}
+
+// Tradeup cards stand grouped by collection, then by rarity, then by how many
+// copies there are to spend
+func sortTradeupStacks(stacks []cardStack, loc string) {
+	titles := make(map[uint]string, len(stacks))
+	for _, stack := range stacks {
+		title, err := stack.collection.Translate(loc, "title")
+		if err != nil {
+			log.Printf("WARN collection of card %d has no title: %s", stack.CardID, err)
+		}
+		titles[stack.CardID] = title
+	}
+	collator := collate.New(language.Make(loc), collate.IgnoreCase)
+
+	slices.SortStableFunc(stacks, func(a, b cardStack) int {
+		return cmp.Or(
+			collator.CompareString(titles[a.CardID], titles[b.CardID]),
+			cmp.Compare(rarityRank(a), rarityRank(b)),
+			cmp.Compare(b.Count, a.Count),
 			b.LastAcquired.Compare(a.LastAcquired),
 			cmp.Compare(a.CardID, b.CardID),
 			cmp.Compare(a.Foil, b.Foil),
@@ -491,6 +553,124 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 			"Data": data,
 		})
 	}
+	return nil
+}
+
+// Tradeup error codes the POST redirects with, mapped to their message
+var tradeupErrorKeys = map[string]string{
+	"count":    "tradeup-error-count",
+	"rarity":   "tradeup-error-rarity",
+	"tier":     "tradeup-error-tier",
+	"missing":  "tradeup-error-missing",
+	"empty":    "tradeup-error-empty",
+	"internal": "tradeup-error-internal",
+}
+
+// Message for a tradeup error code, "" when the code is unknown
+func (dc *DataController) tradeupErrorMessage(c *gin.Context, code string) string {
+	if code == "count" {
+		return dc.Renderer.T(c, "tradeup-error-count", "count", tradeupCost)
+	}
+	key, ok := tradeupErrorKeys[code]
+	if !ok {
+		return ""
+	}
+	return dc.Renderer.T(c, key)
+}
+
+// Fill the view with every card that can go into a tradeup, and the outcome of
+// the last one if it was just completed
+func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inventoryView) error {
+	loc := dc.Renderer.Localizer.GetLocale(c)
+
+	if message := dc.tradeupErrorMessage(c, c.Query("error")); message != "" {
+		v.Message = message
+	}
+
+	var all []cardStack
+	if err := dc.DB.Model(&models.Card{}).
+		Where("owner_id = ?", userID).
+		Select("card_id, foil, COUNT(*) AS count, MIN(acquired) AS first_acquired, MAX(acquired) AS last_acquired").
+		Group("card_id, foil").
+		Scan(&all).Error; err != nil {
+		return err
+	}
+
+	stacks := all[:0]
+	for _, stack := range all {
+		stack.card, stack.collection = dc.Data.GetCard(int(stack.CardID))
+		if stack.card == nil || stack.collection == nil {
+			log.Printf("WARN user %d owns unknown card %d", userID, stack.CardID)
+			continue
+		}
+		// The highest rarity has no tier above to trade into
+		if tierAbove(stack.card.Rarity) == "" {
+			continue
+		}
+		stacks = append(stacks, stack)
+		v.Count += stack.Count
+	}
+	// Grouped by collection, then rarity, then how many copies to spend
+	sortTradeupStacks(stacks, loc)
+
+	// Every eligible stack is listed at once, see renderInventory
+	v.PageItems = int64(len(stacks))
+	v.Items = make([]map[string]any, 0, len(stacks))
+	// The filter offers every collection the grid holds, plus all of them
+	v.Collections = []inventoryOption{{
+		Label: dc.Renderer.T(c, "inventory-filter-collection-all"),
+	}}
+	collections := make(map[int]bool)
+	for _, stack := range stacks {
+		data, err := GetCardData(c, loc, dc.Renderer, stack.collection, stack.card)
+		if err != nil {
+			return fmt.Errorf("card %d: %w", stack.CardID, err)
+		}
+		data["CardCopies"] = stack.Count
+		data["CardAcquiredFirst"] = stack.FirstAcquired.Format(time.RFC3339)
+		data["CardAcquiredLast"] = stack.LastAcquired.Format(time.RFC3339)
+		setCardFoil(data, stack.Foil)
+		v.Items = append(v.Items, map[string]any{
+			"Data":   data,
+			"CardID": stack.CardID,
+			"Foil":   stack.Foil,
+			"Count":  stack.Count,
+			"Rarity": stack.card.Rarity,
+		})
+
+		if collections[stack.collection.ID] {
+			continue
+		}
+		collections[stack.collection.ID] = true
+		title, err := stack.collection.Translate(loc, "title")
+		if err != nil {
+			log.Printf("WARN collection %d has no title: %s", stack.collection.ID, err)
+		}
+		v.Collections = append(v.Collections, inventoryOption{
+			Value: strconv.Itoa(stack.collection.ID),
+			Label: title,
+		})
+	}
+
+	// The card the last tradeup awarded, with the foil it rolled
+	if id, err := strconv.Atoi(c.Query("result")); err == nil {
+		card, collection := dc.Data.GetCard(id)
+		if card != nil && collection != nil {
+			result, err := GetCardData(c, loc, dc.Renderer, collection, card)
+			if err != nil {
+				return fmt.Errorf("result card %d: %w", id, err)
+			}
+			var won models.Card
+			if err := dc.DB.
+				Where("owner_id = ? AND card_id = ?", userID, id).
+				Order("id DESC").
+				First(&won).Error; err == nil {
+				setCardFoil(result, won.Foil)
+			}
+			v.Result = map[string]any{"Data": result}
+		}
+	}
+
 	return nil
 }
 

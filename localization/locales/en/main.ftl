@@ -105,6 +105,8 @@ inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
 inventory-filter-effect-foil = Foil
+inventory-filter-collection = Collection
+inventory-filter-collection-all = All collections
 inventory-sort = Sort by
 inventory-sort-relevance = Relevance
 inventory-sort-recent = Last acquired
@@ -116,6 +118,7 @@ inventory-sort-name-desc = Name (Z-A)
 inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
+inventory-tab-tradeup = Trade up
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open-confirm = Open booster { $name }?
 inventory-booster-open-yes = Yes
@@ -149,3 +152,19 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+
+tradeup-rules = Trade { $count } cards of the same rarity for one card of the next rarity
+tradeup-empty = No cards here can be traded up
+tradeup-slots = Tradeup slots
+tradeup-remove = Remove
+tradeup-slot-empty = Empty slot
+tradeup-clear = Clear
+tradeup-submit = Trade up
+tradeup-result = You obtained
+tradeup-result-close = Close
+tradeup-error-count = A tradeup needs exactly { $count } cards
+tradeup-error-rarity = Every card in a tradeup must share the same rarity
+tradeup-error-tier = These cards cannot be traded up
+tradeup-error-missing = You do not own enough of these cards
+tradeup-error-empty = None of these collections holds a card of the next rarity
+tradeup-error-internal = Failed to complete the tradeup

@@ -4,6 +4,8 @@ import FormEnhancement from './FormEnhancement.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
+import TradeUpPicker from './TradeUpPicker.svelte';
+import TradeUpResult from './TradeUpResult.svelte';
 import PackOpening from './PackOpening.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
@@ -150,6 +152,24 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(InventoryBoosterPopup, { target, props: { target } });
+	}
+}
+
+// Tradeup contract picker
+{
+	const target = document.querySelector('#tradeup-picker');
+
+	if (target) {
+		mount(TradeUpPicker, { target, props: { target } });
+	}
+}
+
+// Tradeup result popup
+{
+	const target = document.querySelector('#tradeup-result');
+
+	if (target) {
+		mount(TradeUpResult, { target, props: { target } });
 	}
 }
 

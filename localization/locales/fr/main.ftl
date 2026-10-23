@@ -104,6 +104,8 @@ inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
 inventory-filter-effect-foil = Holographique
+inventory-filter-collection = Collection
+inventory-filter-collection-all = Toutes les collections
 inventory-sort = Trier par
 inventory-sort-relevance = Pertinence
 inventory-sort-recent = Dernière obtention
@@ -115,6 +117,7 @@ inventory-sort-name-desc = Nom (Z-A)
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
+inventory-tab-tradeup = Échange
 inventory-message-no-boosters = Aucun booster pour l'instant
 inventory-booster-open-confirm = Ouvrir le booster { $name } ?
 inventory-booster-open-yes = Oui
@@ -148,3 +151,19 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+
+tradeup-rules = Échangez { $count } cartes de la même rareté contre une carte de la rareté supérieure
+tradeup-empty = Aucune carte ici ne peut être échangée
+tradeup-slots = Emplacements de l'échange
+tradeup-remove = Retirer
+tradeup-slot-empty = Emplacement vide
+tradeup-clear = Réinitialiser
+tradeup-submit = Échanger
+tradeup-result = Vous avez obtenu
+tradeup-result-close = Fermer
+tradeup-error-count = Un échange nécessite exactement { $count } cartes
+tradeup-error-rarity = Toutes les cartes d'un échange doivent avoir la même rareté
+tradeup-error-tier = Ces cartes ne peuvent pas être échangées
+tradeup-error-missing = Vous ne possédez pas assez de ces cartes
+tradeup-error-empty = Aucune de ces collections ne contient de carte de la rareté supérieure
+tradeup-error-internal = Échec de l'échange

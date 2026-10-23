@@ -26,6 +26,11 @@
 		<a class="inventory-tab-boosters" href="{{ .Data.TabBoostersUrl }}" {{ if eq .Data.Tab "boosters" }}aria-current="page"{{ end }}>
 			{{ .T "inventory-tab-boosters" }} <span class="inventory-tab-count">{{ .Data.TotalBoosters }}</span>
 		</a>
+		{{ if eq (len .Data.Viewed) 0 }}
+		<a class="inventory-tab-tradeup" href="{{ .Data.TabTradeupUrl }}" {{ if eq .Data.Tab "tradeup" }}aria-current="page"{{ end }}>
+			{{ .T "inventory-tab-tradeup" }}
+		</a>
+		{{ end }}
 	</nav>
 
 	{{ if eq .Data.Tab "cards" }}
@@ -66,7 +71,47 @@
 	</div>
 	{{ end }}
 
+	{{ if eq .Data.Tab "tradeup" }}
+	{{ with .Data.Result }}
+	<div id="tradeup-result" data-label-title="{{ $.T "tradeup-result" }}"
+		data-label-close="{{ $.T "tradeup-result-close" }}">
+		<template>{{ template "card" . }}</template>
+	</div>
+	{{ end }}
 	{{ if ne (len .Data.Items) 0 }}
+	<p class="tradeup-rules">{{ .T "tradeup-rules" "count" .Data.TradeupCost }}</p>
+	<div class="tradeup-layout">
+		<e-cluster class="inventory-cards tradeup-cards" justify="center">
+			{{ range $val := .Data.Items }}
+			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
+				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
+				data-tradeup-title="{{ $val.Data.CardTitle }}"
+				data-tradeup-collection-id="{{ $val.Data.CardCollectionID }}">
+				{{ template "card" $val }}
+			</div>
+			{{ end }}
+		</e-cluster>
+		<div class="tradeup-side">
+			<form class="tradeup-filter" action="/inventory" method="get">
+				<input type="hidden" name="tab" value="tradeup">
+				<label>
+					<span>{{ .T "inventory-filter-collection" }}</span>
+					<select id="tradeup-collection-filter" name="collection">
+						{{ range .Data.CollectionOptions }}
+						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+			</form>
+			<form class="tradeup-form" action="/tradeup" method="post">
+				<div id="tradeup-picker" data-cost="{{ .Data.TradeupCost }}" data-label-slots="{{ .T "tradeup-slots" }}"
+					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
+					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"></div>
+			</form>
+		</div>
+	</div>
+	{{ end }}
+	{{ else if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
