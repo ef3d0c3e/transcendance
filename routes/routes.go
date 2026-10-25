@@ -43,6 +43,10 @@ func RegisterRoutes(
 	router.GET("/profile", profileController.ProfileGet)
 	router.GET("/profile/:username", profileController.ProfileGet)
 	router.POST("/profile", profileController.ProfilePost)
+	router.POST("/profile/avatar", profileController.AvatarPost)
+	router.POST("/profile/avatar/delete", profileController.AvatarDelete)
+	router.GET("/avatars/:id", profileController.AvatarGet)
+	router.HEAD("/avatars/:id", profileController.AvatarGet)
 
 	pages := Pages{
 		DB:       db,

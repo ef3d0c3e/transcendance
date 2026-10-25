@@ -14,8 +14,8 @@ type User struct {
 	CreatedAt    time.Time      `gorm:"not null"`
 	UpdatedAt    time.Time      `gorm:"not null"`
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
-	Avatar       string
-	Rank         uint `gorm:"not null;default:0"`
+	Avatar       []byte         `gorm:"type:mediumblob" json:"-"`
+	Rank         uint           `gorm:"not null;default:0"`
 }
 
 type UserSession struct {

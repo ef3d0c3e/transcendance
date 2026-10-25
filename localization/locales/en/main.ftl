@@ -101,3 +101,9 @@ error-unexpected = An error occured
 error-unauthorized = You must be logged in to access this ressource
 
 Error = Error
+
+profile-avatar-label = Profile picture
+profile-avatar-help = JPEG, PNG or WebP. Maximum 5 MiB, 1024 by 1024 pixels.
+profile-avatar-upload = Upload picture
+profile-avatar-delete = Delete picture
+profile-avatar-invalid = Invalid image. JPEG, PNG or WebP image up to 5 MiB, 1024 by 1024 pixels.

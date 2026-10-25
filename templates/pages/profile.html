@@ -3,10 +3,18 @@
 {{ if .Data.Edit }}
 <section>
 	<div class="profile-error" id="profile-result"></div>
+	<div id="avatar">
+		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="Avatar" width="128" height="128" style="object-fit: contain" />
+	</div>
+	<form method="post" action="/profile/avatar" enctype="multipart/form-data">
+		<label for="avatar-file">{{ .T "profile-avatar-label" }}</label>
+		<input type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png,image/webp" required title="{{ .T "profile-avatar-help" }}">
+		<button type="submit">{{ .T "profile-avatar-upload" }}</button>
+	</form>
+	<form method="post" action="/profile/avatar/delete">
+		<button type="submit">{{ .T "profile-avatar-delete" }}</button>
+	</form>
 	<form id="profile-form" method="post">
-		<div id="avatar">
-			<img src="{{ .Data.Profile.User.Avatar }}" alt="Avatar" />
-		</div>
 		<div class="field field-disabled">
 			<label for="username">Username</label>
 			<input
@@ -95,7 +103,7 @@
 {{ else }}
 <section>
 	<div id="avatar">
-		<img src="{{ .Data.Profile.User.Avatar }}" alt="Avatar" />
+		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="Avatar" width="128" height="128" style="object-fit: contain" />
 	</div>
 	<div>
 		<p id="username">{{ .Data.Profile.User.Username }}</p>

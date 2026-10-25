@@ -52,7 +52,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		err = db.
+		err = db.Select("id", "username", "rank").
 			Where("id = ?", session.UserID).
 			First(&user).
 			Error
@@ -234,7 +234,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	}
 
 	var user models.User;
-	err := ac.DB.
+	err := ac.DB.Omit("avatar").
 		Where("username = ?", username).
 		First(&user).
 		Error
