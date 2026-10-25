@@ -21,13 +21,10 @@ type ProfileController struct {
 func (pc *ProfileController) ProfileGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		pc.Renderer.RenderError(
-			c,
-			views.ErrorPage{
-				StatusCode: http.StatusUnauthorized,
-				Message:    pc.Renderer.T(c, "error-unauthorized"),
-			},
-		)
+		pc.Renderer.RenderError(c, views.ErrorPage{
+			StatusCode: http.StatusUnauthorized,
+			Message:    pc.Renderer.T(c, "error-unauthorized"),
+		})
 		return
 	}
 
@@ -39,22 +36,15 @@ func (pc *ProfileController) ProfileGet(c *gin.Context) {
 
 	var userProfile models.UserProfile
 	if err := pc.DB.
-		Joins("User").
+		Joins("User", pc.DB.Select("id", "username")).
 		Where("User.username = ?", profileUsername).
 		First(&userProfile).Error; err != nil {
-		pc.Renderer.RenderError(
-			c,
-			views.ErrorPage{
-				User:       user,
-				StatusCode: http.StatusNotFound,
-				Message:    pc.Renderer.T(c, "profile-error-user"),
-			},
-		)
+		pc.Renderer.RenderError(c, views.ErrorPage{
+			User:       user,
+			StatusCode: http.StatusNotFound,
+			Message:    pc.Renderer.T(c, "profile-error-user"),
+		})
 		return
-	}
-
-	if userProfile.User.Avatar == "" {
-		userProfile.User.Avatar = "/static/profile-picture.svg"
 	}
 
 	builder := views.PageBuilder("base", gin.H{
@@ -72,14 +62,11 @@ func (pc *ProfileController) ProfileGet(c *gin.Context) {
 func (pc *ProfileController) ProfilePost(c *gin.Context) {
 	authUser := GetAuthenticatedUser(c)
 	if authUser == nil {
-		pc.Renderer.RenderError(
-			c,
-			views.ErrorPage{
-				User:       nil,
-				StatusCode: http.StatusUnauthorized,
-				Message:    pc.Renderer.T(c, "error-unauthorized"),
-			},
-		)
+		pc.Renderer.RenderError(c, views.ErrorPage{
+			User:       nil,
+			StatusCode: http.StatusUnauthorized,
+			Message:    pc.Renderer.T(c, "error-unauthorized"),
+		})
 		return
 	}
 
@@ -110,7 +97,7 @@ func (pc *ProfileController) ProfilePost(c *gin.Context) {
 		if len(username) < 3 || len(username) > 16 || !is_alphanumeric.MatchString(username) {
 			errorMessages["username"] = pc.Renderer.T(c, "profile-error-username")
 			validRequest = false
-		} else if err := pc.DB.Where("username = ?", username).First(&models.User{}).Error; err == nil {
+		} else if err := pc.DB.Select("id").Where("username = ?", username).First(&models.User{}).Error; err == nil {
 			errorMessages["username"] = pc.Renderer.T(c, "profile-error-username-taken")
 			validRequest = false
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {

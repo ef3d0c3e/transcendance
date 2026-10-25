@@ -100,3 +100,9 @@ error-unexpected = Une erreur est survenue
 error-unauthorized = Vous devez être connecté pour accéder au contenu
 
 Error = Erreur
+
+profile-avatar-label = Photo de profil
+profile-avatar-help = JPEG, PNG ou WebP. Maximum 5 Mio, 1024 par 1024 pixels.
+profile-avatar-upload = Envoyer la photo
+profile-avatar-delete = Supprimer la photo
+profile-avatar-invalid = Image invalide. JPEG, PNG ou WebP valide de 5 Mio maximum, 1024 par 1024 pixels.

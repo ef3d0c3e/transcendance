@@ -27,11 +27,7 @@
 <ul>
 {{ range $val := .Data.Users }}
 	<li>
-	{{ if $val.Avatar }}
-		<img src="{{ $val.Avatar }}" class="profile-picture">
-	{{ else }}
-		<img src="/static/profile-picture.svg" class="profile-picture">
-	{{ end }}
+		<img src="/avatars/{{ $val.ID }}" class="profile-picture" alt="Avatar">
 		<a href="/profile/{{$val.Username}}">{{$val.Username}}</a>
 	</li>
 {{ end }}

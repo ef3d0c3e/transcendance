@@ -37,6 +37,7 @@ func (sc *SearchController) SearchUsersGet(c *gin.Context) {
 			Count(c.Request.Context(), "username")
 
 		users, err = gorm.G[models.User](sc.DB).
+			Select("id", "username").
 			Where("username LIKE ?", "%"+username+"%").
 			Offset((page - 1) * 50).
 			Limit(50).
