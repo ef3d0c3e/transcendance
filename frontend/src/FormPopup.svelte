@@ -76,6 +76,10 @@
 
 		closeTimer = setTimeout(() => {
 			closepopup();
+			// The header shows the logged in user
+			if (url === "/login") {
+				window.location.reload();
+			}
 		}, 800);
 	}
 

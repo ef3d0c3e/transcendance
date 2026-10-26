@@ -37,6 +37,20 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 	}
 }
 
+// Log out, then land on a page visitors can see
+{
+	for (const button of document.querySelectorAll('[data-logout]')) {
+		button.addEventListener('click', async () => {
+			button.disabled = true;
+			try {
+				await fetch(button.dataset.logout, { credentials: 'same-origin' });
+			} finally {
+				location.assign('/cards/search/');
+			}
+		});
+	}
+}
+
 // Login popup
 {
 	const target = document.querySelector('#login-popup');

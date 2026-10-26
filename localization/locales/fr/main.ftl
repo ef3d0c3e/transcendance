@@ -39,7 +39,12 @@ search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
 
 navbar-label-toggle = Afficher/masquer le menu
+navbar-label-main = Navigation principale
+navbar-cards = Cartes
+navbar-inventory = Inventaire
 navbar-shop = Boutique
+navbar-profile = Votre profil
+navbar-logout = Se déconnecter
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
@@ -57,7 +62,6 @@ card-rarity-common = Commune
 card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
 
-card-search-title = Rechercher des Cartes
 card-search-placeholder = Rechercher des cartes
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
@@ -76,13 +80,24 @@ collection-count = { $count ->
 }
 collection-id = NO. { $id }
 
-collection-search-title = Rechercher des Collections
 collection-search-placeholder = Rechercher des collections
 collection-search-empty = Aucune collection trouvée
 collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+catalog-title = Catalogue de cartes
+catalog-tabs-label = Sections du catalogue
+catalog-tab-cards = Cartes
+catalog-tab-collections = Collections
+catalog-collection-count = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+catalog-filter-collection = Collection
+catalog-filter-collection-all = Toutes les collections
+catalog-sort-number = Ordre de la collection
 
 inventory-title = Votre inventaire
 inventory-title-other = Inventaire de { $username }
