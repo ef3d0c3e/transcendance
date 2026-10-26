@@ -43,13 +43,12 @@ func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 }
 
 func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
-	var user  models.User
-	fc.DB.First(&user, GetAuthenticatedUser(c).ID)
+	userID := GetAuthenticatedUser(c).ID;
 	targetID := c.Param("target")
 	if (targetID == "/") { //no target, query all relations from active user
 		rel := models.Relation{}
 		res := fc.DB.Find(&rel).
-		Where("user_id = ?", user.ID).
+		Where("user_id = ?", userID).
 		Order("Type")
 		if res.RowsAffected == 0 {
 			c.JSON(http.StatusOK, "No friends or pending requests")
