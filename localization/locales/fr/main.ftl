@@ -6,7 +6,7 @@ register-tos = J'ai lu et j'accepte les Conditions d'Utilisation
 register-submit = Créer un compte
 register-error-authenticated = Vous êtes déjà connecté.
 register-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit faire entre 3 et 16 caractères et peut être composé de lettres, chiffres et '_'
-register-error-password = Le mot de passe est invalide. Le mot de passe doit faire entre 12 et 72 caractères.
+register-error-password = Le mot de passe est invalide. Le mot de passe doit faire entre 8 et 72 caractères.
 register-error-passwords-do-not-match = Les mots de passe doivent correspondre
 register-error-tos = Vous devez accepter les Conditions d'Utilisation
 register-error-user = Impossible de créer l'utilisateur
@@ -37,3 +37,157 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+
+navbar-label-toggle = Afficher/masquer le menu
+navbar-label-main = Navigation principale
+navbar-cards = Cartes
+navbar-inventory = Inventaire
+navbar-shop = Boutique
+navbar-profile = Votre profil
+navbar-logout = Se déconnecter
+
+theme-switcher-light = Theme clair
+theme-switcher-dark = Theme sombre
+
+language-switcher = Choisissez un langage
+
+cards-error-not-found = Carte non trouvée
+cards-error-collection-not-found = Collection non trouvée
+
+paginator-label-nav = Pagination
+paginator-label-previous = Page précédente
+paginator-label-next = Page suivante
+
+card-rarity-common = Commune
+card-rarity-rare = Rare
+card-rarity-legendary = Legendaire
+
+card-search-placeholder = Rechercher des cartes
+card-search-empty = Aucune carte trouvée
+card-search-submit = Rechercher
+card-search-error-internal = Echec de la recherche
+
+card-error-not-found = Carte non trouvée
+
+collection-title = Collection { $collection }
+collection-booster = { $count ->
+    [one] Booster de { $count } carte
+    *[other] Booster de { $count } cartes
+}
+collection-count = { $count ->
+    [one] { $count } CARTE
+    *[other] { $count } CARTES
+}
+collection-id = NO. { $id }
+
+collection-search-placeholder = Rechercher des collections
+collection-search-empty = Aucune collection trouvée
+collection-search-submit = Rechercher
+collection-search-error-internal = Echec de la recherche
+
+collection-error-not-found = Collection non trouvée
+
+catalog-title = Catalogue de cartes
+catalog-tabs-label = Sections du catalogue
+catalog-tab-cards = Cartes
+catalog-tab-collections = Collections
+catalog-collection-count = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+catalog-filter-collection = Collection
+catalog-filter-collection-all = Toutes les collections
+catalog-sort-number = Ordre de la collection
+
+inventory-title = Votre inventaire
+inventory-title-other = Inventaire de { $username }
+inventory-unauthenticated = Vous devez être connecté pour acceder aux inventaires
+inventory-message-empty = Rien n'a voir ici
+inventory-message-user-not-found = Utilisateur non trouvé
+inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
+inventory-message-no-match = Aucune carte de cet inventaire ne correspond à votre recherche
+inventory-search-placeholder = Rechercher dans cet inventaire
+inventory-search-submit = Rechercher
+inventory-search-clear = Effacer la recherche
+inventory-card-acquired = Obtenue le
+inventory-card-close = Fermer
+inventory-card-acquired-first = Première obtenue le
+inventory-card-acquired-last = Dernière obtenue le
+inventory-card-copies = Exemplaires
+inventory-filter-rarity = Rareté
+inventory-filter-rarity-all = Toutes les raretés
+inventory-filter-effect = Effet
+inventory-filter-effect-all = Tous les effets
+inventory-filter-effect-none = Sans effet
+inventory-filter-effect-foil = Holographique
+inventory-sort = Trier par
+inventory-sort-relevance = Pertinence
+inventory-sort-recent = Dernière obtention
+inventory-sort-oldest = Première obtention
+inventory-sort-rarity = Rareté
+inventory-sort-count = Nombre
+inventory-sort-name = Nom (A-Z)
+inventory-sort-name-desc = Nom (Z-A)
+inventory-tabs-label = Sections de l'inventaire
+inventory-tab-cards = Cartes
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = Aucun booster pour l'instant
+inventory-booster-open-confirm = Ouvrir le booster { $name } ?
+inventory-booster-open-yes = Oui
+inventory-booster-open-no = Non
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+inventory-search-count = { $count ->
+    [one] { $count } carte trouvée
+    *[other] { $count } cartes trouvées
+}
+
+pack-opening-title = Ouverture de booster
+pack-opening-open = Ouvrir le booster
+pack-opening-open-another = Ouvrir un autre booster
+pack-opening-error-collection = Collection introuvable
+pack-opening-error-empty = Ce booster ne contient aucune carte
+pack-opening-error-internal = Impossible d'ouvrir le booster
+pack-opening-obtained = Cartes obtenues
+pack-opening-back = Retour à l'inventaire
+pack-opening-return = Retour
+pack-opening-open-again = Ouvrir à nouveau
+pack-opening-remaining = { $count ->
+    [0] Plus aucun booster
+    [one] { $count } booster restant
+    *[other] { $count } boosters restants
+}
+pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+
+shop-title = Boutique
+shop-balance = Solde
+shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = Aucun booster n'est en vente pour le moment
+shop-booster-buy = Acheter
+shop-price = { $amount } pièces
+shop-topup-title = Obtenir des pièces
+shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-price = { $euros },{ $cents } €
+shop-topup-open = Acheter des pièces
+shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
+shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
+shop-error-pack = Paquet de pièces inconnu
+shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
+shop-error-quantity = Saisissez une quantité entre 1 et { $max }
+shop-error-internal = Impossible de mettre à jour votre solde
+shop-buy-close = Fermer
+shop-buy-success = { $count ->
+    [one] Un booster { $collection } a été ajouté à votre inventaire
+   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
+}
+shop-buy-view-inventory = Voir l'inventaire
+shop-buy-quantity = Quantité
+shop-buy-total = Total
+shop-coins = pièces

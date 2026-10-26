@@ -7,13 +7,14 @@ import (
 	"gorm.io/gorm"
 
 	"transcendance/config"
+	"transcendance/controllers"
+	"transcendance/data"
 	"transcendance/localization"
 	"transcendance/routes"
 	"transcendance/views"
-	"transcendance/controllers"
 )
 
-func run(db *gorm.DB) *gin.Engine {
+func run(data *data.Data, db *gorm.DB) *gin.Engine {
 	if err := config.MigrateDatabase(db); err != nil {
 		log.Fatal(err)
 	}
@@ -24,24 +25,31 @@ func run(db *gorm.DB) *gin.Engine {
 	if err != nil {
 		log.Fatal(err)
 	}
+	themer := views.NewThemer()
 
 	router.Use(l10n.Middleware())
+	router.Use(themer.Middleware())
 	router.Use(controllers.AuthMiddleware(db))
 
-	renderer := views.NewRenderer(l10n)
-	routes.RegisterRoutes(router, db, renderer)
+	renderer := views.NewRenderer(l10n, themer)
+	routes.RegisterRoutes(router, data, db, renderer)
 
 	return router
 }
 
-
 func main() {
-db, err := config.ConnectDatabase()
+	data, err := data.LoadCards()
+	if err != nil {
+		log.Fatal(err)
+		return
+	}
+
+	db, err := config.ConnectDatabase()
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	router := run(db)
+	router := run(data, db)
 
 	log.Println("Server running on http://localhost:8080")
 	if err := router.Run(":8080"); err != nil {

@@ -1,16 +1,84 @@
 {{ define "base" }}
 <!DOCTYPE html>
-<html>
+<html theme="{{ .Theme }}">
+
 <head>
 	<script src="https://cdn.jsdelivr.net/npm/e-layout/dist/e-layout.min.js"></script>
 
-	<!--- Temporary -->
-	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@exampledev/new.css@1.1.2/new.min.css">
+	<script>
+		if (!document.cookie.includes('theme=')) {
+			const theme = matchMedia('(prefers-color-scheme: dark)').matches
+				? 'dark'
+				: 'light';
+			document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+			document.documentElement.setAttribute("theme", theme);
+		}
+	</script>
+	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
+
+	<script type="module" src="/frontend/main.js"></script>
 </head>
+
 <body>
-	{{ .Children.Content }}
+	<header>
+		<h1 class="header-title">Transcendance</h1>
+
+		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
+		<label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
+			<svg width="24" height="24" viewBox="0 0 24 24">
+				<path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+					fill="none" />
+			</svg>
+		</label>
+
+		<nav id="header-nav">
+			<label for="nav-toggle" class="nav-close" aria-hidden="true">
+				<svg width="24" height="24" viewBox="0 0 24 24">
+					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+						fill="none" />
+				</svg>
+			</label>
+
+			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
+				<li><a href="/cards/search/" {{ if or (hasPrefix .Path "/cards") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
+				{{ if .User }}
+				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
+				{{ end }}
+				<li><a href="/shop" {{ if hasPrefix .Path "/shop" }}aria-current="page"{{ end }}>{{ .T "navbar-shop" }}</a></li>
+			</ul>
+
+			<div class="nav-end">
+				<div id="language-switcher" data-label="{{ .T "language-switcher" }}"></div>
+
+				<span id="theme-switcher" data-theme-label-light="{{ .T "theme-switcher-light" }}"
+					data-theme-label-dark="{{ .T "theme-switcher-dark" }}"></span>
+
+				<div class="nav-account">
+					{{ with .User }}
+					<a class="nav-user" href="/profile" title="{{ $.T "navbar-profile" }}" {{ if hasPrefix $.Path "/profile" }}aria-current="page"{{ end }}>
+						<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
+							<path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 1.5c-3 0-5.5 1.6-5.5 3.75V15h11v-1.75C13.5 11.1 11 9.5 8 9.5Z"
+								fill="currentColor" />
+						</svg>
+						<span>{{ .Username }}</span>
+					</a>
+					<button type="button" class="nav-logout" data-logout="/api/logout">{{ $.T "navbar-logout" }}</button>
+					{{ else }}
+					<span id="login-popup" data-label="{{ .T "login-title" }}"></span>
+					<span id="register-popup" data-label="{{ .T "register-title" }}"></span>
+					{{ end }}
+				</div>
+			</div>
+		</nav>
+	</header>
+	<main>
+		{{ .Children.Content }}
+	</main>
+	<!-- Card rendering styles and interactions, mounted once for every card on the page -->
+	<div id="card-rendering"></div>
 </body>
+
 </html>
 {{ end }}
