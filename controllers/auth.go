@@ -26,6 +26,8 @@ type AuthenticatedUser struct {
 	Username string
 	// 2: Admin, 1: Moderator, 0: User
 	Rank     uint
+	// In-shop currency balance
+	Coins    uint
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -67,6 +69,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			ID: session.UserID,
 			Username: user.Username,
 			Rank: user.Rank,
+			Coins: user.Coins,
 		})
 
 		c.Next()
@@ -84,6 +87,14 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 
 func (ac *AuthController) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
+
+	if v := c.Query("fragment"); v == "1" {
+		builder := views.PageBuilder("register", map[string]any{
+			"User":  user,
+		})
+		ac.Renderer.Render(c, &builder)
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Register",
@@ -180,6 +191,14 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 
 func (ac *AuthController) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
+
+	if v := c.Query("fragment"); v == "1" {
+		builder := views.PageBuilder("login", map[string]any{
+			"User":  user,
+		})
+		ac.Renderer.Render(c, &builder)
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": "Login",
@@ -285,16 +304,16 @@ func (ac *AuthController) LogoutGet(c *gin.Context) {
 	} else {
 		// Log out current device
 		token, err := c.Cookie("session_token")
-		if err != nil && token != "" {
+		if err == nil && token != "" {
 			ctx := c.Request.Context()
 			// Silently fail, since the user's cookie is cleared anyway, that just means keeping data in the DB a little longer
 			_, _ = gorm.G[models.UserSession](ac.DB).
-				Where("user_id = ? and token = ", user.ID, token).
+				Where("user_id = ? and token = ?", user.ID, token).
 				Delete(ctx)
 		}
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "", true, true)
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "logout-success"),
 	})

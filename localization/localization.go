@@ -4,6 +4,7 @@ import (
 	"embed"
 	"fmt"
 	"io/fs"
+	"net/http"
 	"strings"
 	"sync"
 
@@ -37,7 +38,7 @@ type Localizer struct {
 	// Locale cookie name: 'lang'
 	CookieName string
 
-	// Cache of per-user locales
+	// Cache of (locale fallback chain, locale)
 	Cache sync.Map
 }
 
@@ -96,7 +97,8 @@ func (l *Localizer) Middleware() gin.HandlerFunc {
 			// Store cookie
 			requested := l.requestedLocales(c)
 			chosen := l.chosenLocale(requested)
-			c.SetCookie(l.CookieName, chosen, 3600*24*30, "/", "", false, true)
+			c.SetSameSite(http.SameSiteLaxMode)
+			c.SetCookie(l.CookieName, chosen, 3600*24*30, "/", "", false, false)
 		}
 		c.Next()
 	}
@@ -183,6 +185,32 @@ func (l *Localizer) requestedLocales(c *gin.Context) []string {
 	}
 
 	return requested
+}
+
+func (l *Localizer) LocalizeFor(localeName string, id string, kv ...any) (string, error) {
+	loc, err := fluentloc.NewFromLocales(fluentloc.Config{
+		Requested: []string{localeName},
+		Available: l.Available,
+		Default:   l.Fallback,
+		Resources: l.Resources,
+		Loader:    l.Loader,
+	})
+	if err != nil {
+		return "", err
+	}
+	if loc == nil {
+		return "", fmt.Errorf("failed to find locale '%s'", localeName)
+	}
+	msg, err := loc.FormatValue(id, argsToMap(kv))
+	if err != nil {
+		return "", err
+	}
+	return msg, nil
+}
+
+func (l *Localizer) GetLocale(c *gin.Context) string {
+	locales := l.requestedLocales(c)
+	return l.chosenLocale(locales)
 }
 
 // Transforms a flat: "key1", val1, "key2", val2 list into map[string]any

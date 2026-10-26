@@ -1,0 +1,13 @@
+{{ define "add-booster" }}
+<h2>Add a booster (debug)</h2>
+
+<form class="pack-form" action="/add_booster" method="post">
+	<label for="booster-collection">Collection</label>
+	<select id="booster-collection" name="collection" required>
+		{{ range .Data.Collections }}
+		<option value="{{ .ID }}">{{ .Title }}</option>
+		{{ end }}
+	</select>
+	<button type="submit">Add booster</button>
+</form>
+{{ end }}

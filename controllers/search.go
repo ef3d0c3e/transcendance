@@ -59,9 +59,13 @@ func (sc *SearchController) SearchUsersGet(c *gin.Context) {
 		"Username": username,
 		"Users":    users,
 	})
+	totalPages := int(total / 50)
+	if total % 50 != 0 {
+		totalPages = totalPages + 1
+	}
 	content.Add("paginator", "Paginator", map[string]any{
 		"Current": page,
-		"Total":   int(total / 50),
+		"Total":   totalPages,
 		"Url":     "?username=" + username + "&p=",
 	})
 	sc.Renderer.Render(c, &builder)
