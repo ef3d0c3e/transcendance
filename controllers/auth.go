@@ -304,16 +304,16 @@ func (ac *AuthController) LogoutGet(c *gin.Context) {
 	} else {
 		// Log out current device
 		token, err := c.Cookie("session_token")
-		if err != nil && token != "" {
+		if err == nil && token != "" {
 			ctx := c.Request.Context()
 			// Silently fail, since the user's cookie is cleared anyway, that just means keeping data in the DB a little longer
 			_, _ = gorm.G[models.UserSession](ac.DB).
-				Where("user_id = ? and token = ", user.ID, token).
+				Where("user_id = ? and token = ?", user.ID, token).
 				Delete(ctx)
 		}
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "", true, true)
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "logout-success"),
 	})

@@ -68,7 +68,6 @@ func GetCardData(c *gin.Context, loc string, renderer *views.Renderer, collectio
 
 // cards/* route
 func (dc *DataController) CardsGet(c *gin.Context) {
-	user := controllers.GetAuthenticatedUser(c)
 	first := c.Param("FIRST")
 	second := c.Param("SECOND")
 
@@ -77,72 +76,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 		c.File("data/assets/" + second)
 		return
 	case "search":
-		query := c.Query("q")
-		page, err := strconv.Atoi(c.Query("p"))
-		if err != nil || page < 1 {
-			page = 1
-		}
-
-		if query != "" {
-			loc := dc.Renderer.Localizer.GetLocale(c)
-			ss, err := dc.GetCardSearchSet(loc)
-			if err != nil {
-				log.Printf("[WARN] Failed to get card search set for locale '%s': %s", loc, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "card-search-error-internal"),
-				})
-				return
-			}
-			results, total, err := ss.Search(query, pageSize, (page-1)*pageSize)
-			if err != nil {
-				log.Printf("[WARN] Search failed for locale: '%s', term '%s': %s", loc, query, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "card-search-error-internal"),
-				})
-				return
-			}
-
-			cards := make([]map[string]any, len(results))
-			for i, pair := range results {
-				data, err := GetCardData(c, loc, dc.Renderer, pair.collection, pair.card)
-				if err != nil {
-					log.Printf("[WARN] Failed to build data for card '%s': %s", pair.card.Name, err)
-					c.JSON(http.StatusInternalServerError, gin.H{
-						"message": dc.Renderer.T(c, "card-search-error-internal"),
-					})
-					return
-				}
-				cards[i] = map[string]any{
-					"Data": data,
-				}
-			}
-
-			builder := views.PageBuilder("base", map[string]any{
-				"Title": "Login",
-				"User":  user,
-			})
-			content := builder.Add("card-search", "Content", map[string]any{
-				"Query": query,
-				"Cards": cards,
-			})
-			content.Add("paginator", "Paginator", map[string]any{
-				"Current": page,
-				"Total":   int(total / uint64(pageSize)),
-				"Url":     "?q=" + query + "&p=",
-			})
-			dc.Renderer.Render(c, &builder)
-			return
-		}
-
-		builder := views.PageBuilder("base", map[string]any{
-			"Title": dc.Renderer.T(c, "card-search-title"),
-			"User":  user,
-		})
-		builder.Add("card-search", "Content", map[string]any{
-			"Query": query,
-			"Cards": []map[string]any{},
-		})
-		dc.Renderer.Render(c, &builder)
+		dc.catalogCards(c)
 		return
 	}
 
@@ -197,72 +131,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 
 	switch first {
 	case "search":
-		query := c.Query("q")
-		page, err := strconv.Atoi(c.Query("p"))
-		if err != nil || page < 1 {
-			page = 1
-		}
-
-		if query != "" {
-			loc := dc.Renderer.Localizer.GetLocale(c)
-			ss, err := dc.GetCollectionSearchSet(loc)
-			if err != nil {
-				log.Printf("[WARN] Failed to get collection search set for locale '%s': %s", loc, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "collection-search-error-internal"),
-				})
-				return
-			}
-			results, total, err := ss.Search(query, pageSize, (page-1)*pageSize)
-			if err != nil {
-				log.Printf("[WARN] Search failed for locale: '%s', term '%s': %s", loc, query, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "collection-search-error-internal"),
-				})
-				return
-			}
-
-			collections := make([]map[string]any, len(results))
-			for i, collection := range results {
-				data, err := getCollectionData(c, loc, dc.Renderer, collection)
-				if err != nil {
-					log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
-					c.JSON(http.StatusInternalServerError, gin.H{
-						"message": dc.Renderer.T(c, "collection-search-error-internal"),
-					})
-					return
-				}
-				collections[i] = map[string]any{
-					"Data": data,
-				}
-			}
-
-			builder := views.PageBuilder("base", map[string]any{
-				"Title": "Login",
-				"User":  user,
-			})
-			content := builder.Add("collection-search", "Content", map[string]any{
-				"Query":       query,
-				"Collections": collections,
-			})
-			content.Add("paginator", "Paginator", map[string]any{
-				"Current": page,
-				"Total":   int(total / uint64(pageSize)),
-				"Url":     "?q=" + query + "&p=",
-			})
-			dc.Renderer.Render(c, &builder)
-			return
-		}
-
-		builder := views.PageBuilder("base", map[string]any{
-			"Title": dc.Renderer.T(c, "collection-search-title"),
-			"User":  user,
-		})
-		builder.Add("collection-search", "Content", map[string]any{
-			"Query":       query,
-			"Collections": []map[string]any{},
-		})
-		dc.Renderer.Render(c, &builder)
+		dc.catalogCollections(c)
 		return
 	}
 
