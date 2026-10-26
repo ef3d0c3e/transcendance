@@ -28,10 +28,39 @@
 		</a>
 	</nav>
 
+	{{ if eq .Data.Tab "cards" }}
+	<div class="inventory-filters">
+		<label>
+			<span>{{ .T "inventory-filter-rarity" }}</span>
+			<select name="rarity" form="search-form" data-autosubmit>
+				{{ range .Data.RarityOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "inventory-filter-effect" }}</span>
+			<select name="effect" form="search-form" data-autosubmit>
+				{{ range .Data.EffectOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "inventory-sort" }}</span>
+			<select name="sort" form="search-form" data-autosubmit>
+				{{ range .Data.SortOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+	</div>
+	{{ end }}
+
 	{{ if .Data.Message }}
 	<div class="inventory-message">
 		<p>{{ .Data.Message }}</p>
-		{{ if ne (len .Data.Query) 0 }}
+		{{ if .Data.Filtered }}
 		<a href="{{ .Data.TabCardsUrl }}">{{ .T "inventory-search-clear" }}</a>
 		{{ end }}
 	</div>
@@ -70,7 +99,10 @@
 	{{ end }}
 	{{ if eq .Data.Tab "cards" }}
 	<div id="inventory-card-popup" data-locale="{{ .Data.Locale }}"
-		data-label-acquired="{{ .T "inventory-card-acquired" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
+		data-label-acquired="{{ .T "inventory-card-acquired" }}"
+		data-label-acquired-first="{{ .T "inventory-card-acquired-first" }}"
+		data-label-acquired-last="{{ .T "inventory-card-acquired-last" }}"
+		data-label-copies="{{ .T "inventory-card-copies" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
 	{{ end }}
 	{{ end }}
 </div>

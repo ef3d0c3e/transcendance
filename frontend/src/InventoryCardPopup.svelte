@@ -1,7 +1,7 @@
 <!--
-    Popup with instance details (acquisition date) when clicking an inventory card
+    Popup with stack details (copies, acquisition dates) when clicking an inventory card
 
-    Cards must provide `data-acquired` (RFC 3339 date)
+    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates)
 -->
 
 <script>
@@ -9,17 +9,21 @@
 
 	let { target } = $props();
 
-	const CARD_SELECTOR = ".inventory-cards .card-container[data-acquired]";
+	const CARD_SELECTOR = ".inventory-cards .card-container[data-acquired-first]";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
 
 	let dialog;
 	let title = $state("");
-	let acquired = $state("");
-	let acquiredIso = $state("");
+	let copies = $state(1);
+	// Single date for one copy, first and last otherwise
+	let dates = $state([]);
 	let returnFocus = null;
 
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
+	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
+	const labelAcquiredLast = $derived(target.dataset.labelAcquiredLast ?? "");
+	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
 	const dateFormat = $derived(
 		new Intl.DateTimeFormat(target.dataset.locale || undefined, {
@@ -30,8 +34,15 @@
 
 	function show(card) {
 		title = card.querySelector(".card-title")?.textContent ?? "";
-		acquiredIso = card.dataset.acquired;
-		acquired = dateFormat.format(new Date(acquiredIso));
+		copies = Number(card.dataset.copies) || 1;
+		const date = (label, iso) => ({ label, iso, text: dateFormat.format(new Date(iso)) });
+		dates =
+			copies > 1
+				? [
+						date(labelAcquiredFirst, card.dataset.acquiredFirst),
+						date(labelAcquiredLast, card.dataset.acquiredLast),
+					]
+				: [date(labelAcquired, card.dataset.acquiredFirst)];
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -112,8 +123,18 @@
 	<div class="inventory-popup-content">
 		<h3 id="inventory-popup-title">{title}</h3>
 		<dl>
-			<dt>{labelAcquired}</dt>
-			<dd><time datetime={acquiredIso}>{acquired}</time></dd>
+			{#if copies > 1}
+				<div>
+					<dt>{labelCopies}</dt>
+					<dd>{copies}</dd>
+				</div>
+			{/if}
+			{#each dates as { label, iso, text } (label)}
+				<div>
+					<dt>{label}</dt>
+					<dd><time datetime={iso}>{text}</time></dd>
+				</div>
+			{/each}
 		</dl>
 		<button type="button" onclick={close}>{labelClose}</button>
 	</div>
@@ -157,6 +178,10 @@
 	}
 
 	dl {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+
 		margin: 0;
 	}
 
