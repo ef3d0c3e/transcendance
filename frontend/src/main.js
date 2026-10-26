@@ -118,6 +118,32 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 	}
 }
 
+// Selects that apply as soon as they change (inventory filters)
+{
+	const forms = new Set();
+	for (const select of document.querySelectorAll('select[data-autosubmit]')) {
+		select.addEventListener('change', () => select.form?.requestSubmit());
+		if (select.form) {
+			forms.add(select.form);
+		}
+	}
+
+	// Leave unset fields out of the URL, collected first since deleting while iterating skips entries
+	for (const form of forms) {
+		form.addEventListener('formdata', (event) => {
+			const empty = [];
+			for (const [name, value] of event.formData) {
+				if (value === '') {
+					empty.push(name);
+				}
+			}
+			for (const name of empty) {
+				event.formData.delete(name);
+			}
+		});
+	}
+}
+
 // Inventory booster popup
 {
 	const target = document.querySelector('#inventory-booster-popup');
