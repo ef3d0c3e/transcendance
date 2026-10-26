@@ -71,3 +71,158 @@ friends-pending = Pending invite
 friends-respond-message = This user has sent you a friend invite
 friends-unknown-error = Something went wrong !
 friends-spam-error = You may only have one outgoing invite active
+
+navbar-label-toggle = Toggle menu
+navbar-label-main = Main navigation
+navbar-cards = Cards
+navbar-inventory = Inventory
+navbar-shop = Shop
+navbar-profile = Your profile
+navbar-logout = Log out
+
+theme-switcher-light = Switch to light theme
+theme-switcher-dark = Switch to dark theme
+
+language-switcher = Choose language
+
+cards-error-not-found = Card not found
+cards-error-collection-not-found = Collection not found
+
+paginator-label-nav = Pagination
+paginator-label-previous = Previous page
+paginator-label-next = Next page
+
+card-rarity-common = Common
+card-rarity-rare = Rare
+card-rarity-legendary = Legendary
+
+
+card-search-placeholder = Search for cards
+card-search-empty = No cards found
+card-search-submit = Search
+card-search-error-internal = Search failed
+
+card-error-not-found = Card not found
+
+collection-title = { $collection } Collection
+collection-booster = { $count ->
+    [one] { $count } card booster
+    *[other] { $count } cards booster
+}
+collection-count = { $count ->
+    [one] { $count } CARD
+    *[other] { $count } CARDS
+}
+collection-id = NO. { $id }
+
+collection-search-placeholder = Search for collections
+collection-search-empty = No collections found
+collection-search-submit = Search
+collection-search-error-internal = Search failed
+
+collection-error-not-found = Collection not found
+
+catalog-title = Card catalog
+catalog-tabs-label = Catalog sections
+catalog-tab-cards = Cards
+catalog-tab-collections = Collections
+catalog-collection-count = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+catalog-filter-collection = Collection
+catalog-filter-collection-all = All collections
+catalog-sort-number = Collection order
+
+inventory-title = Your inventory
+inventory-title-other = { $username }'s inventory
+inventory-unauthenticated = You must be authenticated to access inventories
+inventory-message-empty = Nothing to show here
+inventory-message-user-not-found = User not found
+inventory-message-fetch-fail = Cannot fetch user inventory
+inventory-message-no-match = No cards in this inventory match your search
+inventory-search-placeholder = Search this inventory
+inventory-search-submit = Search
+inventory-search-clear = Clear search
+inventory-card-acquired = Acquired on
+inventory-card-close = Close
+inventory-card-acquired-first = First acquired on
+inventory-card-acquired-last = Last acquired on
+inventory-card-copies = Copies
+inventory-filter-rarity = Rarity
+inventory-filter-rarity-all = All rarities
+inventory-filter-effect = Effect
+inventory-filter-effect-all = All effects
+inventory-filter-effect-none = No effect
+inventory-filter-effect-foil = Foil
+inventory-sort = Sort by
+inventory-sort-relevance = Relevance
+inventory-sort-recent = Last acquired
+inventory-sort-oldest = First acquired
+inventory-sort-rarity = Rarity
+inventory-sort-count = Count
+inventory-sort-name = Name (A-Z)
+inventory-sort-name-desc = Name (Z-A)
+inventory-tabs-label = Inventory sections
+inventory-tab-cards = Cards
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = No boosters yet
+inventory-booster-open-confirm = Open booster { $name }?
+inventory-booster-open-yes = Yes
+inventory-booster-open-no = No
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+inventory-search-count = { $count ->
+    [one] { $count } card found
+    *[other] { $count } cards found
+}
+
+pack-opening-title = Pack Opening
+pack-opening-open = Open pack
+pack-opening-open-another = Open another pack
+pack-opening-error-collection = Collection not found
+pack-opening-error-empty = This booster has no cards
+pack-opening-error-internal = Failed to open the pack
+pack-opening-obtained = Cards obtained
+pack-opening-back = Back to inventory
+pack-opening-return = Return
+pack-opening-open-again = Open again
+pack-opening-remaining = { $count ->
+    [0] No boosters left
+    [one] { $count } booster left
+    *[other] { $count } boosters left
+}
+pack-opening-error-booster = This booster is not in your inventory
+
+shop-title = Shop
+shop-balance = Balance
+shop-login-hint = Log in to get coins and buy boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = No boosters are on sale right now
+shop-booster-buy = Buy
+shop-price = { $amount } coins
+shop-topup-title = Get coins
+shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-price = €{ $euros }.{ $cents }
+shop-topup-open = Buy more coins
+shop-topup-success = { $amount } coins have been added to your balance
+shop-error-unauthenticated = You must be logged in to get coins
+shop-error-pack = Unknown coin pack
+shop-error-funds = You do not have enough coins for this purchase
+shop-error-quantity = Enter a quantity between 1 and { $max }
+shop-error-internal = Failed to update your balance
+shop-buy-close = Close
+shop-buy-success = { $count ->
+    [one] A { $collection } booster has been added to your inventory
+   *[other] { $count } { $collection } boosters have been added to your inventory
+}
+shop-buy-view-inventory = View inventory
+shop-buy-quantity = Quantity
+shop-buy-total = Total
+shop-coins = coins

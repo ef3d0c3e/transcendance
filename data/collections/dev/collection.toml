@@ -1,0 +1,17 @@
+id = 1
+tags = ["dev"]
+color-primary = "#ff7f5f"
+color-secondary = "#7f2fff"
+
+[[cards]]
+name = "pythagorean-tiling"
+[[cards]]
+name = "flying-scotsman"
+[[cards]]
+name = "mcmurdo"
+[[cards]]
+name = "ford-t"
+[[cards]]
+name = "tungsten"
+
+

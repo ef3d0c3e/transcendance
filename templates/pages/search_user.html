@@ -10,6 +10,7 @@
 </style>
 <e-center intrinsic>
 <form
+	class="search-form"
 	id="search-form"
 	action="/search"
 	method="get">
@@ -20,7 +21,7 @@
 		placeholder="{{ .T "search-user-form-placeholder" }}"
 		value="{{ .Data.Username }}">
 
-	<button type="submit">{{ .T "search-user-submit" }}</button>
+	<button type="submit" aria-role="{{ .T "search-user-submit" }}"></button>
 </form>
 </e-center>
 <ul>

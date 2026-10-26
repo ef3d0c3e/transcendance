@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	fluentloc "github.com/hakastein/gofluent/localization"
@@ -15,19 +16,26 @@ import (
 // Renderer holds parsed templates and localization state
 type Renderer struct {
 	templates *template.Template
-	localizer *localization.Localizer
+	Localizer *localization.Localizer
+	themer    *Themer
 }
 
 // T is a method to translate strings
 func (r *Renderer) T(c *gin.Context, id string, kv ...any) string {
-	loc := r.localizer.Localization(c)
-	return r.localizer.Translate(loc, id, kv...)
+	loc := r.Localizer.Localization(c)
+	return r.Localizer.Translate(loc, id, kv...)
 }
 
 // Data passed to templates
 type View struct {
 	// Parameters
 	Data any
+	// Theme
+	Theme string
+	// Authenticated user, nil for visitors (shown in the header)
+	User any
+	// Request path, to highlight the current page in the header
+	Path string
 	// Child templates
 	Children map[string]template.HTML
 	// Translator instance
@@ -46,18 +54,32 @@ func (t Translator) T(id string, kv ...any) string {
 }
 
 // NewRenderer: parse all templates under templates/**/*.html
-func NewRenderer(l *localization.Localizer) *Renderer {
+func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	t := template.Must(
 		template.New("").Funcs(template.FuncMap{
-			"sub": func(a, b int) int { return a - b },
-			"add": func(a, b int) int { return a + b },
+			"sub":       func(a, b int) int { return a - b },
+			"add":       func(a, b int) int { return a + b },
+			"hasPrefix": strings.HasPrefix,
 		}).ParseGlob("templates/**/*.html"),
 	)
 
 	return &Renderer{
 		templates: t,
-		localizer: l,
+		Localizer: l,
+		themer:    themer,
 	}
+}
+
+// RenderToString executes a named template and returns the result as a string.
+// Useful to embed fragments (like cards) into JSON responses.
+func (r *Renderer) RenderToString(name string, data any) (string, error) {
+	var content bytes.Buffer
+
+	if err := r.templates.ExecuteTemplate(&content, name, data); err != nil {
+		return "", err
+	}
+
+	return content.String(), nil
 }
 
 type pageBuilder struct {
@@ -95,15 +117,20 @@ func (b *pageBuilder) Add(templateName string, name string, data map[string]any)
 	return child
 }
 
-func (r *Renderer) renderPage(
-	loc *fluentloc.Localization,
-	b *pageBuilder,
-) (template.HTML, error) {
+// Request-wide values given to every template
+type pageContext struct {
+	theme string
+	user  any
+	path  string
+	loc   *fluentloc.Localization
+}
+
+func (r *Renderer) renderPage(ctx *pageContext, b *pageBuilder) (template.HTML, error) {
 	children := make(map[string]template.HTML, len(b.children))
 
 	// Render children first (DFS)
 	for name, child := range b.children {
-		content, err := r.renderPage(loc, child)
+		content, err := r.renderPage(ctx, child)
 		if err != nil {
 			return "", err
 		}
@@ -113,10 +140,13 @@ func (r *Renderer) renderPage(
 
 	view := View{
 		Data:     b.data,
+		Theme:    ctx.theme,
+		User:     ctx.user,
+		Path:     ctx.path,
 		Children: children,
 		Translator: Translator{
-			localizer: r.localizer,
-			loc:       loc,
+			localizer: r.Localizer,
+			loc:       ctx.loc,
 		},
 	}
 
@@ -136,9 +166,16 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		return
 	}
 
-	loc := r.localizer.Localization(c)
+	// Set by the auth middleware, a nil *AuthenticatedUser for visitors
+	user, _ := c.Get("authenticatedUser")
+	ctx := &pageContext{
+		theme: r.themer.Theme(c),
+		user:  user,
+		path:  c.Request.URL.Path,
+		loc:   r.Localizer.Localization(c),
+	}
 
-	content, err := r.renderPage(loc, b)
+	content, err := r.renderPage(ctx, b)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return
