@@ -5,6 +5,7 @@ import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
+import ShopBuyPopup from './ShopBuyPopup.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -171,6 +172,49 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				openAgainLabel: target.dataset.openAgainLabel,
 				autostart: target.dataset.autostart === 'true',
 			},
+		});
+	}
+}
+
+// Shop booster buy popup
+{
+	const target = document.querySelector('#shop-buy-popup');
+
+	if (target) {
+		mount(ShopBuyPopup, {
+			target,
+			props: {
+				target,
+			},
+		});
+	}
+}
+
+// Shop coin top-up popup
+{
+	const dialog = document.querySelector('#shop-topup-popup');
+
+	if (dialog) {
+		let returnFocus;
+
+		for (const button of document.querySelectorAll('.shop-topup-open')) {
+			button.addEventListener('click', () => {
+				returnFocus = button;
+				dialog.showModal();
+			});
+		}
+		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {
+			button.addEventListener('click', () => dialog.close());
+		}
+		// Clicking the backdrop targets the dialog itself
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+		dialog.addEventListener('close', () => {
+			returnFocus?.focus();
+			returnFocus = undefined;
 		});
 	}
 }
