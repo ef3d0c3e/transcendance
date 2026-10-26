@@ -83,3 +83,52 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+
+inventory-title = Your inventory
+inventory-title-other = { $username }'s inventory
+inventory-unauthenticated = You must be authenticated to access inventories
+inventory-message-empty = Nothing to show here
+inventory-message-user-not-found = User not found
+inventory-message-fetch-fail = Cannot fetch user inventory
+inventory-message-no-match = No cards in this inventory match your search
+inventory-search-placeholder = Search this inventory
+inventory-search-submit = Search
+inventory-search-clear = Clear search
+inventory-card-acquired = Acquired on
+inventory-card-close = Close
+inventory-tabs-label = Inventory sections
+inventory-tab-cards = Cards
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = No boosters yet
+inventory-booster-open-confirm = Open booster { $name }?
+inventory-booster-open-yes = Yes
+inventory-booster-open-no = No
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+inventory-search-count = { $count ->
+    [one] { $count } card found
+    *[other] { $count } cards found
+}
+
+pack-opening-title = Pack Opening
+pack-opening-open = Open pack
+pack-opening-open-another = Open another pack
+pack-opening-error-collection = Collection not found
+pack-opening-error-empty = This booster has no cards
+pack-opening-error-internal = Failed to open the pack
+pack-opening-obtained = Cards obtained
+pack-opening-back = Back to inventory
+pack-opening-return = Return
+pack-opening-open-again = Open again
+pack-opening-remaining = { $count ->
+    [0] No boosters left
+    [one] { $count } booster left
+    *[other] { $count } boosters left
+}
+pack-opening-error-booster = This booster is not in your inventory

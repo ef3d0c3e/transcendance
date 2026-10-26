@@ -19,7 +19,7 @@ const (
 )
 
 // Get template data for a card
-func getCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) (map[string]any, error) {
+func GetCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) (map[string]any, error) {
 	rarity := renderer.T(c, "card-rarity-"+card.Rarity)
 	var rarity_color string
 	switch card.Rarity {
@@ -87,7 +87,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 			loc := dc.Renderer.Localizer.GetLocale(c)
 			ss, err := dc.GetCardSearchSet(loc)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("[WARN] Failed to get card search set for locale '%s': %s", loc, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"message": dc.Renderer.T(c, "card-search-error-internal"),
 				})
@@ -104,7 +104,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 
 			cards := make([]map[string]any, len(results))
 			for i, pair := range results {
-				data, err := getCardData(c, loc, dc.Renderer, pair.collection, pair.card)
+				data, err := GetCardData(c, loc, dc.Renderer, pair.collection, pair.card)
 				if err != nil {
 					log.Printf("[WARN] Failed to build data for card '%s': %s", pair.card.Name, err)
 					c.JSON(http.StatusInternalServerError, gin.H{
@@ -183,7 +183,7 @@ func getCollectionData(c *gin.Context, loc string, renderer *views.Renderer, col
 		"CollectionTitle":         title,
 		"ColorPrimary":            template.CSS(collection.ColorPrimary),
 		"ColorSecondary":          template.CSS(collection.ColorSecondary),
-		"CollectionDescription":   renderer.T(c, "collection-booster", "count", 5),
+		"CollectionDescription":   renderer.T(c, "collection-booster", "count", collection.BoosterSize),
 		"CollectionCount":         renderer.T(c, "collection-count", "count", len(collection.Cards)),
 		"CollectionID":            renderer.T(c, "collection-id", "id", fmt.Sprintf("%03d", collection.ID)),
 	}, nil
@@ -207,7 +207,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 			loc := dc.Renderer.Localizer.GetLocale(c)
 			ss, err := dc.GetCollectionSearchSet(loc)
 			if err != nil {
-				log.Fatal(err)
+				log.Printf("[WARN] Failed to get collection search set for locale '%s': %s", loc, err)
 				c.JSON(http.StatusInternalServerError, gin.H{
 					"message": dc.Renderer.T(c, "collection-search-error-internal"),
 				})
@@ -301,7 +301,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 		cards := make([]map[string]any, len(collection.Cards))
 		for i := range collection.Cards {
 			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
-			data, err := getCardData(c, loc, dc.Renderer, collection, card)
+			data, err := GetCardData(c, loc, dc.Renderer, collection, card)
 			if err != nil {
 				log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
 				c.JSON(http.StatusInternalServerError, gin.H{

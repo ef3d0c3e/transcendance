@@ -82,3 +82,52 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+inventory-title = Votre inventaire
+inventory-title-other = Inventaire de { $username }
+inventory-unauthenticated = Vous devez être connecté pour acceder aux inventaires
+inventory-message-empty = Rien n'a voir ici
+inventory-message-user-not-found = Utilisateur non trouvé
+inventory-message-fetch-fail = Impossible d'accéder à cet inventaire
+inventory-message-no-match = Aucune carte de cet inventaire ne correspond à votre recherche
+inventory-search-placeholder = Rechercher dans cet inventaire
+inventory-search-submit = Rechercher
+inventory-search-clear = Effacer la recherche
+inventory-card-acquired = Obtenue le
+inventory-card-close = Fermer
+inventory-tabs-label = Sections de l'inventaire
+inventory-tab-cards = Cartes
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = Aucun booster pour l'instant
+inventory-booster-open-confirm = Ouvrir le booster { $name } ?
+inventory-booster-open-yes = Oui
+inventory-booster-open-no = Non
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+inventory-search-count = { $count ->
+    [one] { $count } carte trouvée
+    *[other] { $count } cartes trouvées
+}
+
+pack-opening-title = Ouverture de booster
+pack-opening-open = Ouvrir le booster
+pack-opening-open-another = Ouvrir un autre booster
+pack-opening-error-collection = Collection introuvable
+pack-opening-error-empty = Ce booster ne contient aucune carte
+pack-opening-error-internal = Impossible d'ouvrir le booster
+pack-opening-obtained = Cartes obtenues
+pack-opening-back = Retour à l'inventaire
+pack-opening-return = Retour
+pack-opening-open-again = Ouvrir à nouveau
+pack-opening-remaining = { $count ->
+    [0] Plus aucun booster
+    [one] { $count } booster restant
+    *[other] { $count } boosters restants
+}
+pack-opening-error-booster = Ce booster n'est pas dans votre inventaire

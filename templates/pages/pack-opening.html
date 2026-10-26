@@ -1,0 +1,24 @@
+{{ define "pack-opening" }}
+<h2>{{ .T "pack-opening-title" }}</h2>
+
+<div class="pack-booster">
+	{{ template "collection" .Data.Booster }}
+</div>
+
+<form class="pack-form" id="pack-form" action="/opening" method="post">
+	<div id="form-result"></div>
+	<input type="hidden" name="booster" value="{{ .Data.BoosterID }}">
+	<button type="submit">{{ .T "pack-opening-open" }}</button>
+	<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
+</form>
+
+<div id="pack-opening"
+	data-open-label="{{ .T "pack-opening-open" }}"
+	data-retry-label="{{ .T "pack-opening-open-another" }}"
+	data-error-label="{{ .T "pack-opening-error-internal" }}"
+	data-obtained-label="{{ .T "pack-opening-obtained" }}"
+	data-return-label="{{ .T "pack-opening-return" }}"
+	data-open-again-label="{{ .T "pack-opening-open-again" }}"
+	data-return-url="/inventory?tab=boosters"
+	data-autostart="true"></div>
+{{ end }}

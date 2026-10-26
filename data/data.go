@@ -51,6 +51,9 @@ func (c *Card) Translate(localeName string, id string) (string, error) {
 	return value, nil
 }
 
+// Number of cards in a booster, unless the collection sets `booster-size`
+const defaultBoosterSize = 5
+
 type CollectionCard struct {
 	Name string
 }
@@ -64,6 +67,8 @@ type Collection struct {
 	ColorPrimary   string
 	ColorSecondary string
 	ContectSheet   string
+	// Number of cards in a booster of this collection
+	BoosterSize int
 }
 
 func (c *Collection) Translate(localeName string, id string) (string, error) {
@@ -268,9 +273,10 @@ func LoadCards() (*Data, error) {
 		if file.IsDir() {
 			collectionName := components[len(components)-1]
 			collections[collectionName] = &Collection{
-				Name:    collectionName,
-				Locales: make(map[string]*fluent.Bundle),
-				Cards:   make([]CollectionCard, 0),
+				Name:        collectionName,
+				Locales:     make(map[string]*fluent.Bundle),
+				Cards:       make([]CollectionCard, 0),
+				BoosterSize: defaultBoosterSize,
 			}
 		} else {
 			collectionName := components[len(components)-2]
@@ -323,6 +329,14 @@ func LoadCards() (*Data, error) {
 					return fmt.Errorf("Collection %s is missing 'color-secondary'", collection.Name)
 				}
 				collection.ColorSecondary = config.Get("color-secondary").(string)
+
+				if config.Has("booster-size") {
+					size, ok := config.Get("booster-size").(int64)
+					if !ok || size <= 0 {
+						return fmt.Errorf("Collection %s has an invalid 'booster-size', expected a positive integer", collection.Name)
+					}
+					collection.BoosterSize = int(size)
+				}
 
 				cardList := config.Get("cards").([]*toml.Tree)
 				for _, entry := range cardList {

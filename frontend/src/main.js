@@ -2,6 +2,9 @@ import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
 import CardRender from './CardRender.svelte';
+import InventoryCardPopup from './InventoryCardPopup.svelte';
+import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
+import PackOpening from './PackOpening.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -103,5 +106,45 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Inventory card popup
+{
+	const target = document.querySelector('#inventory-card-popup');
+
+	if (target) {
+		mount(InventoryCardPopup, { target, props: { target } });
+	}
+}
+
+// Inventory booster popup
+{
+	const target = document.querySelector('#inventory-booster-popup');
+
+	if (target) {
+		mount(InventoryBoosterPopup, { target, props: { target } });
+	}
+}
+
+// Pack opening
+{
+	const target = document.querySelector('#pack-opening');
+
+	if (target) {
+		mount(PackOpening, {
+			target,
+			props: {
+				formSelector: '#pack-form',
+				openLabel: target.dataset.openLabel,
+				retryLabel: target.dataset.retryLabel,
+				errorLabel: target.dataset.errorLabel,
+				obtainedLabel: target.dataset.obtainedLabel,
+				returnLabel: target.dataset.returnLabel,
+				returnUrl: target.dataset.returnUrl,
+				openAgainLabel: target.dataset.openAgainLabel,
+				autostart: target.dataset.autostart === 'true',
+			},
+		});
 	}
 }
