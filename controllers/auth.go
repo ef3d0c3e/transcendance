@@ -44,7 +44,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			First(&session).
 			Error
 
-		if err != nil {
+		if err != nil || len(session) == 0 {
 			// Invalid/expired token = unauthenticated.
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
@@ -57,7 +57,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			First(&user).
 			Error
 
-		if err != nil {
+		if err != nil || len(user) == 0 {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
