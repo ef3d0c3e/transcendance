@@ -128,6 +128,18 @@ inventory-sort-rarity = Rareté
 inventory-sort-count = Nombre
 inventory-sort-name = Nom (A-Z)
 inventory-sort-name-desc = Nom (Z-A)
+inventory-card-value = Valeur
+inventory-card-sell = Vendre
+inventory-sell-quantity = Quantité
+inventory-sell-confirm = Confirmer la vente
+inventory-sold = { $count ->
+    [one] Vous avez vendu { $count } carte pour { $amount } pièces
+   *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
+}
+inventory-sell-error-card = Cette carte ne peut pas être vendue
+inventory-sell-error-quantity = Choisissez une quantité d'au moins 1
+inventory-sell-error-missing = Vous n'avez pas autant d'exemplaires à vendre
+inventory-sell-error-internal = La vente de vos cartes a échoué
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters

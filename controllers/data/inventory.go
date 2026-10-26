@@ -115,6 +115,12 @@ func inventoryOptions(values []string, current string, label func(value string) 
 	return options
 }
 
+// Outcome of a sale round-trip through the inventory, if any
+type inventoryNotice struct {
+	Message string
+	Error   bool
+}
+
 // Everything needed to render the inventory page
 type inventoryView struct {
 	// Displayed tab, cards or boosters
@@ -127,6 +133,12 @@ type inventoryView struct {
 	Effect string
 	// Card sort, always set on the cards tab
 	Sort string
+	// Set when the viewed inventory is the viewer's own, whose cards can be sold
+	Own bool
+	// Post target of the card popup's sell form, empty on other inventories
+	SellAction string
+	// What a sale did to the inventory, if this page is its reply
+	Notice inventoryNotice
 	// Error or empty state message
 	Message string
 	// Rendered cards or boosters
@@ -202,6 +214,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	}
 	fields := map[string]any{
 		"Title":          title,
+		"Notice":         v.Notice,
+		"SellAction":     v.SellAction,
 		"Message":        v.Message,
 		"Count":          count,
 		"Tab":            v.Tab,
@@ -316,9 +330,14 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	if v.Username == "" {
 		v.Username = user.Username
 	}
+	// A sale round-trips through the inventory with what it did
+	v.Notice = dc.sellNotice(c)
 	userID := user.ID
 	if strings.EqualFold(v.Username, user.Username) {
 		v.Username = user.Username
+		// The owner can sell their cards from the card popup
+		v.Own = true
+		v.SellAction = "/shop/sell"
 	} else {
 		// Fetch
 		var otherUser models.User
@@ -420,6 +439,42 @@ func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[u
 	})
 }
 
+// sellNotice returns what a sale did to the inventory, when the page is its
+// reply. The shop redirects here with `sold` and `coins`, or with an `error`
+// code prefixed by `sell-`.
+func (dc *DataController) sellNotice(c *gin.Context) inventoryNotice {
+	if sold := c.Query("sold"); sold != "" {
+		count, err := strconv.Atoi(sold)
+		if err != nil || count < 1 {
+			return inventoryNotice{}
+		}
+		coins, err := strconv.Atoi(c.Query("coins"))
+		if err != nil || coins < 0 {
+			return inventoryNotice{}
+		}
+		return inventoryNotice{
+			Message: dc.Renderer.T(c, "inventory-sold", "count", count, "amount", coins),
+		}
+	}
+
+	code, ok := strings.CutPrefix(c.Query("error"), "sell-")
+	if !ok {
+		return inventoryNotice{}
+	}
+	var key string
+	switch code {
+	case "card":
+		key = "inventory-sell-error-card"
+	case "quantity":
+		key = "inventory-sell-error-quantity"
+	case "missing":
+		key = "inventory-sell-error-missing"
+	default:
+		key = "inventory-sell-error-internal"
+	}
+	return inventoryNotice{Message: dc.Renderer.T(c, key), Error: true}
+}
+
 // Fill the view with the user's cards folded by card and foil, restricted to the search and filters if any
 func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *inventoryView) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
@@ -487,6 +542,17 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 		data["CardAcquiredFirst"] = stack.FirstAcquired.Format(time.RFC3339)
 		data["CardAcquiredLast"] = stack.LastAcquired.Format(time.RFC3339)
 		setCardFoil(data, stack.Foil)
+		// What the owner's popup needs to sell copies of this stack
+		if v.Own {
+			if price := controllers.SellPrice(stack.card.Rarity, stack.Foil); price > 0 {
+				data["CardSellID"] = stack.CardID
+				data["CardSellPrice"] = price
+				data["CardSellOwned"] = stack.Count
+				if stack.Foil != "" {
+					data["CardSellFoil"] = stack.Foil
+				}
+			}
+		}
 		v.Items = append(v.Items, map[string]any{
 			"Data": data,
 		})

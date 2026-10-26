@@ -28,6 +28,12 @@
 		</a>
 	</nav>
 
+	{{ if .Data.Notice.Message }}
+	<p class="inventory-notice {{ if .Data.Notice.Error }}inventory-notice-error{{ else }}inventory-notice-success{{ end }}">
+		{{ .Data.Notice.Message }}
+	</p>
+	{{ end }}
+
 	{{ if eq .Data.Tab "cards" }}
 	<div class="inventory-filters">
 		<label>
@@ -102,7 +108,11 @@
 		data-label-acquired="{{ .T "inventory-card-acquired" }}"
 		data-label-acquired-first="{{ .T "inventory-card-acquired-first" }}"
 		data-label-acquired-last="{{ .T "inventory-card-acquired-last" }}"
-		data-label-copies="{{ .T "inventory-card-copies" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
+		data-label-copies="{{ .T "inventory-card-copies" }}" data-label-close="{{ .T "inventory-card-close" }}"
+		data-label-value="{{ .T "inventory-card-value" }}" data-label-sell="{{ .T "inventory-card-sell" }}"
+		data-label-quantity="{{ .T "inventory-sell-quantity" }}" data-label-total="{{ .T "shop-buy-total" }}"
+		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
+		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}
 	{{ end }}
 </div>

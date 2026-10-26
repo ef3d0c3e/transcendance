@@ -1,7 +1,10 @@
 <!--
     Popup with stack details (copies, acquisition dates) when clicking an inventory card
 
-    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates)
+    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates).
+    On their owner's inventory they also provide `data-sell-id`, `data-sell-price`,
+    `data-sell-owned` and optionally `data-sell-foil`, and the popup offers
+    to sell copies of the card to the shop.
 -->
 
 <script>
@@ -20,11 +23,29 @@
 	let dates = $state([]);
 	let returnFocus = null;
 
+	let sellId = $state("");
+	let sellFoil = $state("");
+	let sellPrice = $state(0);
+	let sellOwned = $state(0);
+	let selling = $state(false);
+	let quantity = $state(1);
+
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
 	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
 	const labelAcquiredLast = $derived(target.dataset.labelAcquiredLast ?? "");
 	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
+	const labelValue = $derived(target.dataset.labelValue ?? "");
+	const labelSell = $derived(target.dataset.labelSell ?? "");
+	const labelQuantity = $derived(target.dataset.labelQuantity ?? "");
+	const labelTotal = $derived(target.dataset.labelTotal ?? "");
+	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
+	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	const sellAction = $derived(target.dataset.sellAction ?? "");
+	// The popup offers to sell only where the card carries a price and the
+	// owner has copies of it
+	const sellable = $derived(sellAction !== "" && sellId !== "" && sellOwned > 0);
+	const total = $derived(sellPrice * quantity);
 	const dateFormat = $derived(
 		new Intl.DateTimeFormat(target.dataset.locale || undefined, {
 			dateStyle: "long",
@@ -43,6 +64,12 @@
 						date(labelAcquiredLast, card.dataset.acquiredLast),
 					]
 				: [date(labelAcquired, card.dataset.acquiredFirst)];
+		sellId = card.dataset.sellId ?? "";
+		sellFoil = card.dataset.sellFoil ?? "";
+		sellPrice = Number(card.dataset.sellPrice ?? 0);
+		sellOwned = Number(card.dataset.sellOwned ?? 0);
+		selling = false;
+		quantity = 1;
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -135,7 +162,29 @@
 					<dd><time datetime={iso}>{text}</time></dd>
 				</div>
 			{/each}
+			{#if sellable}
+				<div>
+					<dt>{labelValue}</dt>
+					<dd>{sellPrice} {labelCoins}</dd>
+				</div>
+			{/if}
 		</dl>
+		{#if sellable && selling}
+			<form class="inventory-sell-form" method="post" action={sellAction}>
+				<input type="hidden" name="card" value={sellId} />
+				<input type="hidden" name="foil" value={sellFoil} />
+				<input type="hidden" name="quantity" value={quantity} />
+				<label class="inventory-sell-quantity">
+					<span>{labelQuantity}</span>
+					<input type="range" min="1" max={sellOwned} bind:value={quantity} />
+					<output>{quantity} / {sellOwned}</output>
+				</label>
+				<p class="inventory-sell-total">{labelTotal}: {total} {labelCoins}</p>
+				<button type="submit">{labelConfirm}</button>
+			</form>
+		{:else if sellable}
+			<button type="button" onclick={() => (selling = true)}>{labelSell}</button>
+		{/if}
 		<button type="button" onclick={close}>{labelClose}</button>
 	</div>
 </dialog>
@@ -195,6 +244,37 @@
 		margin: 0.15rem 0 0;
 
 		font-size: 1.05rem;
+		font-variant-numeric: tabular-nums;
+	}
+
+	.inventory-sell-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.inventory-sell-quantity {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.inventory-sell-quantity input {
+		flex: 1;
+	}
+
+	.inventory-sell-quantity output {
+		color: var(--color-text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.inventory-sell-total {
+		margin: 0;
+
+		font-weight: 650;
 		font-variant-numeric: tabular-nums;
 	}
 

@@ -44,6 +44,27 @@ func boosterPrice(collectionID int) uint {
 	return defaultBoosterPrice
 }
 
+// sellPrices is the coin value the shop pays for one card of a rarity.
+// Rarity names match the `rarity` field of a card's data.
+var sellPrices = map[string]uint{
+	"common":    10,
+	"rare":      50,
+	"legendary": 250,
+}
+
+// foilSellMultiplier multiplies a card's value when it is foil
+const foilSellMultiplier = 2
+
+// SellPrice returns the coins the shop pays for one card of a rarity, twice as
+// much for a foil. Unknown rarities are worth nothing and cannot be sold.
+func SellPrice(rarity string, foil string) uint {
+	price := sellPrices[rarity]
+	if foil != "" {
+		price *= foilSellMultiplier
+	}
+	return price
+}
+
 // topupPack is one bundle of coins sold by the shop's checkout.
 type topupPack struct {
 	ID     string
@@ -327,4 +348,80 @@ func (sc *ShopController) ShopTopupPost(c *gin.Context) {
 	}
 
 	c.Redirect(http.StatusSeeOther, "/shop?topup="+packID)
+}
+
+// errSellMissing is returned when the inventory holds fewer copies than the
+// sale asks for.
+var errSellMissing = errors.New("sell cards are missing")
+
+// ShopSellPost takes copies of one card out of the inventory and pays their
+// value in coins. The reply is a redirect back to the inventory, so
+// refreshing it cannot sell the cards twice.
+func (sc *ShopController) ShopSellPost(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	fail := func(code string) {
+		c.Redirect(http.StatusSeeOther, "/inventory?error=sell-"+code)
+	}
+
+	// The card to sell and which of its foil variants, then how many copies
+	id, err := strconv.Atoi(c.PostForm("card"))
+	if err != nil || id <= 0 {
+		fail("card")
+		return
+	}
+	foil := c.PostForm("foil")
+	card, _ := sc.Data.GetCard(id)
+	if card == nil || SellPrice(card.Rarity, foil) == 0 {
+		fail("card")
+		return
+	}
+	quantity, err := strconv.Atoi(c.PostForm("quantity"))
+	if err != nil || quantity < 1 {
+		fail("quantity")
+		return
+	}
+
+	// The unit price is fixed whatever the quantity
+	total := SellPrice(card.Rarity, foil) * uint(quantity)
+	err = sc.DB.Transaction(func(tx *gorm.DB) error {
+		var ids []uint
+		if err := tx.Model(&models.Card{}).
+			Where("owner_id = ? AND card_id = ? AND foil = ?", user.ID, id, foil).
+			Order("id").
+			Limit(quantity).
+			Pluck("id", &ids).
+			Error; err != nil {
+			return err
+		}
+		if len(ids) != quantity {
+			return errSellMissing
+		}
+		deleted := tx.Where("id IN ? AND owner_id = ?", ids, user.ID).Delete(&models.Card{})
+		if deleted.Error != nil {
+			return deleted.Error
+		}
+		if deleted.RowsAffected != int64(quantity) {
+			return errSellMissing
+		}
+
+		return tx.Model(&models.User{}).
+			Where("id = ?", user.ID).
+			Update("coins", gorm.Expr("coins + ?", total)).Error
+	})
+
+	switch {
+	case errors.Is(err, errSellMissing):
+		fail("missing")
+	case err != nil:
+		log.Printf("WARN failed to sell %d copies of card %d for user '%s': %s", quantity, id, user.Username, err)
+		fail("internal")
+	default:
+		c.Redirect(http.StatusSeeOther, "/inventory?sold="+strconv.Itoa(quantity)+
+			"&coins="+strconv.FormatUint(uint64(total), 10))
+	}
 }

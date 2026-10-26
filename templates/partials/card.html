@@ -1,6 +1,6 @@
 {{ define "card" }}
 <div class="card-container" {{ .Data.CardContainerData }} {{ with .Data.CardAcquiredFirst }}data-copies="{{ $.Data.CardCopies }}"
-	data-acquired-first="{{ . }}" data-acquired-last="{{ $.Data.CardAcquiredLast }}"{{ end }}>
+	data-acquired-first="{{ . }}" data-acquired-last="{{ $.Data.CardAcquiredLast }}"{{ end }}{{ with .Data.CardSellID }} data-sell-id="{{ . }}"{{ end }}{{ with .Data.CardSellFoil }} data-sell-foil="{{ . }}"{{ end }}{{ with .Data.CardSellPrice }} data-sell-price="{{ . }}"{{ end }}{{ with .Data.CardSellOwned }} data-sell-owned="{{ . }}"{{ end }}>
 	<article class="card"
 		style="--c1: {{ .Data.CardColorPrimary }}; --c2: {{ .Data.CardColorSecondary }}; --badge-color: {{ .Data.CardBadgeColor }}">
 		<img class="card-image" src="{{ .Data.CardArtwork }}" draggable="false">
