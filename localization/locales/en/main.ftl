@@ -39,7 +39,12 @@ search-user-submit = Search
 search-user-form-placeholder = Username
 
 navbar-label-toggle = Toggle menu
+navbar-label-main = Main navigation
+navbar-cards = Cards
+navbar-inventory = Inventory
 navbar-shop = Shop
+navbar-profile = Your profile
+navbar-logout = Log out
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
@@ -58,7 +63,6 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
 
-card-search-title = Search Cards
 card-search-placeholder = Search for cards
 card-search-empty = No cards found
 card-search-submit = Search
@@ -77,13 +81,24 @@ collection-count = { $count ->
 }
 collection-id = NO. { $id }
 
-collection-search-title = Search Collections
 collection-search-placeholder = Search for collections
 collection-search-empty = No collections found
 collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+
+catalog-title = Card catalog
+catalog-tabs-label = Catalog sections
+catalog-tab-cards = Cards
+catalog-tab-collections = Collections
+catalog-collection-count = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+catalog-filter-collection = Collection
+catalog-filter-collection-all = All collections
+catalog-sort-number = Collection order
 
 inventory-title = Your inventory
 inventory-title-other = { $username }'s inventory

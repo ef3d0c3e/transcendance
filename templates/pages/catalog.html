@@ -1,0 +1,92 @@
+{{ define "catalog" }}
+<div class="inventory catalog">
+	<div class="inventory-header">
+		<div class="inventory-heading">
+			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			{{ if ne (len .Data.Items) 0 }}
+			<p class="inventory-count">{{ .Data.Count }}</p>
+			{{ end }}
+		</div>
+		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Action }}" method="get">
+			{{ if eq .Data.Tab "cards" }}
+			<input type="text" id="q" name="q" placeholder="{{ .T "card-search-placeholder" }}"
+				value="{{ .Data.Query }}">
+			<button type="submit" aria-label={{ .T "card-search-submit" }}></button>
+			{{ else }}
+			<input type="text" id="q" name="q" placeholder="{{ .T "collection-search-placeholder" }}"
+				value="{{ .Data.Query }}">
+			<button type="submit" aria-label={{ .T "collection-search-submit" }}></button>
+			{{ end }}
+		</form>
+	</div>
+
+	<nav class="inventory-tabs" aria-label="{{ .T "catalog-tabs-label" }}">
+		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
+			{{ .T "catalog-tab-cards" }}
+		</a>
+		<a class="inventory-tab-boosters" href="{{ .Data.TabCollectionsUrl }}" {{ if eq .Data.Tab "collections" }}aria-current="page"{{ end }}>
+			{{ .T "catalog-tab-collections" }}
+		</a>
+	</nav>
+
+	{{ if eq .Data.Tab "cards" }}
+	<div class="inventory-filters">
+		<label>
+			<span>{{ .T "inventory-filter-rarity" }}</span>
+			<select name="rarity" form="search-form" data-autosubmit>
+				{{ range .Data.RarityOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "catalog-filter-collection" }}</span>
+			<select name="collection" form="search-form" data-autosubmit>
+				{{ range .Data.CollectionOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "inventory-sort" }}</span>
+			<select name="sort" form="search-form" data-autosubmit>
+				{{ range .Data.SortOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+	</div>
+	{{ end }}
+
+	{{ if .Data.Message }}
+	<div class="inventory-message">
+		<p>{{ .Data.Message }}</p>
+		{{ if .Data.Filtered }}
+		<a href="{{ .Data.ClearUrl }}">{{ .T "inventory-search-clear" }}</a>
+		{{ end }}
+	</div>
+	{{ end }}
+
+	{{ if ne (len .Data.Items) 0 }}
+	{{ .Children.Paginator }}
+	{{ if eq .Data.Tab "collections" }}
+	<e-cluster class="inventory-boosters" justify="center">
+		{{ range $val := .Data.Items }}
+		<a class="catalog-collection" href="{{ $val.Url }}">
+			{{ template "collection" $val }}
+		</a>
+		{{ end }}
+	</e-cluster>
+	{{ else }}
+	<e-cluster class="inventory-cards" justify="center">
+		{{ range $val := .Data.Items }}
+		{{ template "card" $val }}
+		{{ end }}
+	</e-cluster>
+	{{ end }}
+	{{ if gt .Data.Pages 1 }}
+	{{ .Children.Paginator }}
+	{{ end }}
+	{{ end }}
+</div>
+{{ end }}

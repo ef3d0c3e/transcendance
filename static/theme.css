@@ -202,6 +202,137 @@ header nav>span {
     align-items: center;
 }
 
+/* Page links next to the title, settings and account at the end */
+header nav {
+    flex: 1;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+
+        min-height: 2.5rem;
+        padding: 0.45rem 0.8rem;
+
+        color: var(--color-text-muted);
+        border-radius: 0.55rem;
+
+        font-weight: 600;
+        line-height: 1.3;
+        text-decoration: none;
+        white-space: nowrap;
+
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
+
+        &:hover {
+            color: var(--color-text);
+            background: var(--color-bg-4);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+
+        &[aria-current="page"] {
+            color: var(--color-accent-secondary);
+            background: color-mix(in srgb, var(--color-accent-secondary) 12%, transparent);
+        }
+    }
+}
+
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    margin-inline-start: auto;
+}
+
+.nav-account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding-inline-start: 0.75rem;
+
+    border-inline-start: 1px solid var(--color-border-1);
+}
+
+/* Username, links to the profile */
+.nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+
+    max-width: 14rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.8rem 0.45rem 0.65rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-weight: 650;
+    line-height: 1.3;
+    text-decoration: none;
+
+    transition: background-color 120ms ease;
+
+    svg {
+        flex: none;
+        color: var(--color-accent-secondary);
+    }
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &:hover {
+        color: var(--color-text);
+        background: color-mix(in srgb, var(--color-bg-4), black 10%);
+    }
+
+    &:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline-offset: 2px;
+    }
+
+    &[aria-current="page"] {
+        box-shadow: inset 0 0 0 2px var(--color-accent-secondary);
+    }
+}
+
+/* Logging out is the neutral action */
+.nav-logout {
+    color: var(--color-text);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--color-border-2);
+
+    &:hover {
+        background: var(--color-bg-4);
+    }
+}
+
+/* Natural width of the nav, measured to pick the compact layout */
+header.is-measuring nav {
+    flex: none;
+}
+
 
 /* Hide controls when expanded */
 .nav-toggle,
@@ -280,6 +411,33 @@ header.is-compact nav>span {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+}
+
+header.is-compact .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+header.is-compact .nav-end {
+    flex-wrap: wrap;
+    margin-inline-start: 0;
+    padding-top: 1rem;
+
+    border-top: 1px solid var(--color-border-1);
+}
+
+header.is-compact .nav-account {
+    flex-direction: column;
+    align-items: stretch;
+
+    width: 100%;
+    padding-inline-start: 0;
+
+    border-inline-start: 0;
+}
+
+header.is-compact .nav-user {
+    max-width: none;
 }
 
 header.is-compact .nav-toggle:checked~nav {
@@ -828,6 +986,26 @@ section {
     font-weight: 700;
     font-variant-numeric: tabular-nums;
     text-align: center;
+}
+
+/* Collection tile of the catalog, links to its cards */
+.catalog-collection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    color: inherit;
+    text-decoration: none;
+    border-radius: 1rem;
+
+    &:hover {
+        color: inherit;
+    }
+
+    &:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline-offset: 4px;
+    }
 }
 
 /* Booster tile, clicking it asks to open the booster */
