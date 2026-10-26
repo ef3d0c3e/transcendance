@@ -50,3 +50,9 @@ friends-pending = Pending invite
 friends-respond-message = This user has sent you a friend invite
 friends-unknown-error = Something went wrong !
 friends-spam-error = You may only have one outgoing invite active
+
+account-delete-success = { $username }'s account has been deleted
+account-delete-success-self = Your account has been deleted
+account-delete-error-generic = Failed to delete account
+account-delete-error-missing = Missing account name
+account-delete-error-permission = You do not have permissions to delete { $username }'s account
