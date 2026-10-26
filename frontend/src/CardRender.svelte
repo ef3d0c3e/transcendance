@@ -134,6 +134,8 @@
 		}
 
 		function onPointerDown(e) {
+			// No tilt on touch, it would prevent scrolling over cards
+			if (e.pointerType === "touch") return;
 			if (e.pointerType === "mouse" && e.button !== 0) return;
 
 			// Allow clicking on the link
@@ -164,6 +166,7 @@
 		}
 
 		function onPointerMove(e) {
+			if (e.pointerType === "touch") return;
 			if (drag && e.pointerId === drag.pointerId) {
 				tiltFrom(drag.card, e.clientX, e.clientY);
 				return;
