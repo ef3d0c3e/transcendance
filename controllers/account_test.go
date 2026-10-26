@@ -82,7 +82,7 @@ func login(t *testing.T, router *gin.Engine, username string, password string) *
 }
 
 func TestAccountDeleteSelf1(t *testing.T) {
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foo1", "123456789", 0)
 
 	// Login
@@ -111,7 +111,7 @@ func TestAccountDeleteSelf1(t *testing.T) {
 }
 
 func TestAccountDeleteSelf2(t *testing.T) {
-	router := tests.Run(tests.DB)
+	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foo2", "123456789", 0)
 
 	// Login
@@ -142,7 +142,7 @@ func TestAccountDeleteSelf2(t *testing.T) {
 func TestAccountDeleteOtherPermission(t *testing.T) {
 	// User -> User: Fail
 	{
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo3", "123456789", 0)
 		createAccount(t, router, "other1", "123456789", 0)
 
@@ -165,7 +165,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 	// Mod -> User: Ok
 	{
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo4", "123456789", 1)
 		createAccount(t, router, "other2", "123456789", 0)
 
@@ -195,7 +195,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 	// Mod -> Mod: Fail
 	{
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo5", "123456789", 1)
 		createAccount(t, router, "other3", "123456789", 1)
 
@@ -218,7 +218,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 	// Amin -> Mod: Ok
 	{
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo6", "123456789", 2)
 		createAccount(t, router, "other4", "123456789", 1)
 
@@ -248,7 +248,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 	// Amin -> Admin: Ok
 	{
-		router := tests.Run(tests.DB)
+		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo7", "123456789", 2)
 		createAccount(t, router, "other5", "123456789", 2)
 

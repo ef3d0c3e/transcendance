@@ -25,6 +25,7 @@ npm i vite \
 ```
 
 To build frontend components, go to `frontend/` and execute `npm run build` (or `make frontend` from the root)
+You can use `npx vite build --watch` inside the `frontend/` directory to automatically rebuild when you edit a Svelte file.
 
 ## Running the server
 
@@ -70,6 +71,9 @@ update users set rank = 2 where username='admin';
  * [bcrypt](https://golang.org/x/crypto/bcrypt) bcrypt implementation
  * [gofluent](https://github.com/hakastein/gofluent) Fluent for Go
  * [testify](https://https://github.com/stretchr/testify) Assertion library
+ * [go-toml](https://github.com/pelletier/go-toml) TOML support
+ * [github.com/chai2010/webp](https://golang.org/x/image/webp) WEBP image support, the standard one doesn't support encoding
+ * [blevesearch/bleve](https://github.com/blevesearch/bleve) Search engine library
 
 # Static routes
 
