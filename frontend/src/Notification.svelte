@@ -18,8 +18,8 @@
 	let error = $state(false);
 	let open = $state(false);
 
-	let root;
-	let trigger;
+	let root = $state(undefined);
+	let trigger = $state(undefined);
 
 	async function load() {
 		if (loading) {

@@ -202,6 +202,137 @@ header nav>span {
     align-items: center;
 }
 
+/* Page links next to the title, settings and account at the end */
+header nav {
+    flex: 1;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+
+        min-height: 2.5rem;
+        padding: 0.45rem 0.8rem;
+
+        color: var(--color-text-muted);
+        border-radius: 0.55rem;
+
+        font-weight: 600;
+        line-height: 1.3;
+        text-decoration: none;
+        white-space: nowrap;
+
+        transition:
+            background-color 120ms ease,
+            color 120ms ease;
+
+        &:hover {
+            color: var(--color-text);
+            background: var(--color-bg-4);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+
+        &[aria-current="page"] {
+            color: var(--color-accent-secondary);
+            background: color-mix(in srgb, var(--color-accent-secondary) 12%, transparent);
+        }
+    }
+}
+
+.nav-end {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    margin-inline-start: auto;
+}
+
+.nav-account {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    padding-inline-start: 0.75rem;
+
+    border-inline-start: 1px solid var(--color-border-1);
+}
+
+/* Username, links to the profile */
+.nav-user {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+
+    max-width: 14rem;
+    min-height: 2.5rem;
+    padding: 0.45rem 0.8rem 0.45rem 0.65rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-weight: 650;
+    line-height: 1.3;
+    text-decoration: none;
+
+    transition: background-color 120ms ease;
+
+    svg {
+        flex: none;
+        color: var(--color-accent-secondary);
+    }
+
+    span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    &:hover {
+        color: var(--color-text);
+        background: color-mix(in srgb, var(--color-bg-4), black 10%);
+    }
+
+    &:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline-offset: 2px;
+    }
+
+    &[aria-current="page"] {
+        box-shadow: inset 0 0 0 2px var(--color-accent-secondary);
+    }
+}
+
+/* Logging out is the neutral action */
+.nav-logout {
+    color: var(--color-text);
+    background: transparent;
+    box-shadow: inset 0 0 0 1px var(--color-border-2);
+
+    &:hover {
+        background: var(--color-bg-4);
+    }
+}
+
+/* Natural width of the nav, measured to pick the compact layout */
+header.is-measuring nav {
+    flex: none;
+}
+
 
 /* Hide controls when expanded */
 .nav-toggle,
@@ -280,6 +411,33 @@ header.is-compact nav>span {
     display: flex;
     flex-direction: column;
     align-items: stretch;
+}
+
+header.is-compact .nav-links {
+    flex-direction: column;
+    align-items: stretch;
+}
+
+header.is-compact .nav-end {
+    flex-wrap: wrap;
+    margin-inline-start: 0;
+    padding-top: 1rem;
+
+    border-top: 1px solid var(--color-border-1);
+}
+
+header.is-compact .nav-account {
+    flex-direction: column;
+    align-items: stretch;
+
+    width: 100%;
+    padding-inline-start: 0;
+
+    border-inline-start: 0;
+}
+
+header.is-compact .nav-user {
+    max-width: none;
 }
 
 header.is-compact .nav-toggle:checked~nav {
@@ -708,6 +866,359 @@ section {
     .paginator__arrow {
         font-size: 1.25rem;
     }
+}
+
+/* }}} */
+
+/* {{{ Inventory */
+.inventory {
+    width: 100%;
+    max-width: 76rem;
+    margin: 0 auto;
+    padding-inline: 1rem;
+}
+
+.inventory-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+
+    margin-bottom: 1rem;
+}
+
+/* Tab selector */
+.inventory-tabs {
+    --icon-cards: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M5 1.5h8A1.5 1.5 0 0 1 14.5 3v9A1.5 1.5 0 0 1 13 13.5H5A1.5 1.5 0 0 1 3.5 12V3A1.5 1.5 0 0 1 5 1.5Zm0 1.5v9h8V3H5Z'/%3E%3Cpath d='M1.5 4.5H3v9h8V15H3a1.5 1.5 0 0 1-1.5-1.5v-9Z'/%3E%3C/svg%3E");
+    --icon-booster: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h10l-.75 1L13 3v10l-.75 1 .75 1H3l.75-1L3 13V3l.75-1L3 1Zm2 4v1.5h6V5H5Z'/%3E%3C/svg%3E");
+
+    display: flex;
+    gap: 0.5rem;
+
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+
+    border-bottom: 1px solid var(--color-border-1);
+
+    /* Unselected tabs look like neutral buttons (language switcher) */
+    a {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        min-height: 2.5rem;
+        padding: 0.45rem 0.75rem 0.45rem 0.9rem;
+
+        color: var(--color-text);
+        background: var(--color-bg-4);
+
+        border: 0;
+        border-radius: 0.55rem;
+
+        font-weight: 600;
+        line-height: 1.3;
+        text-decoration: none;
+
+        transition:
+            background-color 120ms ease,
+            transform 120ms ease;
+
+        &::before {
+            content: "";
+            flex: none;
+            width: 1.05rem;
+            height: 1.05rem;
+
+            background-color: currentColor;
+            mask: var(--icon) center / contain no-repeat;
+        }
+
+        &:hover {
+            color: var(--color-text);
+            background: color-mix(in srgb, var(--color-bg-4), black 10%);
+        }
+
+        &:active {
+            transform: translateY(1px);
+            background: color-mix(in srgb, var(--color-bg-4), black 20%);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+
+        /* Selected tab looks like the generic buttons */
+        &[aria-current="page"] {
+            color: var(--color-text-alt);
+            background: var(--color-accent-secondary);
+
+            &:hover {
+                background: var(--color-accent-secondary-dark);
+            }
+
+            .inventory-tab-count {
+                color: var(--color-text-alt);
+                background: rgb(255 255 255 / 22%);
+            }
+        }
+    }
+
+    .inventory-tab-cards {
+        --icon: var(--icon-cards);
+    }
+
+    .inventory-tab-boosters {
+        --icon: var(--icon-booster);
+    }
+}
+
+.inventory-tab-count {
+    min-width: 1.6rem;
+    padding: 0.1rem 0.45rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-2);
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+/* Collection tile of the catalog, links to its cards */
+.catalog-collection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    color: inherit;
+    text-decoration: none;
+    border-radius: 1rem;
+
+    &:hover {
+        color: inherit;
+    }
+
+    &:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline-offset: 4px;
+    }
+}
+
+/* Booster tile, clicking it asks to open the booster */
+.inventory-booster {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Number of identical boosters in a stack */
+/* Number of copies of a folded booster or card */
+.collection-stack,
+.card-stack {
+    position: absolute;
+    top: -0.6rem;
+    right: -0.6rem;
+    z-index: 20;
+
+    min-width: 2.25rem;
+    padding: 0.2rem 0.6rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+}
+
+.inventory-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.25rem 0.75rem;
+    min-width: 0;
+}
+
+.inventory-title {
+    margin: 0;
+
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+}
+
+.inventory-count {
+    margin: 0;
+    padding: 0.15rem 0.7rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: 999px;
+
+    font-size: 0.875rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+.search-form.inventory-search {
+    flex: 1 1 18rem;
+    width: auto;
+    max-width: 26rem;
+    margin: 0;
+}
+
+/* Card filters and sort, part of the search form */
+.inventory-filters {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.75rem 1.25rem;
+
+    margin: -0.5rem 0 1.5rem;
+
+    label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+
+        color: var(--color-text-muted);
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    select {
+        min-height: 2.25rem;
+        padding: 0.3rem 0.65rem;
+
+        color: var(--color-text);
+        background: var(--color-bg-4);
+        border: 1px solid var(--color-border-1);
+        border-radius: 0.55rem;
+
+        font-size: 0.95rem;
+        font-weight: 500;
+        cursor: pointer;
+
+        &:hover {
+            background: color-mix(in srgb, var(--color-bg-4), black 10%);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+    }
+}
+
+.inventory-message {
+    max-width: 32rem;
+    margin: 2rem auto;
+    padding: 2.5rem 1.5rem;
+
+    text-align: center;
+    color: var(--color-text-muted);
+    background: var(--color-bg-2);
+    border: 1px dashed var(--color-border-2);
+    border-radius: 1rem;
+
+    p {
+        margin: 0;
+        font-weight: 500;
+    }
+
+    a {
+        display: inline-block;
+        margin-top: 0.75rem;
+        font-weight: 600;
+    }
+}
+
+.inventory .paginator {
+    margin: 0 0 1.5rem;
+}
+
+.inventory-cards+.paginator,
+.inventory-boosters+.paginator {
+    margin: 1.5rem 0 0;
+}
+
+@media (max-width: 480px) {
+    .inventory {
+        padding-inline: 0.75rem;
+    }
+
+    .inventory-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .search-form.inventory-search {
+        flex-basis: auto;
+        max-width: none;
+    }
+
+    .inventory-filters {
+        flex-direction: column;
+        align-items: stretch;
+
+        label {
+            justify-content: space-between;
+        }
+
+        select {
+            flex: 0 1 12rem;
+        }
+    }
+}
+
+/* }}} */
+
+/* {{{ Pack opening */
+.pack-booster {
+    display: flex;
+    justify-content: center;
+
+    margin: 1rem 0 1.5rem;
+}
+
+.pack-form {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem 1rem;
+
+    margin: 0 auto 1rem;
+
+    #form-result {
+        flex-basis: 100%;
+        margin: 0;
+    }
+
+    select {
+        min-height: 2.5rem;
+        padding: 0.45rem 0.75rem;
+
+        color: var(--color-text);
+        background: var(--color-bg-4);
+        border: 1px solid var(--color-border-1);
+        border-radius: 0.55rem;
+    }
+}
+
+.pack-back {
+    font-weight: 600;
 }
 /* }}} */
 

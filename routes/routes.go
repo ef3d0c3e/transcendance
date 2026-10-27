@@ -76,4 +76,24 @@ func RegisterRoutes(
 	// Debug: send a notification to the authenticated user
 	router.GET("/add_notification", notificationController.AddNotificationGet)
 	router.POST("/add_notification", notificationController.AddNotificationPost)
+
+	router.GET("/inventory", dataController.InventoryGet)
+	router.GET("/add", dataController.InventoryAddGet)
+
+	router.GET("/opening", dataController.OpeningGet)
+	router.POST("/opening", dataController.OpeningPost)
+
+	// Debug: add a booster to the authenticated user's inventory
+	router.GET("/add_booster", dataController.AddBoosterGet)
+	router.POST("/add_booster", dataController.AddBoosterPost)
+
+	// Shop
+	shopController := controllers.ShopController{
+		DB:       db,
+		Renderer: renderer,
+		Data:     data,
+	}
+	router.GET("/shop", shopController.ShopGet)
+	router.POST("/shop/topup", shopController.ShopTopupPost)
+	router.POST("/shop/buy", shopController.ShopBuyPost)
 }
