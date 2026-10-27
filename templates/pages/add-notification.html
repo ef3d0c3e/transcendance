@@ -1,0 +1,19 @@
+{{ define "add-notification" }}
+<h2>Add a notification (debug)</h2>
+
+<form action="/add_notification" method="post">
+	<input type="hidden" name="type" value="friend-request">
+	<label for="notification-username">Friend request from</label>
+	<input id="notification-username" name="username" value="foobar" required>
+	<button type="submit">Add friend request</button>
+</form>
+
+<form action="/add_notification" method="post">
+	<input type="hidden" name="type" value="info">
+	<label for="notification-title">Title</label>
+	<input id="notification-title" name="title" value="Information" required>
+	<label for="notification-description">Description</label>
+	<input id="notification-description" name="description" value="Something happened" required>
+	<button type="submit">Add info</button>
+</form>
+{{ end }}

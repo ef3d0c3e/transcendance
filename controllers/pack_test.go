@@ -32,11 +32,6 @@ type openingResponse struct {
 	Message        string          `json:"message"`
 }
 
-// Fluent wraps placeables in unicode bidi isolation marks
-func stripIsolation(s string) string {
-	return strings.NewReplacer("\u2068", "", "\u2069", "").Replace(s)
-}
-
 var cardTitleRe = regexp.MustCompile(`<h2 class="card-title">([^<]*)</h2>`)
 
 func postForm(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string, form url.Values) *httptest.ResponseRecorder {
