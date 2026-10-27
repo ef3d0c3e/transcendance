@@ -87,6 +87,27 @@ collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
 
+notification-title = Notifications
+notification-unread = non lues
+notification-loading = Chargement des notifications...
+notification-none = Vous êtes à jour
+notification-error = Impossible de charger les notifications
+notification-view-all = Voir toutes les notifications
+notification-mark-all-read = Tout marquer comme lu
+notification-mark-read = Marquer comme lue
+notification-mark-unread = Marquer comme non lue
+notification-delete = Supprimer
+notification-tabs-label = Filtrer les notifications
+notification-tab-all = Toutes
+notification-tab-unread = Non lues
+notification-empty-all = Aucune notification pour le moment
+notification-empty-unread = Aucune notification non lue
+
+notification-friend-request-title = Demande en Ami
+notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-info-title = { $title }
+notification-info-desc = { $description }
+
 catalog-title = Catalogue de cartes
 catalog-tabs-label = Sections du catalogue
 catalog-tab-cards = Cartes

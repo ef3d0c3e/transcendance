@@ -88,6 +88,27 @@ collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
 
+notification-title = Notifications
+notification-unread = unread
+notification-loading = Loading notifications...
+notification-none = You're all caught up
+notification-error = Could not load notifications
+notification-view-all = View all notifications
+notification-mark-all-read = Mark all as read
+notification-mark-read = Mark as read
+notification-mark-unread = Mark as unread
+notification-delete = Dismiss
+notification-tabs-label = Filter notifications
+notification-tab-all = All
+notification-tab-unread = Unread
+notification-empty-all = No notifications yet
+notification-empty-unread = No unread notifications
+
+notification-friend-request-title = Friend Request
+notification-friend-request-desc = { $username } sent you a friend request
+notification-info-title = { $title }
+notification-info-desc = { $description }
+
 catalog-title = Card catalog
 catalog-tabs-label = Catalog sections
 catalog-tab-cards = Cards

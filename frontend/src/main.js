@@ -10,6 +10,8 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
+import Notification from './Notification.svelte';
+import { enhanceNotificationList } from './relative-time.js';
 
 // Navbar
 {
@@ -34,6 +36,29 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 		mount(ThemeSwitcher, {
 			target,
 		});
+	}
+}
+
+// Notifications
+{
+	const target = document.querySelector('#notification');
+
+	if (target) {
+		mount(Notification, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
+// Notifications page
+{
+	const target = document.querySelector('#notification-list');
+
+	if (target) {
+		enhanceNotificationList(target);
 	}
 }
 
