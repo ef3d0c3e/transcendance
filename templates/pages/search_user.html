@@ -33,6 +33,7 @@
 		<img src="/static/profile-picture.svg" class="profile-picture">
 	{{ end }}
 		<a href="/profile/{{$val.Username}}">{{$val.Username}}</a>
+		<div id="friend-button" data-id={{$val.ID}}></div>
 	</li>
 {{ end }}
 </ul>

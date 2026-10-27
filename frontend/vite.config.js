@@ -9,13 +9,7 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			input: {
-<<<<<<< HEAD
-				register: "src/register.js",
-				login: "src/login.js",
-				friendbutton: "src/friendbutton.js",
-=======
 				main: "src/main.js",
->>>>>>> master
 			},
 			output: {
 				entryFileNames: "[name].js",

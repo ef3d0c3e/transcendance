@@ -2,9 +2,9 @@ package models
 
 type Relation struct {
 	ID uint `gorm:"primaryKey"`
-	UserID uint `gorm:"not null;index"`
+	UserID uint
 	User   User `gorm:"constraint:OnDelete:CASCADE"`
-	TargetID uint `gorm:"not null;index"`
+	TargetID uint
 	Target   User `gorm:"constraint:OnDelete:CASCADE"`
 	Type string `gorm:"not null"`
 }

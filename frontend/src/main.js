@@ -1,6 +1,8 @@
 import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
+import FriendButton from './FriendButton.svelte';
+import Friends from './FriendsEnhancement.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
@@ -112,6 +114,27 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				onSuccess: () => {},
 			},
 		});
+	}
+}
+
+// Friend Button
+{
+	if (document.querySelector("#friend-button") != null) {
+		const friendbutton = mount(FriendButton, {
+			target: document.querySelector('#friend-button'),
+			props: {
+				id: document.querySelector('#friend-button').getAttribute('data-id'),
+			}
+		});
+	}
+}
+
+// Friends List
+{
+	const target = document.querySelector('#friends-list');
+
+	if (target) {
+		mount(Friends, {target});
 	}
 }
 
