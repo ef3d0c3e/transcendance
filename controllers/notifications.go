@@ -15,11 +15,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type NotificationController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 const (
 	notificationPageSize    = 15
 	notificationMaxPageSize = 50
@@ -28,7 +23,7 @@ const (
 )
 
 // Translate a notification's title and description, using its data as arguments
-func (nc *NotificationController) translate(c *gin.Context, notif *models.Notification) (string, string) {
+func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (string, string) {
 	args := make([]any, 0, len(notif.Data)*2)
 	for key, value := range notif.Data {
 		args = append(args, key, value)
@@ -39,7 +34,7 @@ func (nc *NotificationController) translate(c *gin.Context, notif *models.Notifi
 }
 
 // Get the user's notification by the `ID` param, writes the error response if any
-func (nc *NotificationController) find(c *gin.Context, userID uint) (*models.Notification, bool) {
+func (nc *Controller) find(c *gin.Context, userID uint) (*models.Notification, bool) {
 	notif, err := gorm.G[models.Notification](nc.DB).
 		Where("id = ? AND user_id = ?", c.Param("ID"), userID).
 		First(c.Request.Context())
@@ -55,7 +50,7 @@ func (nc *NotificationController) find(c *gin.Context, userID uint) (*models.Not
 }
 
 // /notifications GET: notifications page
-func (nc *NotificationController) NotificationsGet(c *gin.Context) {
+func (nc *Controller) NotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
@@ -112,7 +107,7 @@ func (nc *NotificationController) NotificationsGet(c *gin.Context) {
 }
 
 // /notification/:ID GET: mark the notification as read and open its page
-func (nc *NotificationController) NotificationGet(c *gin.Context) {
+func (nc *Controller) NotificationGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
@@ -145,7 +140,7 @@ type notificationList struct {
 }
 
 // A page of the user's notifications, newest first, with the user's unread count
-func (nc *NotificationController) list(c *gin.Context, userID uint, filter string, page int, limit int) (notificationList, error) {
+func (nc *Controller) list(c *gin.Context, userID uint, filter string, page int, limit int) (notificationList, error) {
 	var list notificationList
 
 	query := nc.DB.Model(&models.Notification{}).Where("user_id = ?", userID)
@@ -204,7 +199,7 @@ func respondAction(c *gin.Context) {
 // /api/notifications GET: a page of the user's notifications, newest first
 //
 // Query: `page` (from 1), `limit` (page size), `filter=unread` to only list unread ones
-func (nc *NotificationController) ApiNotificationsGet(c *gin.Context) {
+func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
@@ -237,7 +232,7 @@ func (nc *NotificationController) ApiNotificationsGet(c *gin.Context) {
 }
 
 // Set whether a notification is read
-func (nc *NotificationController) setRead(c *gin.Context, read bool) {
+func (nc *Controller) setRead(c *gin.Context, read bool) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
@@ -263,17 +258,17 @@ func (nc *NotificationController) setRead(c *gin.Context, read bool) {
 }
 
 // /api/notifications/:ID/read POST: mark a notification as read
-func (nc *NotificationController) ApiNotificationReadPost(c *gin.Context) {
+func (nc *Controller) ApiNotificationReadPost(c *gin.Context) {
 	nc.setRead(c, true)
 }
 
 // /api/notifications/:ID/unread POST: mark a notification as unread
-func (nc *NotificationController) ApiNotificationUnreadPost(c *gin.Context) {
+func (nc *Controller) ApiNotificationUnreadPost(c *gin.Context) {
 	nc.setRead(c, false)
 }
 
 // /api/notifications/:ID/delete POST: dismiss a notification
-func (nc *NotificationController) ApiNotificationDeletePost(c *gin.Context) {
+func (nc *Controller) ApiNotificationDeletePost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
@@ -292,7 +287,7 @@ func (nc *NotificationController) ApiNotificationDeletePost(c *gin.Context) {
 }
 
 // /api/notifications/read_all POST: mark all of the user's notifications as read
-func (nc *NotificationController) ApiNotificationsReadAllPost(c *gin.Context) {
+func (nc *Controller) ApiNotificationsReadAllPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "You must be authenticated"})
@@ -310,7 +305,7 @@ func (nc *NotificationController) ApiNotificationsReadAllPost(c *gin.Context) {
 }
 
 // /add_notification GET: debug page to send a notification to yourself
-func (nc *NotificationController) AddNotificationGet(c *gin.Context) {
+func (nc *Controller) AddNotificationGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
@@ -327,7 +322,7 @@ func (nc *NotificationController) AddNotificationGet(c *gin.Context) {
 }
 
 // /add_notification POST: send a notification to yourself, then show the notifications
-func (nc *NotificationController) AddNotificationPost(c *gin.Context) {
+func (nc *Controller) AddNotificationPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.String(http.StatusForbidden, "You must be authenticated")
