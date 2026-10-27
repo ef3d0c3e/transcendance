@@ -46,15 +46,15 @@ func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
 	userID := GetAuthenticatedUser(c).ID;
 	targetID := c.Param("target")
 	if (targetID == "/") { //no target, query all relations from active user
-		rel := models.Relation{}
+		var rel []models.Relation;
 		res := fc.DB.Find(&rel).
 		Where("user_id = ?", userID).
 		Order("Type")
 		if res.RowsAffected == 0 {
-			c.JSON(http.StatusOK, "No friends or pending requests")
+			//c.JSON(http.StatusOK, "No friends or pending requests")
 			return
 		}
-		c.JSON(http.StatusOK, gin.H{"Relations:": rel})
+		c.JSON(http.StatusOK, gin.H{"relations": rel})
 	} else { //query specific relation
 		targetID = strings.ReplaceAll(targetID, "/", "")
 		targetID, _ := strconv.Atoi(targetID)
@@ -71,11 +71,6 @@ func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
 func updateRelation(db *gorm.DB, user, target models.User, action string){
 	var relation models.Relation
 	switch action {
-	case "friends":
-		db.Find(&relation).
-		Where("user_id = ? and target_id = ?", user.ID, target.ID).
-		Update("Type", "friends")
-		//send notification
 	case "delete":
 		res := db.Where("user_id = ? and target_id = ?", user.ID, target.ID).
 		Delete(&relation)
@@ -139,6 +134,7 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 		}
 		updateRelation(fc.DB, user, target, "pending")
 	case relationStr == "respond" && (action == "add" || action == "accept"):
+		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "friends")
 		updateRelation(fc.DB, target, user, "friends")
 	case relationStr == "respond" && action == "deny":

@@ -1,28 +1,30 @@
 <script lang="ts">
-	import { onMount } from "svelte";
 	import FriendButton from "./FriendButton.svelte";
 
-	let relations = $state([]);
+	async function loadFriends() {
+		const res = await fetch('/api/friends');
+		const data = await res.json();
+		console.log(data.relations);
+		return new Promise((fulfil) => {
+		fulfil(data.relations ?? []);
+		})
+	}
+	let promise = $state(loadFriends());
 
-	onMount(() => {
-		async function loadFriends() {
-			const res = await fetch('/api/friends');
-			const data = await res.json();
-			relations = (data.relations ?? []);
-		}
-		loadFriends();
-	})
 </script>
 
-{#if relations.length === 0}
-	<p>No Friends</p>
-{:else}
-	{#each relations as relation}
-		<div>
-			<p>1</p>
-			<p>{relation.Target.Username}</p>
-			<FriendButton data-id={relation.TargetID}></FriendButton>
-		</div>
-	{/each}
-	<p>FooBar test</p>
-{/if}
+{#await promise}
+	<p>Loading relations...</p>
+{:then relations}
+	{#if relations.length === 0}
+		<p>No Friends</p>
+	{:else}
+		{#each relations as relation}
+			<div>
+				<p>{relation.Target.Username}</p>
+				<FriendButton data-id={relation.TargetID}></FriendButton>
+			</div>
+		{/each}
+		<p>FooBar test</p>
+	{/if}
+{/await}
