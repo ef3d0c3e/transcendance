@@ -17,6 +17,8 @@
 
 		function update() {
 			header.classList.remove('is-compact', 'nav-animate');
+			// The nav grows to fill the header, measure its content instead
+			header.classList.add('is-measuring');
 
 			const cs = getComputedStyle(header);
 			const available =
@@ -25,6 +27,7 @@
 				title.getBoundingClientRect().width +
 				nav.getBoundingClientRect().width +
 				parseFloat(cs.columnGap);
+			header.classList.remove('is-measuring');
 
 			const next = needed > available;
 			header.classList.toggle('is-compact', next);
