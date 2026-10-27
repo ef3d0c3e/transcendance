@@ -18,12 +18,6 @@ import (
 	"transcendance/views"
 )
 
-type ShopController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-	Data     *data.Data
-}
-
 // defaultBoosterPrice is the coin price of one booster, for collections
 // without an entry in boosterPrices.
 const defaultBoosterPrice = 250
@@ -97,7 +91,7 @@ func collectionTitle(collection *data.Collection, locale string) string {
 }
 
 // collectionTile builds the template data consumed by the "collection" partial.
-func (sc *ShopController) collectionTile(c *gin.Context, collection *data.Collection, title string) map[string]any {
+func (sc *Controller) collectionTile(c *gin.Context, collection *data.Collection, title string) map[string]any {
 	return map[string]any{
 		"CollectionContainerData": template.HTMLAttr(`data-tilt`),
 		"CollectionArtwork":       "/collections/" + strconv.Itoa(collection.ID) + "/thumbnail",
@@ -119,7 +113,7 @@ type shopNotice struct {
 }
 
 // notice builds the notice shown after a shop round-trip, if any.
-func (sc *ShopController) notice(c *gin.Context) shopNotice {
+func (sc *Controller) notice(c *gin.Context) shopNotice {
 	locale := sc.Renderer.Localizer.GetLocale(c)
 
 	if bought := c.Query("bought"); bought != "" {
@@ -168,7 +162,7 @@ func (sc *ShopController) notice(c *gin.Context) shopNotice {
 	}
 }
 
-func (sc *ShopController) ShopGet(c *gin.Context) {
+func (sc *Controller) ShopGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	locale := sc.Renderer.Localizer.GetLocale(c)
@@ -230,7 +224,7 @@ var errInsufficientFunds = errors.New("insufficient funds")
 
 // ShopBuyPost spends coins on boosters of a collection and adds them to the
 // inventory. The reply is a redirect so refreshing the shop cannot buy twice.
-func (sc *ShopController) ShopBuyPost(c *gin.Context) {
+func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/shop?error=auth")
@@ -304,7 +298,7 @@ func (sc *ShopController) ShopBuyPost(c *gin.Context) {
 
 // ShopTopupPost credits the coins of a pack to the logged in account.
 // The reply is a redirect so refreshing the shop cannot credit a pack twice.
-func (sc *ShopController) ShopTopupPost(c *gin.Context) {
+func (sc *Controller) ShopTopupPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/shop?error=auth")

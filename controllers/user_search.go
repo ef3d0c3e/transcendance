@@ -10,12 +10,7 @@ import (
 	"transcendance/views"
 )
 
-type SearchController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
-func (sc *SearchController) SearchUsersGet(c *gin.Context) {
+func (sc *Controller) SearchUsersGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	username := c.Query("username")
