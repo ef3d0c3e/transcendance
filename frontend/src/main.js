@@ -62,7 +62,6 @@ import { enhanceNotificationList } from './relative-time.js';
 	}
 }
 
-
 // Log out, then land on a page visitors can see
 {
 	for (const button of document.querySelectorAll('[data-logout]')) {
