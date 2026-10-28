@@ -30,6 +30,28 @@ var boosterPrices = map[int]uint{}
 // sells. The buy popup advertises it so its stepper cannot exceed it.
 const maxBuyQuantity = 10
 
+// boosterPileCap is how many default boosters a pile holds at most.
+const boosterPileCap = 5
+
+// boosterPileInterval is the time between two default boosters of a pile
+// that is not full.
+const boosterPileInterval = 10 * time.Minute
+
+// dailyStreakRewards is the coin reward of each day of the connection
+// streak, day 1 first. Days past the last entry keep paying the last amount.
+var dailyStreakRewards = []uint{200, 300, 500, 700, 1000}
+
+// dailyStreakReward returns the coins a streak day pays.
+func dailyStreakReward(day uint) uint {
+	if day < 1 {
+		day = 1
+	}
+	if int(day) > len(dailyStreakRewards) {
+		return dailyStreakRewards[len(dailyStreakRewards)-1]
+	}
+	return dailyStreakRewards[day-1]
+}
+
 // boosterPrice returns the coin price of one booster of a collection.
 func boosterPrice(collectionID int) uint {
 	if price, ok := boosterPrices[collectionID]; ok {

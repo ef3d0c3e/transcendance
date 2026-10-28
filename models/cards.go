@@ -28,3 +28,14 @@ type Booster struct {
 	OwnerID uint `gorm:"not null;index"`
 	Owner   User `gorm:"constraint:OnDelete:CASCADE"`
 }
+
+// A user's pile of default boosters, which refills over time up to a cap
+type BoosterPile struct {
+	OwnerID uint `gorm:"primaryKey"`
+	Owner   User `gorm:"constraint:OnDelete:CASCADE"`
+
+	// Boosters currently in the pile
+	Count uint `gorm:"not null;default:0"`
+	// Time at which the next booster joins the pile, nil while the pile is full
+	NextAt *time.Time
+}

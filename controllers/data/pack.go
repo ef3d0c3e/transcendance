@@ -84,28 +84,35 @@ func pickTier(rolled string, available map[string]bool) string {
 	return ""
 }
 
+// poolCard is one card of a draw pool, with the collection it belongs to
+type poolCard struct {
+	card       *data.Card
+	collection *data.Collection
+}
+
 // groupByRarity indexes the cards of a collection by rarity
-func groupByRarity(cards map[string]*data.Card, collection *data.Collection) map[string][]*data.Card {
-	byRarity := make(map[string][]*data.Card, len(rarityTiers))
+func groupByRarity(cards map[string]*data.Card, collection *data.Collection) map[string][]poolCard {
+	byRarity := make(map[string][]poolCard, len(rarityTiers))
 	for _, entry := range collection.Cards {
 		card, ok := cards[entry.Name]
 		if !ok {
 			continue
 		}
-		byRarity[card.Rarity] = append(byRarity[card.Rarity], card)
+		byRarity[card.Rarity] = append(byRarity[card.Rarity], poolCard{card: card, collection: collection})
 	}
 	return byRarity
 }
 
 // stripEntry is one slot on an opening reel
 type stripEntry struct {
-	Card *data.Card
-	Win  bool
+	Card       *data.Card
+	Collection *data.Collection
+	Win        bool
 }
 
 // flattenByRarity returns every card of the collection in one slice
-func flattenByRarity(byRarity map[string][]*data.Card) []*data.Card {
-	pool := make([]*data.Card, 0)
+func flattenByRarity(byRarity map[string][]poolCard) []poolCard {
+	pool := make([]poolCard, 0)
 	for _, tier := range rarityTiers {
 		pool = append(pool, byRarity[tier]...)
 	}
@@ -114,41 +121,60 @@ func flattenByRarity(byRarity map[string][]*data.Card) []*data.Card {
 
 // buildReel returns the stack for one won card: cards above the winner at
 // index reelAbove, the winner, then the cards that will run past the window
-// as the reel drops. Returns nil when the collection holds no card to fill
-// with.
-func buildReel(rnd *rand.Rand, pool []*data.Card, winner *data.Card) []stripEntry {
+// as the reel drops. Returns nil when the pool holds no card to fill with.
+func buildReel(rnd *rand.Rand, pool []poolCard, winner poolCard) []stripEntry {
 	if len(pool) == 0 {
 		return nil
 	}
 
 	strip := make([]stripEntry, 0, reelAbove+1+reelBelow)
 	for i := 0; i < reelAbove; i++ {
-		strip = append(strip, stripEntry{Card: pool[rnd.N(len(pool))], Win: false})
+		strip = append(strip, newStripEntry(pool[rnd.N(len(pool))], false))
 	}
-	strip = append(strip, stripEntry{Card: winner, Win: true})
+	strip = append(strip, newStripEntry(winner, true))
 	for i := 0; i < reelBelow; i++ {
-		strip = append(strip, stripEntry{Card: pool[rnd.N(len(pool))], Win: false})
+		strip = append(strip, newStripEntry(pool[rnd.N(len(pool))], false))
 	}
 
 	return strip
 }
 
+// newStripEntry places one pool card on an opening reel slot
+func newStripEntry(pc poolCard, win bool) stripEntry {
+	return stripEntry{Card: pc.card, Collection: pc.collection, Win: win}
+}
+
 // drawPack draws `size` cards from a collection. The rarity of each card is
 // rolled first, then a card is picked uniformly among that tier's cards.
 // Duplicates are allowed. Returns nil when the collection holds no card.
-func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*data.Card {
+func drawPack(rnd *rand.Rand, byRarity map[string][]poolCard, size int) []poolCard {
 	available := make(map[string]bool, len(rarityTiers))
 	for _, tier := range rarityTiers {
 		available[tier] = len(byRarity[tier]) > 0
 	}
 
-	pack := make([]*data.Card, 0, size)
+	pack := make([]poolCard, 0, size)
 	for i := 0; i < size; i++ {
 		tier := pickTier(rollRarity(rnd), available)
 		if tier == "" {
 			return nil
 		}
 		pack = append(pack, byRarity[tier][rnd.N(len(byRarity[tier]))])
+	}
+	return pack
+}
+
+// drawDefaultPack draws `size` cards among the pool, each of them uniformly
+// across every collection. Duplicates are allowed. Returns nil when the pool
+// holds no card.
+func drawDefaultPack(rnd *rand.Rand, pool []poolCard, size int) []poolCard {
+	if len(pool) == 0 {
+		return nil
+	}
+
+	pack := make([]poolCard, 0, size)
+	for i := 0; i < size; i++ {
+		pack = append(pack, pool[rnd.N(len(pool))])
 	}
 	return pack
 }
@@ -170,11 +196,81 @@ func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint
 	return &booster, nil
 }
 
+// allCardsPool returns every card of every collection in one pool, cards of
+// the lower IDs first
+func (dc *DataController) allCardsPool() []poolCard {
+	sorted := make([]*data.Collection, 0, len(dc.Data.Collections))
+	for _, collection := range dc.Data.Collections {
+		sorted = append(sorted, collection)
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].ID < sorted[j].ID
+	})
+
+	pool := make([]poolCard, 0)
+	for _, collection := range sorted {
+		pool = append(pool, flattenByRarity(groupByRarity(dc.Data.Cards, collection))...)
+	}
+	return pool
+}
+
+// packReels renders the opening reels of a drawn pack from a pool of
+// possible cards, or writes the failure
+func (dc *DataController) packReels(c *gin.Context, rnd *rand.Rand, pool []poolCard, pack []poolCard, foils []string) ([][]gin.H, bool) {
+	reels := make([][]gin.H, 0, len(pack))
+	for i, winner := range pack {
+		strip := buildReel(rnd, pool, winner)
+
+		slots := make([]gin.H, 0, len(strip))
+		for _, entry := range strip {
+			// Only the won card shows the foil it was obtained with
+			foil := ""
+			if entry.Win {
+				foil = foils[i]
+			}
+			html, ok := packCard(dc, c, entry.Collection, entry.Card, foil)
+			if !ok {
+				return nil, false
+			}
+			slots = append(slots, gin.H{
+				"rarity": entry.Card.Rarity,
+				"html":   html,
+				"win":    entry.Win,
+			})
+		}
+		reels = append(reels, slots)
+	}
+	return reels, true
+}
+
 // /opening GET: open one of the user's boosters (?booster=ID)
 func (dc *DataController) OpeningGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// A default booster comes out of the user's pile of default boosters
+	if c.Query("booster") == defaultBoosterRef {
+		pile, err := controllers.AccrueBoosterPile(dc.DB, user.ID)
+		if err != nil {
+			log.Printf("[WARN] Failed to get the booster pile of user '%s': %s", user.Username, err)
+		}
+		if err != nil || pile.Count == 0 {
+			c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
+			return
+		}
+
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": dc.Renderer.T(c, "pack-opening-title"),
+			"User":  user,
+		})
+		builder.Add("pack-opening", "Content", map[string]any{
+			"BoosterID": defaultBoosterRef,
+			"Pile":      dc.pileTileData(c, &pile),
+		})
+		dc.Renderer.Render(c, &builder)
 		return
 	}
 
@@ -251,6 +347,12 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		return
 	}
 
+	// A default booster comes out of the user's pile of default boosters
+	if c.PostForm("booster") == defaultBoosterRef {
+		dc.openDefaultPost(c, user)
+		return
+	}
+
 	var booster models.Booster
 	if err := dc.DB.
 		Where("id = ? AND owner_id = ?", c.PostForm("booster"), user.ID).
@@ -302,9 +404,9 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		}
 
 		cards := make([]models.Card, len(pack))
-		for i, card := range pack {
+		for i, drawn := range pack {
 			cards[i] = models.Card{
-				CardID:   uint(collection.ID*1000 + card.ID),
+				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
 				Acquired: now,
 				Foil:     foils[i],
 				OwnerID:  user.ID,
@@ -327,29 +429,9 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 	}
 
 	// The cards are in the inventory, what follows is only the animation
-	pool := flattenByRarity(byRarity)
-	reels := make([][]gin.H, 0, len(pack))
-	for i, winner := range pack {
-		strip := buildReel(rnd, pool, winner)
-
-		slots := make([]gin.H, 0, len(strip))
-		for _, entry := range strip {
-			// Only the won card shows the foil it was obtained with
-			foil := ""
-			if entry.Win {
-				foil = foils[i]
-			}
-			html, ok := packCard(dc, c, collection, entry.Card, foil)
-			if !ok {
-				return
-			}
-			slots = append(slots, gin.H{
-				"rarity": entry.Card.Rarity,
-				"html":   html,
-				"win":    entry.Win,
-			})
-		}
-		reels = append(reels, slots)
+	reels, ok := dc.packReels(c, rnd, flattenByRarity(byRarity), pack, foils)
+	if !ok {
+		return
 	}
 
 	// Let the page chain into the next booster of the same stack
@@ -381,6 +463,87 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 }
 
 var errBoosterOpened = errors.New("booster already opened")
+
+// openDefaultPost opens one default booster out of the user's pile, its
+// cards are added to the inventory
+func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.AuthenticatedUser) {
+	// Draw before touching the pile, an empty catalog keeps the booster
+	rnd := rand.New(rand.NewPCG(
+		uint64(time.Now().UnixNano()),
+		uint64(time.Now().UnixNano()),
+	))
+	pool := dc.allCardsPool()
+	pack := drawDefaultPack(rnd, pool, defaultBoosterSize)
+	if pack == nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-empty"),
+		})
+		return
+	}
+	foils := make([]string, len(pack))
+	for i := range pack {
+		foils[i] = rollFoil(rnd)
+	}
+
+	// Take the booster out of the pile and award its cards at once. The
+	// conditional consume keeps concurrent openings from digging into an
+	// empty pile.
+	now := time.Now()
+	var pile models.BoosterPile
+	err := dc.DB.Transaction(func(tx *gorm.DB) error {
+		var err error
+		pile, err = controllers.ConsumePileBooster(tx, user.ID)
+		if err != nil {
+			return err
+		}
+
+		cards := make([]models.Card, len(pack))
+		for i, drawn := range pack {
+			cards[i] = models.Card{
+				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
+				Acquired: now,
+				Foil:     foils[i],
+				OwnerID:  user.ID,
+			}
+		}
+		return tx.Create(&cards).Error
+	})
+	if errors.Is(err, controllers.ErrNoPileBooster) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-pile"),
+		})
+		return
+	}
+	if err != nil {
+		log.Printf("[WARN] Failed to open a default booster for user '%s': %s", user.Username, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+		})
+		return
+	}
+
+	// The cards are in the inventory, what follows is only the animation
+	reels, ok := dc.packReels(c, rnd, pool, pack, foils)
+	if !ok {
+		return
+	}
+
+	// Let the page chain into the next default booster of the pile
+	next := ""
+	if pile.Count > 0 {
+		next = defaultBoosterRef
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"reels":          reels,
+		"next":           next,
+		"remaining":      pile.Count,
+		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(pile.Count)),
+		"colors": gin.H{
+			"primary":   defaultBoosterColorPrimary,
+			"secondary": defaultBoosterColorSecondary,
+		},
+	})
+}
 
 // Collections sorted by ID, with their translated title
 func (dc *DataController) collectionChoices(c *gin.Context) []map[string]any {

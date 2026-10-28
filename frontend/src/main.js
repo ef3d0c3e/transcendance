@@ -13,6 +13,7 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
+import { enhanceCountdowns } from './countdown.js';
 
 // Navbar
 {
@@ -68,6 +69,11 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 	for (const list of document.querySelectorAll('[data-relative-times]')) {
 		enhanceRelativeTimes(list);
 	}
+}
+
+// Countdown pills, e.g the time left before the next booster
+{
+	enhanceCountdowns();
 }
 
 // Log out, then land on a page visitors can see

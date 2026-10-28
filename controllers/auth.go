@@ -200,9 +200,14 @@ func (ac *Controller) RegisterPost(c *gin.Context) {
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
-		return tx.Create(&models.UserProfile{
+		if err := tx.Create(&models.UserProfile{
 			UserID: user.ID,
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+		// The account comes with its pile of default boosters
+		_, err := ensureBoosterPile(tx, user.ID, now)
+		return err
 	})
 	if err != nil {
 		key := ""

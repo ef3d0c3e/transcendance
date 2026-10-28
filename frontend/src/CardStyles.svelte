@@ -361,4 +361,32 @@
 
 		display: inline-flex;
 	}
+
+	/* Pile of default boosters */
+	:global(.booster-pile-packs) {
+		z-index: 11;
+		flex: 0 0 40%;
+		height: 40%;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	:global(.booster-pile-packs svg) {
+		width: 100%;
+		height: 100%;
+	}
+
+	:global(.booster-pile-packs rect) {
+		fill: rgba(255, 255, 255, 0.16);
+		stroke: rgba(255, 255, 255, 0.55);
+		stroke-width: 2;
+	}
+
+	/* An empty pile fades out, its pills stay readable */
+	:global(.booster-pile-art.booster-pile-empty) {
+		filter: saturate(0);
+		opacity: 0.55;
+	}
 </style>

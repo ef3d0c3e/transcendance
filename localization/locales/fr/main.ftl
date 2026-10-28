@@ -186,6 +186,8 @@ notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-daily-reward-title = Récompense quotidienne
+notification-daily-reward-desc = Jour { $day } : { $amount } pièces ajoutées à votre solde
 
 catalog-title = Catalogue de cartes
 catalog-tabs-label = Sections du catalogue
@@ -248,6 +250,10 @@ inventory-search-count = { $count ->
     *[other] { $count } cartes trouvées
 }
 
+booster-pile-title = Booster par défaut
+booster-pile-desc = { $count } cartes aléatoires de toutes les collections
+booster-pile-open-confirm = Ouvrir un booster par défaut ?
+
 pack-opening-title = Ouverture de booster
 pack-opening-open = Ouvrir le booster
 pack-opening-open-another = Ouvrir un autre booster
@@ -264,6 +270,7 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-error-pile = Aucun booster par défaut disponible
 
 shop-title = Boutique
 shop-balance = Solde

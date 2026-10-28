@@ -3,7 +3,7 @@
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h2 class="inventory-title">{{ .Data.Title }}</h2>
-			{{ if ne (len .Data.Items) 0 }}
+			{{ if .Data.Count }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
@@ -66,10 +66,18 @@
 	</div>
 	{{ end }}
 
+	{{ if or (ne (len .Data.Items) 0) .Data.Pile }}
 	{{ if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
+	{{ end }}
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
+		{{ with .Data.Pile }}
+		<div class="inventory-booster"{{ if not .PileEmpty }} data-booster-open="{{ .PileOpen }}"
+			data-booster-confirm="{{ .PileConfirm }}"{{ end }}>
+			{{ template "booster-pile" . }}
+		</div>
+		{{ end }}
 		{{ range $val := .Data.Items }}
 		{{ if eq (len $.Data.Viewed) 0 }}
 		<div class="inventory-booster" data-booster-open="/opening?booster={{ $val.BoosterID }}"
