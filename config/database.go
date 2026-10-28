@@ -61,6 +61,5 @@ func MigrateDatabase(db *gorm.DB) error {
 		SELECT users.id FROM users
 		LEFT JOIN user_profiles ON user_profiles.user_id = users.id
 		WHERE users.deleted_at IS NULL AND user_profiles.user_id IS NULL
-		ON DUPLICATE KEY UPDATE user_id = VALUES(user_id)
 	`).Error
 }

@@ -62,7 +62,7 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 			"sub": func(a, b int) int { return a - b },
 			"add": func(a, b int) int { return a + b },
 			"today": func() string {
-				return time.Now().UTC().Format("2006-01-02")
+				return LatestToday().Format("2006-01-02")
 			},
 			"hasPrefix": strings.HasPrefix,
 		}).ParseGlob("templates/**/*.html"),
@@ -192,6 +192,12 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
 		return
 	}
+}
+
+// Current date in the timezone furthest ahead (UTC+14), so no user's today is in the future
+func LatestToday() time.Time {
+	now := time.Now().UTC().Add(14 * time.Hour)
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
 }
 
 type ErrorPage struct {

@@ -9,6 +9,7 @@ import (
 	"time"
 	"transcendance/models"
 	"transcendance/views"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"github.com/go-sql-driver/mysql"
@@ -69,11 +70,8 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 func (pc *Controller) ProfilePost(c *gin.Context) {
 	authUser := GetAuthenticatedUser(c)
 	if authUser == nil {
-		pc.Renderer.RenderError(c, views.ErrorPage{
-			User:       nil,
-			StatusCode: http.StatusUnauthorized,
-			Message:    pc.Renderer.T(c, "error-unauthorized"),
-		})
+		// Answered in JSON since the profile form submits with fetch
+		c.JSON(http.StatusUnauthorized, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
 		return
 	}
 
@@ -114,7 +112,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		if len(username) < 3 || len(username) > 16 || !is_alphanumeric.MatchString(username) {
 			errorMessages["username"] = pc.Renderer.T(c, "profile-error-username")
 			validRequest = false
-		} else if err := pc.DB.Select("id").Where("username = ?", username).First(&models.User{}).Error; err == nil {
+		} else if err := pc.DB.Select("id").Where("username = ? AND id <> ?", username, target.ID).First(&models.User{}).Error; err == nil {
 			errorMessages["username"] = pc.Renderer.T(c, "profile-error-username-taken")
 			validRequest = false
 		} else if !errors.Is(err, gorm.ErrRecordNotFound) {
@@ -127,17 +125,20 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processBio {
-		if len(bio) > 244 {
+		if utf8.RuneCountInString(bio) > 244 {
 			errorMessages["bio"] = pc.Renderer.T(c, "profile-error-bio")
 			validRequest = false
 		}
 		updates["profile"]["bio"] = bio
 	}
 
-	if processBirthDate {
+	if processBirthDate && birthDate == "" {
+		// An empty date clears the birth date
+		updates["profile"]["birth_date"] = nil
+	} else if processBirthDate {
 		d, err := time.Parse("2006-01-02", birthDate)
 
-		if err != nil || d.After(time.Now().UTC()) {
+		if err != nil || d.After(views.LatestToday()) {
 			errorMessages["birthdate"] = pc.Renderer.T(c, "profile-error-birthdate")
 			validRequest = false
 		}
@@ -145,7 +146,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processContactInfo {
-		if len(contactInfo) > 256 {
+		if utf8.RuneCountInString(contactInfo) > 256 {
 			errorMessages["contact"] = pc.Renderer.T(c, "profile-error-contactinfo")
 			validRequest = false
 		}
@@ -208,6 +209,14 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 				if err := tx.Model(&models.User{}).
 					Where("id = ?", target.ID).
 					Updates(updates["user"]).Error; err != nil {
+					return err
+				}
+			}
+			if _, changed := updates["user"]["password_hash"]; changed {
+				// Log out everywhere else, the current session stays valid
+				token, _ := c.Cookie("session_token")
+				if err := tx.Where("user_id = ? AND token <> ?", target.ID, token).
+					Delete(&models.UserSession{}).Error; err != nil {
 					return err
 				}
 			}

@@ -101,7 +101,8 @@
 		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
 	</form>
 </section>
-<div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"></div>
+<div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"
+	data-label-unexpected-error="{{ .T "error-unexpected" }}"></div>
 {{ else }}
 <section>
 	<div id="avatar">
