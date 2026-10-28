@@ -218,10 +218,10 @@ func bestStreak(streak *models.DailyStreak) uint {
 type StreakState struct {
 	// Consecutive days claimed in a row, 0 when the streak is over
 	Day uint
-	// Tier of the bonus of the day, 1 to Tiers
+	// Tier of the bonus of the day, 1 to the last tier of Rewards
 	Tier uint
-	// Number of tiers of the reward ladder
-	Tiers uint
+	// Coin reward of each tier of the ladder
+	Rewards []uint
 	// Coins the bonus of the day pays
 	Reward uint
 	// Best streak the user has done
@@ -242,9 +242,9 @@ func DailyStreakState(db *gorm.DB, userID uint, now time.Time) (StreakState, err
 	today := startOfDay(now)
 	yesterday := startOfDay(now.AddDate(0, 0, -1))
 	state := StreakState{
-		Tiers:  uint(len(dailyStreakRewards)),
-		Best:   bestStreak(&streak),
-		NextAt: today.AddDate(0, 0, 1),
+		Rewards: dailyStreakRewards,
+		Best:    bestStreak(&streak),
+		NextAt:  today.AddDate(0, 0, 1),
 	}
 	// The bonus of the day is the one the streak is on, or the one that
 	// restarts it after a missed day
@@ -262,7 +262,7 @@ func DailyStreakState(db *gorm.DB, userID uint, now time.Time) (StreakState, err
 		}
 		// A wider gap leaves the streak over: the bonus of the day is day 1
 	}
-	state.Tier = min(next, state.Tiers)
+	state.Tier = min(next, uint(len(dailyStreakRewards)))
 	state.Reward = dailyStreakReward(state.Tier)
 	return state, nil
 }

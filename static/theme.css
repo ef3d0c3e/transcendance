@@ -1489,7 +1489,7 @@ section {
 .daily-streak-info {
     display: flex;
     flex-wrap: wrap;
-    align-items: baseline;
+    align-items: center;
     gap: 0.4rem 1.25rem;
 }
 
@@ -1500,18 +1500,30 @@ section {
     font-weight: 700;
 }
 
-.daily-streak-numbers {
+/* Reward ladder: one cell per tier, the one of the bonus of the day
+   standing out and the others grayed out */
+.daily-streak-meter {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.4rem 1.25rem;
+    gap: 0.35rem;
 
-    color: var(--color-text-muted);
     font-variant-numeric: tabular-nums;
 }
 
 .daily-streak-tier {
-    color: var(--color-text);
+    padding: 0.25rem 0.7rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.daily-streak-tier-current {
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
     font-weight: 700;
 }
 
@@ -1519,6 +1531,11 @@ section {
 .daily-streak-count {
     color: var(--color-accent-secondary);
     font-weight: 700;
+}
+
+.daily-streak-best {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
 }
 
 .daily-streak-claim {
