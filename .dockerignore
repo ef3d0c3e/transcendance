@@ -1,0 +1,9 @@
+.git
+.github
+**/node_modules
+frontend/dist
+data/dist
+tmp
+docker
+.env
+.mcp.json

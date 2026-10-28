@@ -1,37 +1,58 @@
+name: transcendance-stack
+
+# Container logs are rotated on disk
+x-logging: &logging
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: "3"
+
 services:
-  # Service
   service:
-    build: ./service
-    container_name: transcendance-service
+    build:
+      context: ..
+      dockerfile: docker/service/Dockerfile
+    image: transcendance-service
     restart: unless-stopped
-    env_file: .env
-    volumes:
-      - service_data:/opt/transcendance
-    networks:
-      - transcendance
-  # Mariadb
-  mariadb:
-    image: mariadb
-    container_name: transcendance-db
     environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQL_ADDRESS: mariadb:3306
       MYSQL_USER: ${MYSQL_USER:?}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
       MYSQL_DATABASE: ${MYSQL_DATABASE:?}
-    ports:
-      - "127.0.0.1:3306:3306"
+    volumes:
+      - card_images:/opt/transcendance/data/dist
+    depends_on:
+      mariadb:
+        condition: service_healthy
     networks:
-      - transcendance
+      - backend
+    mem_limit: 256m
+    logging: *logging
 
+  mariadb:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MARIADB_USER: ${MYSQL_USER:?}
+      MARIADB_PASSWORD: ${MYSQL_PASSWORD:?}
+      MARIADB_DATABASE: ${MYSQL_DATABASE:?}
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks:
+      - backend
+    mem_limit: 384m
+    logging: *logging
 
 volumes:
-  service_data:
-    driver: local
-    driver_opts:
-      type: none
-      device: ./testing
-      o: bind
+  db_data:
+  card_images:
 
 networks:
-  transcendance:
-    driver: bridge
+  backend:
