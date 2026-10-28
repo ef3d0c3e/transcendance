@@ -37,6 +37,16 @@ es /_security/user/logstash_internal -X PUT -d "{
 	\"roles\": [\"logstash_writer\"]
 }"
 
+# Metrics exporter, reads cluster and index statistics
+es /_security/role/metrics_reader -X PUT -d '{
+	"cluster": ["monitor"],
+	"indices": [{"names": ["*"], "privileges": ["monitor"]}]
+}'
+es /_security/user/es_exporter -X PUT -d "{
+	\"password\": \"${ES_EXPORTER_PASSWORD}\",
+	\"roles\": [\"metrics_reader\"]
+}"
+
 # Logs are kept LOG_RETENTION_DAYS, compressed after LOG_COMPRESS_AFTER_DAYS
 es /_ilm/policy/transcendance-logs -X PUT -d "{
 	\"policy\": {
