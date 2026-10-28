@@ -37,4 +37,43 @@ es /_security/user/logstash_internal -X PUT -d "{
 	\"roles\": [\"logstash_writer\"]
 }"
 
+# Logs are kept LOG_RETENTION_DAYS, compressed after LOG_COMPRESS_AFTER_DAYS
+es /_ilm/policy/transcendance-logs -X PUT -d "{
+	\"policy\": {
+		\"phases\": {
+			\"hot\": {
+				\"actions\": {
+					\"rollover\": {\"max_age\": \"1d\", \"max_primary_shard_size\": \"5gb\"}
+				}
+			},
+			\"warm\": {
+				\"min_age\": \"${LOG_COMPRESS_AFTER_DAYS}d\",
+				\"actions\": {
+					\"readonly\": {},
+					\"forcemerge\": {\"max_num_segments\": 1, \"index_codec\": \"best_compression\"}
+				}
+			},
+			\"delete\": {
+				\"min_age\": \"${LOG_RETENTION_DAYS}d\",
+				\"actions\": {\"delete\": {}}
+			}
+		}
+	}
+}"
+# Wins over the built-in logs template, a single node has no replicas
+es /_index_template/logs-transcendance -X PUT -d '{
+	"index_patterns": ["logs-transcendance-*"],
+	"data_stream": {},
+	"priority": 200,
+	"composed_of": ["logs@mappings", "logs@settings", "ecs@mappings"],
+	"template": {
+		"settings": {
+			"index.lifecycle.name": "transcendance-logs",
+			"index.number_of_replicas": 0
+		}
+	}
+}'
+# Indices made before the template, if any
+es '/logs-transcendance-*/_settings?allow_no_indices=true' -X PUT -d '{"index.number_of_replicas": 0}'
+
 echo "Elasticsearch is set up"
