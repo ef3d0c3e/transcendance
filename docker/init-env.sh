@@ -1,7 +1,7 @@
 #!/bin/sh
 # Create or complete .env from .env.example, generating the secrets left empty.
 # Values already in .env are kept, so it can run again after an update.
-# The Docker paths are asked to Docker on every run, they differ with rootless Docker.
+# The Docker socket is asked to Docker, it differs with rootless Docker.
 set -eu
 cd "$(dirname "$0")"
 
@@ -40,13 +40,14 @@ while IFS= read -r line; do
 done <.env.example
 echo "Added $added value(s) to $(pwd)/.env"
 
-# Where the daemon keeps container logs and how to reach it
-root=$(docker info --format '{{.DockerRootDir}}' 2>/dev/null || true)
+# cAdvisor reads the containers from the Docker socket, a value set by hand is kept
+current=$(sed -n 's/^DOCKER_SOCKET=//p' .env)
 host=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true)
-if [ -n "$root" ] && [ "${host#unix://}" != "$host" ]; then
-	set_value DOCKER_ROOT "$root"
-	set_value DOCKER_SOCKET "${host#unix://}"
-	echo "Docker keeps its data in $root, its socket is ${host#unix://}"
+if [ "${host#unix://}" != "$host" ]; then
+	if [ "$current" = "/var/run/docker.sock" ] && [ "${host#unix://}" != "$current" ]; then
+		set_value DOCKER_SOCKET "${host#unix://}"
+	fi
+	echo "Docker socket: $(sed -n 's/^DOCKER_SOCKET=//p' .env)"
 else
-	echo "Cannot ask Docker for its paths, check DOCKER_ROOT and DOCKER_SOCKET in .env" >&2
+	echo "Cannot ask Docker for its socket, check DOCKER_SOCKET in .env" >&2
 fi
