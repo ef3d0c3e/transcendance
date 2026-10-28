@@ -16,16 +16,13 @@ import (
 	"transcendance/views"
 )
 
-type AuthController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
 	// 2: Admin, 1: Moderator, 0: User
 	Rank     uint
+	// In-shop currency balance
+	Coins    uint
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -52,7 +49,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		err = db.Select("id", "username", "rank").
+		err = db.Select("id", "username", "rank", "coins").
 			Where("id = ?", session.UserID).
 			First(&user).
 			Error
@@ -67,6 +64,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			ID:       session.UserID,
 			Username: user.Username,
 			Rank: user.Rank,
+			Coins: user.Coins,
 		})
 
 		c.Next()
@@ -82,7 +80,7 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 	return user.(*AuthenticatedUser)
 }
 
-func (ac *AuthController) RegisterGet(c *gin.Context) {
+func (ac *Controller) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -105,7 +103,7 @@ func (ac *AuthController) RegisterGet(c *gin.Context) {
 
 var is_alphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
-func (ac *AuthController) RegisterPost(c *gin.Context) {
+func (ac *Controller) RegisterPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 	passwordConfirm := c.PostForm("password_confirm")
@@ -194,7 +192,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) LoginGet(c *gin.Context) {
+func (ac *Controller) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -215,7 +213,7 @@ func (ac *AuthController) LoginGet(c *gin.Context) {
 	ac.Renderer.Render(c, &builder)
 }
 
-func (ac *AuthController) LoginPost(c *gin.Context) {
+func (ac *Controller) LoginPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
@@ -284,7 +282,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) LogoutGet(c *gin.Context) {
+func (ac *Controller) LogoutGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if user == nil {
@@ -309,16 +307,16 @@ func (ac *AuthController) LogoutGet(c *gin.Context) {
 	} else {
 		// Log out current device
 		token, err := c.Cookie("session_token")
-		if err != nil && token != "" {
+		if err == nil && token != "" {
 			ctx := c.Request.Context()
 			// Silently fail, since the user's cookie is cleared anyway, that just means keeping data in the DB a little longer
 			_, _ = gorm.G[models.UserSession](ac.DB).
-				Where("user_id = ? and token = ", user.ID, token).
+				Where("user_id = ? and token = ?", user.ID, token).
 				Delete(ctx)
 		}
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "", true, true)
+	c.SetCookie("session_token", "", -1, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "logout-success"),
 	})
