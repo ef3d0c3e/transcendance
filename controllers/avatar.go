@@ -83,7 +83,7 @@ func (pc *Controller) AvatarPost(c *gin.Context) {
 	c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, maxAvatarBytes+64*1024)
 	err := c.Request.ParseMultipartForm(maxAvatarBytes + 64*1024)
 	if c.Request.MultipartForm != nil {
-		defer c.Request.MultipartForm.RemoveAll()
+		defer func() { _ = c.Request.MultipartForm.RemoveAll() }()
 	}
 	if err != nil {
 		var tooLarge *http.MaxBytesError
@@ -106,7 +106,7 @@ func (pc *Controller) AvatarPost(c *gin.Context) {
 		pc.avatarError(c, http.StatusBadRequest, "profile-avatar-invalid")
 		return
 	}
-	defer f.Close()
+	defer func() { _ = f.Close() }()
 
 	input, err := io.ReadAll(io.LimitReader(f, maxAvatarBytes+1))
 	if err != nil {
