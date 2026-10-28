@@ -25,6 +25,9 @@ func RegisterRoutes(
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
+	healthController := controllers.HealthController{DB: db}
+	router.GET("/healthz", healthController.HealthzGet)
+
 	router.GET("/register", authController.RegisterGet)
 	router.POST("/register", authController.RegisterPost)
 
