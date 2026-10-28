@@ -72,8 +72,14 @@ server {
 		proxy_pass $kibana;
 	}
 
+	location /prometheus/ {
+		include /etc/nginx/snippets/admin.conf;
+		set $prometheus http://prometheus:9090;
+		proxy_pass $prometheus;
+	}
+
 	# Reserved for the admin tools, until each one is deployed
-	location ~ ^/(grafana|prometheus|alertmanager)(/|$) {
+	location ~ ^/(grafana|alertmanager)(/|$) {
 		include /etc/nginx/snippets/admin.conf;
 		try_files /not-deployed =404;
 	}

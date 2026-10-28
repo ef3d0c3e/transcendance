@@ -58,6 +58,7 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_ADDRESS: mariadb:3306
+      METRICS_ADDR: :9101
       MYSQL_USER: ${MYSQL_USER:?}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
       MYSQL_DATABASE: ${MYSQL_DATABASE:?}
@@ -131,6 +132,7 @@ services:
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:?}
       KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
       LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD:?}
+      ES_EXPORTER_PASSWORD: ${ES_EXPORTER_PASSWORD:?}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-730}
       LOG_COMPRESS_AFTER_DAYS: ${LOG_COMPRESS_AFTER_DAYS:-14}
     volumes:
@@ -235,7 +237,143 @@ services:
       - backend
     mem_limit: 128m
     logging: *logging
+
+  # Monitoring
+  prometheus:
+    image: prom/prometheus:v3.15.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=${METRICS_RETENTION:-30d}
+      - --storage.tsdb.retention.size=2GB
+      # Links in the alerts
+      - --web.external-url=https://${DOMAIN:-transcendance.pundalik.org}:${HTTPS_PORT:-8443}/prometheus/
+      - --web.route-prefix=/prometheus/
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/rules:/etc/prometheus/rules:ro
+      - prometheus_data:/prometheus
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9090/prometheus/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    mem_limit: 384m
+    logging: *logging
+
+  node-exporter:
+    image: prom/node-exporter:v1.12.1
+    restart: unless-stopped
+    command:
+      - --path.rootfs=/host
+    pid: host
+    volumes:
+      - /:/host:ro
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
+  cadvisor:
+    image: ghcr.io/google/cadvisor:v0.60.6
+    restart: unless-stopped
+    command:
+      - --docker_only=true
+      - --housekeeping_interval=30s
+      - --store_container_labels=false
+      - --whitelisted_container_labels=com.docker.compose.project,com.docker.compose.service
+      - --disable_metrics=advtcp,cpu_topology,cpuset,hugetlb,memory_numa,percpu,process,referenced_memory,resctrl,sched,tcp,udp
+    # Reads the cgroups and the Docker state of every container
+    privileged: true
+    devices:
+      - /dev/kmsg
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
+      - /dev/disk:/dev/disk:ro
+    networks:
+      - backend
+    mem_limit: 192m
+    logging: *logging
+
+  # Exporter's database user, applied on every start
+  mariadb-setup:
+    image: mariadb:11.8
+    restart: on-failure
+    entrypoint: ["/setup.sh"]
+    environment:
+      MARIADB_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQLD_EXPORTER_PASSWORD: ${MYSQLD_EXPORTER_PASSWORD:?}
+    volumes:
+      - ./mariadb/setup.sh:/setup.sh:ro
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
+  mysqld-exporter:
+    image: prom/mysqld-exporter:v0.21.0
+    restart: unless-stopped
+    command:
+      - --mysqld.address=mariadb:3306
+      - --mysqld.username=exporter
+    environment:
+      MYSQLD_EXPORTER_PASSWORD: ${MYSQLD_EXPORTER_PASSWORD:?}
+    depends_on:
+      mariadb-setup:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
+  nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:1.5.3
+    restart: unless-stopped
+    command:
+      - --nginx.scrape-uri=http://gateway:8081/stub_status
+    networks:
+      - backend
+    mem_limit: 32m
+    logging: *logging
+
+  elasticsearch-exporter:
+    image: prometheuscommunity/elasticsearch-exporter:v1.11.0
+    restart: unless-stopped
+    command:
+      - --es.uri=http://elasticsearch:9200
+    environment:
+      ES_USERNAME: es_exporter
+      ES_PASSWORD: ${ES_EXPORTER_PASSWORD:?}
+    depends_on:
+      elasticsearch-setup:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
+  blackbox-exporter:
+    image: prom/blackbox-exporter:v0.29.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/blackbox/blackbox.yml
+    volumes:
+      - ./prometheus/blackbox.yml:/etc/blackbox/blackbox.yml:ro
+    networks:
+      - backend
+    mem_limit: 32m
+    logging: *logging
 volumes:
+  prometheus_data:
   es_data:
   filebeat_data:
   auth_data:
