@@ -40,9 +40,30 @@ server {
 		return 404;
 	}
 
-	# Reserved for the admin tools, behind the device authorization
-	location ~ ^/(auth|grafana|kibana|prometheus|alertmanager)(/|$) {
-		return 404;
+	# Sign-in page of the admin tools
+	location /auth/ {
+		set $auth http://auth:9000;
+		proxy_pass $auth;
+	}
+
+	# Asked before every admin request, see snippets/admin.conf
+	location = /_auth {
+		internal;
+		set $auth_verify http://auth:9000/auth/verify;
+		proxy_pass $auth_verify;
+		proxy_pass_request_body off;
+		proxy_set_header Content-Length "";
+		proxy_set_header Cookie $http_cookie;
+	}
+
+	location @signin {
+		return 302 /auth/?rd=$request_uri;
+	}
+
+	# Reserved for the admin tools, until each one is deployed
+	location ~ ^/(grafana|kibana|prometheus|alertmanager)(/|$) {
+		include /etc/nginx/snippets/admin.conf;
+		try_files /not-deployed =404;
 	}
 
 	location / {

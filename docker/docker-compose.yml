@@ -25,6 +25,27 @@ services:
     depends_on:
       service:
         condition: service_healthy
+      auth:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
+  # Admin sign-in over SSH, guards the tools behind the gateway
+  auth:
+    build:
+      context: ..
+      dockerfile: docker/auth/Dockerfile
+    image: transcendance-auth
+    restart: unless-stopped
+    environment:
+      AUTH_SSH_PUBLIC_PORT: ${AUTH_SSH_PORT:-2233}
+      AUTH_SESSION_TTL: ${AUTH_SESSION_TTL:-12h}
+    ports:
+      - "${AUTH_SSH_PORT:-2233}:2233"
+    volumes:
+      - auth_data:/data
     networks:
       - backend
     mem_limit: 64m
@@ -73,6 +94,7 @@ services:
     logging: *logging
 
 volumes:
+  auth_data:
   certificates:
   db_data:
   card_images:
