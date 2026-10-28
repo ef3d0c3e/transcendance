@@ -78,8 +78,14 @@ server {
 		proxy_pass $prometheus;
 	}
 
+	location /grafana/ {
+		include /etc/nginx/snippets/admin.conf;
+		set $grafana http://grafana:3000;
+		proxy_pass $grafana;
+	}
+
 	# Reserved for the admin tools, until each one is deployed
-	location ~ ^/(grafana|alertmanager)(/|$) {
+	location ~ ^/(alertmanager)(/|$) {
 		include /etc/nginx/snippets/admin.conf;
 		try_files /not-deployed =404;
 	}

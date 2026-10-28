@@ -47,6 +47,15 @@ es /_security/user/es_exporter -X PUT -d "{
 	\"roles\": [\"metrics_reader\"]
 }"
 
+# Grafana reads the logs
+es /_security/role/log_reader -X PUT -d '{
+	"indices": [{"names": ["logs-transcendance-*"], "privileges": ["read", "view_index_metadata"]}]
+}'
+es /_security/user/grafana_reader -X PUT -d "{
+	\"password\": \"${GRAFANA_ES_PASSWORD}\",
+	\"roles\": [\"log_reader\"]
+}"
+
 # Logs are kept LOG_RETENTION_DAYS, compressed after LOG_COMPRESS_AFTER_DAYS
 es /_ilm/policy/transcendance-logs -X PUT -d "{
 	\"policy\": {
