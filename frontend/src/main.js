@@ -12,6 +12,7 @@ import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
+import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 
 // Navbar
@@ -46,6 +47,20 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 
 	if (target) {
 		mount(Notification, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
+// Shoutbox
+{
+	const target = document.querySelector('#shoutbox');
+
+	if (target) {
+		mount(Shoutbox, {
 			target,
 			props: {
 				dataset: target.dataset,
