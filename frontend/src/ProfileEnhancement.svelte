@@ -60,6 +60,8 @@
 <script>
 	import { onMount } from "svelte";
 
+	let { dataset } = $props();
+
 	onMount(() => {
 		const form = document.querySelector("#profile-form");
 		const result = document.querySelector("#profile-result");
@@ -181,7 +183,7 @@
 					hideButtonAfterSave();
 				}
 			} catch (error) {
-				result.textContent = "Unable to contact the server.";
+				result.textContent = dataset.labelNetworkError;
 			} finally {
 				button.disabled = false;
 			}

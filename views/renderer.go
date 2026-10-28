@@ -209,10 +209,9 @@ func (r *Renderer) RenderError(
 		c.Status(data.StatusCode)
 	}
 	if data.Title == "" {
+		data.Title = r.T(c, "error-title")
 		if data.StatusCode != 0 {
-			data.Title = strconv.Itoa(data.StatusCode) + " " + http.StatusText(data.StatusCode)
-		} else {
-			data.Title = r.T(c, "Error")
+			data.Title += " " + strconv.Itoa(data.StatusCode)
 		}
 	}
 	builder := PageBuilder("base", gin.H{
