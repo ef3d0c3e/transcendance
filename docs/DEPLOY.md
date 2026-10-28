@@ -2,6 +2,8 @@
 
 The production stack runs with Docker Compose from the `docker/` directory. For a development setup, see [DEV.md](DEV.md).
 
+It needs about 3 GB of free memory once everything runs. Elasticsearch, Kibana and Logstash take most of it.
+
 ## Ports
 
 Only these 3 are published on the host. Everything else, including the database, stays on the internal Docker network.
@@ -15,7 +17,7 @@ Only these 3 are published on the host. Everything else, including the database,
 ## Configuration
 
 
-Create `.env` from `.env.example`. DB values are required, otherwise the stack won't start:
+Run `./init-env.sh` from `docker/`. It creates `.env` from `.env.example` and generates every empty password and key; run it again after an update to add new values. The values to review:
 | Variable              | Description                                                                   |
 |-----------------------|-------------------------------------------------------------------------------|
 | `MYSQL_ROOT_PASSWORD` | MariaDB root password.                                                        |
@@ -25,7 +27,11 @@ Create `.env` from `.env.example`. DB values are required, otherwise the stack w
 | `DOMAIN`              | Host name for the TLS certificate                                             |
 | `HTTP_PORT`, `HTTPS_PORT`, `AUTH_SSH_PORT` | Published ports                                          |
 | `TLS_EXTRA_SANS`      | Other names in the certificate, e.g `IP:192.168.1.10,DNS:transcendance.local` |
-| `AUTH_SESSION_TTL`    | How long an admin stays signed in, e.g `12h`                                 |
+| `AUTH_SESSION_TTL`    | How long an admin stays signed in, e.g `12h`                                  |
+| `LOG_RETENTION_DAYS`  | Days logs are kept, `730` (2 years) by default                                |
+| `LOG_COMPRESS_AFTER_DAYS` | Days before logs are compressed, `14` by default                          |
+| `METRICS_RETENTION`   | How long metrics are kept, e.g `30d`                                          |
+| `DOCKER_ROOT`         | Docker's data directory, read for the container logs and metrics. `~/.local/share/docker` with rootless Docker |
 
 The database passwords are only read when the database volume is first created. Changing them later requires changing them inside MariaDB too.
 
@@ -49,6 +55,13 @@ docker compose exec auth auth list-keys
 ```
 
 To sign in, open `https://<host>:8443/auth/` (or any admin tool). It will display a SSH command to authentify the device you used to access the page.
+
+| Tool         | Path             | Purpose                                                    |
+|--------------|------------------|------------------------------------------------------------|
+| Grafana      | `/grafana/`      | Firing alerts on its home page, dashboards for the application, infrastructure and logs |
+| Kibana       | `/kibana/`       | Search the logs                                            |
+| Prometheus   | `/prometheus/`   | Metrics and alert rules                                    |
+| Alertmanager | `/alertmanager/` | Alert details and silences                                 |
 
 To revoke an admin, which also ends their current sessions:
 ```sh
@@ -80,6 +93,11 @@ Data lives in Docker volumes named `transcendance-stack_<name>`. Running `docker
 | `card_images`  | Card images rendered at startup, can be deleted              |
 | `certificates` | Self-signed certificate                                      |
 | `auth_data`    | Authorized admin keys and session secrets                    |
+| `es_data`      | Logs                                                         |
+| `prometheus_data` | Metrics                                                   |
+| `grafana_data` | Grafana users and preferences, dashboards come from `grafana/dashboards/` |
+| `alertmanager_data` | Silences                                                |
+| `filebeat_data` | How far the container logs were read                        |
 
 ## Operations
 
@@ -95,7 +113,13 @@ docker compose logs -f service
 docker compose down
 ```
 
-Container logs are rotated by Docker: at most 3 files of 10 MB per container.
+Container logs are rotated by Docker: at most 3 files of 10 MB per container. Filebeat ships them to Logstash, which stores them in Elasticsearch; they are compressed after `LOG_COMPRESS_AFTER_DAYS` and deleted after `LOG_RETENTION_DAYS`.
+
+Alerts are not sent anywhere, admins see them on Grafana's home page. The rules are in `docker/prometheus/rules/alerts.yml`. Test them after a change:
+
+```sh
+docker run --rm -v ./prometheus/rules:/rules -w /rules --entrypoint promtool prom/prometheus:v3.15.1 test rules alerts_test.yml
+```
 To create a new certificate, for example after changing `DOMAIN` or `TLS_EXTRA_SANS`:
 
 ```sh
