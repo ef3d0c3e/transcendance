@@ -141,9 +141,15 @@ func TestDailyRewardSectionHoldsTheRecord(t *testing.T) {
 	setDailyStreak(t, "streak6", 12, 12, &yesterday)
 
 	body := getInventory(t, router, cookie, "/inventory")
-	// Past the reward cap the raw streak shows next to the tier, and the
+	// The meter shows every tier with its coin value, the one of today's
+	// bonus standing out
+	require.Contains(t, body, `<span class="daily-streak-tier">1 · 200</span>`)
+	require.Contains(t, body, `<span class="daily-streak-tier">2 · 300</span>`)
+	require.Contains(t, body, `<span class="daily-streak-tier">3 · 500</span>`)
+	require.Contains(t, body, `<span class="daily-streak-tier">4 · 700</span>`)
+	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">5 · 1,000</span>`)
+	// Past the reward cap the raw streak shows next to the meter, and the
 	// best streak is the ongoing one
-	require.Contains(t, body, `<span class="daily-streak-tier">Tier 5/5</span>`)
 	require.Contains(t, body, `<span class="daily-streak-count">Streak 12</span>`)
 	require.Contains(t, body, `<span class="daily-streak-best">Best: current</span>`)
 	require.Contains(t, body, "Claim 1,000 coins")
@@ -157,8 +163,12 @@ func TestDailyRewardSectionBelowTheCap(t *testing.T) {
 	setDailyStreak(t, "streak7", 3, 8, &yesterday)
 
 	body := getInventory(t, router, cookie, "/inventory")
-	// The tier is the one of today's bonus: the fourth day of the ladder
-	require.Contains(t, body, `<span class="daily-streak-tier">Tier 4/5</span>`)
+	// The highlighted tier is the one of today's bonus: the fourth day of
+	// the ladder
+	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">4 · 700</span>`)
+	// The other tiers are grayed out
+	require.Contains(t, body, `<span class="daily-streak-tier">1 · 200</span>`)
+	require.Contains(t, body, `<span class="daily-streak-tier">5 · 1,000</span>`)
 	// Below the cap the raw streak stays hidden
 	require.NotContains(t, body, "daily-streak-count")
 	require.Contains(t, body, `<span class="daily-streak-best">Best: 8</span>`)
@@ -175,7 +185,7 @@ func TestDailyRewardSectionBrokenStreak(t *testing.T) {
 
 	body := getInventory(t, router, cookie, "/inventory")
 	// The bonus of the day restarts the streak at day 1
-	require.Contains(t, body, `<span class="daily-streak-tier">Tier 1/5</span>`)
+	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">1 · 200</span>`)
 	require.NotContains(t, body, "daily-streak-count")
 	require.Contains(t, body, "Claim 200 coins")
 	// The ongoing streak holds no record anymore
@@ -190,7 +200,8 @@ func TestDailyRewardSectionClaimed(t *testing.T) {
 	setDailyStreak(t, "streak9", 3, 3, &today)
 
 	body := getInventory(t, router, cookie, "/inventory")
-	require.Contains(t, body, `<span class="daily-streak-tier">Tier 3/5</span>`)
+	// The claimed tier stays the highlighted one until midnight
+	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">3 · 500</span>`)
 	require.Contains(t, body, `<span class="daily-streak-best">Best: current</span>`)
 	// The button is disabled until midnight, and counts down to it
 	require.Contains(t, body, `class="daily-streak-button" disabled`)
