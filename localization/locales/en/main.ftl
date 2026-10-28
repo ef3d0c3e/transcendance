@@ -115,19 +115,29 @@ profile-error-username-taken = Username already taken
 profile-error-bio = Bio must be no more than 244 characters long
 profile-error-birthdate = Birthdate must be between year 0 and the present day
 profile-error-contactinfo = Contact must be no more than 256 characters long
-profile-error-password = Password doesn't not match the current password
+profile-error-password = Password does not match the current password
 profile-error-new_password = Invalid password. Your password must be between 8 and 72 characters long
 profile-error-passwords-do-not-match = Passwords do not match
 profile-error-password-missing = Must provide this field to change password
-profile-empty-field = Not Specified
+profile-empty-field = Not specified
 profile-submit = Save
+profile-username = Username
+profile-username-hint = 3 to 16 characters: letters, numbers and '_'
+profile-bio = Bio
+profile-birthdate = Birth date
+profile-contact = Contact info
+profile-new-password = New password
+profile-confirm-password = Confirm password
+profile-current-password = Current password
+profile-error-network = Unable to contact the server
 
-error-unexpected = An error occured
-error-unauthorized = You must be logged in to access this ressource
+error-unexpected = An error occurred
+error-unauthorized = You must be logged in to access this resource
 
-Error = Error
+error-title = Error
 
 profile-avatar-label = Profile picture
+profile-avatar-alt = Profile picture of { $username }
 profile-avatar-help = JPEG, PNG or WebP. Maximum 5 MiB, 1024 by 1024 pixels.
 profile-avatar-upload = Upload picture
 profile-avatar-delete = Delete picture

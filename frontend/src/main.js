@@ -164,6 +164,9 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 	if (target) {
 		mount(Profile, {
 			target,
+			props: {
+				dataset: target.dataset,
+			},
 		});
 	}
 }
