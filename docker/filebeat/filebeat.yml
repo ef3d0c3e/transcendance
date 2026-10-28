@@ -1,0 +1,29 @@
+# Ships the stack's container logs to Logstash
+filebeat.inputs:
+  - type: filestream
+    id: docker-containers
+    paths:
+      - /var/lib/docker/containers/*/*-json.log
+    parsers:
+      # Docker json-file lines: {"log": ..., "stream": ..., "attrs": ..., "time": ...}
+      - ndjson:
+          target: docker
+          add_error_key: true
+
+processors:
+  # Only containers of this stack name their compose service, see x-logging
+  - drop_event:
+      when:
+        not:
+          has_fields: ["docker.attrs.com.docker.compose.service"]
+
+output.logstash:
+  hosts: ["logstash:5044"]
+
+# Health check endpoint, inside the container only
+http.enabled: true
+http.host: localhost
+http.port: 5066
+
+logging.level: warning
+logging.to_stderr: true
