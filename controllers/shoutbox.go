@@ -258,7 +258,7 @@ func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 	if err != nil {
 		return
 	}
-	defer conn.CloseNow()
+	defer func() { _ = conn.CloseNow() }()
 	conn.SetReadLimit(shoutboxReadLimit)
 
 	client := newShoutboxClient(user.ID)

@@ -49,7 +49,7 @@ func shoutboxDial(t *testing.T, server *httptest.Server, cookie *http.Cookie, or
 		HTTPHeader: header,
 	})
 	if conn != nil {
-		t.Cleanup(func() { conn.CloseNow() })
+		t.Cleanup(func() { _ = conn.CloseNow() })
 	}
 	return conn, res, err
 }
@@ -134,7 +134,7 @@ func TestShoutboxBroadcast(t *testing.T) {
 	connA, _ := shoutboxConnect(t, server, cookieA)
 	connB, _ := shoutboxConnect(t, server, cookieB)
 
-	shoutboxSend(t, connA, "  hello\nworld‮  ")
+	shoutboxSend(t, connA, "  hello\nworld\u202E  ")
 	for _, conn := range []*websocket.Conn{connA, connB} {
 		event := shoutboxRead(t, conn)
 		require.Equal(t, "message", event.Type)
@@ -158,7 +158,7 @@ func TestShoutboxInvalidMessages(t *testing.T) {
 
 	conn, _ := shoutboxConnect(t, server, cookie)
 
-	shoutboxSend(t, conn, " \n​ ")
+	shoutboxSend(t, conn, " \n\u200B ")
 	event := shoutboxRead(t, conn)
 	require.Equal(t, "error", event.Type)
 	require.Equal(t, "empty", event.Error)
