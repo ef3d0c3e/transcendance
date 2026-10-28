@@ -398,6 +398,8 @@ services:
       GF_NEWS_NEWS_FEED_ENABLED: "false"
       # Plugins come with the image, nothing is downloaded
       GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      # Admins land on the firing alerts
+      GF_DASHBOARDS_DEFAULT_HOME_DASHBOARD_PATH: /var/lib/grafana/dashboards/transcendance-alerts.json
       GRAFANA_ES_PASSWORD: ${GRAFANA_ES_PASSWORD:?}
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
@@ -413,7 +415,34 @@ services:
       - backend
     mem_limit: 320m
     logging: *logging
+
+  # Groups and silences the alerts, admins see them in Grafana
+  alertmanager:
+    image: prom/alertmanager:v0.34.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/alertmanager/alertmanager.yml
+      - --storage.path=/alertmanager
+      # Links in the alerts
+      - --web.external-url=https://${DOMAIN:-transcendance.pundalik.org}:${HTTPS_PORT:-8443}/alertmanager/
+      - --web.route-prefix=/alertmanager/
+      # A single instance, no peers
+      - --cluster.listen-address=
+    volumes:
+      - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - alertmanager_data:/alertmanager
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9093/alertmanager/-/healthy"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
 volumes:
+  alertmanager_data:
   grafana_data:
   prometheus_data:
   es_data:

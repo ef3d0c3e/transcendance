@@ -84,10 +84,10 @@ server {
 		proxy_pass $grafana;
 	}
 
-	# Reserved for the admin tools, until each one is deployed
-	location ~ ^/(alertmanager)(/|$) {
+	location /alertmanager/ {
 		include /etc/nginx/snippets/admin.conf;
-		try_files /not-deployed =404;
+		set $alertmanager http://alertmanager:9093;
+		proxy_pass $alertmanager;
 	}
 
 	location / {

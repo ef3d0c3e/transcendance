@@ -26,3 +26,12 @@ datasources:
       logLevelField: log.level
     secureJsonData:
       basicAuthPassword: $GRAFANA_ES_PASSWORD
+
+  - name: Alertmanager
+    uid: alertmanager
+    type: alertmanager
+    access: proxy
+    url: http://alertmanager:9093/alertmanager
+    editable: false
+    jsonData:
+      implementation: prometheus
