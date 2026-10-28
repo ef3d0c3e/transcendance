@@ -16,40 +16,50 @@ func RegisterRoutes(
 	db *gorm.DB,
 	renderer *views.Renderer,
 ) {
-	authController := controllers.AuthController{
+	controller := controllers.Controller{
 		DB:       db,
 		Renderer: renderer,
+		Data:     data,
 	}
 
+	// Static data
 	router.Static("/frontend", "./frontend/dist")
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
-	router.GET("/register", authController.RegisterGet)
-	router.POST("/register", authController.RegisterPost)
-
-	router.GET("/login", authController.LoginGet)
-	router.POST("/login", authController.LoginPost)
-
-	router.GET("/api/logout", authController.LogoutGet)
-
-	accountController := controllers.AccountController{
-		DB:       db,
-		Renderer: renderer,
-	}
-	router.GET("/api/account_delete", accountController.AccountDeleteGet)
-
+	// Static pages
 	pages := Pages{
 		DB:       db,
 		Renderer: renderer,
 	}
 	router.GET("/", pages.IndexGet)
 
-	searchController := controllers.SearchController{
-		DB:       db,
-		Renderer: renderer,
-	}
-	router.GET("/search", searchController.SearchUsersGet)
+	// auth.go
+	router.GET("/register", controller.RegisterGet)
+	router.POST("/register", controller.RegisterPost)
+	router.GET("/login", controller.LoginGet)
+	router.POST("/login", controller.LoginPost)
+	router.GET("/api/logout", controller.LogoutGet)
+
+	// account.go
+	router.GET("/api/account_delete", controller.AccountDeleteGet)
+
+	// user_search.go
+	router.GET("/search", controller.SearchUsersGet)
+
+
+	// notifications.go
+	router.GET("/notifications", controller.NotificationsGet)
+	router.GET("/notification/:ID", controller.NotificationGet)
+	router.GET("/api/notifications", controller.ApiNotificationsGet)
+	router.POST("/api/notifications/read_all", controller.ApiNotificationsReadAllPost)
+	router.POST("/api/notifications/:ID/read", controller.ApiNotificationReadPost)
+	router.POST("/api/notifications/:ID/unread", controller.ApiNotificationUnreadPost)
+	router.POST("/api/notifications/:ID/delete", controller.ApiNotificationDeletePost)
+
+	// DEBUG: send a notification to the authenticated user
+	router.GET("/add_notification", controller.AddNotificationGet)
+	router.POST("/add_notification", controller.AddNotificationPost)
 
 	// Data
 	dataController := ctrldata.DataController{
@@ -59,23 +69,6 @@ func RegisterRoutes(
 	}
 	router.GET("/cards/:FIRST/*SECOND", dataController.CardsGet)
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
-
-	// Notifications
-	notificationController := controllers.NotificationController{
-		DB:       db,
-		Renderer: renderer,
-	}
-	router.GET("/notifications", notificationController.NotificationsGet)
-	router.GET("/notification/:ID", notificationController.NotificationGet)
-	router.GET("/api/notifications", notificationController.ApiNotificationsGet)
-	router.POST("/api/notifications/read_all", notificationController.ApiNotificationsReadAllPost)
-	router.POST("/api/notifications/:ID/read", notificationController.ApiNotificationReadPost)
-	router.POST("/api/notifications/:ID/unread", notificationController.ApiNotificationUnreadPost)
-	router.POST("/api/notifications/:ID/delete", notificationController.ApiNotificationDeletePost)
-
-	// Debug: send a notification to the authenticated user
-	router.GET("/add_notification", notificationController.AddNotificationGet)
-	router.POST("/add_notification", notificationController.AddNotificationPost)
 
 	router.GET("/inventory", dataController.InventoryGet)
 	router.GET("/add", dataController.InventoryAddGet)
@@ -87,13 +80,8 @@ func RegisterRoutes(
 	router.GET("/add_booster", dataController.AddBoosterGet)
 	router.POST("/add_booster", dataController.AddBoosterPost)
 
-	// Shop
-	shopController := controllers.ShopController{
-		DB:       db,
-		Renderer: renderer,
-		Data:     data,
-	}
-	router.GET("/shop", shopController.ShopGet)
-	router.POST("/shop/topup", shopController.ShopTopupPost)
-	router.POST("/shop/buy", shopController.ShopBuyPost)
+	// shop.go
+	router.GET("/shop", controller.ShopGet)
+	router.POST("/shop/topup", controller.ShopTopupPost)
+	router.POST("/shop/buy", controller.ShopBuyPost)
 }
