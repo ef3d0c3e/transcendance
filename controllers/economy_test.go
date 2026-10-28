@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -24,14 +26,15 @@ func daysAgo(n int) time.Time {
 }
 
 // setDailyStreak gives a user a connection streak that claimed its last
-// reward on the given day
-func setDailyStreak(t *testing.T, username string, day uint, lastDay *time.Time) {
+// reward on the given day, with the given best streak
+func setDailyStreak(t *testing.T, username string, day uint, best uint, lastDay *time.Time) {
 	t.Helper()
 	id := userID(t, username)
 	require.NoError(t, tests.DB.Where("user_id = ?", id).Delete(&models.DailyStreak{}).Error)
 	require.NoError(t, tests.DB.Create(&models.DailyStreak{
 		UserID:  id,
 		Day:     day,
+		Best:    best,
 		LastDay: lastDay,
 	}).Error)
 }
@@ -43,105 +46,204 @@ func dailyStreak(t *testing.T, username string) models.DailyStreak {
 	return streak
 }
 
-// visit makes an authenticated request, which credits the connection streak
-// reward of the day when it is due
-func visit(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string) {
+// claimDaily claims the connection streak reward of the day from the
+// inventory's streak section
+func claimDaily(t *testing.T, router *gin.Engine, cookie *http.Cookie, tab string) *httptest.ResponseRecorder {
 	t.Helper()
-	req := httptest.NewRequest(http.MethodGet, target, nil)
-	req.AddCookie(cookie)
-
-	rec := httptest.NewRecorder()
-	router.ServeHTTP(rec, req)
-	require.Equal(t, http.StatusOK, rec.Code)
+	return postForm(t, router, cookie, "/inventory/claim", url.Values{"tab": {tab}})
 }
 
-func TestDailyRewardFirstVisit(t *testing.T) {
+func TestDailyRewardClaim(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "streak1", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "streak1", "foo-bar-baz-qux")
-	// The account created no reward yet
-	setDailyStreak(t, "streak1", 0, nil)
 
-	visit(t, router, cookie, "/shop")
+	rec := claimDaily(t, router, cookie, "")
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/inventory", rec.Header().Get("Location"))
 
+	// The first day of the ladder pays 200 coins
 	require.Equal(t, uint(200), shopBalance(t, "streak1"))
 	streak := dailyStreak(t, "streak1")
 	require.Equal(t, uint(1), streak.Day)
+	require.Equal(t, uint(1), streak.Best)
 	require.NotNil(t, streak.LastDay)
 	require.WithinDuration(t, daysAgo(0), *streak.LastDay, time.Second)
+}
 
-	// The reward is announced with a notification
-	res := getNotifications(t, router, cookie, "")
-	require.Equal(t, "Daily reward", res.Notifications[0].Title)
-	require.Equal(t, "Day 1: 200 coins added to your balance", res.Notifications[0].Desc)
+func TestDailyRewardClaimTwice(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak2", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak2", "foo-bar-baz-qux")
 
-	// A second visit of the day changes nothing
-	visit(t, router, cookie, "/shop")
-	require.Equal(t, uint(200), shopBalance(t, "streak1"))
-	require.Equal(t, uint(1), dailyStreak(t, "streak1").Day)
-	require.Len(t, getNotifications(t, router, cookie, "").Notifications, 1)
+	require.Equal(t, http.StatusSeeOther, claimDaily(t, router, cookie, "").Code)
+	// The bonus of the day pays once only
+	require.Equal(t, http.StatusSeeOther, claimDaily(t, router, cookie, "").Code)
+
+	require.Equal(t, uint(200), shopBalance(t, "streak2"))
+	require.Equal(t, uint(1), dailyStreak(t, "streak2").Day)
 }
 
 func TestDailyRewardContinuesStreak(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "streak2", "foo-bar-baz-qux", 0)
-	cookie := login(t, router, "streak2", "foo-bar-baz-qux")
-	// Day 4 pays 700 coins
+	createAccount(t, router, "streak3", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak3", "foo-bar-baz-qux")
+	// The fourth day pays 700 coins
 	yesterday := daysAgo(1)
-	setDailyStreak(t, "streak2", 3, &yesterday)
+	setDailyStreak(t, "streak3", 3, 3, &yesterday)
 
-	visit(t, router, cookie, "/shop")
+	claimDaily(t, router, cookie, "")
 
-	require.Equal(t, uint(700), shopBalance(t, "streak2"))
-	require.Equal(t, uint(4), dailyStreak(t, "streak2").Day)
+	require.Equal(t, uint(700), shopBalance(t, "streak3"))
+	streak := dailyStreak(t, "streak3")
+	require.Equal(t, uint(4), streak.Day)
+	require.Equal(t, uint(4), streak.Best)
 }
 
 func TestDailyRewardResetsAfterMissedDay(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "streak3", "foo-bar-baz-qux", 0)
-	cookie := login(t, router, "streak3", "foo-bar-baz-qux")
-	// A missed day sends the streak back to day 1
-	twoDaysAgo := daysAgo(2)
-	setDailyStreak(t, "streak3", 4, &twoDaysAgo)
-
-	visit(t, router, cookie, "/shop")
-
-	require.Equal(t, uint(200), shopBalance(t, "streak3"))
-	require.Equal(t, uint(1), dailyStreak(t, "streak3").Day)
-}
-
-func TestDailyRewardCapsAtFive(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "streak4", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "streak4", "foo-bar-baz-qux")
-	// Past the last reward day the counter stays put, but keeps paying
+	// A missed day sends the streak back to day 1, the best is kept
+	twoDaysAgo := daysAgo(2)
+	setDailyStreak(t, "streak4", 4, 8, &twoDaysAgo)
+
+	claimDaily(t, router, cookie, "")
+
+	require.Equal(t, uint(200), shopBalance(t, "streak4"))
+	streak := dailyStreak(t, "streak4")
+	require.Equal(t, uint(1), streak.Day)
+	require.Equal(t, uint(8), streak.Best)
+}
+
+func TestDailyRewardClimbsPastTheCap(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak5", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak5", "foo-bar-baz-qux")
+	// Past the last reward day the counter keeps climbing, and the last
+	// reward keeps paying
 	yesterday := daysAgo(1)
-	setDailyStreak(t, "streak4", 5, &yesterday)
+	setDailyStreak(t, "streak5", 5, 5, &yesterday)
 
-	visit(t, router, cookie, "/shop")
+	claimDaily(t, router, cookie, "")
 
-	require.Equal(t, uint(1000), shopBalance(t, "streak4"))
-	require.Equal(t, uint(5), dailyStreak(t, "streak4").Day)
+	require.Equal(t, uint(1000), shopBalance(t, "streak5"))
+	streak := dailyStreak(t, "streak5")
+	require.Equal(t, uint(6), streak.Day)
+	require.Equal(t, uint(6), streak.Best)
+}
 
-	// And the day after that pays again
-	setDailyStreak(t, "streak4", 5, &yesterday)
-	visit(t, router, cookie, "/shop")
-	require.Equal(t, uint(2000), shopBalance(t, "streak4"))
+func TestDailyRewardSectionHoldsTheRecord(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak6", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak6", "foo-bar-baz-qux")
+	yesterday := daysAgo(1)
+	setDailyStreak(t, "streak6", 12, 12, &yesterday)
+
+	body := getInventory(t, router, cookie, "/inventory")
+	// Past the reward cap the raw streak shows next to the tier, and the
+	// best streak is the ongoing one
+	require.Contains(t, body, `<span class="daily-streak-tier">Tier 5/5</span>`)
+	require.Contains(t, body, `<span class="daily-streak-count">Streak 12</span>`)
+	require.Contains(t, body, `<span class="daily-streak-best">Best: current</span>`)
+	require.Contains(t, body, "Claim 1,000 coins")
+}
+
+func TestDailyRewardSectionBelowTheCap(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak7", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak7", "foo-bar-baz-qux")
+	yesterday := daysAgo(1)
+	setDailyStreak(t, "streak7", 3, 8, &yesterday)
+
+	body := getInventory(t, router, cookie, "/inventory")
+	// The tier is the one of today's bonus: the fourth day of the ladder
+	require.Contains(t, body, `<span class="daily-streak-tier">Tier 4/5</span>`)
+	// Below the cap the raw streak stays hidden
+	require.NotContains(t, body, "daily-streak-count")
+	require.Contains(t, body, `<span class="daily-streak-best">Best: 8</span>`)
+	require.Contains(t, body, "Claim 700 coins")
+}
+
+func TestDailyRewardSectionBrokenStreak(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak8", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak8", "foo-bar-baz-qux")
+	// The last claim is too old for the streak to continue
+	twoDaysAgo := daysAgo(2)
+	setDailyStreak(t, "streak8", 12, 12, &twoDaysAgo)
+
+	body := getInventory(t, router, cookie, "/inventory")
+	// The bonus of the day restarts the streak at day 1
+	require.Contains(t, body, `<span class="daily-streak-tier">Tier 1/5</span>`)
+	require.NotContains(t, body, "daily-streak-count")
+	require.Contains(t, body, "Claim 200 coins")
+	// The ongoing streak holds no record anymore
+	require.Contains(t, body, `<span class="daily-streak-best">Best: 12</span>`)
+}
+
+func TestDailyRewardSectionClaimed(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak9", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak9", "foo-bar-baz-qux")
+	today := daysAgo(0)
+	setDailyStreak(t, "streak9", 3, 3, &today)
+
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Contains(t, body, `<span class="daily-streak-tier">Tier 3/5</span>`)
+	require.Contains(t, body, `<span class="daily-streak-best">Best: current</span>`)
+	// The button is disabled until midnight, and counts down to it
+	require.Contains(t, body, `class="daily-streak-button" disabled`)
+	require.Contains(t, body, "Available in")
+	require.Contains(t, body, "data-countdown=")
+
+	// The countdown ends at the next midnight, server time
+	match := regexp.MustCompile(`data-countdown="(\d+)"`).FindStringSubmatch(body)
+	require.NotNil(t, match)
+	seconds, err := strconv.Atoi(match[1])
+	require.NoError(t, err)
+	now := time.Now()
+	midnight := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local).AddDate(0, 0, 1)
+	require.InDelta(t, time.Until(midnight).Seconds(), seconds, 30)
+}
+
+func TestDailyRewardSectionOnEveryTab(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak10", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "streak11", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak10", "foo-bar-baz-qux")
+
+	// The section is on top of every tab of one's own inventory
+	require.Contains(t, getInventory(t, router, cookie, "/inventory"), "daily-streak")
+	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=boosters"), "daily-streak")
+
+	// And only on one's own inventory
+	require.NotContains(t, getInventory(t, router, cookie, "/inventory?u=streak11"), "daily-streak")
+}
+
+func TestDailyRewardSectionClaimsFromTheTab(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak12", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak12", "foo-bar-baz-qux")
+
+	// The claim comes back to the tab it was made from
+	rec := claimDaily(t, router, cookie, "boosters")
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/inventory?tab=boosters", rec.Header().Get("Location"))
 }
 
 func TestDailyRewardUnauthenticated(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "streak5", "foo-bar-baz-qux", 0)
-	setDailyStreak(t, "streak5", 0, nil)
+	createAccount(t, router, "streak13", "foo-bar-baz-qux", 0)
 
-	rec := shopRequest(t, router, http.MethodGet, "/shop", nil, nil)
-	require.Equal(t, http.StatusOK, rec.Code)
+	rec := claimDaily(t, router, nil, "")
+	require.Equal(t, http.StatusForbidden, rec.Code)
 
-	// Only signed in visitors claim the reward of the day
-	require.Equal(t, uint(0), shopBalance(t, "streak5"))
-	streak := dailyStreak(t, "streak5")
-	require.Zero(t, streak.Day)
-	require.Nil(t, streak.LastDay)
+	// Only signed in visitors have a streak
+	require.Equal(t, uint(0), shopBalance(t, "streak13"))
+	var count int64
+	require.NoError(t, tests.DB.Model(&models.DailyStreak{}).Where("user_id = ?", userID(t, "streak13")).Count(&count).Error)
+	require.Zero(t, count)
 }
 
 // setBoosterPile gives a user a pile of default boosters

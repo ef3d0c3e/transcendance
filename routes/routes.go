@@ -88,6 +88,7 @@ func RegisterRoutes(
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
 
 	router.GET("/inventory", dataController.InventoryGet)
+	router.POST("/inventory/claim", dataController.InventoryClaimPost)
 	router.GET("/add", dataController.InventoryAddGet)
 
 	router.GET("/opening", dataController.OpeningGet)

@@ -10,8 +10,10 @@ type DailyStreak struct {
 	UserID uint `gorm:"primaryKey"`
 	User   User `gorm:"constraint:OnDelete:CASCADE"`
 
-	// Day of the streak the last reward was credited on, capped
+	// Consecutive days the reward was claimed on in a row
 	Day uint `gorm:"not null;default:0"`
-	// Start of the day the last reward was credited on, nil until the first one
+	// Best streak the user has done
+	Best uint `gorm:"not null;default:0"`
+	// Start of the day the last reward was claimed on, nil until the first one
 	LastDay *time.Time
 }

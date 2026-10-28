@@ -55,7 +55,7 @@ func (dc *DataController) pileTileData(c *gin.Context, pile *models.BoosterPile)
 			remaining = 0
 		}
 		timerSeconds = remaining
-		timerLabel = fmt.Sprintf("%d:%02d", remaining/60, remaining%60)
+		timerLabel = formatCountdown(remaining)
 	}
 
 	return &pileTile{

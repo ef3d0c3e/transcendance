@@ -1,0 +1,21 @@
+{{ define "daily-streak" }}
+<section class="daily-streak">
+	<div class="daily-streak-info">
+		<h3 class="daily-streak-title">{{ .Title }}</h3>
+		<div class="daily-streak-numbers">
+			<span class="daily-streak-tier">{{ .TierLabel }}</span>
+			{{ with .StreakLabel }}
+			<span class="daily-streak-count">{{ . }}</span>
+			{{ end }}
+			<span class="daily-streak-best">{{ .BestLabel }}</span>
+		</div>
+	</div>
+	<form class="daily-streak-claim" method="post" action="{{ .ClaimAction }}">
+		<input type="hidden" name="tab" value="{{ .Tab }}">
+		<button type="submit" class="daily-streak-button"{{ if .ClaimDisabled }} disabled{{ end }}>
+			{{- .ClaimLabel -}}
+			{{- with .TimerValue }} <span data-countdown="{{ $.TimerSeconds }}">{{ . }}</span>{{ end -}}
+		</button>
+	</form>
+</section>
+{{ end }}

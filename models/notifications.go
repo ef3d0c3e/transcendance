@@ -10,7 +10,6 @@ import (
 const (
 	NotificationFriendRequest = "friend-request"
 	NotificationInfo          = "info"
-	NotificationDailyReward   = "daily-reward"
 )
 
 type Notification struct {
