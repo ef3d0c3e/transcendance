@@ -14,6 +14,7 @@ services:
     image: transcendance-gateway
     restart: unless-stopped
     environment:
+      KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
       DOMAIN: ${DOMAIN:-transcendance.pundalik.org}
       HTTPS_PORT: ${HTTPS_PORT:-8443}
       TLS_EXTRA_SANS: ${TLS_EXTRA_SANS:-}
@@ -22,11 +23,7 @@ services:
       - "${HTTPS_PORT:-8443}:443"
     volumes:
       - certificates:/etc/nginx/certs
-    depends_on:
-      service:
-        condition: service_healthy
-      auth:
-        condition: service_healthy
+    # Upstreams are looked up per request, the gateway starts without them
     networks:
       - backend
     mem_limit: 64m
@@ -93,7 +90,102 @@ services:
     mem_limit: 384m
     logging: *logging
 
+  # Logs
+  elasticsearch:
+    image: elasticsearch:9.5.5
+    restart: unless-stopped
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?}
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      discovery.type: single-node
+      # Only reachable inside the stack
+      xpack.security.enabled: "true"
+      xpack.security.http.ssl.enabled: "false"
+      xpack.security.transport.ssl.enabled: "false"
+      xpack.ml.enabled: "false"
+      ingest.geoip.downloader.enabled: "false"
+      # Avoids needing vm.max_map_count on the host
+      node.store.allow_mmap: "false"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health' | grep -qE '\"status\":\"(green|yellow)\"'"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 10
+    networks:
+      - backend
+    mem_limit: 1280m
+    logging: *logging
+
+  # Users, roles and policies, applied on every start
+  elasticsearch-setup:
+    image: elasticsearch:9.5.5
+    restart: on-failure
+    entrypoint: ["/setup.sh"]
+    environment:
+      ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?}
+      KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:?}
+      KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
+    volumes:
+      - ./elasticsearch/setup.sh:/setup.sh:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 128m
+    logging: *logging
+
+  kibana:
+    image: kibana:9.5.5
+    restart: unless-stopped
+    environment:
+      SERVER_BASEPATH: /kibana
+      SERVER_REWRITEBASEPATH: "true"
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+      ELASTICSEARCH_USERNAME: kibana_system
+      ELASTICSEARCH_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:?}
+      XPACK_SECURITY_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:?}
+      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:?}
+      XPACK_REPORTING_ENCRYPTIONKEY: ${KIBANA_ENCRYPTION_KEY:?}
+      XPACK_SECURITY_SECURECOOKIES: "true"
+      TELEMETRY_OPTIN: "false"
+      NODE_OPTIONS: --max-old-space-size=768
+    healthcheck:
+      # 401 means up and asking for a login
+      test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/kibana/api/status | grep -qE '^(200|401)$$'"]
+      interval: 15s
+      timeout: 5s
+      start_period: 120s
+      retries: 10
+    depends_on:
+      elasticsearch-setup:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    mem_limit: 1g
+    logging: *logging
+
+  # Data view of the logs, applied on every start
+  kibana-setup:
+    image: elasticsearch:9.5.5
+    restart: on-failure
+    entrypoint: ["/kibana-setup.sh"]
+    environment:
+      KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
+    volumes:
+      - ./elasticsearch/kibana-setup.sh:/kibana-setup.sh:ro
+    depends_on:
+      kibana:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
 volumes:
+  es_data:
   auth_data:
   certificates:
   db_data:

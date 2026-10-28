@@ -60,8 +60,20 @@ server {
 		return 302 /auth/?rd=$request_uri;
 	}
 
+	location ~ ^/(kibana|grafana|prometheus|alertmanager)$ {
+		return 301 $uri/;
+	}
+
+	location /kibana/ {
+		include /etc/nginx/snippets/admin.conf;
+		# Kibana trusts its own users only, the gateway signs in for the admin
+		proxy_set_header Authorization "Basic ${KIBANA_BASIC_AUTH}";
+		set $kibana http://kibana:5601;
+		proxy_pass $kibana;
+	}
+
 	# Reserved for the admin tools, until each one is deployed
-	location ~ ^/(grafana|kibana|prometheus|alertmanager)(/|$) {
+	location ~ ^/(grafana|prometheus|alertmanager)(/|$) {
 		include /etc/nginx/snippets/admin.conf;
 		try_files /not-deployed =404;
 	}
