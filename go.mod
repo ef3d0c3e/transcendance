@@ -5,6 +5,7 @@ go 1.27.1
 require (
 	github.com/blevesearch/bleve v1.0.14
 	github.com/chai2010/webp v1.4.0
+	github.com/coder/websocket v1.8.15
 	github.com/gin-gonic/gin v1.12.0
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/hakastein/gofluent v0.6.0
