@@ -1,7 +1,9 @@
 package config
 
 import (
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
 	"time"
@@ -15,20 +17,24 @@ import (
 )
 
 func ConnectDatabase() (*gorm.DB, error) {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-		return nil, err
+	// Containers get their environment from compose instead of a .env file
+	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
+		return nil, fmt.Errorf("load .env: %w", err)
 	}
 
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
 	database := os.Getenv("MYSQL_DATABASE")
+	address := os.Getenv("MYSQL_ADDRESS")
+	if address == "" {
+		address = "127.0.0.1:3306"
+	}
 
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user,
 		password,
+		address,
 		database,
 	)
 
