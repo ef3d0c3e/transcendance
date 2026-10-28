@@ -27,4 +27,14 @@ es /_security/user/kibana_gateway -X PUT -d "{
 	\"roles\": [\"kibana_admin\", \"log_admin\", \"monitoring_user\"]
 }"
 
+# Logstash writes the logs, nothing else
+es /_security/role/logstash_writer -X PUT -d '{
+	"cluster": ["monitor"],
+	"indices": [{"names": ["logs-transcendance-*"], "privileges": ["create_doc", "auto_configure", "view_index_metadata"]}]
+}'
+es /_security/user/logstash_internal -X PUT -d "{
+	\"password\": \"${LOGSTASH_PASSWORD}\",
+	\"roles\": [\"logstash_writer\"]
+}"
+
 echo "Elasticsearch is set up"

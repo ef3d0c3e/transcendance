@@ -6,6 +6,8 @@ x-logging: &logging
   options:
     max-size: 10m
     max-file: "3"
+    # Filebeat keeps the lines naming a compose service
+    labels: com.docker.compose.service
 
 services:
   # Only published service, terminates TLS
@@ -128,6 +130,7 @@ services:
       ELASTIC_PASSWORD: ${ELASTIC_PASSWORD:?}
       KIBANA_SYSTEM_PASSWORD: ${KIBANA_SYSTEM_PASSWORD:?}
       KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
+      LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD:?}
     volumes:
       - ./elasticsearch/setup.sh:/setup.sh:ro
     depends_on:
@@ -184,8 +187,55 @@ services:
       - backend
     mem_limit: 64m
     logging: *logging
+
+  logstash:
+    image: logstash:9.5.5
+    restart: unless-stopped
+    environment:
+      LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD:?}
+      LS_JAVA_OPTS: -Xms256m -Xmx256m
+    volumes:
+      - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:9600/ > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+      retries: 10
+    depends_on:
+      elasticsearch-setup:
+        condition: service_completed_successfully
+    networks:
+      - backend
+    mem_limit: 640m
+    logging: *logging
+
+  # Reads the container logs of the host, keeps this stack's
+  filebeat:
+    image: elastic/filebeat:9.5.5
+    restart: unless-stopped
+    user: root
+    command: ["filebeat", "-e", "--strict.perms=false"]
+    volumes:
+      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro
+      - filebeat_data:/usr/share/filebeat/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:5066/ > /dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      logstash:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 128m
+    logging: *logging
 volumes:
   es_data:
+  filebeat_data:
   auth_data:
   certificates:
   db_data:
