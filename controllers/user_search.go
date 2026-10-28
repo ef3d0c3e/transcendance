@@ -17,11 +17,6 @@ import (
 	"transcendance/views"
 )
 
-type SearchController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 const (
 	userSearchPageSize = 24
 	// Shorter searches only match usernames containing them
@@ -124,7 +119,7 @@ func (v *userSearchView) params() url.Values {
 }
 
 // Users matching the search and filters, without ordering
-func (sc *SearchController) userQuery(c *gin.Context, v *userSearchView) *gorm.DB {
+func (sc *Controller) userQuery(c *gin.Context, v *userSearchView) *gorm.DB {
 	db := sc.DB.WithContext(c.Request.Context()).Model(&models.User{})
 	if v.Query != "" {
 		pattern := "%" + escapeLike(v.Query) + "%"
@@ -167,7 +162,7 @@ func userOrder(v *userSearchView) clause.Expression {
 }
 
 // Fill the view with the matching users of the page
-func (sc *SearchController) searchUsers(c *gin.Context, v *userSearchView) error {
+func (sc *Controller) searchUsers(c *gin.Context, v *userSearchView) error {
 	if err := sc.userQuery(c, v).Count(&v.Count).Error; err != nil {
 		return err
 	}
@@ -181,7 +176,7 @@ func (sc *SearchController) searchUsers(c *gin.Context, v *userSearchView) error
 }
 
 // search: every user, or the ones matching the search and filters
-func (sc *SearchController) SearchUsersGet(c *gin.Context) {
+func (sc *Controller) SearchUsersGet(c *gin.Context) {
 	v := &userSearchView{
 		Query: strings.TrimSpace(c.Query("q")),
 		Page:  1,
@@ -209,7 +204,7 @@ func (sc *SearchController) SearchUsersGet(c *gin.Context) {
 }
 
 // Options of the filter and sort selects
-func (sc *SearchController) searchOptions(c *gin.Context, v *userSearchView) map[string]any {
+func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[string]any {
 	joined := SelectOptions(append([]string{""}, userJoinedFilters...), v.Joined, func(value string) string {
 		if value == "" {
 			return sc.Renderer.T(c, "search-user-filter-joined-all")
@@ -237,7 +232,7 @@ func (sc *SearchController) searchOptions(c *gin.Context, v *userSearchView) map
 	}
 }
 
-func (sc *SearchController) renderSearch(c *gin.Context, v *userSearchView) {
+func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
 	user := GetAuthenticatedUser(c)
 	title := sc.Renderer.T(c, "search-user-title")
 	builder := views.PageBuilder("base", map[string]any{

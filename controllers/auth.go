@@ -16,11 +16,6 @@ import (
 	"transcendance/views"
 )
 
-type AuthController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
@@ -85,7 +80,7 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 	return user.(*AuthenticatedUser)
 }
 
-func (ac *AuthController) RegisterGet(c *gin.Context) {
+func (ac *Controller) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -108,7 +103,7 @@ func (ac *AuthController) RegisterGet(c *gin.Context) {
 
 var is_alphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
-func (ac *AuthController) RegisterPost(c *gin.Context) {
+func (ac *Controller) RegisterPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 	passwordConfirm := c.PostForm("password_confirm")
@@ -189,7 +184,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) LoginGet(c *gin.Context) {
+func (ac *Controller) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -210,7 +205,7 @@ func (ac *AuthController) LoginGet(c *gin.Context) {
 	ac.Renderer.Render(c, &builder)
 }
 
-func (ac *AuthController) LoginPost(c *gin.Context) {
+func (ac *Controller) LoginPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
@@ -279,7 +274,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) LogoutGet(c *gin.Context) {
+func (ac *Controller) LogoutGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if user == nil {
