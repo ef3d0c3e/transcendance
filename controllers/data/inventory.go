@@ -124,6 +124,8 @@ type inventoryView struct {
 	// Count shown in each tab
 	TotalCards    int64
 	TotalBoosters int64
+	// Pile of default boosters, shown on one's own boosters tab
+	Pile *pileTile
 }
 
 func (dc *DataController) renderInventory(c *gin.Context, user *controllers.AuthenticatedUser, v *inventoryView) {
@@ -146,7 +148,10 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		case searching:
 			v.Message = dc.Renderer.T(c, "inventory-message-no-match")
 		case v.Tab == inventoryTabBoosters:
-			v.Message = dc.Renderer.T(c, "inventory-message-no-boosters")
+			// The pile of default boosters shows its own tile, even empty
+			if v.Pile == nil || v.Pile.PileEmpty {
+				v.Message = dc.Renderer.T(c, "inventory-message-no-boosters")
+			}
 		default:
 			v.Message = dc.Renderer.T(c, "inventory-message-empty")
 		}
@@ -194,6 +199,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
 		"TotalCards":     v.TotalCards,
 		"TotalBoosters":  v.TotalBoosters,
+		"Pile":           v.Pile,
 		"Items":          v.Items,
 		"Query":          v.Query,
 		"Filtered":       searching,
@@ -333,6 +339,17 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	if v.Tab == inventoryTabBoosters {
+		// The pile of default boosters tops itself up over time, and only
+		// shows on one's own inventory
+		if v.Username == user.Username {
+			pile, err := controllers.AccrueBoosterPile(dc.DB, userID)
+			if err != nil {
+				fail("booster pile", err)
+				return
+			}
+			v.Pile = dc.pileTileData(c, &pile)
+			v.TotalBoosters += int64(pile.Count)
+		}
 		if err := dc.inventoryBoosters(c, userID, v); err != nil {
 			fail("boosters", err)
 			return

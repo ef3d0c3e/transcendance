@@ -2,7 +2,11 @@
 <h2>{{ .T "pack-opening-title" }}</h2>
 
 <div class="pack-booster">
+	{{ if .Data.Pile }}
+	{{ template "booster-pile" .Data.Pile }}
+	{{ else }}
 	{{ template "collection" .Data.Booster }}
+	{{ end }}
 </div>
 
 <form class="pack-form" id="pack-form" action="/opening" method="post">
