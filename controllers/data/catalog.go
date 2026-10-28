@@ -128,7 +128,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		"Pages":             totalPages,
 	}
 	if v.Tab == catalogTabCards {
-		fields["RarityOptions"] = inventoryOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
+		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
 			if value == "" {
 				return dc.Renderer.T(c, "inventory-filter-rarity-all")
 			}
@@ -151,7 +151,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		if v.Collection != 0 {
 			current = strconv.Itoa(v.Collection)
 		}
-		fields["CollectionOptions"] = inventoryOptions(collections, current, func(value string) string {
+		fields["CollectionOptions"] = controllers.SelectOptions(collections, current, func(value string) string {
 			return titles[value]
 		})
 		defaultSort := defaultCatalogSort(v.Query)
@@ -159,7 +159,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		if defaultSort != inventorySortRelevance {
 			sorts = sorts[1:]
 		}
-		sortOptions := inventoryOptions(sorts, v.Sort, func(value string) string {
+		sortOptions := controllers.SelectOptions(sorts, v.Sort, func(value string) string {
 			if value == catalogSortNumber {
 				return dc.Renderer.T(c, "catalog-sort-number")
 			}
