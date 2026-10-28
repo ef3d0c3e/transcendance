@@ -37,6 +37,26 @@ account-delete-error-permission = You do not have permissions to delete { $usern
 search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
+search-user-count = { $count ->
+    [one] { $count } user
+    *[other] { $count } users
+}
+search-user-empty = No users found
+search-user-error-internal = Search failed
+search-user-filter-joined = Joined
+search-user-filter-joined-all = Any time
+search-user-filter-joined-day = Past day
+search-user-filter-joined-week = Past week
+search-user-filter-joined-month = Past month
+search-user-filter-joined-year = Past year
+search-user-sort-relevance = Relevance
+search-user-sort-name = Name (A-Z)
+search-user-sort-name-desc = Name (Z-A)
+search-user-sort-newest = Newest members
+search-user-sort-oldest = Oldest members
+search-user-sort-cards = Most cards
+search-user-joined = Joined:
+search-user-cards = Cards:
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation

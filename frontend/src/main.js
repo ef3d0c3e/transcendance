@@ -11,7 +11,7 @@ import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Notification from './Notification.svelte';
-import { enhanceNotificationList } from './relative-time.js';
+import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 
 // Navbar
 {
@@ -59,6 +59,13 @@ import { enhanceNotificationList } from './relative-time.js';
 
 	if (target) {
 		enhanceNotificationList(target);
+	}
+}
+
+// Relative dates of server rendered lists
+{
+	for (const list of document.querySelectorAll('[data-relative-times]')) {
+		enhanceRelativeTimes(list);
 	}
 }
 

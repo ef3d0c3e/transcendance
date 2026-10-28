@@ -77,3 +77,12 @@ export function enhanceNotificationList(list) {
 		previous = label;
 	}
 }
+
+// Format the times of a server rendered list relative to now, e.g user join dates
+export function enhanceRelativeTimes(list) {
+	const { locale } = list.dataset;
+	for (const time of list.querySelectorAll('time')) {
+		time.textContent = relativeTime(time.dateTime, locale);
+		time.title = fullDate(time.dateTime, locale);
+	}
+}
