@@ -10,7 +10,6 @@ import (
 	_ "image/png"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -61,25 +60,18 @@ func (pc *ProfileController) avatarError(c *gin.Context, status int, message str
 	})
 }
 
-func (pc *ProfileController) avatarOwner(c *gin.Context) *AuthenticatedUser {
+func (pc *ProfileController) avatarOwner(c *gin.Context) *models.User {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		pc.avatarError(c, http.StatusUnauthorized, "error-unauthorized")
 		return nil
 	}
-	origin := c.GetHeader("Origin")
-	if origin != "" {
-		u, err := url.Parse(origin)
-		if err != nil || u.Host != c.Request.Host || (u.Scheme != "http" && u.Scheme != "https") {
-			pc.avatarError(c, http.StatusForbidden, "error-unauthorized")
-			return nil
-		}
-	}
-	if c.GetHeader("Sec-Fetch-Site") == "cross-site" {
-		pc.avatarError(c, http.StatusForbidden, "error-unauthorized")
+	target, status := pc.profileTarget(c, user)
+	if status != 0 {
+		pc.avatarError(c, status, "error-unauthorized")
 		return nil
 	}
-	return user
+	return target
 }
 
 func (pc *ProfileController) AvatarPost(c *gin.Context) {
@@ -127,7 +119,7 @@ func (pc *ProfileController) AvatarPost(c *gin.Context) {
 		pc.avatarError(c, http.StatusBadRequest, "profile-avatar-invalid")
 		return
 	}
-	pc.saveAvatar(c, user.ID, data)
+	pc.saveAvatar(c, user, data)
 }
 
 func (pc *ProfileController) AvatarDelete(c *gin.Context) {
@@ -135,16 +127,20 @@ func (pc *ProfileController) AvatarDelete(c *gin.Context) {
 	if user == nil {
 		return
 	}
-	pc.saveAvatar(c, user.ID, nil)
+	pc.saveAvatar(c, user, nil)
 }
 
-func (pc *ProfileController) saveAvatar(c *gin.Context, userID uint, data []byte) {
-	if err := pc.DB.Model(&models.User{}).Where("id = ?", userID).Update("avatar", data).Error; err != nil {
+func (pc *ProfileController) saveAvatar(c *gin.Context, target *models.User, data []byte) {
+	if err := pc.DB.Model(&models.User{}).Where("id = ?", target.ID).Update("avatar", data).Error; err != nil {
 		pc.avatarError(c, http.StatusInternalServerError, "error-unexpected")
 		return
 	}
 	c.Header("Cache-Control", "no-store")
-	c.Redirect(http.StatusSeeOther, "/profile")
+	destination := "/profile"
+	if target.ID != GetAuthenticatedUser(c).ID {
+		destination += "/" + target.Username
+	}
+	c.Redirect(http.StatusSeeOther, destination)
 }
 
 const maxAvatarBytes = 5 * 1024 * 1024
