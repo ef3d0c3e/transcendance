@@ -1,0 +1,73 @@
+server_tokens off;
+
+# Docker DNS, so a recreated container is found again
+resolver 127.0.0.11 valid=10s ipv6=off;
+
+map $http_upgrade $connection_upgrade {
+	default upgrade;
+	''      close;
+}
+
+server {
+	listen 80;
+
+	return 308 https://$host:${HTTPS_PORT}$request_uri;
+}
+
+server {
+	listen 443 ssl;
+	http2 on;
+	server_name _;
+	# Location headers keep the port the client used
+	absolute_redirect off;
+
+	ssl_certificate     /etc/nginx/certs/gateway.crt;
+	ssl_certificate_key /etc/nginx/certs/gateway.key;
+	ssl_protocols       TLSv1.2 TLSv1.3;
+	ssl_session_cache   shared:SSL:10m;
+	ssl_session_timeout 1d;
+
+	add_header X-Content-Type-Options nosniff always;
+	add_header X-Frame-Options SAMEORIGIN always;
+	add_header Referrer-Policy strict-origin-when-cross-origin always;
+
+	client_max_body_size 10m;
+
+	include /etc/nginx/snippets/proxy.conf;
+
+	# Only the stack's own checks need it
+	location = /healthz {
+		return 404;
+	}
+
+	# Reserved for the admin tools, behind the device authorization
+	location ~ ^/(auth|grafana|kibana|prometheus|alertmanager)(/|$) {
+		return 404;
+	}
+
+	location / {
+		set $app http://service:8080;
+		proxy_pass $app;
+	}
+}
+
+# Internal only: health check and metrics for the exporter, never published
+server {
+	listen 8081;
+
+	allow 127.0.0.1;
+	allow 10.0.0.0/8;
+	allow 172.16.0.0/12;
+	allow 192.168.0.0/16;
+	deny all;
+
+	location = /healthz {
+		access_log off;
+		return 200 "ok\n";
+	}
+
+	location = /stub_status {
+		access_log off;
+		stub_status;
+	}
+}

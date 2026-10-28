@@ -8,6 +8,28 @@ x-logging: &logging
     max-file: "3"
 
 services:
+  # Only published service, terminates TLS
+  gateway:
+    build: ./gateway
+    image: transcendance-gateway
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:-transcendance.pundalik.org}
+      HTTPS_PORT: ${HTTPS_PORT:-8443}
+      TLS_EXTRA_SANS: ${TLS_EXTRA_SANS:-}
+    ports:
+      - "${HTTP_PORT:-8080}:80"
+      - "${HTTPS_PORT:-8443}:443"
+    volumes:
+      - certificates:/etc/nginx/certs
+    depends_on:
+      service:
+        condition: service_healthy
+    networks:
+      - backend
+    mem_limit: 64m
+    logging: *logging
+
   service:
     build:
       context: ..
@@ -51,6 +73,7 @@ services:
     logging: *logging
 
 volumes:
+  certificates:
   db_data:
   card_images:
 
