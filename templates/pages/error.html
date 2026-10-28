@@ -1,6 +1,4 @@
 {{ define "error" }}
-{{ if ne .Data.Error -1 }}
 <h1>{{ .T "error-title" }}{{ if .Data.StatusCode }} {{ .Data.StatusCode }}{{ end }}</h1>
-{{ end }}
 <h3>{{ .Data.ErrorMessage }}</h3>
 {{ end }}

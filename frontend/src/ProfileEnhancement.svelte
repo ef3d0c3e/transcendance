@@ -144,7 +144,12 @@
 					return;
 				}
 
-				const data = await response.json();
+				// Server errors may not be JSON
+				const data = await response.json().catch(() => null);
+				if (!data) {
+					result.textContent = dataset.labelUnexpectedError;
+					return;
+				}
 
 				if (!response.ok && typeof data.message === "string") {
 					result.textContent = data.message;
