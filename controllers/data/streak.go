@@ -23,11 +23,20 @@ func formatCountdown(seconds int) string {
 	return fmt.Sprintf("%d:%02d", seconds/60, seconds%60)
 }
 
+// streakTier is one tier of the reward ladder in the streak meter
+type streakTier struct {
+	// Tier number and coin value of the tier, e.g "3 · 500"
+	Label string
+	// Whether the tier is the one of the bonus of the day
+	Current bool
+}
+
 // streakTile is the template data of the daily streak section, consumed by
 // the "daily-streak" partial
 type streakTile struct {
-	Title     string
-	TierLabel string
+	Title string
+	// Reward ladder, one cell per tier, the current one highlighted
+	Tiers []streakTier
 	// Raw streak count, shown past the reward cap
 	StreakLabel string
 	BestLabel   string
@@ -46,11 +55,20 @@ type streakTile struct {
 func (dc *DataController) streakTileData(c *gin.Context, state *controllers.StreakState) *streakTile {
 	tile := &streakTile{
 		Title:       dc.Renderer.T(c, "daily-streak-title"),
-		TierLabel:   dc.Renderer.T(c, "daily-streak-tier", "tier", int(state.Tier), "tiers", int(state.Tiers)),
 		ClaimAction: "/inventory/claim",
 	}
+	// The meter shows the tier number and the coin value of every tier,
+	// the one of the bonus of the day standing out
+	tile.Tiers = make([]streakTier, 0, len(state.Rewards))
+	for i, amount := range state.Rewards {
+		tier := uint(i + 1)
+		tile.Tiers = append(tile.Tiers, streakTier{
+			Label:   dc.Renderer.T(c, "daily-streak-meter", "tier", int(tier), "amount", int(amount)),
+			Current: tier == state.Tier,
+		})
+	}
 	// The streak count is only shown once it climbs past the reward cap
-	if state.Day > state.Tiers {
+	if state.Day > uint(len(state.Rewards)) {
 		tile.StreakLabel = dc.Renderer.T(c, "daily-streak-count", "days", int(state.Day))
 	}
 	// The best streak shows as a number, or as "current" while the ongoing

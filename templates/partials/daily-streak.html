@@ -2,13 +2,15 @@
 <section class="daily-streak">
 	<div class="daily-streak-info">
 		<h3 class="daily-streak-title">{{ .Title }}</h3>
-		<div class="daily-streak-numbers">
-			<span class="daily-streak-tier">{{ .TierLabel }}</span>
-			{{ with .StreakLabel }}
-			<span class="daily-streak-count">{{ . }}</span>
-			{{ end }}
-			<span class="daily-streak-best">{{ .BestLabel }}</span>
+		<div class="daily-streak-meter">
+			{{- range .Tiers }}
+			<span{{ if .Current }} aria-current="true"{{ end }} class="daily-streak-tier{{ if .Current }} daily-streak-tier-current{{ end }}">{{ .Label }}</span>
+			{{- end }}
 		</div>
+		{{ with .StreakLabel }}
+		<span class="daily-streak-count">{{ . }}</span>
+		{{ end }}
+		<span class="daily-streak-best">{{ .BestLabel }}</span>
 	</div>
 	<form class="daily-streak-claim" method="post" action="{{ .ClaimAction }}">
 		<input type="hidden" name="tab" value="{{ .Tab }}">
