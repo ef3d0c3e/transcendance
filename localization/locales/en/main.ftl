@@ -186,8 +186,6 @@ notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
-notification-daily-reward-title = Daily reward
-notification-daily-reward-desc = Day { $day }: { $amount } coins added to your balance
 
 catalog-title = Card catalog
 catalog-tabs-label = Catalog sections
@@ -253,6 +251,14 @@ inventory-search-count = { $count ->
 booster-pile-title = Default booster
 booster-pile-desc = { $count } random cards from all collections
 booster-pile-open-confirm = Open a default booster?
+daily-streak-title = Daily streak
+daily-streak-tier = Tier { $tier }/{ $tiers }
+daily-streak-count = Streak { $days }
+daily-streak-best = Best: { $best }
+daily-streak-best-current = current
+daily-streak-none = —
+daily-streak-claim = Claim { $amount } coins
+daily-streak-claimed = Available in
 
 pack-opening-title = Pack Opening
 pack-opening-open = Open pack

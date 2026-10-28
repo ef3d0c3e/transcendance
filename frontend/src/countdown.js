@@ -1,6 +1,11 @@
-// Format a number of seconds as M:SS, e.g "9:05"
+// Format a number of seconds as M:SS, or H:MM:SS past an hour, e.g "9:05"
 function formatCountdown(seconds) {
-	return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+	const hours = Math.floor(seconds / 3600);
+	const minutes = Math.floor((seconds % 3600) / 60);
+	const rest = String(seconds % 60).padStart(2, '0');
+	return hours > 0
+		? `${hours}:${String(minutes).padStart(2, '0')}:${rest}`
+		: `${minutes}:${rest}`;
 }
 
 // Tick one countdown pill down to zero, then reload the page so the server
