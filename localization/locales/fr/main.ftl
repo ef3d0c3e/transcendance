@@ -41,6 +41,7 @@ search-user-form-placeholder = Nom d'utilisateur
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
 navbar-cards = Cartes
+navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-shop = Boutique
 navbar-profile = Votre profil

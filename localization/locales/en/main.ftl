@@ -41,6 +41,7 @@ search-user-form-placeholder = Username
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
 navbar-cards = Cards
+navbar-users = Users
 navbar-inventory = Inventory
 navbar-shop = Shop
 navbar-profile = Your profile
