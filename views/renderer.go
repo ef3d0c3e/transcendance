@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +34,10 @@ type View struct {
 	Data any
 	// Theme
 	Theme string
+	// Authenticated user, nil for visitors (shown in the header)
+	User any
+	// Request path, to highlight the current page in the header
+	Path string
 	// Child templates
 	Children map[string]template.HTML
 	// Translator instance
@@ -59,6 +64,7 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 			"today": func() string {
 				return time.Now().UTC().Format("2006-01-02")
 			},
+			"hasPrefix": strings.HasPrefix,
 		}).ParseGlob("templates/**/*.html"),
 	)
 
@@ -67,6 +73,18 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 		Localizer: l,
 		themer:    themer,
 	}
+}
+
+// RenderToString executes a named template and returns the result as a string.
+// Useful to embed fragments (like cards) into JSON responses.
+func (r *Renderer) RenderToString(name string, data any) (string, error) {
+	var content bytes.Buffer
+
+	if err := r.templates.ExecuteTemplate(&content, name, data); err != nil {
+		return "", err
+	}
+
+	return content.String(), nil
 }
 
 type pageBuilder struct {
@@ -104,16 +122,20 @@ func (b *pageBuilder) Add(templateName string, name string, data map[string]any)
 	return child
 }
 
-func (r *Renderer) renderPage(
-	theme string,
-	loc *fluentloc.Localization,
-	b *pageBuilder,
-) (template.HTML, error) {
+// Request-wide values given to every template
+type pageContext struct {
+	theme string
+	user  any
+	path  string
+	loc   *fluentloc.Localization
+}
+
+func (r *Renderer) renderPage(ctx *pageContext, b *pageBuilder) (template.HTML, error) {
 	children := make(map[string]template.HTML, len(b.children))
 
 	// Render children first (DFS)
 	for name, child := range b.children {
-		content, err := r.renderPage(theme, loc, child)
+		content, err := r.renderPage(ctx, child)
 		if err != nil {
 			return "", err
 		}
@@ -123,11 +145,13 @@ func (r *Renderer) renderPage(
 
 	view := View{
 		Data:     b.data,
-		Theme:    theme,
+		Theme:    ctx.theme,
+		User:     ctx.user,
+		Path:     ctx.path,
 		Children: children,
 		Translator: Translator{
 			localizer: r.Localizer,
-			loc:       loc,
+			loc:       ctx.loc,
 		},
 	}
 
@@ -147,10 +171,16 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		return
 	}
 
-	loc := r.Localizer.Localization(c)
-	theme := r.themer.Theme(c)
+	// Set by the auth middleware, a nil *AuthenticatedUser for visitors
+	user, _ := c.Get("authenticatedUser")
+	ctx := &pageContext{
+		theme: r.themer.Theme(c),
+		user:  user,
+		path:  c.Request.URL.Path,
+		loc:   r.Localizer.Localization(c),
+	}
 
-	content, err := r.renderPage(theme, loc, b)
+	content, err := r.renderPage(ctx, b)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

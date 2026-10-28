@@ -16,12 +16,7 @@ import (
 	"gorm.io/gorm"
 )
 
-type ProfileController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
-func (pc *ProfileController) ProfileGet(c *gin.Context) {
+func (pc *Controller) ProfileGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		pc.Renderer.RenderError(c, views.ErrorPage{
@@ -71,7 +66,7 @@ func (pc *ProfileController) ProfileGet(c *gin.Context) {
 	pc.Renderer.Render(c, &builder)
 }
 
-func (pc *ProfileController) ProfilePost(c *gin.Context) {
+func (pc *Controller) ProfilePost(c *gin.Context) {
 	authUser := GetAuthenticatedUser(c)
 	if authUser == nil {
 		pc.Renderer.RenderError(c, views.ErrorPage{
@@ -251,7 +246,7 @@ func (pc *ProfileController) ProfilePost(c *gin.Context) {
 }
 
 // profileTarget authorizes the target before loading any other account.
-func (pc *ProfileController) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*models.User, int) {
+func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*models.User, int) {
 	origin := c.GetHeader("Origin")
 	if origin != "" {
 		u, err := url.Parse(origin)

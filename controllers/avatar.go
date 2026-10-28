@@ -22,7 +22,7 @@ import (
 	"gorm.io/gorm"
 )
 
-func (pc *ProfileController) AvatarGet(c *gin.Context) {
+func (pc *Controller) AvatarGet(c *gin.Context) {
 	id, err := strconv.ParseUint(c.Param("id"), 10, 64)
 	if err != nil || id == 0 {
 		c.Status(http.StatusNotFound)
@@ -51,7 +51,7 @@ func (pc *ProfileController) AvatarGet(c *gin.Context) {
 	serveAvatar(c.Writer, c.Request, data, contentType)
 }
 
-func (pc *ProfileController) avatarError(c *gin.Context, status int, message string) {
+func (pc *Controller) avatarError(c *gin.Context, status int, message string) {
 	c.Header("Cache-Control", "no-store")
 	pc.Renderer.RenderError(c, views.ErrorPage{
 		User:       GetAuthenticatedUser(c),
@@ -60,7 +60,7 @@ func (pc *ProfileController) avatarError(c *gin.Context, status int, message str
 	})
 }
 
-func (pc *ProfileController) avatarOwner(c *gin.Context) *models.User {
+func (pc *Controller) avatarOwner(c *gin.Context) *models.User {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		pc.avatarError(c, http.StatusUnauthorized, "error-unauthorized")
@@ -74,7 +74,7 @@ func (pc *ProfileController) avatarOwner(c *gin.Context) *models.User {
 	return target
 }
 
-func (pc *ProfileController) AvatarPost(c *gin.Context) {
+func (pc *Controller) AvatarPost(c *gin.Context) {
 	user := pc.avatarOwner(c)
 	if user == nil {
 		return
@@ -122,7 +122,7 @@ func (pc *ProfileController) AvatarPost(c *gin.Context) {
 	pc.saveAvatar(c, user, data)
 }
 
-func (pc *ProfileController) AvatarDelete(c *gin.Context) {
+func (pc *Controller) AvatarDelete(c *gin.Context) {
 	user := pc.avatarOwner(c)
 	if user == nil {
 		return
@@ -130,7 +130,7 @@ func (pc *ProfileController) AvatarDelete(c *gin.Context) {
 	pc.saveAvatar(c, user, nil)
 }
 
-func (pc *ProfileController) saveAvatar(c *gin.Context, target *models.User, data []byte) {
+func (pc *Controller) saveAvatar(c *gin.Context, target *models.User, data []byte) {
 	if err := pc.DB.Model(&models.User{}).Where("id = ?", target.ID).Update("avatar", data).Error; err != nil {
 		pc.avatarError(c, http.StatusInternalServerError, "error-unexpected")
 		return

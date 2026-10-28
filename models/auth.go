@@ -16,6 +16,8 @@ type User struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Avatar       []byte         `gorm:"type:mediumblob" json:"-"`
 	Rank         uint           `gorm:"not null;default:0"`
+	// Coins is the in-shop currency balance
+	Coins uint `gorm:"not null;default:0"`
 }
 
 type UserSession struct {

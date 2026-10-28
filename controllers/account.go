@@ -4,18 +4,12 @@ import (
 	"log"
 	"net/http"
 	"transcendance/models"
-	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
 
-type AccountController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
-func (ac *AccountController) AccountDeleteGet(c *gin.Context) {
+func (ac *Controller) AccountDeleteGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	username := ""

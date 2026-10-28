@@ -37,8 +37,35 @@ account-delete-error-permission = You do not have permissions to delete { $usern
 search-user-title = Search for users
 search-user-submit = Search
 search-user-form-placeholder = Username
+search-user-count = { $count ->
+    [one] { $count } user
+    *[other] { $count } users
+}
+search-user-empty = No users found
+search-user-error-internal = Search failed
+search-user-filter-joined = Joined
+search-user-filter-joined-all = Any time
+search-user-filter-joined-day = Past day
+search-user-filter-joined-week = Past week
+search-user-filter-joined-month = Past month
+search-user-filter-joined-year = Past year
+search-user-sort-relevance = Relevance
+search-user-sort-name = Name (A-Z)
+search-user-sort-name-desc = Name (Z-A)
+search-user-sort-newest = Newest members
+search-user-sort-oldest = Oldest members
+search-user-sort-cards = Most cards
+search-user-joined = Joined:
+search-user-cards = Cards:
 
 navbar-label-toggle = Toggle menu
+navbar-label-main = Main navigation
+navbar-cards = Cards
+navbar-users = Users
+navbar-inventory = Inventory
+navbar-shop = Shop
+navbar-profile = Your profile
+navbar-logout = Log out
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
@@ -57,7 +84,6 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
 
-card-search-title = Search Cards
 card-search-placeholder = Search for cards
 card-search-empty = No cards found
 card-search-submit = Search
@@ -76,7 +102,6 @@ collection-count = { $count ->
 }
 collection-id = NO. { $id }
 
-collection-search-title = Search Collections
 collection-search-placeholder = Search for collections
 collection-search-empty = No collections found
 collection-search-submit = Search
@@ -107,3 +132,129 @@ profile-avatar-help = JPEG, PNG or WebP. Maximum 5 MiB, 1024 by 1024 pixels.
 profile-avatar-upload = Upload picture
 profile-avatar-delete = Delete picture
 profile-avatar-invalid = Invalid image. JPEG, PNG or WebP image up to 5 MiB, 1024 by 1024 pixels.
+
+notification-title = Notifications
+notification-unread = unread
+notification-loading = Loading notifications...
+notification-none = You're all caught up
+notification-error = Could not load notifications
+notification-view-all = View all notifications
+notification-mark-all-read = Mark all as read
+notification-mark-read = Mark as read
+notification-mark-unread = Mark as unread
+notification-delete = Dismiss
+notification-tabs-label = Filter notifications
+notification-tab-all = All
+notification-tab-unread = Unread
+notification-empty-all = No notifications yet
+notification-empty-unread = No unread notifications
+
+notification-friend-request-title = Friend Request
+notification-friend-request-desc = { $username } sent you a friend request
+notification-info-title = { $title }
+notification-info-desc = { $description }
+
+catalog-title = Card catalog
+catalog-tabs-label = Catalog sections
+catalog-tab-cards = Cards
+catalog-tab-collections = Collections
+catalog-collection-count = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+catalog-filter-collection = Collection
+catalog-filter-collection-all = All collections
+catalog-sort-number = Collection order
+
+inventory-title = Your inventory
+inventory-title-other = { $username }'s inventory
+inventory-unauthenticated = You must be authenticated to access inventories
+inventory-message-empty = Nothing to show here
+inventory-message-user-not-found = User not found
+inventory-message-fetch-fail = Cannot fetch user inventory
+inventory-message-no-match = No cards in this inventory match your search
+inventory-search-placeholder = Search this inventory
+inventory-search-submit = Search
+inventory-search-clear = Clear search
+inventory-card-acquired = Acquired on
+inventory-card-close = Close
+inventory-card-acquired-first = First acquired on
+inventory-card-acquired-last = Last acquired on
+inventory-card-copies = Copies
+inventory-filter-rarity = Rarity
+inventory-filter-rarity-all = All rarities
+inventory-filter-effect = Effect
+inventory-filter-effect-all = All effects
+inventory-filter-effect-none = No effect
+inventory-filter-effect-foil = Foil
+inventory-sort = Sort by
+inventory-sort-relevance = Relevance
+inventory-sort-recent = Last acquired
+inventory-sort-oldest = First acquired
+inventory-sort-rarity = Rarity
+inventory-sort-count = Count
+inventory-sort-name = Name (A-Z)
+inventory-sort-name-desc = Name (Z-A)
+inventory-tabs-label = Inventory sections
+inventory-tab-cards = Cards
+inventory-tab-boosters = Boosters
+inventory-message-no-boosters = No boosters yet
+inventory-booster-open-confirm = Open booster { $name }?
+inventory-booster-open-yes = Yes
+inventory-booster-open-no = No
+inventory-booster-count = { $count ->
+    [one] { $count } booster
+    *[other] { $count } boosters
+}
+inventory-count = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+inventory-search-count = { $count ->
+    [one] { $count } card found
+    *[other] { $count } cards found
+}
+
+pack-opening-title = Pack Opening
+pack-opening-open = Open pack
+pack-opening-open-another = Open another pack
+pack-opening-error-collection = Collection not found
+pack-opening-error-empty = This booster has no cards
+pack-opening-error-internal = Failed to open the pack
+pack-opening-obtained = Cards obtained
+pack-opening-back = Back to inventory
+pack-opening-return = Return
+pack-opening-open-again = Open again
+pack-opening-remaining = { $count ->
+    [0] No boosters left
+    [one] { $count } booster left
+    *[other] { $count } boosters left
+}
+pack-opening-error-booster = This booster is not in your inventory
+
+shop-title = Shop
+shop-balance = Balance
+shop-login-hint = Log in to get coins and buy boosters
+shop-boosters-title = Boosters
+shop-boosters-empty = No boosters are on sale right now
+shop-booster-buy = Buy
+shop-price = { $amount } coins
+shop-topup-title = Get coins
+shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-price = €{ $euros }.{ $cents }
+shop-topup-open = Buy more coins
+shop-topup-success = { $amount } coins have been added to your balance
+shop-error-unauthenticated = You must be logged in to get coins
+shop-error-pack = Unknown coin pack
+shop-error-funds = You do not have enough coins for this purchase
+shop-error-quantity = Enter a quantity between 1 and { $max }
+shop-error-internal = Failed to update your balance
+shop-buy-close = Close
+shop-buy-success = { $count ->
+    [one] A { $collection } booster has been added to your inventory
+   *[other] { $count } { $collection } boosters have been added to your inventory
+}
+shop-buy-view-inventory = View inventory
+shop-buy-quantity = Quantity
+shop-buy-total = Total
+shop-coins = coins
