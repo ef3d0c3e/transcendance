@@ -124,6 +124,8 @@ type inventoryView struct {
 	// Count shown in each tab
 	TotalCards    int64
 	TotalBoosters int64
+	// Daily streak section, shown on one's own inventory
+	Streak *streakTile
 	// Pile of default boosters, shown on one's own boosters tab
 	Pile *pileTile
 }
@@ -199,6 +201,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
 		"TotalCards":     v.TotalCards,
 		"TotalBoosters":  v.TotalBoosters,
+		"Streak":         v.Streak,
 		"Pile":           v.Pile,
 		"Items":          v.Items,
 		"Query":          v.Query,
@@ -336,6 +339,16 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	if err := dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&v.TotalBoosters).Error; err != nil {
 		fail("boosters count", err)
 		return
+	}
+
+	// The daily streak section shows on one's own inventory, on every tab
+	if v.Username == user.Username {
+		state, err := controllers.DailyStreakState(dc.DB, userID, time.Now())
+		if err != nil {
+			fail("daily streak", err)
+			return
+		}
+		v.Streak = dc.streakTileData(c, &state)
 	}
 
 	if v.Tab == inventoryTabBoosters {

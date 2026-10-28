@@ -2,11 +2,8 @@ package controllers
 
 import (
 	"errors"
-	"log"
 	"time"
 
-	"github.com/gin-gonic/gin"
-	"gorm.io/datatypes"
 	"gorm.io/gorm"
 
 	"transcendance/models"
@@ -14,6 +11,9 @@ import (
 
 // ErrNoPileBooster is returned when the pile holds no default booster.
 var ErrNoPileBooster = errors.New("no default booster available")
+
+// ErrDailyRewardClaimed is returned when the bonus of the day is claimed already.
+var ErrDailyRewardClaimed = errors.New("daily reward claimed already")
 
 // ensureBoosterPile returns a user's pile of default boosters, creating it
 // when the account predates the pile. A new pile starts refilling right away.
@@ -152,11 +152,11 @@ func startOfDay(t time.Time) time.Time {
 	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.Local)
 }
 
-// creditDailyReward credits the connection streak reward of the day to a
+// ClaimDailyReward credits the connection streak reward of the day to a
 // user's balance, once per day, growing their streak. A missed day resets
-// the streak to day 1, which caps out at the last reward day.
-// `user.Coins` is updated to the new balance.
-func creditDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) error {
+// the streak to day 1. `user.Coins` is updated to the new balance.
+// Returns ErrDailyRewardClaimed when the bonus of the day is claimed already.
+func ClaimDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) error {
 	today := startOfDay(now)
 	yesterday := startOfDay(now.AddDate(0, 0, -1))
 
@@ -170,39 +170,36 @@ func creditDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) erro
 		last := startOfDay(*streak.LastDay)
 		switch {
 		case last.Equal(today):
-			// The day is already credited
-			return nil
+			// The day is claimed already
+			return ErrDailyRewardClaimed
 		case last.Equal(yesterday):
-			// The streak counter caps out, but keeps paying the last reward
-			day = min(streak.Day+1, uint(len(dailyStreakRewards)))
+			// Consecutive day: the streak keeps growing, past the reward cap
+			day = streak.Day + 1
 		}
 		// A wider gap resets the streak to day 1
 	}
 
 	reward := dailyStreakReward(day)
 	return db.Transaction(func(tx *gorm.DB) error {
-		// Credit only when no request credited this day yet, so two visits
+		// Claim only when no request claimed this day yet, so two claims
 		// the same day cannot pay it twice
 		result := tx.Model(&models.DailyStreak{}).
 			Where("user_id = ? AND (last_day IS NULL OR last_day < ?)", user.ID, today).
-			Updates(map[string]any{"day": day, "last_day": today})
+			Updates(map[string]any{
+				"day":      day,
+				"last_day": today,
+				"best":     max(bestStreak(&streak), day),
+			})
 		if result.Error != nil {
 			return result.Error
 		}
 		if result.RowsAffected == 0 {
-			return nil
+			return ErrDailyRewardClaimed
 		}
 
 		if err := tx.Model(&models.User{}).
 			Where("id = ?", user.ID).
 			Update("coins", gorm.Expr("coins + ?", reward)).Error; err != nil {
-			return err
-		}
-		if err := tx.Create(&models.Notification{
-			UserID: user.ID,
-			Type:   models.NotificationDailyReward,
-			Data:   datatypes.JSONMap{"amount": int(reward), "day": int(day)},
-		}).Error; err != nil {
 			return err
 		}
 
@@ -211,15 +208,61 @@ func creditDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) erro
 	})
 }
 
-// DailyRewardMiddleware credits the connection streak reward of the day,
-// once per day, on the first request of the day (server time).
-func DailyRewardMiddleware(db *gorm.DB) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if user := GetAuthenticatedUser(c); user != nil {
-			if err := creditDailyReward(db, user, time.Now()); err != nil {
-				log.Printf("WARN failed to credit the daily reward of user %d: %s", user.ID, err)
-			}
-		}
-		c.Next()
+// bestStreak returns the best streak recorded for a user, counting the
+// streaks that predate the best-streak tracking
+func bestStreak(streak *models.DailyStreak) uint {
+	return max(streak.Best, streak.Day)
+}
+
+// DailyStreakState describes a user's connection streak for display
+type StreakState struct {
+	// Consecutive days claimed in a row, 0 when the streak is over
+	Day uint
+	// Tier of the bonus of the day, 1 to Tiers
+	Tier uint
+	// Number of tiers of the reward ladder
+	Tiers uint
+	// Coins the bonus of the day pays
+	Reward uint
+	// Best streak the user has done
+	Best uint
+	// Whether the bonus of the day is claimed already
+	Claimed bool
+	// Start of the next day, server time, when the bonus comes back
+	NextAt time.Time
+}
+
+// DailyStreakState returns the state of a user's connection streak at `now`
+func DailyStreakState(db *gorm.DB, userID uint, now time.Time) (StreakState, error) {
+	streak, err := ensureDailyStreak(db, userID)
+	if err != nil {
+		return StreakState{}, err
 	}
+
+	today := startOfDay(now)
+	yesterday := startOfDay(now.AddDate(0, 0, -1))
+	state := StreakState{
+		Tiers:  uint(len(dailyStreakRewards)),
+		Best:   bestStreak(&streak),
+		NextAt: today.AddDate(0, 0, 1),
+	}
+	// The bonus of the day is the one the streak is on, or the one that
+	// restarts it after a missed day
+	next := uint(1)
+	if streak.LastDay != nil {
+		last := startOfDay(*streak.LastDay)
+		switch {
+		case last.Equal(today):
+			state.Claimed = true
+			state.Day = streak.Day
+			next = streak.Day
+		case last.Equal(yesterday):
+			state.Day = streak.Day
+			next = streak.Day + 1
+		}
+		// A wider gap leaves the streak over: the bonus of the day is day 1
+	}
+	state.Tier = min(next, state.Tiers)
+	state.Reward = dailyStreakReward(state.Tier)
+	return state, nil
 }

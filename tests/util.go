@@ -37,7 +37,6 @@ func Run(data *data.Data, db *gorm.DB) *gin.Engine {
 
 	router.Use(l10n.Middleware())
 	router.Use(controllers.AuthMiddleware(db))
-	router.Use(controllers.DailyRewardMiddleware(db))
 	router.Use(themer.Middleware())
 
 	renderer := views.NewRenderer(l10n, themer)

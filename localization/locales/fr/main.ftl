@@ -186,8 +186,6 @@ notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
-notification-daily-reward-title = Récompense quotidienne
-notification-daily-reward-desc = Jour { $day } : { $amount } pièces ajoutées à votre solde
 
 catalog-title = Catalogue de cartes
 catalog-tabs-label = Sections du catalogue
@@ -253,6 +251,14 @@ inventory-search-count = { $count ->
 booster-pile-title = Booster par défaut
 booster-pile-desc = { $count } cartes aléatoires de toutes les collections
 booster-pile-open-confirm = Ouvrir un booster par défaut ?
+daily-streak-title = Série quotidienne
+daily-streak-tier = Niveau { $tier }/{ $tiers }
+daily-streak-count = Série { $days }
+daily-streak-best = Record : { $best }
+daily-streak-best-current = en cours
+daily-streak-none = —
+daily-streak-claim = Réclamer { $amount } pièces
+daily-streak-claimed = Disponible dans
 
 pack-opening-title = Ouverture de booster
 pack-opening-open = Ouvrir le booster
