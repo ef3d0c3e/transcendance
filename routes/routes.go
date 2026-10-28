@@ -45,6 +45,9 @@ func RegisterRoutes(
 	router.POST("/profile", profileController.ProfilePost)
 	router.POST("/profile/avatar", profileController.AvatarPost)
 	router.POST("/profile/avatar/delete", profileController.AvatarDelete)
+	router.POST("/profiles/:id", profileController.ProfilePost)
+	router.POST("/profiles/:id/avatar", profileController.AvatarPost)
+	router.POST("/profiles/:id/avatar/delete", profileController.AvatarDelete)
 	router.GET("/avatars/:id", profileController.AvatarGet)
 	router.HEAD("/avatars/:id", profileController.AvatarGet)
 

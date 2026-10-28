@@ -144,7 +144,7 @@
 
 				const data = await response.json();
 
-				if (response.status === 500) {
+				if (!response.ok && typeof data.message === "string") {
 					result.textContent = data.message;
 					return;
 				}
@@ -160,6 +160,9 @@
 					}
 				}
 				if (response.ok) {
+					if (data.profileUrl) {
+						window.history.replaceState(window.history.state, "", data.profileUrl);
+					}
 					button.classList.remove("saved");
 					void button.offsetWidth;
 					button.classList.add("saved");
@@ -169,10 +172,12 @@
 							field.defaultValue = field.value;
 					}
 					form.reset();
-					form.elements["confirm_password"].disabled = true;
-					form.elements["password"].disabled = true;
-					safelyHide(form.elements["confirm_password"].parentElement);
-					safelyHide(form.elements["password"].parentElement);
+					if (form.elements["new_password"]) {
+						form.elements["confirm_password"].disabled = true;
+						form.elements["password"].disabled = true;
+						safelyHide(form.elements["confirm_password"].parentElement);
+						safelyHide(form.elements["password"].parentElement);
+					}
 					hideButtonAfterSave();
 				}
 			} catch (error) {

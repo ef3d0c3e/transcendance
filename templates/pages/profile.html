@@ -6,15 +6,15 @@
 	<div id="avatar">
 		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="Avatar" width="128" height="128" style="object-fit: contain" />
 	</div>
-	<form method="post" action="/profile/avatar" enctype="multipart/form-data">
+	<form method="post" action="{{ .Data.AvatarAction }}" enctype="multipart/form-data">
 		<label for="avatar-file">{{ .T "profile-avatar-label" }}</label>
 		<input type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png,image/webp" required title="{{ .T "profile-avatar-help" }}">
 		<button type="submit">{{ .T "profile-avatar-upload" }}</button>
 	</form>
-	<form method="post" action="/profile/avatar/delete">
+	<form method="post" action="{{ .Data.AvatarAction }}/delete">
 		<button type="submit">{{ .T "profile-avatar-delete" }}</button>
 	</form>
-	<form id="profile-form" method="post">
+	<form id="profile-form" method="post" action="{{ .Data.FormAction }}">
 		<div class="field field-disabled">
 			<label for="username">Username</label>
 			<input
@@ -62,6 +62,7 @@
 				value="{{ .Data.Profile.ContactInfo }}">
 			<p class="profile-error" id="profile-error-contact" hidden></p>
 		</div>
+		{{ if .Data.CanChangePassword }}
 		<div class="field field-disabled">
 			<label for="new_password">New Password</label>
 			<input
@@ -96,6 +97,7 @@
 				placeholder="********">
 				<p class="profile-error" id="profile-error-password" hidden></p>
 		</div>
+		{{ end }}
 		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
 	</form>
 </section>
