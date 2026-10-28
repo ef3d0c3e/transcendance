@@ -19,16 +19,16 @@ func TestShoutboxSanitize(t *testing.T) {
 		{"two\nlines\r\n", "two lines", ""},
 		{"\x00nul\x07bell\x1b[31m", "nulbell[31m", ""},
 		// Bidirectional overrides and zero width spaces are removed, joiners are kept for emojis
-		{"a‮b​c", "abc", ""},
-		{"\U0001F468‍\U0001F469", "\U0001F468‍\U0001F469", ""},
-		{"ź̂̃̄̅", "ź̂̃", ""},
-		{"\xffbad", "�bad", ""},
+		{"a\u202Eb\u200Bc", "abc", ""},
+		{"\U0001F468\u200D\U0001F469", "\U0001F468\u200D\U0001F469", ""},
+		{"z\u0301\u0302\u0303\u0304\u0305", "z\u0301\u0302\u0303", ""},
+		{"\xffbad", "\uFFFDbad", ""},
 		{"", "", shoutboxErrorEmpty},
-		{" \n\t​ ", "", shoutboxErrorEmpty},
+		{" \n\t\u200B ", "", shoutboxErrorEmpty},
 		{strings.Repeat("é", shoutboxMaxLength), strings.Repeat("é", shoutboxMaxLength), ""},
 		{strings.Repeat("a", shoutboxMaxLength+1), "", shoutboxErrorTooLong},
 		// Removed characters don't count
-		{strings.Repeat("a​", shoutboxMaxLength), strings.Repeat("a", shoutboxMaxLength), ""},
+		{strings.Repeat("a\u200B", shoutboxMaxLength), strings.Repeat("a", shoutboxMaxLength), ""},
 	}
 	for _, c := range cases {
 		out, code := sanitizeShoutboxMessage(c.in)
