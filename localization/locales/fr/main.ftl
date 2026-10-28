@@ -37,10 +37,31 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+search-user-count = { $count ->
+    [one] { $count } utilisateur
+    *[other] { $count } utilisateurs
+}
+search-user-empty = Aucun utilisateur trouvé
+search-user-error-internal = La recherche a échoué
+search-user-filter-joined = Inscription
+search-user-filter-joined-all = Toutes les dates
+search-user-filter-joined-day = Dernières 24 heures
+search-user-filter-joined-week = Dernière semaine
+search-user-filter-joined-month = Dernier mois
+search-user-filter-joined-year = Dernière année
+search-user-sort-relevance = Pertinence
+search-user-sort-name = Nom (A-Z)
+search-user-sort-name-desc = Nom (Z-A)
+search-user-sort-newest = Membres récents
+search-user-sort-oldest = Membres anciens
+search-user-sort-cards = Plus de cartes
+search-user-joined = Inscrit :
+search-user-cards = Cartes :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
 navbar-cards = Cartes
+navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-shop = Boutique
 navbar-profile = Votre profil
