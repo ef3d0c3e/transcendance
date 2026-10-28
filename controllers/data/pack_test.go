@@ -14,6 +14,13 @@ func testCard(name string, rarity string) *data.Card {
 	return &data.Card{Name: name, Rarity: rarity}
 }
 
+// Collection of every card of the test pools
+var testCollection = &data.Collection{}
+
+func testPoolCard(name string, rarity string) poolCard {
+	return poolCard{card: testCard(name, rarity), collection: testCollection}
+}
+
 func TestRollRarityDistribution(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(1, 2))
 	counts := map[string]int{}
@@ -109,10 +116,10 @@ func TestPickTierFallsBackToLower(t *testing.T) {
 }
 
 func TestDrawtestPackSize(t *testing.T) {
-	byRarity := map[string][]*data.Card{
-		"common":    {testCard("a", "common"), testCard("b", "common")},
-		"rare":      {testCard("c", "rare")},
-		"legendary": {testCard("d", "legendary")},
+	byRarity := map[string][]poolCard{
+		"common":    {testPoolCard("a", "common"), testPoolCard("b", "common")},
+		"rare":      {testPoolCard("c", "rare")},
+		"legendary": {testPoolCard("d", "legendary")},
 	}
 
 	for _, seed := range []uint64{1, 2, 42, 1000} {
@@ -130,32 +137,32 @@ func TestDrawtestPackSize(t *testing.T) {
 
 func TestDrawPackOnlyYieldsCardsFromCollection(t *testing.T) {
 	pool := map[string]bool{"a": true, "b": true, "c": true}
-	byRarity := map[string][]*data.Card{
-		"common":    {testCard("a", "common")},
-		"rare":      {testCard("b", "rare")},
-		"legendary": {testCard("c", "legendary")},
+	byRarity := map[string][]poolCard{
+		"common":    {testPoolCard("a", "common")},
+		"rare":      {testPoolCard("b", "rare")},
+		"legendary": {testPoolCard("c", "legendary")},
 	}
 
 	rnd := rand.New(rand.NewPCG(7, 7))
 	for i := 0; i < 500; i++ {
-		for _, card := range drawPack(rnd, byRarity, testPackSize) {
-			if !pool[card.Name] {
-				t.Fatalf("drew card %q which is not in the collection", card.Name)
+		for _, drawn := range drawPack(rnd, byRarity, testPackSize) {
+			if !pool[drawn.card.Name] {
+				t.Fatalf("drew card %q which is not in the collection", drawn.card.Name)
 			}
 		}
 	}
 }
 
 func TestDrawPackRespectsSingleRarityPool(t *testing.T) {
-	byRarity := map[string][]*data.Card{
-		"common": {testCard("only", "common")},
+	byRarity := map[string][]poolCard{
+		"common": {testPoolCard("only", "common")},
 	}
 
 	rnd := rand.New(rand.NewPCG(3, 3))
 	for i := 0; i < 100; i++ {
-		for _, card := range drawPack(rnd, byRarity, testPackSize) {
-			if card.Rarity != "common" {
-				t.Fatalf("drew rarity %q from a common-only collection", card.Rarity)
+		for _, drawn := range drawPack(rnd, byRarity, testPackSize) {
+			if drawn.card.Rarity != "common" {
+				t.Fatalf("drew rarity %q from a common-only collection", drawn.card.Rarity)
 			}
 		}
 	}
@@ -163,18 +170,18 @@ func TestDrawPackRespectsSingleRarityPool(t *testing.T) {
 
 func TestDrawPackEmptyCollection(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(1, 2))
-	if pack := drawPack(rnd, map[string][]*data.Card{}, testPackSize); pack != nil {
+	if pack := drawPack(rnd, map[string][]poolCard{}, testPackSize); pack != nil {
 		t.Fatalf("drawPack on an empty collection = %v, want nil", pack)
 	}
 }
 
 func TestBuildReelPlacesWinnerInWindow(t *testing.T) {
-	byRarity := map[string][]*data.Card{
-		"common":    {testCard("a", "common"), testCard("b", "common")},
-		"rare":      {testCard("c", "rare")},
-		"legendary": {testCard("d", "legendary")},
+	byRarity := map[string][]poolCard{
+		"common":    {testPoolCard("a", "common"), testPoolCard("b", "common")},
+		"rare":      {testPoolCard("c", "rare")},
+		"legendary": {testPoolCard("d", "legendary")},
 	}
-	winner := testCard("w", "legendary")
+	winner := testPoolCard("w", "legendary")
 
 	rnd := rand.New(rand.NewPCG(11, 11))
 	strip := buildReel(rnd, flattenByRarity(byRarity), winner)
@@ -192,8 +199,8 @@ func TestBuildReelPlacesWinnerInWindow(t *testing.T) {
 	}
 
 	// The won card must survive the trip through the strip
-	if got := strip[reelAbove].Card; got != winner {
-		t.Errorf("strip[%d] = %q, want winner %q", reelAbove, got.Name, winner.Name)
+	if got := strip[reelAbove].Card; got != winner.card {
+		t.Errorf("strip[%d] = %q, want winner %q", reelAbove, got.Name, winner.card.Name)
 	}
 
 	// The cards beneath the winner are the ones that run past as the reel
@@ -216,7 +223,7 @@ func TestBuildReelPlacesWinnerInWindow(t *testing.T) {
 
 func TestBuildReelEmptyPool(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(1, 2))
-	winner := testCard("w", "common")
+	winner := testPoolCard("w", "common")
 
 	if strip := buildReel(rnd, nil, winner); strip != nil {
 		t.Fatalf("buildReel with an empty pool = %v, want nil", strip)
@@ -224,10 +231,10 @@ func TestBuildReelEmptyPool(t *testing.T) {
 }
 
 func TestPackReelsHoldOneWinnerEach(t *testing.T) {
-	byRarity := map[string][]*data.Card{
-		"common":    {testCard("a", "common"), testCard("b", "common")},
-		"rare":      {testCard("c", "rare")},
-		"legendary": {testCard("d", "legendary")},
+	byRarity := map[string][]poolCard{
+		"common":    {testPoolCard("a", "common"), testPoolCard("b", "common")},
+		"rare":      {testPoolCard("c", "rare")},
+		"legendary": {testPoolCard("d", "legendary")},
 	}
 
 	rnd := rand.New(rand.NewPCG(21, 21))
@@ -249,8 +256,79 @@ func TestPackReelsHoldOneWinnerEach(t *testing.T) {
 		if wins != 1 {
 			t.Fatalf("reel %d holds %d winners, want exactly 1", i, wins)
 		}
-		if got := strip[reelAbove].Card; got != winner {
-			t.Errorf("reel %d stops on %q, want winner %q", i, got.Name, winner.Name)
+		if got := strip[reelAbove].Card; got != winner.card {
+			t.Errorf("reel %d stops on %q, want winner %q", i, got.Name, winner.card.Name)
+		}
+	}
+}
+
+func TestDrawDefaultPackSize(t *testing.T) {
+	pool := []poolCard{
+		testPoolCard("a", "common"),
+		testPoolCard("b", "rare"),
+	}
+
+	rnd := rand.New(rand.NewPCG(1, 2))
+	pack := drawDefaultPack(rnd, pool, testPackSize)
+	if pack == nil {
+		t.Fatal("drawDefaultPack returned nil")
+	}
+	if len(pack) != testPackSize {
+		t.Fatalf("drawDefaultPack returned %d cards, want %d", len(pack), testPackSize)
+	}
+}
+
+func TestDrawDefaultPackEmptyPool(t *testing.T) {
+	rnd := rand.New(rand.NewPCG(1, 2))
+	if pack := drawDefaultPack(rnd, nil, testPackSize); pack != nil {
+		t.Fatalf("drawDefaultPack on an empty pool = %v, want nil", pack)
+	}
+}
+
+func TestDrawDefaultPackIsUniformAcrossCollections(t *testing.T) {
+	// A collection with one card and a collection with three: every card
+	// must be drawn as often as the others, whatever its collection
+	small := &data.Collection{ID: 1}
+	big := &data.Collection{ID: 2}
+	pool := []poolCard{
+		{card: testCard("s", "common"), collection: small},
+		{card: testCard("x", "common"), collection: big},
+		{card: testCard("y", "rare"), collection: big},
+		{card: testCard("z", "legendary"), collection: big},
+	}
+
+	rnd := rand.New(rand.NewPCG(3, 4))
+	counts := map[string]int{}
+	samples := 100_000
+	for i := 0; i < samples; i++ {
+		for _, drawn := range drawDefaultPack(rnd, pool, 1) {
+			counts[drawn.card.Name]++
+		}
+	}
+
+	for _, drawn := range pool {
+		share := float64(counts[drawn.card.Name]) / float64(samples)
+		if share < 0.25-0.02 || share > 0.25+0.02 {
+			t.Errorf("card %s: share %.3f, want 0.25 ± 0.02", drawn.card.Name, share)
+		}
+	}
+}
+
+func TestDrawDefaultPackKeepsCardCollections(t *testing.T) {
+	small := &data.Collection{ID: 1}
+	big := &data.Collection{ID: 2}
+	pool := []poolCard{
+		{card: testCard("s", "common"), collection: small},
+		{card: testCard("x", "common"), collection: big},
+	}
+
+	rnd := rand.New(rand.NewPCG(5, 6))
+	for _, drawn := range drawDefaultPack(rnd, pool, 50) {
+		if drawn.collection == nil {
+			t.Fatalf("drew card %q with no collection", drawn.card.Name)
+		}
+		if drawn.collection != small && drawn.collection != big {
+			t.Fatalf("drew card %q with an unknown collection", drawn.card.Name)
 		}
 	}
 }

@@ -186,6 +186,8 @@ notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-daily-reward-title = Daily reward
+notification-daily-reward-desc = Day { $day }: { $amount } coins added to your balance
 
 catalog-title = Card catalog
 catalog-tabs-label = Catalog sections
@@ -248,6 +250,10 @@ inventory-search-count = { $count ->
     *[other] { $count } cards found
 }
 
+booster-pile-title = Default booster
+booster-pile-desc = { $count } random cards from all collections
+booster-pile-open-confirm = Open a default booster?
+
 pack-opening-title = Pack Opening
 pack-opening-open = Open pack
 pack-opening-open-another = Open another pack
@@ -264,6 +270,7 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+pack-opening-error-pile = No default booster available
 
 shop-title = Shop
 shop-balance = Balance

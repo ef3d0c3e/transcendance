@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -26,6 +27,13 @@ const (
 func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (string, string) {
 	args := make([]any, 0, len(notif.Data)*2)
 	for key, value := range notif.Data {
+		// Numbers come out of the JSON column as json.Number, which the
+		// translator cannot format: give it floats instead
+		if number, ok := value.(json.Number); ok {
+			if float, err := number.Float64(); err == nil {
+				value = float
+			}
+		}
 		args = append(args, key, value)
 	}
 	title := nc.Renderer.T(c, "notification-"+notif.Type+"-title", args...)

@@ -49,6 +49,16 @@ func createAccount(t *testing.T, router *gin.Engine, username string, password s
 
 	tests.DB.Model(&user).
 		Update("rank", rank)
+
+	// The connection streak of the day is claimed already: tests own the
+	// balances they start with, the daily reward is tested on its own
+	now := time.Now()
+	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
+	require.NoError(t, tests.DB.Create(&models.DailyStreak{
+		UserID:  user.ID,
+		Day:     1,
+		LastDay: &today,
+	}).Error)
 }
 
 func login(t *testing.T, router *gin.Engine, username string, password string) *http.Cookie {
