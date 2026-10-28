@@ -1,15 +1,30 @@
 name: transcendance-stack
 
-# Container logs are rotated on disk
+# Docker sends every line to Logstash, nothing is read from the host.
+# Lines sent before Logstash is up are lost, docker compose logs still has them.
 x-logging: &logging
-  driver: json-file
+  driver: gelf
   options:
-    max-size: 10m
-    max-file: "3"
-    # Filebeat keeps the lines naming a compose service
+    gelf-address: udp://127.0.0.1:12201
     labels: com.docker.compose.service
+    # Copy kept for docker compose logs, rotated
+    cache-max-size: 10m
+    cache-max-file: "3"
 
 services:
+  # Creates the data folders, owned by each service's user
+  data-setup:
+    image: nginx:1.29-alpine
+    restart: on-failure
+    entrypoint: ["/data-setup.sh"]
+    volumes:
+      - ./data-setup.sh:/data-setup.sh:ro
+      - ${DATA_DIR:-./data}:/data
+    network_mode: none
+    mem_limit: 32m
+    logging:
+      driver: json-file
+
   # Only published service, terminates TLS
   gateway:
     build: ./gateway
@@ -44,7 +59,10 @@ services:
     ports:
       - "${AUTH_SSH_PORT:-2233}:2233"
     volumes:
-      - auth_data:/data
+      - ${DATA_DIR:-./data}/auth:/data
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 64m
@@ -81,13 +99,16 @@ services:
       MARIADB_PASSWORD: ${MYSQL_PASSWORD:?}
       MARIADB_DATABASE: ${MYSQL_DATABASE:?}
     volumes:
-      - db_data:/var/lib/mysql
+      - ${DATA_DIR:-./data}/mariadb:/var/lib/mysql
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
       start_period: 30s
       retries: 5
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 384m
@@ -110,13 +131,16 @@ services:
       # Avoids needing vm.max_map_count on the host
       node.store.allow_mmap: "false"
     volumes:
-      - es_data:/usr/share/elasticsearch/data
+      - ${DATA_DIR:-./data}/elasticsearch:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health' | grep -qE '\"status\":\"(green|yellow)\"'"]
       interval: 15s
       timeout: 5s
       start_period: 60s
       retries: 10
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 1280m
@@ -199,6 +223,9 @@ services:
     environment:
       LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD:?}
       LS_JAVA_OPTS: -Xms256m -Xmx256m
+    # Docker sends the container logs here, from the host
+    ports:
+      - "127.0.0.1:12201:12201/udp"
     volumes:
       - ./logstash/logstash.yml:/usr/share/logstash/config/logstash.yml:ro
       - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
@@ -216,29 +243,6 @@ services:
     mem_limit: 640m
     logging: *logging
 
-  # Reads the container logs of the host, keeps this stack's
-  filebeat:
-    image: elastic/filebeat:9.5.5
-    restart: unless-stopped
-    user: root
-    command: ["filebeat", "-e", "--strict.perms=false"]
-    volumes:
-      - ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-      - ${DOCKER_ROOT:-/var/lib/docker}/containers:/var/lib/docker/containers:ro
-      - filebeat_data:/usr/share/filebeat/data
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:5066/ > /dev/null"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      logstash:
-        condition: service_healthy
-    networks:
-      - backend
-    mem_limit: 128m
-    logging: *logging
-
   # Monitoring
   prometheus:
     image: prom/prometheus:v3.15.1
@@ -254,12 +258,15 @@ services:
     volumes:
       - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./prometheus/rules:/etc/prometheus/rules:ro
-      - prometheus_data:/prometheus
+      - ${DATA_DIR:-./data}/prometheus:/prometheus
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9090/prometheus/-/healthy"]
       interval: 15s
       timeout: 5s
       retries: 5
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 384m
@@ -293,7 +300,6 @@ services:
       - /:/rootfs:ro
       - ${DOCKER_SOCKET:-/var/run/docker.sock}:/var/run/docker.sock:ro
       - /sys:/sys:ro
-      - ${DOCKER_ROOT:-/var/lib/docker}:/var/lib/docker:ro
       - /dev/disk:/dev/disk:ro
     networks:
       - backend
@@ -402,13 +408,16 @@ services:
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
       - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
-      - grafana_data:/var/lib/grafana
+      - ${DATA_DIR:-./data}/grafana:/var/lib/grafana
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:3000/grafana/api/health"]
       interval: 15s
       timeout: 5s
       start_period: 30s
       retries: 5
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 320m
@@ -428,26 +437,22 @@ services:
       - --cluster.listen-address=
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
-      - alertmanager_data:/alertmanager
+      - ${DATA_DIR:-./data}/alertmanager:/alertmanager
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9093/alertmanager/-/healthy"]
       interval: 15s
       timeout: 5s
       retries: 5
+    depends_on:
+      data-setup:
+        condition: service_completed_successfully
     networks:
       - backend
     mem_limit: 64m
     logging: *logging
 
 volumes:
-  alertmanager_data:
-  grafana_data:
-  prometheus_data:
-  es_data:
-  filebeat_data:
-  auth_data:
   certificates:
-  db_data:
   card_images:
 
 networks:

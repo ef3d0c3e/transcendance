@@ -14,6 +14,8 @@ Only these 3 are published on the host. Everything else, including the database,
 | `8443`         | `HTTPS_PORT`    | TCP      | The site and the admin tools                |
 | `2233`         | `AUTH_SSH_PORT` | TCP      | SSH, used only to approve admin sign-ins    |
 
+Logstash also listens on `127.0.0.1:12201/udp`, only reachable from the host itself: Docker sends the container logs there.
+
 ## Configuration
 
 
@@ -31,7 +33,8 @@ Run `./init-env.sh` from `docker/`. It creates `.env` from `.env.example` and ge
 | `LOG_RETENTION_DAYS`  | Days logs are kept, `730` (2 years) by default                                |
 | `LOG_COMPRESS_AFTER_DAYS` | Days before logs are compressed, `14` by default                          |
 | `METRICS_RETENTION`   | How long metrics are kept, e.g `30d`                                          |
-| `DOCKER_ROOT`         | Docker's data directory, read for the container logs and metrics. `~/.local/share/docker` with rootless Docker |
+| `DATA_DIR`            | Folder of the database, logs, metrics and admin keys, `./data` by default     |
+| `DOCKER_SOCKET`       | Docker's socket, read for the container metrics. `init-env.sh` asks Docker for it |
 
 The database passwords are only read when the database volume is first created. Changing them later requires changing them inside MariaDB too.
 
@@ -85,19 +88,27 @@ The SSH port cannot go through an HTTP proxy, it must be reachable directly.
 
 ## Data
 
-Data lives in Docker volumes named `transcendance-stack_<name>`. Running `docker compose down` keeps them; `docker compose down -v` deletes them.
+Persistent data lives in `DATA_DIR` (`docker/data` by default), one folder per service: `mariadb`, `elasticsearch` (logs), `prometheus` (metrics), `grafana`, `alertmanager` (silences) and `auth` (admin keys and session secrets). The `data-setup` step creates them on start, owned by the user each service runs as, so they can't be read or deleted as your own user. To delete everything:
 
-| Volume         | Content                                                      |
-|----------------|--------------------------------------------------------------|
-| `db_data`      | The DB                                                       |
-| `card_images`  | Card images rendered at startup, can be deleted              |
-| `certificates` | Self-signed certificate                                      |
-| `auth_data`    | Authorized admin keys and session secrets                    |
-| `es_data`      | Logs                                                         |
-| `prometheus_data` | Metrics                                                   |
-| `grafana_data` | Grafana users and preferences, dashboards come from `grafana/dashboards/` |
-| `alertmanager_data` | Silences                                                |
-| `filebeat_data` | How far the container logs were read                        |
+```sh
+docker compose down
+# Replace /path/to/data with the absolute path of DATA_DIR
+docker run --rm -v /path/to/data:/data nginx:1.29-alpine sh -c 'rm -rf /data/*'
+```
+
+The self-signed certificate and the rendered card images stay in the Docker volumes `transcendance-stack_certificates` and `transcendance-stack_card_images`; both are recreated when deleted.
+
+### Storing data on another disk
+
+Set `DATA_DIR` to a folder on that disk. It must use a Linux filesystem such as ext4 or xfs: FAT, exFAT and NTFS can't keep the owners of the folders.
+
+`DATA_DIR` does not hold Docker's images and containers, about 6 GB. They stay in Docker's own storage, `~/.local/share/docker` with rootless Docker. To move it too, with rootless Docker:
+
+```sh
+mkdir -p ~/.config/docker
+echo '{"data-root": "/media/<disk>/docker"}' > ~/.config/docker/daemon.json
+systemctl --user restart docker
+```
 
 ## Operations
 
@@ -113,7 +124,7 @@ docker compose logs -f service
 docker compose down
 ```
 
-Container logs are rotated by Docker: at most 3 files of 10 MB per container. Filebeat ships them to Logstash, which stores them in Elasticsearch; they are compressed after `LOG_COMPRESS_AFTER_DAYS` and deleted after `LOG_RETENTION_DAYS`.
+Container logs are rotated by Docker: at most 3 files of 10 MB per container. Docker also sends them to Logstash, which stores them in Elasticsearch; they are compressed after `LOG_COMPRESS_AFTER_DAYS` and deleted after `LOG_RETENTION_DAYS`.
 
 Alerts are not sent anywhere, admins see them on Grafana's home page. The rules are in `docker/prometheus/rules/alerts.yml`. Test them after a change:
 
