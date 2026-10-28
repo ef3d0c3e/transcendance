@@ -133,6 +133,7 @@ services:
       KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
       LOGSTASH_PASSWORD: ${LOGSTASH_PASSWORD:?}
       ES_EXPORTER_PASSWORD: ${ES_EXPORTER_PASSWORD:?}
+      GRAFANA_ES_PASSWORD: ${GRAFANA_ES_PASSWORD:?}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-730}
       LOG_COMPRESS_AFTER_DAYS: ${LOG_COMPRESS_AFTER_DAYS:-14}
     volumes:
@@ -372,7 +373,48 @@ services:
       - backend
     mem_limit: 32m
     logging: *logging
+
+  grafana:
+    image: grafana/grafana:13.2.5
+    restart: unless-stopped
+    environment:
+      GF_SERVER_ROOT_URL: "%(protocol)s://%(domain)s:%(http_port)s/grafana/"
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?}
+      GF_SECURITY_COOKIE_SECURE: "true"
+      # Admins are signed in by the gateway, which sets Remote-User
+      GF_AUTH_PROXY_ENABLED: "true"
+      GF_AUTH_PROXY_HEADER_NAME: Remote-User
+      GF_AUTH_PROXY_HEADER_PROPERTY: username
+      GF_AUTH_PROXY_AUTO_SIGN_UP: "true"
+      GF_AUTH_DISABLE_LOGIN_FORM: "true"
+      GF_AUTH_DISABLE_SIGNOUT_MENU: "true"
+      GF_AUTH_BASIC_ENABLED: "false"
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_USERS_AUTO_ASSIGN_ORG_ROLE: Admin
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_ANALYTICS_CHECK_FOR_PLUGIN_UPDATES: "false"
+      GF_NEWS_NEWS_FEED_ENABLED: "false"
+      # Plugins come with the image, nothing is downloaded
+      GF_PLUGINS_PREINSTALL_DISABLED: "true"
+      GRAFANA_ES_PASSWORD: ${GRAFANA_ES_PASSWORD:?}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:3000/grafana/api/health"]
+      interval: 15s
+      timeout: 5s
+      start_period: 30s
+      retries: 5
+    networks:
+      - backend
+    mem_limit: 320m
+    logging: *logging
 volumes:
+  grafana_data:
   prometheus_data:
   es_data:
   filebeat_data:
