@@ -7,3 +7,4 @@ tmp
 docker
 .env
 .mcp.json
+!docker/auth
