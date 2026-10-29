@@ -226,6 +226,8 @@ func packCard(dc *DataController, c *gin.Context, collection *data.Collection, c
 		return "", false
 	}
 	cardData["CardRarity"] = card.Rarity
+	// The reel scrolls cards into view while spinning, lazy pictures would show up blank
+	cardData["CardEager"] = true
 	setCardFoil(cardData, foil)
 
 	html, err := dc.Renderer.RenderToString("pack-card", map[string]any{"Data": cardData})
