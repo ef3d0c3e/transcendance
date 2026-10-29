@@ -49,7 +49,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		err = db.Select("id", "username", "rank", "coins").
+		err = db.Select("id", "username", "rank", "coins", "last_seen_at").
 			Where("id = ?", session.UserID).
 			First(&user).
 			Error
@@ -58,6 +58,14 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
+		}
+
+		// Activity of the user, for the online status
+		if user.LastSeenAt == nil || time.Since(*user.LastSeenAt) >= models.LastSeenRefresh {
+			if err := db.Model(&models.User{}).Where("id = ?", user.ID).
+				UpdateColumn("last_seen_at", time.Now()).Error; err != nil {
+				log.Printf("WARN failed to update last seen of user %d: %s", user.ID, err)
+			}
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{

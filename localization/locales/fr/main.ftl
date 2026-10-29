@@ -57,6 +57,12 @@ search-user-sort-oldest = Membres anciens
 search-user-sort-cards = Plus de cartes
 search-user-joined = Inscrit :
 search-user-cards = Cartes :
+search-user-filter-status = Statut
+search-user-filter-status-all = Tout le monde
+search-user-filter-status-online = En ligne
+user-status-online = En ligne
+user-status-offline = Hors ligne
+user-status-last-seen = Dernière activité :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
