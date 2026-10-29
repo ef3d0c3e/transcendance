@@ -34,7 +34,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 
 	var userProfile models.UserProfile
 	if err := pc.DB.
-		Joins("User", pc.DB.Select("id", "username")).
+		Joins("User", pc.DB.Select("id", "username", "last_seen_at")).
 		Where("User.username = ?", profileUsername).
 		First(&userProfile).Error; err != nil {
 		pc.Renderer.RenderError(c, views.ErrorPage{
@@ -63,6 +63,8 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"Edit":              editMode,
 		"CanChangePassword": userProfile.UserID == user.ID,
 		"Own":               userProfile.UserID == user.ID,
+		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
+		"Locale":            pc.Renderer.Localizer.GetLocale(c),
 		"FormAction":        formAction,
 		"AvatarAction":      avatarAction,
 	})
