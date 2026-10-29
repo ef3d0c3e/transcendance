@@ -29,15 +29,8 @@ logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
-account-delete-success = { $username }'s account has been deleted
-account-delete-success-self = Your account has been deleted
 account-delete-error-generic = Failed to delete account
-account-delete-error-missing = Missing account name
-account-delete-error-permission = You do not have permissions to delete { $username }'s account
 account-delete-title = Delete account
-account-delete-text = Permanently erase your account, profile, avatar, cards, boosters, coins and notifications. This cannot be undone.
-account-delete-submit = Delete my account
-account-delete-confirm = Your account and all of its data will be permanently erased. Continue?
 
 search-user-title = Search for users
 search-user-submit = Search
@@ -157,6 +150,15 @@ profile-avatar-view = Open full-size profile picture (new tab)
 profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
+
+profile-rank = Rank
+profile-rank-user = User
+profile-rank-moderator = Moderator
+profile-rank-admin = Administrator
+profile-error-rank = Rank must be 0, 1 or 2.
+account-delete-profile-text = Permanently delete { $username } and all associated data. This cannot be undone.
+account-delete-profile-confirm = Permanently delete { $username } and all associated data?
+account-delete-profile-submit = Delete account
 
 notification-title = Notifications
 notification-unread = unread

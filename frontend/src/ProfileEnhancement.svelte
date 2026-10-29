@@ -117,7 +117,9 @@
 		function handleChange(event) {
 			const field = event.currentTarget;
 
-			if (field.defaultValue !== field.value) {
+			if ((field.tagName === "SELECT"
+				? [...field.options].find(option => option.defaultSelected)?.value
+				: field.defaultValue) !== field.value) {
 				if (field.name === "new_password") {
 					form.elements["confirm_password"].disabled = false;
 					form.elements["password"].disabled = false;
@@ -195,10 +197,16 @@
 					button.classList.remove("saved");
 					void button.offsetWidth;
 					button.classList.add("saved");
-					for (const field of form.querySelectorAll("input, textarea")) {
+					for (const field of form.querySelectorAll("input, textarea, select")) {
 						field.classList.remove("modified");
-						if (!field.name.includes("password"))
+						if (field.tagName === "SELECT") {
+							const value = field.value;
+							for (const option of field.options) {
+								option.defaultSelected = option.value === value;
+							}
+						} else if (!field.name.includes("password")) {
 							field.defaultValue = field.value;
+						}
 					}
 					form.reset();
 					if (form.elements["new_password"]) {
@@ -217,7 +225,7 @@
 		}
 
 		form.addEventListener("submit", handleSubmit);
-		for (const field of form.querySelectorAll("input, textarea")) {
+		for (const field of form.querySelectorAll("input, textarea, select")) {
 			field.addEventListener("input", handleChange);
 		}
 
@@ -227,7 +235,7 @@
 			avatarFile?.removeEventListener("change", uploadAvatar);
 			form.removeEventListener("submit", handleSubmit);
 			button.removeEventListener("animationend", hideButtonOnSave);
-			for (const field of form.querySelectorAll("input, textarea")) {
+			for (const field of form.querySelectorAll("input, textarea, select")) {
 				field.removeEventListener("input", handleChange);
 			}
 		};

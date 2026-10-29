@@ -29,15 +29,8 @@ logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
 
-account-delete-success = Le compte de { $username } a été supprimé
-account-delete-success-self = Votre compte a été supprimé
 account-delete-error-generic = Echec de la suppression du compte
-account-delete-error-missing = Il manque le nom du compte
-account-delete-error-permission = Vous n'avez pas la permission pour supprimer le compte de { $username }
 account-delete-title = Supprimer le compte
-account-delete-text = Effacer définitivement votre compte, profil, avatar, cartes, boosters, pièces et notifications. Cette action est irréversible.
-account-delete-submit = Supprimer mon compte
-account-delete-confirm = Votre compte et toutes ses données seront définitivement effacés. Continuer ?
 
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
@@ -157,6 +150,15 @@ profile-avatar-view = Ouvrir la photo de profil en taille réelle (nouvel onglet
 profile-avatar-delete-title = Supprimer la photo de profil ?
 profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
 profile-avatar-cancel = Annuler
+
+profile-rank = Rôle
+profile-rank-user = Utilisateur
+profile-rank-moderator = Modérateur
+profile-rank-admin = Administrateur
+profile-error-rank = Le rôle doit être 0, 1 ou 2.
+account-delete-profile-text = Supprimer définitivement { $username } et toutes les données associées. Cette action est irréversible.
+account-delete-profile-confirm = Supprimer définitivement { $username } et toutes les données associées ?
+account-delete-profile-submit = Supprimer le compte
 
 notification-title = Notifications
 notification-unread = non lues

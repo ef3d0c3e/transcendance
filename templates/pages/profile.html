@@ -97,6 +97,14 @@
 				value="{{ .Data.Profile.ContactInfo }}">
 			<p class="profile-error" id="profile-error-contact" hidden></p>
 		</div>
+		{{ if .Data.Admin }}
+		{{ template "profile-rank-field" . }}
+		{{ else }}
+		<div class="profile-field">
+			<p class="profile-label">{{ .T "profile-rank" }}</p>
+			<p>{{ template "profile-rank-name" . }}</p>
+		</div>
+		{{ end }}
 		{{ if .Data.CanChangePassword }}
 		<div class="profile-field">
 			<label for="new_password">{{ .T "profile-new-password" }}</label>
@@ -136,18 +144,6 @@
 		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
 	</form>
 </section>
-{{ if .Data.Own }}
-<section class="account-delete">
-	<h2>{{ .T "account-delete-title" }}</h2>
-	<p>{{ .T "account-delete-text" }}</p>
-	<button type="button" class="button-danger" data-account-delete="/api/account_delete"
-		data-confirm="{{ .T "account-delete-confirm" }}"
-		data-label-error="{{ .T "account-delete-error-generic" }}">{{ .T "account-delete-submit" }}</button>
-	<p class="section-error" role="alert" hidden></p>
-</section>
-{{ end }}
-<div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"
-	data-label-unexpected-error="{{ .T "error-unexpected" }}"></div>
 {{ else }}
 <section class="profile-panel profile-readonly">
 	<div class="profile-avatar">
@@ -184,6 +180,10 @@
 		<p id="contact">{{ .T "profile-empty-field" }}</p>
 		{{ end }}
 	</div>
+	<div class="profile-detail">
+		<p class="profile-label">{{ .T "profile-rank" }}</p>
+		<p>{{ template "profile-rank-name" . }}</p>
+	</div>
 	<div class="profile-detail profile-field-wide">
 		<p id="bio-label" class="profile-label">{{ .T "profile-bio" }}</p>
 		{{ if .Data.Profile.Bio }}
@@ -194,5 +194,35 @@
 	</div>
 </section>
 {{ end }}
+{{ if .Data.Edit }}
+<section class="account-delete">
+	<h2>{{ .T "account-delete-title" }}</h2>
+	<p>{{ .T "account-delete-profile-text" "username" .Data.Profile.User.Username }}</p>
+	<button type="button" class="button-danger" data-account-delete="{{ .Data.DeleteAction }}"
+		data-confirm="{{ .T "account-delete-profile-confirm" "username" .Data.Profile.User.Username }}"
+		data-label-error="{{ .T "account-delete-error-generic" }}">{{ .T "account-delete-profile-submit" }}</button>
+	<p class="section-error" role="alert" hidden></p>
+</section>
+{{ end }}
+{{ if .Data.Edit }}
+<div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"
+	data-label-unexpected-error="{{ .T "error-unexpected" }}"></div>
+{{ end }}
 </div>
+{{ end }}
+
+{{ define "profile-rank-field" }}
+<div class="profile-field">
+	<label for="rank">{{ .T "profile-rank" }}</label>
+	<select id="rank" name="rank" required>
+		<option value="0" {{ if eq .Data.Profile.User.Rank 0 }}selected{{ end }}>{{ .T "profile-rank-user" }}</option>
+		<option value="1" {{ if eq .Data.Profile.User.Rank 1 }}selected{{ end }}>{{ .T "profile-rank-moderator" }}</option>
+		<option value="2" {{ if eq .Data.Profile.User.Rank 2 }}selected{{ end }}>{{ .T "profile-rank-admin" }}</option>
+	</select>
+	<p class="profile-error" id="profile-error-rank" hidden></p>
+</div>
+{{ end }}
+
+{{ define "profile-rank-name" }}
+{{ if eq .Data.Profile.User.Rank 2 }}{{ .T "profile-rank-admin" }}{{ else if eq .Data.Profile.User.Rank 1 }}{{ .T "profile-rank-moderator" }}{{ else }}{{ .T "profile-rank-user" }}{{ end }}
 {{ end }}
