@@ -157,6 +157,7 @@ profile-avatar-view = Open full-size profile picture (new tab)
 profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
+profile-inventory = View inventory
 
 notification-title = Notifications
 notification-unread = unread
