@@ -363,7 +363,7 @@ func TestShopTopupIgnoresForeignReturn(t *testing.T) {
 			"return": {back},
 		}, cookie)
 		require.Equal(t, http.StatusSeeOther, rec.Code)
-		require.Equal(t, "/shop?topup=small", rec.Header().Get("Location"), back)
+		require.Equal(t, "/inventory?topup=small", rec.Header().Get("Location"), back)
 	}
 }
 
@@ -397,7 +397,7 @@ func TestAddBooster(t *testing.T) {
 	require.Len(t, ownedBoosters(t, "packadd1"), 1)
 }
 
-func TestInventoryBoosterOpenConfirm(t *testing.T) {
+func TestInventoryBoosterOpens(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "packbtn1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "packbtn2", "foo-bar-baz-qux", 0)
@@ -405,18 +405,17 @@ func TestInventoryBoosterOpenConfirm(t *testing.T) {
 	giveBoosters(t, "packbtn2", collectionDev, 5, 1)
 	cookie := login(t, router, "packbtn1", "foo-bar-baz-qux")
 
-	// Clicking a booster asks to open the oldest of its stack
+	// Clicking a booster opens the oldest of its stack, without asking
 	oldest := ownedBoosters(t, "packbtn1")[0]
 	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
 	require.Contains(t, body, `data-booster-open="/opening?booster=`+strconv.FormatUint(uint64(oldest.ID), 10)+`"`)
-	require.Contains(t, body, `data-booster-confirm="Open booster Development?"`)
-	require.Contains(t, body, `id="inventory-booster-popup"`)
+	require.Contains(t, body, `data-booster-label="Open booster Development"`)
+	require.NotContains(t, body, "data-booster-confirm")
 
 	// Other users' boosters can't be opened
 	other := getInventory(t, router, cookie, "/inventory?u=packbtn2&tab=boosters")
 	require.Contains(t, other, `<span class="collection-stack">×1</span>`)
 	require.NotContains(t, other, "data-booster-open")
-	require.NotContains(t, other, `id="inventory-booster-popup"`)
 }
 
 func TestAddBoosterPageNotLocalized(t *testing.T) {

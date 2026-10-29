@@ -67,7 +67,6 @@ navbar-label-main = Navigation principale
 navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
-navbar-shop = Boutique
 navbar-profile = Votre profil
 navbar-logout = Se déconnecter
 
@@ -227,9 +226,7 @@ inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
 inventory-message-no-boosters = Aucun booster pour l'instant
-inventory-booster-open-confirm = Ouvrir le booster { $name } ?
-inventory-booster-open-yes = Oui
-inventory-booster-open-no = Non
+inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -264,11 +261,8 @@ pack-opening-odds-note = Chaque carte du booster est tirée séparément.
 pack-opening-progress-title = Progression de la collection
 pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
 
-shop-title = Boutique
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = Aucun booster n'est en vente pour le moment
 shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
@@ -286,7 +280,6 @@ shop-buy-success = { $count ->
     [one] Un booster { $collection } a été ajouté à votre inventaire
    *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
 }
-shop-buy-view-inventory = Voir l'inventaire
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces

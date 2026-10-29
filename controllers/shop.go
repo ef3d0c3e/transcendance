@@ -3,10 +3,8 @@ package controllers
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
-	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -30,6 +28,9 @@ var boosterPrices = map[int]uint{}
 // maxBuyQuantity is the most boosters of one collection a single checkout
 // sells. The buy popup advertises it so its stepper cannot exceed it.
 const maxBuyQuantity = 10
+
+// MaxBuyQuantity is maxBuyQuantity, for the pages selling boosters
+const MaxBuyQuantity = maxBuyQuantity
 
 // boosterPrice returns the coin price of one booster of a collection.
 func boosterPrice(collectionID int) uint {
@@ -71,15 +72,6 @@ func topupAmount(id string) (uint, bool) {
 		}
 	}
 	return 0, false
-}
-
-// One booster on sale in the shop. Data feeds the "collection" partial.
-type shopBooster struct {
-	ID         int
-	Title      string
-	Price      uint
-	PriceLabel string
-	Data       map[string]any
 }
 
 // One coin pack on sale in the top-up popup
@@ -127,22 +119,8 @@ func collectionTitle(collection *data.Collection, locale string) string {
 	return title
 }
 
-// collectionTile builds the template data consumed by the "collection" partial.
-func (sc *Controller) collectionTile(c *gin.Context, collection *data.Collection, title string) map[string]any {
-	return map[string]any{
-		"CollectionContainerData": template.HTMLAttr(`data-tilt`),
-		"CollectionArtwork":       "/collections/" + strconv.Itoa(collection.ID) + "/thumbnail",
-		"CollectionTitle":         title,
-		"ColorPrimary":            template.CSS(collection.ColorPrimary),
-		"ColorSecondary":          template.CSS(collection.ColorSecondary),
-		"CollectionDescription":   sc.Renderer.T(c, "collection-booster", "count", collection.BoosterSize),
-		"CollectionCount":         sc.Renderer.T(c, "collection-count", "count", len(collection.Cards)),
-		"CollectionID":            sc.Renderer.T(c, "collection-id", "id", fmt.Sprintf("%03d", collection.ID)),
-	}
-}
-
-// shopNotice is the message shown after a shop round-trip, if any.
-type shopNotice struct {
+// ShopNotice is the message shown after buying boosters or coins, if any
+type ShopNotice struct {
 	Message   string
 	Error     bool
 	LinkHref  string
@@ -150,13 +128,14 @@ type shopNotice struct {
 }
 
 // notice builds the notice shown after a shop round-trip, if any.
-func (sc *Controller) notice(c *gin.Context) shopNotice {
-	locale := sc.Renderer.Localizer.GetLocale(c)
+// GetShopNotice reads the outcome of a purchase from the query
+func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopNotice {
+	locale := renderer.Localizer.GetLocale(c)
 
 	if bought := c.Query("bought"); bought != "" {
 		id, err := strconv.Atoi(bought)
 		if err == nil {
-			if collection := sc.Data.GetCollection(id); collection != nil {
+			if collection := d.GetCollection(id); collection != nil {
 				// A bare bought= means one booster; a bulk checkout adds its quantity.
 				count := 1
 				if raw := c.Query("qty"); raw != "" {
@@ -164,12 +143,10 @@ func (sc *Controller) notice(c *gin.Context) shopNotice {
 						count = n
 					}
 				}
-				return shopNotice{
-					Message: sc.Renderer.T(c, "shop-buy-success",
+				return ShopNotice{
+					Message: renderer.T(c, "shop-buy-success",
 						"collection", collectionTitle(collection, locale),
 						"count", count),
-					LinkHref:  "/inventory?tab=boosters",
-					LinkLabel: sc.Renderer.T(c, "shop-buy-view-inventory"),
 				}
 			}
 		}
@@ -177,74 +154,35 @@ func (sc *Controller) notice(c *gin.Context) shopNotice {
 
 	if packID := c.Query("topup"); packID != "" {
 		if amount, ok := topupAmount(packID); ok {
-			return shopNotice{Message: sc.Renderer.T(c, "shop-topup-success", "amount", amount)}
+			return ShopNotice{Message: renderer.T(c, "shop-topup-success", "amount", amount)}
 		}
 	}
 
 	switch reason := c.Query("error"); reason {
 	case "":
-		return shopNotice{}
+		return ShopNotice{}
 	case "auth":
-		return shopNotice{Message: sc.Renderer.T(c, "shop-error-unauthenticated"), Error: true}
+		return ShopNotice{Message: renderer.T(c, "shop-error-unauthenticated"), Error: true}
 	case "pack":
-		return shopNotice{Message: sc.Renderer.T(c, "shop-error-pack"), Error: true}
+		return ShopNotice{Message: renderer.T(c, "shop-error-pack"), Error: true}
 	case "collection":
-		return shopNotice{Message: sc.Renderer.T(c, "collection-error-not-found"), Error: true}
+		return ShopNotice{Message: renderer.T(c, "collection-error-not-found"), Error: true}
 	case "funds":
-		return shopNotice{Message: sc.Renderer.T(c, "shop-error-funds"), Error: true}
+		return ShopNotice{Message: renderer.T(c, "shop-error-funds"), Error: true}
 	case "quantity":
-		return shopNotice{Message: sc.Renderer.T(c, "shop-error-quantity", "max", maxBuyQuantity), Error: true}
+		return ShopNotice{Message: renderer.T(c, "shop-error-quantity", "max", maxBuyQuantity), Error: true}
 	default:
-		return shopNotice{Message: sc.Renderer.T(c, "shop-error-internal"), Error: true}
+		return ShopNotice{Message: renderer.T(c, "shop-error-internal"), Error: true}
 	}
 }
 
+// ShopGet: boosters are bought from the inventory, purchase notices included
 func (sc *Controller) ShopGet(c *gin.Context) {
-	user := GetAuthenticatedUser(c)
-
-	locale := sc.Renderer.Localizer.GetLocale(c)
-	boosters := make([]shopBooster, 0, len(sc.Data.Collections))
-	for _, collection := range sc.Data.Collections {
-		title := collectionTitle(collection, locale)
-		boosters = append(boosters, shopBooster{
-			ID:         collection.ID,
-			Title:      title,
-			Price:      boosterPrice(collection.ID),
-			PriceLabel: sc.Renderer.T(c, "shop-price", "amount", boosterPrice(collection.ID)),
-			Data:       sc.collectionTile(c, collection, title),
-		})
+	target := "/inventory"
+	if query := c.Request.URL.RawQuery; query != "" {
+		target += "?" + query
 	}
-	sort.Slice(boosters, func(i, j int) bool {
-		return boosters[i].ID < boosters[j].ID
-	})
-
-	// Checkout is only offered once logged in
-	var topups []TopupChoice
-	if user != nil {
-		topups = TopupChoices(c, sc.Renderer)
-	}
-
-	notice := sc.notice(c)
-
-	var coins uint
-	if user != nil {
-		coins = user.Coins
-	}
-
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": sc.Renderer.T(c, "shop-title"),
-		"User":  user,
-	})
-	builder.Add("shop", "Content", map[string]any{
-		"User":        user,
-		"Notice":      notice,
-		"Boosters":    boosters,
-		"Topups":      topups,
-		"Coins":       coins,
-		"CoinsLabel":  sc.Renderer.T(c, "shop-price", "amount", coins),
-		"MaxQuantity": maxBuyQuantity,
-	})
-	sc.Renderer.Render(c, &builder)
+	c.Redirect(http.StatusSeeOther, target)
 }
 
 // errInsufficientFunds is returned when the balance does not cover the price.
@@ -255,18 +193,18 @@ var errInsufficientFunds = errors.New("insufficient funds")
 func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		c.Redirect(http.StatusSeeOther, "/shop?error=auth")
+		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
 
 	id, err := strconv.Atoi(c.PostForm("collection"))
 	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/shop?error=collection")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=collection")
 		return
 	}
 	collection := sc.Data.GetCollection(id)
 	if collection == nil {
-		c.Redirect(http.StatusSeeOther, "/shop?error=collection")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=collection")
 		return
 	}
 
@@ -275,7 +213,7 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	if raw := c.PostForm("quantity"); raw != "" {
 		n, err := strconv.Atoi(raw)
 		if err != nil || n < 1 || n > maxBuyQuantity {
-			c.Redirect(http.StatusSeeOther, "/shop?error=quantity")
+			c.Redirect(http.StatusSeeOther, "/inventory?error=quantity")
 			return
 		}
 		quantity = n
@@ -310,13 +248,13 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 
 	switch {
 	case errors.Is(err, errInsufficientFunds):
-		c.Redirect(http.StatusSeeOther, "/shop?error=funds")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=funds")
 	case err != nil:
 		log.Printf("WARN failed to sell %d boosters of collection %d to user %d: %s", quantity, collection.ID, user.ID, err)
-		c.Redirect(http.StatusSeeOther, "/shop?error=internal")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=internal")
 	default:
 		// The quantity only needs saying when it is not the default one.
-		location := "/shop?bought=" + strconv.Itoa(collection.ID)
+		location := "/inventory?bought=" + strconv.Itoa(collection.ID)
 		if quantity > 1 {
 			location += "&qty=" + strconv.Itoa(quantity)
 		}
@@ -329,14 +267,14 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 func (sc *Controller) ShopTopupPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		c.Redirect(http.StatusSeeOther, "/shop?error=auth")
+		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
 
 	packID := c.PostForm("pack")
 	amount, ok := topupAmount(packID)
 	if !ok {
-		c.Redirect(http.StatusSeeOther, "/shop?error=pack")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=pack")
 		return
 	}
 
@@ -344,7 +282,7 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		Where("id = ?", user.ID).
 		Update("coins", gorm.Expr("coins + ?", amount)).Error; err != nil {
 		log.Printf("WARN failed to credit %d coins to user %d: %s", amount, user.ID, err)
-		c.Redirect(http.StatusSeeOther, "/shop?error=internal")
+		c.Redirect(http.StatusSeeOther, "/inventory?error=internal")
 		return
 	}
 
@@ -353,5 +291,5 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, back)
 		return
 	}
-	c.Redirect(http.StatusSeeOther, "/shop?topup="+packID)
+	c.Redirect(http.StatusSeeOther, "/inventory?topup="+packID)
 }

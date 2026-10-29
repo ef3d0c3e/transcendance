@@ -3,7 +3,6 @@ import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
-import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
 import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
@@ -251,12 +250,35 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Inventory booster popup
+// Inventory boosters open on click, dragging to tilt them doesn't count
 {
-	const target = document.querySelector('#inventory-booster-popup');
+	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
+	// Pointer travel (px) after which a press counts as a tilt drag
+	const dragThreshold = 6;
+	let press = null;
 
-	if (target) {
-		mount(InventoryBoosterPopup, { target, props: { target } });
+	for (const tile of tiles) {
+		const booster = tile.closest('.inventory-booster');
+		const open = () => location.assign(booster.dataset.boosterOpen);
+
+		tile.tabIndex = 0;
+		tile.setAttribute('role', 'link');
+		tile.setAttribute('aria-label', booster.dataset.boosterLabel ?? '');
+		tile.addEventListener('pointerdown', (event) => {
+			press = { x: event.clientX, y: event.clientY };
+		}, { passive: true });
+		tile.addEventListener('click', (event) => {
+			if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > dragThreshold) {
+				return;
+			}
+			open();
+		});
+		tile.addEventListener('keydown', (event) => {
+			if (event.key === 'Enter') {
+				event.preventDefault();
+				open();
+			}
+		});
 	}
 }
 
