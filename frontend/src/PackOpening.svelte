@@ -23,11 +23,11 @@
 	// Slot machine: five vertical reels side by side. Each drops past its
 	// window on its own clock, overshoots the payline, then springs back up
 	// onto the card it landed on.
-	const SPIN_MIN_MS = 5000;
-	const SPIN_MAX_MS = 9000;
-	// Starts from rest, peaks at about twice the average speed a third of the
-	// way in, then slows down onto the payline
-	const SPIN_EASE = "cubic-bezier(0.4, 0.15, 0.3, 1)";
+	const SPIN_MIN_MS = 6000;
+	const SPIN_MAX_MS = 7000;
+	// Starts at twice the average speed and slows down linearly to a stop on the
+	// payline: the exact quadratic ease-out
+	const SPIN_EASE = "cubic-bezier(0.333, 0.667, 0.667, 1)";
 	const BOUNCE_MS = 280;
 	const BOUNCE_EASE = "cubic-bezier(0.34, 1.3, 0.64, 1)";
 	// How far the reel drops past the won card before springing back, in cards.
