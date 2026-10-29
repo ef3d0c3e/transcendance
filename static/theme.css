@@ -1361,6 +1361,35 @@ section {
     overflow-wrap: anywhere;
 }
 
+/* Link to the inventory of the profile owner, shaped like a button */
+.profile-inventory {
+    display: block;
+    width: fit-content;
+    margin: 0.75rem auto 0;
+    padding: 0.45rem 0.9rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary);
+    border-radius: 0.55rem;
+
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+
+    transition:
+        background-color 120ms ease,
+        transform 120ms ease;
+}
+
+.profile-inventory:hover {
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary-dark);
+}
+
+.profile-inventory:active {
+    transform: translateY(1px);
+}
+
 .profile-detail {
     min-width: 0;
     padding-top: 1rem;
