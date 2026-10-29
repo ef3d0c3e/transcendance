@@ -59,6 +59,8 @@ var topupPacks = []topupPack{
 	{ID: "small", Amount: 100, PriceCents: 99},
 	{ID: "medium", Amount: 500, PriceCents: 449},
 	{ID: "large", Amount: 1000, PriceCents: 799},
+	{ID: "xlarge", Amount: 5000, PriceCents: 2999},
+	{ID: "xxlarge", Amount: 10000, PriceCents: 4999},
 }
 
 // topupAmount returns the coins a pack credits, if the pack is on sale.
