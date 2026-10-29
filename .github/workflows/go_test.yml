@@ -56,5 +56,15 @@ jobs:
             sleep 2
           done
 
+      # Thumbnails are made on the first data load, too slow under the race detector
+      - name: Cache card thumbnails
+        uses: actions/cache@v4
+        with:
+          path: data/dist
+          key: card-thumbnails-${{ hashFiles('data/cards/**', 'data/collections/**', 'data/data.go', 'data/contactSheet.go') }}
+
+      - name: Generate card thumbnails
+        run: go test -count=1 ./data/
+
       - name: Run Go tests
         run: go test ./... -v -race -coverprofile=coverage.out
