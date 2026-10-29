@@ -62,7 +62,7 @@ To sign in, open `https://<host>:8443/auth/` (or any admin tool). It will displa
 | Tool         | Path             | Purpose                                                    |
 |--------------|------------------|------------------------------------------------------------|
 | Grafana      | `/grafana/`      | Firing alerts on its home page, dashboards for the application, infrastructure and logs |
-| Kibana       | `/kibana/`       | Search the logs                                            |
+| Kibana       | `/kibana/`       | Search the logs, Logs dashboard (`/kibana/app/dashboards#/view/transcendance-logs`) |
 | Prometheus   | `/prometheus/`   | Metrics and alert rules                                    |
 | Alertmanager | `/alertmanager/` | Alert details and silences                                 |
 
