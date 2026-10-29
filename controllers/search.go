@@ -58,6 +58,7 @@ func (sc *SearchController) SearchUsersGet(c *gin.Context) {
 		"User":     user,
 		"Username": username,
 		"Users":    users,
+		"FormAction": "/search",
 	})
 	totalPages := int(total / 50)
 	if total % 50 != 0 {
