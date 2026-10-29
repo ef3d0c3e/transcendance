@@ -1,0 +1,307 @@
+id = 2
+tags = ["ship"]
+color-primary = "#8fa9c4"
+color-secondary = "#22344d"
+
+[[cards]]
+name = "uss-enterprise-cv-6"
+[[cards]]
+name = "uss-yorktown-cv-5"
+[[cards]]
+name = "uss-hornet-cv-8"
+[[cards]]
+name = "uss-lexington-cv-2"
+[[cards]]
+name = "uss-saratoga-cv-3"
+[[cards]]
+name = "uss-ranger-cv-4"
+[[cards]]
+name = "uss-wasp-cv-7"
+[[cards]]
+name = "uss-essex-cv-9"
+[[cards]]
+name = "uss-intrepid-cv-11"
+[[cards]]
+name = "uss-franklin-cv-13"
+[[cards]]
+name = "uss-ticonderoga-cv-14"
+[[cards]]
+name = "uss-bunker-hill-cv-17"
+[[cards]]
+name = "uss-independence-cvl-22"
+[[cards]]
+name = "uss-gambier-bay"
+[[cards]]
+name = "uss-langley-cv-1"
+[[cards]]
+name = "uss-arizona"
+[[cards]]
+name = "uss-nevada-bb-36"
+[[cards]]
+name = "uss-pennsylvania-bb-38"
+[[cards]]
+name = "uss-texas-bb-35"
+[[cards]]
+name = "uss-tennessee-bb-43"
+[[cards]]
+name = "uss-west-virginia-bb-48"
+[[cards]]
+name = "uss-colorado-bb-45"
+[[cards]]
+name = "uss-north-carolina-bb-55"
+[[cards]]
+name = "uss-washington-bb-56"
+[[cards]]
+name = "uss-south-dakota-bb-57"
+[[cards]]
+name = "uss-massachusetts-bb-59"
+[[cards]]
+name = "uss-alabama-bb-60"
+[[cards]]
+name = "uss-iowa-bb-61"
+[[cards]]
+name = "uss-missouri-bb-63"
+[[cards]]
+name = "uss-indianapolis-ca-35"
+[[cards]]
+name = "uss-houston-ca-30"
+[[cards]]
+name = "uss-juneau-cl-52"
+[[cards]]
+name = "uss-atlanta-cl-51"
+[[cards]]
+name = "uss-baltimore-ca-68"
+[[cards]]
+name = "uss-johnston-dd-557"
+[[cards]]
+name = "uss-laffey-dd-724"
+[[cards]]
+name = "uss-the-sullivans-dd-537"
+[[cards]]
+name = "uss-kidd-dd-661"
+[[cards]]
+name = "uss-fletcher-dd-445"
+[[cards]]
+name = "uss-nautilus-ss-168"
+[[cards]]
+name = "uss-wahoo-ss-238"
+[[cards]]
+name = "uss-tang-ss-306"
+[[cards]]
+name = "uss-archerfish-ss-311"
+[[cards]]
+name = "hms-hood"
+[[cards]]
+name = "hms-renown"
+[[cards]]
+name = "hms-repulse"
+[[cards]]
+name = "hms-warspite"
+[[cards]]
+name = "hms-queen-elizabeth"
+[[cards]]
+name = "hms-valiant"
+[[cards]]
+name = "hms-barham"
+[[cards]]
+name = "hms-royal-oak"
+[[cards]]
+name = "hms-rodney"
+[[cards]]
+name = "hms-nelson"
+[[cards]]
+name = "hms-king-george-v"
+[[cards]]
+name = "hms-prince-of-wales"
+[[cards]]
+name = "hms-duke-of-york"
+[[cards]]
+name = "hms-vanguard"
+[[cards]]
+name = "hms-ark-royal"
+[[cards]]
+name = "hms-illustrious"
+[[cards]]
+name = "hms-glorious"
+[[cards]]
+name = "hms-courageous"
+[[cards]]
+name = "hms-furious"
+[[cards]]
+name = "hms-hermes"
+[[cards]]
+name = "hms-eagle"
+[[cards]]
+name = "hms-belfast"
+[[cards]]
+name = "hms-exeter"
+[[cards]]
+name = "hms-ajax"
+[[cards]]
+name = "hms-sheffield-c24"
+[[cards]]
+name = "hms-edinburgh"
+[[cards]]
+name = "hms-kelly-f01"
+[[cards]]
+name = "hms-cossack-f03"
+[[cards]]
+name = "hms-glowworm-h92"
+[[cards]]
+name = "hms-upholder-p37"
+[[cards]]
+name = "bismarck"
+[[cards]]
+name = "tirpitz"
+[[cards]]
+name = "scharnhorst"
+[[cards]]
+name = "gneisenau"
+[[cards]]
+name = "admiral-graf-spee"
+[[cards]]
+name = "deutschland"
+[[cards]]
+name = "admiral-scheer"
+[[cards]]
+name = "prinz-eugen"
+[[cards]]
+name = "admiral-hipper"
+[[cards]]
+name = "blucher"
+[[cards]]
+name = "emden"
+[[cards]]
+name = "graf-zeppelin"
+[[cards]]
+name = "schleswig-holstein"
+[[cards]]
+name = "u-505"
+[[cards]]
+name = "u-995"
+[[cards]]
+name = "u-96"
+[[cards]]
+name = "yamato"
+[[cards]]
+name = "musashi"
+[[cards]]
+name = "nagato"
+[[cards]]
+name = "mutsu"
+[[cards]]
+name = "kongo"
+[[cards]]
+name = "haruna"
+[[cards]]
+name = "kirishima"
+[[cards]]
+name = "fuso"
+[[cards]]
+name = "yamashiro"
+[[cards]]
+name = "ise"
+[[cards]]
+name = "akagi"
+[[cards]]
+name = "kaga"
+[[cards]]
+name = "soryu"
+[[cards]]
+name = "hiryu"
+[[cards]]
+name = "shokaku"
+[[cards]]
+name = "zuikaku"
+[[cards]]
+name = "hosho"
+[[cards]]
+name = "shinano"
+[[cards]]
+name = "mogami"
+[[cards]]
+name = "takao"
+[[cards]]
+name = "chokai"
+[[cards]]
+name = "yukikaze"
+[[cards]]
+name = "shimakaze"
+[[cards]]
+name = "i-400"
+[[cards]]
+name = "richelieu"
+[[cards]]
+name = "jean-bart"
+[[cards]]
+name = "dunkerque"
+[[cards]]
+name = "bretagne"
+[[cards]]
+name = "lorraine"
+[[cards]]
+name = "courbet"
+[[cards]]
+name = "bearn"
+[[cards]]
+name = "algerie"
+[[cards]]
+name = "gloire"
+[[cards]]
+name = "montcalm"
+[[cards]]
+name = "le-fantasque"
+[[cards]]
+name = "le-terrible"
+[[cards]]
+name = "surcouf"
+[[cards]]
+name = "casabianca-q183"
+[[cards]]
+name = "vittorio-veneto"
+[[cards]]
+name = "littorio"
+[[cards]]
+name = "roma"
+[[cards]]
+name = "conte-di-cavour"
+[[cards]]
+name = "giulio-cesare"
+[[cards]]
+name = "caio-duilio"
+[[cards]]
+name = "zara"
+[[cards]]
+name = "pola"
+[[cards]]
+name = "trieste"
+[[cards]]
+name = "aquila"
+[[cards]]
+name = "marat"
+[[cards]]
+name = "oktyabrskaya-revolutsiya"
+[[cards]]
+name = "sevastopol"
+[[cards]]
+name = "kirov"
+[[cards]]
+name = "krasny-kavkaz"
+[[cards]]
+name = "s-13"
+[[cards]]
+name = "hmcs-haida"
+[[cards]]
+name = "hmas-sydney-d48"
+[[cards]]
+name = "hmas-australia-d84"
+[[cards]]
+name = "hnlms-de-ruyter"
+[[cards]]
+name = "orp-blyskawica"
+[[cards]]
+name = "orp-orzel"
+[[cards]]
+name = "georgios-averof"
+[[cards]]
+name = "minas-geraes"
