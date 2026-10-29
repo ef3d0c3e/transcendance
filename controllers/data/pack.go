@@ -25,7 +25,7 @@ import (
 // settle against.
 const (
 	reelAbove = 2
-	reelBelow = 24
+	reelBelow = 12
 )
 
 // Rarest cards of the collection shown on the opening page
