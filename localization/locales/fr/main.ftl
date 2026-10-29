@@ -150,6 +150,7 @@ profile-avatar-view = Ouvrir la photo de profil en taille réelle (nouvel onglet
 profile-avatar-delete-title = Supprimer la photo de profil ?
 profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
 profile-avatar-cancel = Annuler
+profile-inventory = Voir l’inventaire
 
 profile-rank = Rôle
 profile-rank-user = Utilisateur

@@ -28,6 +28,9 @@
 			</div>
 		</div>
 		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
+		{{ if not .Data.Own }}
+		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		{{ end }}
 	</div>
 	{{ if not .Data.Own }}
 	<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
@@ -152,7 +155,10 @@
 		</a>
 	</div>
 	<div>
-		<p id="username">{{ .Data.Profile.User.Username }}</p>
+		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
+		{{ if not .Data.Own }}
+		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		{{ end }}
 		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
 			{{ if .Data.Online }}
 			{{ .T "user-status-online" }}
