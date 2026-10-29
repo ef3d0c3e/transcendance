@@ -10,6 +10,7 @@ export default [
 			'eslint.config.js',
 			'frontend/dist/',
 			'frontend/vite.config.js',
+			'static/vendor/e-layout.min.js',
 		],
 	},
 
@@ -21,7 +22,7 @@ export default [
 	},
 
 	{
-		files: ['frontend/**/*.js'],
+		files: ['frontend/**/*.js', 'docker/*/static/**/*.js'],
 		languageOptions: {
 			globals: globals.browser,
 		},

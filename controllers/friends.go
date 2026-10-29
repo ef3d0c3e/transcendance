@@ -12,11 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-type FriendsController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 	user := models.User{}
 	db.First(&user, GetAuthenticatedUser(c).ID)
@@ -42,7 +37,7 @@ func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 	return relation.Type
 }
 
-func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
+func (fc *Controller) ApiFriendsGet(c *gin.Context) {
 	targetID := c.Param("target")
 	if (targetID == "/") {
 		c.JSON(http.StatusBadRequest, "No specified user")
@@ -96,7 +91,7 @@ func updateRelation(db *gorm.DB, user, target models.User, action string){
 	}
 }
 
-func (fc *FriendsController) FriendsPost(c *gin.Context) {
+func (fc *Controller) FriendsPost(c *gin.Context) {
 	if GetAuthenticatedUser(c) == nil {
 		return
 	}
@@ -109,7 +104,7 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 	}
 	var target  models.User
 	fc.DB.First(&target, targetID)
-	if target == user {
+	if target.ID == user.ID {
 		return;
 	}
 	var relation models.Relation
@@ -149,7 +144,7 @@ func (fc *FriendsController) FriendsPost(c *gin.Context) {
 	}
 }
 
-func (fc *FriendsController) FriendsGet(c *gin.Context) {
+func (fc *Controller) FriendsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if (user == nil) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
@@ -160,7 +155,7 @@ func (fc *FriendsController) FriendsGet(c *gin.Context) {
 	fc.DB.Model(&relation).
 	Where("user_id = ? and type = ?", user.ID, "friends").
 	Association("Target").
-	Find(&friends)
+	Find(&user)
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": fc.Renderer.T(c, "friends-title"),

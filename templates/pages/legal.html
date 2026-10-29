@@ -1,0 +1,81 @@
+{{ define "legal" }}
+<article class="info-page">
+	<h1>{{ .T "legal-title" }}</h1>
+	<p class="info-page-updated">{{ .T "info-page-updated" }}</p>
+	<p>{{ .T "legal-intro" }}</p>
+
+	<h2 id="publisher">{{ .T "legal-publisher-title" }}</h2>
+	<p>{{ .T "legal-publisher-text" }}</p>
+	<ul>
+		{{ range .Data.Team }}
+		<li><a href="https://github.com/{{ . }}" rel="noopener">{{ . }}</a></li>
+		{{ end }}
+	</ul>
+	<p>{{ .T "legal-publisher-source" }} <a href="{{ .Data.Repository }}" rel="noopener">{{ .Data.Repository }}</a></p>
+	<p>{{ .T "legal-host-text" }}</p>
+
+	<h2 id="privacy">{{ .T "legal-privacy-title" }}</h2>
+	<p>{{ .T "legal-privacy-text" }}</p>
+
+	<h3>{{ .T "legal-data-title" }}</h3>
+	<ul>
+		<li>{{ .T "legal-data-account" }}</li>
+		<li>{{ .T "legal-data-profile" }}</li>
+		<li>{{ .T "legal-data-activity" }}</li>
+		<li>{{ .T "legal-data-logs" }}</li>
+	</ul>
+
+	<h3>{{ .T "legal-purpose-title" }}</h3>
+	<p>{{ .T "legal-purpose-text" }}</p>
+	<p>{{ .T "legal-thirdparty-text" }}</p>
+
+	<h3>{{ .T "legal-retention-title" }}</h3>
+	<p>{{ .T "legal-retention-text" }}</p>
+
+	<h3>{{ .T "legal-rights-title" }}</h3>
+	<p>{{ .T "legal-rights-text" }}</p>
+	<ul>
+		<li>{{ .T "legal-rights-edit" }} <a href="/profile">{{ .T "navbar-profile" }}</a></li>
+		<li>{{ .T "legal-rights-delete" }}</li>
+		<li>{{ .T "legal-rights-other" }} <a href="/contact">{{ .T "contact-title" }}</a></li>
+		<li>{{ .T "legal-rights-complaint" }} <a href="https://www.cnil.fr/" rel="noopener">cnil.fr</a></li>
+	</ul>
+
+	<h2 id="cookies">{{ .T "legal-cookies-title" }}</h2>
+	<p>{{ .T "legal-cookies-text" }}</p>
+	<div class="info-page-table">
+		<table>
+			<thead>
+				<tr>
+					<th scope="col">{{ .T "legal-cookies-name" }}</th>
+					<th scope="col">{{ .T "legal-cookies-purpose" }}</th>
+					<th scope="col">{{ .T "legal-cookies-duration" }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				<tr>
+					<td><code>session_token</code></td>
+					<td>{{ .T "legal-cookies-session" }}</td>
+					<td>{{ .T "legal-cookies-days" }}</td>
+				</tr>
+				<tr>
+					<td><code>lang</code></td>
+					<td>{{ .T "legal-cookies-lang" }}</td>
+					<td>{{ .T "legal-cookies-year" }}</td>
+				</tr>
+				<tr>
+					<td><code>theme</code></td>
+					<td>{{ .T "legal-cookies-theme" }}</td>
+					<td>{{ .T "legal-cookies-year" }}</td>
+				</tr>
+			</tbody>
+		</table>
+	</div>
+	<p>{{ .T "legal-cookies-consent" }}</p>
+
+	<p class="info-page-links">
+		<a href="/terms">{{ .T "terms-title" }}</a>
+		<a href="/contact">{{ .T "contact-title" }}</a>
+	</p>
+</article>
+{{ end }}

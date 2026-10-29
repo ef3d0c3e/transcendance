@@ -100,21 +100,6 @@ func defaultInventorySort(query string) string {
 	return inventorySortRecent
 }
 
-// An option of the filter and sort selects
-type inventoryOption struct {
-	Value    string
-	Label    string
-	Selected bool
-}
-
-func inventoryOptions(values []string, current string, label func(value string) string) []inventoryOption {
-	options := make([]inventoryOption, len(values))
-	for i, value := range values {
-		options[i] = inventoryOption{Value: value, Label: label(value), Selected: value == current}
-	}
-	return options
-}
-
 // Everything needed to render the inventory page
 type inventoryView struct {
 	// Displayed tab, cards or boosters
@@ -217,13 +202,13 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Locale":         dc.Renderer.Localizer.GetLocale(c),
 	}
 	if v.Tab == inventoryTabCards {
-		fields["RarityOptions"] = inventoryOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
+		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
 			if value == "" {
 				return dc.Renderer.T(c, "inventory-filter-rarity-all")
 			}
 			return dc.Renderer.T(c, "card-rarity-"+value)
 		})
-		fields["EffectOptions"] = inventoryOptions(append([]string{""}, inventoryEffects...), v.Effect, func(value string) string {
+		fields["EffectOptions"] = controllers.SelectOptions(append([]string{""}, inventoryEffects...), v.Effect, func(value string) string {
 			if value == "" {
 				return dc.Renderer.T(c, "inventory-filter-effect-all")
 			}
@@ -234,7 +219,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		if defaultSort != inventorySortRelevance {
 			sorts = sorts[1:]
 		}
-		sortOptions := inventoryOptions(sorts, v.Sort, func(value string) string {
+		sortOptions := controllers.SelectOptions(sorts, v.Sort, func(value string) string {
 			return dc.Renderer.T(c, "inventory-sort-"+value)
 		})
 		// The default sort isn't submitted, so a new search ranks by relevance
@@ -322,7 +307,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	} else {
 		// Fetch
 		var otherUser models.User
-		if err := dc.DB.Where("username = ?", v.Username).First(&otherUser).Error; err != nil {
+		if err := dc.DB.Omit("avatar").Where("username = ?", v.Username).First(&otherUser).Error; err != nil {
 			v.Message = dc.Renderer.T(c, "inventory-message-user-not-found")
 			dc.renderInventory(c, user, v)
 			return
