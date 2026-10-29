@@ -20,6 +20,18 @@
 		</form>
 	</div>
 
+	{{ with .Data.Progress }}
+	<div class="collection-progress">
+		<span class="collection-progress-label">{{ $.T "pack-opening-progress-title" }}</span>
+		<p class="pack-progress-count"><strong>{{ .Owned }}</strong> / {{ .Total }}</p>
+		<div class="pack-progress is-static" role="progressbar" aria-valuemin="0" aria-valuemax="{{ .Total }}"
+			aria-valuenow="{{ .Owned }}" aria-label="{{ $.T "pack-opening-progress-title" }}">
+			<div class="pack-progress-bar" style="width: {{ .Percent }}%"></div>
+		</div>
+	</div>
+	{{ end }}
+
+	{{ if not .Data.Scoped }}
 	<nav class="inventory-tabs" aria-label="{{ .T "catalog-tabs-label" }}">
 		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
 			{{ .T "catalog-tab-cards" }}
@@ -28,6 +40,7 @@
 			{{ .T "catalog-tab-collections" }}
 		</a>
 	</nav>
+	{{ end }}
 
 	{{ if eq .Data.Tab "cards" }}
 	<div class="inventory-filters">
@@ -39,6 +52,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ if not .Data.Scoped }}
 		<label>
 			<span>{{ .T "catalog-filter-collection" }}</span>
 			<select name="collection" form="search-form" data-autosubmit>
@@ -47,6 +61,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
 			<select name="sort" form="search-form" data-autosubmit>
