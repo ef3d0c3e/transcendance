@@ -186,6 +186,11 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	require.Contains(t, body, `id="shop-topup-popup"`)
 	require.Contains(t, body, "Buy more coins")
 	require.Contains(t, body, "€4.49")
+	// The biggest packs
+	require.Contains(t, body, "5,000 coins")
+	require.Contains(t, body, "€29.99")
+	require.Contains(t, body, "10,000 coins")
+	require.Contains(t, body, "€49.99")
 
 	// A second pack stacks on top of the first
 	rec = shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
