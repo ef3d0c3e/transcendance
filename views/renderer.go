@@ -5,7 +5,9 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	fluentloc "github.com/hakastein/gofluent/localization"
@@ -57,8 +59,11 @@ func (t Translator) T(id string, kv ...any) string {
 func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	t := template.Must(
 		template.New("").Funcs(template.FuncMap{
-			"sub":       func(a, b int) int { return a - b },
-			"add":       func(a, b int) int { return a + b },
+			"sub": func(a, b int) int { return a - b },
+			"add": func(a, b int) int { return a + b },
+			"today": func() string {
+				return LatestToday().Format("2006-01-02")
+			},
 			"hasPrefix": strings.HasPrefix,
 		}).ParseGlob("templates/**/*.html"),
 	)
@@ -187,4 +192,41 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "Failed to render page"})
 		return
 	}
+}
+
+// Current date in the timezone furthest ahead (UTC+14), so no user's today is in the future
+func LatestToday() time.Time {
+	now := time.Now().UTC().Add(14 * time.Hour)
+	return time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+}
+
+type ErrorPage struct {
+	User       any
+	Title      string
+	Message    string
+	StatusCode int
+}
+
+func (r *Renderer) RenderError(
+	c *gin.Context,
+	data ErrorPage,
+) {
+	if data.StatusCode != 0 {
+		c.Status(data.StatusCode)
+	}
+	if data.Title == "" {
+		data.Title = r.T(c, "error-title")
+		if data.StatusCode != 0 {
+			data.Title += " " + strconv.Itoa(data.StatusCode)
+		}
+	}
+	builder := PageBuilder("base", gin.H{
+		"Title": data.Title,
+		"User":  data.User,
+	})
+	builder.Add("error", "Content", gin.H{
+		"StatusCode":   data.StatusCode,
+		"ErrorMessage": data.Message,
+	})
+	r.Render(c, &builder)
 }

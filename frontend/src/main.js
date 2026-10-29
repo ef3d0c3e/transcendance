@@ -10,6 +10,9 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
+import Profile from './ProfileEnhancement.svelte';
+import Notification from './Notification.svelte';
+import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 
 // Navbar
 {
@@ -34,6 +37,36 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 		mount(ThemeSwitcher, {
 			target,
 		});
+	}
+}
+
+// Notifications
+{
+	const target = document.querySelector('#notification');
+
+	if (target) {
+		mount(Notification, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
+// Notifications page
+{
+	const target = document.querySelector('#notification-list');
+
+	if (target) {
+		enhanceNotificationList(target);
+	}
+}
+
+// Relative dates of server rendered lists
+{
+	for (const list of document.querySelectorAll('[data-relative-times]')) {
+		enhanceRelativeTimes(list);
 	}
 }
 
@@ -121,6 +154,20 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Profile form
+{
+	const target = document.querySelector('#profile-enhancement');
+
+	if (target) {
+		mount(Profile, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
 	}
 }
 

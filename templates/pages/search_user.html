@@ -1,40 +1,78 @@
 {{ define "search_user" }}
-<style>
-.profile-picture {
-	height: 2em;
-	width: 2em;
-	margin: 0;
-	padding: 0;
-	vertical-align: -.7em;
-}
-</style>
-<e-center intrinsic>
-<form
-	class="search-form"
-	id="search-form"
-	action="/search"
-	method="get">
-	<input
-		type="text"
-		id="username"
-		name="username"
-		placeholder="{{ .T "search-user-form-placeholder" }}"
-		value="{{ .Data.Username }}">
+<div class="inventory user-search">
+	<div class="inventory-header">
+		<div class="inventory-heading">
+			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			{{ if ne (len .Data.Users) 0 }}
+			<p class="inventory-count">{{ .Data.Count }}</p>
+			{{ end }}
+		</div>
+		<form class="search-form inventory-search" id="search-form" action="/search" method="get">
+			<input type="text" id="q" name="q" placeholder="{{ .T "search-user-form-placeholder" }}"
+				value="{{ .Data.Query }}">
+			<button type="submit" aria-label={{ .T "search-user-submit" }}></button>
+		</form>
+	</div>
 
-	<button type="submit" aria-role="{{ .T "search-user-submit" }}"></button>
-</form>
-</e-center>
-<ul>
-{{ range $val := .Data.Users }}
-	<li>
-	{{ if $val.Avatar }}
-		<img src="{{ $val.Avatar }}" class="profile-picture">
-	{{ else }}
-		<img src="/static/profile-picture.svg" class="profile-picture">
+	<div class="inventory-filters">
+		<label>
+			<span>{{ .T "search-user-filter-joined" }}</span>
+			<select name="joined" form="search-form" data-autosubmit>
+				{{ range .Data.JoinedOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "inventory-sort" }}</span>
+			<select name="sort" form="search-form" data-autosubmit>
+				{{ range .Data.SortOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+	</div>
+
+	{{ if .Data.Message }}
+	<div class="inventory-message">
+		<p>{{ .Data.Message }}</p>
+		{{ if .Data.Filtered }}
+		<a href="/search">{{ .T "inventory-search-clear" }}</a>
+		{{ end }}
+	</div>
 	{{ end }}
-		<a href="/profile/{{$val.Username}}">{{$val.Username}}</a>
-	</li>
-{{ end }}
-</ul>
-{{ .Children.Paginator }}
+
+	{{ if ne (len .Data.Users) 0 }}
+	{{ .Children.Paginator }}
+	<ul class="user-results" data-relative-times data-locale="{{ .Data.Locale }}">
+		{{ range .Data.Users }}
+		<li class="user-result">
+			<img class="user-result-avatar" src="/avatars/{{ .ID }}" alt="" width="48" height="48">
+			<div class="user-result-body">
+				<a class="user-result-name" href="/profile/{{ .Username }}">{{ .Username }}</a>
+				<dl class="user-result-stats">
+					<div>
+						<dt>{{ $.T "search-user-joined" }}</dt>
+						<dd><time datetime="{{ .CreatedAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .CreatedAt.Format "2006-01-02" }}</time></dd>
+					</div>
+					<div>
+						<dt>{{ $.T "search-user-cards" }}</dt>
+						<dd>
+							{{ if $.Data.User }}
+							<a href="/inventory?u={{ .Username }}">{{ .CardCount }}</a>
+							{{ else }}
+							{{ .CardCount }}
+							{{ end }}
+						</dd>
+					</div>
+				</dl>
+			</div>
+		</li>
+		{{ end }}
+	</ul>
+	{{ if gt .Data.Pages 1 }}
+	{{ .Children.Paginator }}
+	{{ end }}
+	{{ end }}
+</div>
 {{ end }}

@@ -37,10 +37,31 @@ account-delete-error-permission = Vous n'avez pas la permission pour supprimer l
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher
 search-user-form-placeholder = Nom d'utilisateur
+search-user-count = { $count ->
+    [one] { $count } utilisateur
+    *[other] { $count } utilisateurs
+}
+search-user-empty = Aucun utilisateur trouvé
+search-user-error-internal = La recherche a échoué
+search-user-filter-joined = Inscription
+search-user-filter-joined-all = Toutes les dates
+search-user-filter-joined-day = Dernières 24 heures
+search-user-filter-joined-week = Dernière semaine
+search-user-filter-joined-month = Dernier mois
+search-user-filter-joined-year = Dernière année
+search-user-sort-relevance = Pertinence
+search-user-sort-name = Nom (A-Z)
+search-user-sort-name-desc = Nom (Z-A)
+search-user-sort-newest = Membres récents
+search-user-sort-oldest = Membres anciens
+search-user-sort-cards = Plus de cartes
+search-user-joined = Inscrit :
+search-user-cards = Cartes :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
 navbar-cards = Cartes
+navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-shop = Boutique
 navbar-profile = Votre profil
@@ -86,6 +107,61 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+profile-title = Profil
+profile-error-user = L'utilisateur n'existe pas
+profile-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit faire entre 3 et 16 caractères et ne peut contenir que des lettres, des chiffres et '_'
+profile-error-username-taken = Nom d'utilisateur déjà utilisé
+profile-error-bio = La bio ne doit pas dépasser 244 caractères
+profile-error-birthdate = La date de naissance doit être comprise entre l'an 0 et aujourd'hui
+profile-error-contactinfo = Le contact ne doit pas dépasser 256 caractères
+profile-error-password = Le mot de passe ne correspond pas au mot de passe actuel
+profile-error-new_password = Mot de passe invalide. Votre mot de passe doit faire entre 8 et 72 caractères
+profile-error-passwords-do-not-match = Les mots de passe ne correspondent pas
+profile-error-password-missing = Ce champ est requis pour changer de mot de passe
+profile-empty-field = Non renseigné
+profile-submit = Enregistrer
+profile-username = Nom d'utilisateur
+profile-username-hint = 3 à 16 caractères : lettres, chiffres et '_'
+profile-bio = Bio
+profile-birthdate = Date de naissance
+profile-contact = Contact
+profile-new-password = Nouveau mot de passe
+profile-confirm-password = Confirmer le mot de passe
+profile-current-password = Mot de passe actuel
+profile-error-network = Impossible de contacter le serveur
+
+error-unexpected = Une erreur est survenue
+error-unauthorized = Vous devez être connecté pour accéder à cette ressource
+
+error-title = Erreur
+
+profile-avatar-label = Photo de profil
+profile-avatar-alt = Photo de profil de { $username }
+profile-avatar-help = JPEG, PNG ou WebP. Maximum 5 Mio, 1024 par 1024 pixels.
+profile-avatar-upload = Envoyer la photo
+profile-avatar-delete = Supprimer la photo
+profile-avatar-invalid = Image invalide. Formats acceptés : JPEG, PNG ou WebP, 5 Mio maximum, 1024 par 1024 pixels.
+
+notification-title = Notifications
+notification-unread = non lues
+notification-loading = Chargement des notifications...
+notification-none = Vous êtes à jour
+notification-error = Impossible de charger les notifications
+notification-view-all = Voir toutes les notifications
+notification-mark-all-read = Tout marquer comme lu
+notification-mark-read = Marquer comme lue
+notification-mark-unread = Marquer comme non lue
+notification-delete = Supprimer
+notification-tabs-label = Filtrer les notifications
+notification-tab-all = Toutes
+notification-tab-unread = Non lues
+notification-empty-all = Aucune notification pour le moment
+notification-empty-unread = Aucune notification non lue
+
+notification-friend-request-title = Demande en Ami
+notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-info-title = { $title }
+notification-info-desc = { $description }
 
 catalog-title = Catalogue de cartes
 catalog-tabs-label = Sections du catalogue
