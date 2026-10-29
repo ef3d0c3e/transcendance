@@ -5,6 +5,7 @@ import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
+import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
@@ -277,6 +278,15 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				autostart: target.dataset.autostart === 'true',
 			},
 		});
+	}
+}
+
+// Pack opening animated background
+{
+	const target = document.querySelector('#pack-background');
+
+	if (target) {
+		mount(PackBackground, { target, props: { target } });
 	}
 }
 
