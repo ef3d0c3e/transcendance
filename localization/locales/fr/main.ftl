@@ -76,17 +76,6 @@ search-user-sort-cards = Plus de cartes
 search-user-joined = Inscrit :
 search-user-cards = Cartes :
 
-friends-title = Liste d'amis
-friends-add = Demander en ami
-friends-unfriend = Supprimer l'ami
-friends-block = Bloquer
-friends-unblock = Debloquer
-friends-blocked = Bloque
-friends-pending = En attente
-friends-respond-message = Cet utilisateur vous a demande en ami
-friends-unknown-error = Une erreur est survenue
-friends-spam-error = Vous ne pouvez envoyer qu'une invitation a la fois.
-
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
 navbar-cards = Cartes
