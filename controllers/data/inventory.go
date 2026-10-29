@@ -307,7 +307,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	} else {
 		// Fetch
 		var otherUser models.User
-		if err := dc.DB.Where("username = ?", v.Username).First(&otherUser).Error; err != nil {
+		if err := dc.DB.Omit("avatar").Where("username = ?", v.Username).First(&otherUser).Error; err != nil {
 			v.Message = dc.Renderer.T(c, "inventory-message-user-not-found")
 			dc.renderInventory(c, user, v)
 			return

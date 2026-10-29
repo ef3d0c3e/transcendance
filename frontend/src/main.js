@@ -10,6 +10,7 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
+import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 
@@ -153,6 +154,20 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Profile form
+{
+	const target = document.querySelector('#profile-enhancement');
+
+	if (target) {
+		mount(Profile, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
 	}
 }
 

@@ -81,8 +81,8 @@ func fuzzyPattern(query string) string {
 
 // A user shown in the results
 type userSearchResult struct {
+	ID        uint
 	Username  string
-	Avatar    string
 	CreatedAt time.Time
 	CardCount int64
 }
@@ -168,7 +168,7 @@ func (sc *Controller) searchUsers(c *gin.Context, v *userSearchView) error {
 	}
 	v.Users = make([]userSearchResult, 0, userSearchPageSize)
 	return sc.userQuery(c, v).
-		Select("users.username, users.avatar, users.created_at, " + userCardCount + " AS card_count").
+		Select("users.id, users.username, users.created_at, " + userCardCount + " AS card_count").
 		Order(clause.OrderBy{Expression: userOrder(v)}).
 		Offset((v.Page - 1) * userSearchPageSize).
 		Limit(userSearchPageSize).
