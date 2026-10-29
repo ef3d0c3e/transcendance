@@ -1500,12 +1500,15 @@ section {
     font-weight: 700;
 }
 
-/* Reward ladder: one cell per tier, the one of the bonus of the day
-   standing out and the others grayed out */
+/* Reward ladder: one bar of fused cells, one per tier, the one of the
+   bonus of the day standing out and the others grayed out */
 .daily-streak-meter {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.35rem;
+    overflow: hidden;
+
+    background: var(--color-bg-4);
+    border-radius: 999px;
 
     font-variant-numeric: tabular-nums;
 }
@@ -1514,11 +1517,14 @@ section {
     padding: 0.25rem 0.7rem;
 
     color: var(--color-text-muted);
-    background: var(--color-bg-4);
-    border-radius: 999px;
 
     font-size: 0.85rem;
     font-weight: 600;
+
+    /* Fused cells, split by a hairline */
+    & + & {
+        border-left: 1px solid var(--color-border-1);
+    }
 }
 
 .daily-streak-tier-current {
