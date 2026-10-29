@@ -1,0 +1,28 @@
+{{ define "contact" }}
+<article class="info-page">
+	<h1>{{ .T "contact-title" }}</h1>
+	<p>{{ .T "contact-intro" }}</p>
+
+	<h2>{{ .T "contact-issues-title" }}</h2>
+	<p>{{ .T "contact-issues-text" }}</p>
+	<p><a class="info-page-cta" href="{{ .Data.Repository }}/issues" rel="noopener">{{ .T "contact-issues-link" }}</a></p>
+
+	<h2>{{ .T "contact-team-title" }}</h2>
+	<p>{{ .T "contact-team-text" }}</p>
+	<ul class="contact-team">
+		{{ range .Data.Team }}
+		<li>
+			<a href="https://github.com/{{ . }}" rel="noopener">{{ . }}</a>
+		</li>
+		{{ end }}
+	</ul>
+
+	<h2>{{ .T "contact-privacy-title" }}</h2>
+	<p>{{ .T "contact-privacy-text" }}</p>
+
+	<p class="info-page-links">
+		<a href="/terms">{{ .T "terms-title" }}</a>
+		<a href="/legal">{{ .T "legal-title" }}</a>
+	</p>
+</article>
+{{ end }}

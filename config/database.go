@@ -61,6 +61,10 @@ func MigrateDatabase(db *gorm.DB) error {
 	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Notification{}, &models.Card{}, &models.Booster{}); err != nil {
 		return err
 	}
+	// Erasing users that were soft deleted before account deletion became permanent
+	if err := db.Exec("DELETE FROM users WHERE deleted_at IS NOT NULL").Error; err != nil {
+		return err
+	}
 	// Updating user entries that were created before user profile was introduced
 	return db.Exec(`
 		INSERT INTO user_profiles (user_id)
