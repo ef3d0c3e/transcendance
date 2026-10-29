@@ -58,8 +58,8 @@
 			<img class="user-result-avatar" src="/avatars/{{ .ID }}" alt="" width="48" height="48">
 			<div class="user-result-body">
 				<a class="user-result-name" href="/profile/{{ .Username }}">{{ .Username }}</a>
-				<div id="friend-button" data-id="{{ .ID }}"></div>
 				<dl class="user-result-stats">
+					<div class="friend-button" data-id="{{ .ID }}"></div>
 					<div>
 						<dt>{{ $.T "search-user-joined" }}</dt>
 						<dd><time datetime="{{ .CreatedAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .CreatedAt.Format "2006-01-02" }}</time></dd>

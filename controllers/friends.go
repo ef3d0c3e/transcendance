@@ -3,7 +3,6 @@ package controllers
 import (
 	"strconv"
 	"transcendance/models"
-	"transcendance/views"
 
 	"net/http"
 	"strings"
@@ -142,32 +141,4 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 			"message": fc.Renderer.T(c, "friend-unknown-error"),
 		})
 	}
-}
-
-func (fc *Controller) FriendsGet(c *gin.Context) {
-	user := GetAuthenticatedUser(c)
-	if (user == nil) {
-		c.Redirect(http.StatusTemporaryRedirect, "/login")
-	}
-
-	var relation models.Relation
-	var friends []models.User
-	fc.DB.Model(&relation).
-	Where("user_id = ? and type = ?", user.ID, "friends").
-	Association("Target").
-	Find(&user)
-
-	builder := views.PageBuilder("base", map[string]any{
-		"Title": fc.Renderer.T(c, "friends-title"),
-		"User":  user,
-	})
-
-	builder.Add("search_user", "Content", map[string]any{
-		"User":     user,
-		"Username": user.Username,
-		"Users": friends,
-		"FormAction": "/friends",
-	})
-
-	fc.Renderer.Render(c, &builder)
 }
