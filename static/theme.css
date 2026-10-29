@@ -1556,6 +1556,111 @@ section {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    .card-container {
+        cursor: pointer;
+    }
+}
+
+/* No booster of this collection left: grayed, clicking buys some */
+.inventory-booster.is-empty {
+    cursor: pointer;
+
+    .card-container {
+        filter: grayscale(0.85) opacity(0.6);
+        transition: filter 200ms ease;
+    }
+
+    &:hover .card-container,
+    &:focus-visible .card-container {
+        filter: grayscale(0.3) opacity(0.9);
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--color-accent-primary);
+        outline-offset: 4px;
+        border-radius: 1rem;
+    }
+}
+
+.collection-stack.collection-stack-empty {
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+}
+
+/* Balance and coin top-up, above the boosters */
+.inventory-wallet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+
+    margin: 0 0 1rem;
+}
+
+.shop-balance {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+
+    min-height: 2.5rem;
+    margin: 0;
+    padding: 0.35em 0.9em;
+
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+
+    background: var(--color-bg-4);
+    border-radius: 0.55rem;
+
+    .coin-icon {
+        width: 1.2em;
+        height: 1.2em;
+    }
+}
+
+.shop-booster-display {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.shop-price-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+
+    padding: 0.35em 0.9em;
+
+    font-weight: 650;
+    color: var(--color-text);
+
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 999px;
+    box-shadow: 0 4px 12px var(--color-shadow);
+}
+
+/* Outcome of buying boosters or coins */
+.shop-message {
+    margin: 0 0 1rem;
+    padding: 0.6em 1em;
+
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.5em;
+}
+
+.shop-message-success {
+    background: var(--color-success-1);
+    border-color: var(--color-success-2);
+    color: var(--color-success-3);
+}
+
+.shop-message-error {
+    background: var(--color-error-1);
+    border-color: var(--color-error-2);
+    color: var(--color-error-3);
 }
 
 /* Number of identical boosters in a stack */

@@ -48,7 +48,6 @@
 				{{ if .User }}
 				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
 				{{ end }}
-				<li><a href="/shop" {{ if hasPrefix .Path "/shop" }}aria-current="page"{{ end }}>{{ .T "navbar-shop" }}</a></li>
 			</ul>
 
 			<div class="nav-end">

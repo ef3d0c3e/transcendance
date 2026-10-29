@@ -67,7 +67,6 @@ navbar-label-main = Main navigation
 navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
-navbar-shop = Shop
 navbar-profile = Your profile
 navbar-logout = Log out
 
@@ -227,9 +226,7 @@ inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
 inventory-message-no-boosters = No boosters yet
-inventory-booster-open-confirm = Open booster { $name }?
-inventory-booster-open-yes = Yes
-inventory-booster-open-no = No
+inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -264,11 +261,8 @@ pack-opening-odds-note = Each card of the booster is rolled on its own.
 pack-opening-progress-title = Collection progress
 pack-opening-progress-note = Different cards of this collection you own.
 
-shop-title = Shop
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = No boosters are on sale right now
 shop-booster-buy = Buy
 shop-price = { $amount } coins
 shop-topup-title = Get coins
@@ -286,7 +280,6 @@ shop-buy-success = { $count ->
     [one] A { $collection } booster has been added to your inventory
    *[other] { $count } { $collection } boosters have been added to your inventory
 }
-shop-buy-view-inventory = View inventory
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins

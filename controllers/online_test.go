@@ -40,7 +40,7 @@ func TestLastSeenRefresh(t *testing.T) {
 	cookie := login(t, router, "seenref", "foo-bar-baz-qux")
 	setLastSeen(t, "seenref", nil)
 
-	getInventory(t, router, cookie, "/shop")
+	getInventory(t, router, cookie, "/cards/search/")
 	first := lastSeen(t, "seenref")
 	require.NotNil(t, first)
 	require.WithinDuration(t, time.Now(), *first, time.Minute)
@@ -48,12 +48,12 @@ func TestLastSeenRefresh(t *testing.T) {
 	// Not written again until the refresh delay passed
 	recent := time.Now().Add(-models.LastSeenRefresh / 2).Truncate(time.Second)
 	setLastSeen(t, "seenref", recent)
-	getInventory(t, router, cookie, "/shop")
+	getInventory(t, router, cookie, "/cards/search/")
 	require.WithinDuration(t, recent, *lastSeen(t, "seenref"), time.Second)
 
 	stale := time.Now().Add(-2 * models.LastSeenRefresh)
 	setLastSeen(t, "seenref", stale)
-	getInventory(t, router, cookie, "/shop")
+	getInventory(t, router, cookie, "/cards/search/")
 	require.WithinDuration(t, time.Now(), *lastSeen(t, "seenref"), time.Minute)
 }
 
