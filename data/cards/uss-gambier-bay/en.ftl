@@ -1,0 +1,2 @@
+title = USS Gambier Bay
+description = USS Gambier Bay (CVE-73) was a Casablanca-class escort carrier of the United States Navy. During the Battle off Samar, part of the overall Battle of Leyte Gulf, during a successful effort to turn back a much larger attacking Japanese surface force, Gambier Bay was sunk by naval gunfire, primarily from the battleship Yamato, taking at least 15 hits between 8:10 and 8:50.
