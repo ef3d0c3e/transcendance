@@ -2,18 +2,14 @@
 <style>
 /* Style et animation pour checkmark */
 
-:global(.profile-error) {
-	color: red;
-}
-
-:global(button.saved) {
-	--checkmark-color: #5cb85c;
+:global(#profile-form button.saved) {
+	--checkmark-color: var(--color-success-3);
 	--checkmark-height: 2rem;
 	--checkmark-width: 1rem;
 	position: relative;
 }
 
-:global(button.saved)::after {
+:global(#profile-form button.saved)::after {
 	content: "";
     display: inline-block;
     position: absolute;
@@ -67,6 +63,32 @@
 		if (!form || !result) {
 			return;
 		}
+		const avatarForm = document.querySelector("#avatar-upload-form");
+		const avatarFile = document.querySelector("#avatar-file");
+		const avatarButton = document.querySelector("#avatar-upload-button");
+
+		const avatarDeleteButton = document.querySelector("#avatar-delete-button");
+		const avatarDeleteDialog = document.querySelector("#avatar-delete-dialog");
+
+		function confirmAvatarDeletion() {
+			avatarDeleteDialog?.showModal();
+		}
+
+		avatarDeleteButton?.addEventListener("click", confirmAvatarDeletion);
+
+		function chooseAvatar() {
+			avatarFile?.click();
+		}
+
+		function uploadAvatar() {
+			if (avatarFile?.files.length) {
+				avatarForm?.requestSubmit();
+			}
+		}
+
+		avatarButton?.addEventListener("click", chooseAvatar);
+		avatarFile?.addEventListener("change", uploadAvatar);
+
 		const button = form.querySelector("button[type=submit]");
 		const errorFields = form.querySelectorAll(".profile-error")
 
@@ -181,7 +203,7 @@
 					hideButtonAfterSave();
 				}
 			} catch (error) {
-				result.textContent = "Unable to contact the server.";
+				result.textContent = form.dataset.saveError;
 			} finally {
 				button.disabled = false;
 			}
@@ -193,6 +215,9 @@
 		}
 
 		return () => {
+			avatarDeleteButton?.removeEventListener("click", confirmAvatarDeletion);
+			avatarButton?.removeEventListener("click", chooseAvatar);
+			avatarFile?.removeEventListener("change", uploadAvatar);
 			form.removeEventListener("submit", handleSubmit);
 			button.removeEventListener("animationend", hideButtonOnSave);
 			for (const field of form.querySelectorAll("input, textarea")) {
