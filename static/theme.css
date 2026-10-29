@@ -1900,9 +1900,8 @@ body:has(.pack-background) {
     margin: 0 auto;
 }
 
-/* Panels over the background */
-.pack-panel,
-.pack-chase {
+/* Panel over the background */
+.pack-panel {
     padding: 1.25rem;
 
     background: color-mix(in srgb, var(--color-bg-2) 88%, transparent);
@@ -1910,6 +1909,31 @@ body:has(.pack-background) {
     border-radius: 1rem;
     box-shadow: 0 10px 30px var(--color-shadow);
     backdrop-filter: blur(6px);
+}
+
+/* While opening, the reels have the screen to themselves */
+.pack-page.is-opening .pack-hero,
+body:has(.pack-page.is-opening) > header,
+body:has(.pack-page.is-opening) > .site-footer {
+    display: none;
+}
+
+/* Back once opened, above the reels */
+.pack-page.is-revealed .pack-hero {
+    animation: pack-hero-in 600ms ease-out both;
+}
+
+@keyframes pack-hero-in {
+    from {
+        opacity: 0;
+        transform: translateY(-1.5rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pack-page.is-revealed .pack-hero {
+        animation: none;
+    }
 }
 
 .pack-hero {
@@ -2153,30 +2177,79 @@ body:has(.pack-background) {
 
     background: var(--color-bg-4);
     border-radius: 999px;
+
+    animation: pack-progress-pulse 2.2s ease-in-out infinite;
 }
 
 .pack-progress-bar {
+    position: relative;
     height: 100%;
     max-width: 100%;
 
     background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
     border-radius: inherit;
     transition: width 600ms ease;
-}
+    animation: pack-progress-bright 2.2s ease-in-out infinite;
 
-.pack-chase-header {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: 0.5rem 1rem;
+    /* A light sweeping along the filled part */
+    &::after {
+        content: "";
+        position: absolute;
+        inset: 0;
 
-    margin-bottom: 1rem;
-
-    h3 {
-        margin: 0;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 55%), transparent) no-repeat;
+        background-size: 40% 100%;
+        animation: pack-progress-shine 2.6s ease-in-out infinite;
     }
 }
+
+/* The owned count pops when it rolls up after an opening */
+#pack-owned {
+    display: inline-block;
+
+    &.is-updated {
+        animation: pack-count-pop 0.7s ease-out;
+    }
+}
+
+@keyframes pack-progress-pulse {
+    50% {
+        box-shadow: 0 0 10px 1px color-mix(in srgb, var(--color-accent-secondary) 60%, transparent);
+    }
+}
+
+@keyframes pack-progress-bright {
+    50% {
+        filter: brightness(1.25) saturate(1.2);
+    }
+}
+
+@keyframes pack-progress-shine {
+    from {
+        background-position: -60% 0;
+    }
+
+    to {
+        background-position: 160% 0;
+    }
+}
+
+@keyframes pack-count-pop {
+    40% {
+        color: var(--color-accent-secondary);
+        transform: scale(1.35);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pack-progress,
+    .pack-progress-bar,
+    .pack-progress-bar::after,
+    #pack-owned.is-updated {
+        animation: none;
+    }
+}
+
 
 .pack-form {
     display: flex;

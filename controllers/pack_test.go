@@ -249,10 +249,10 @@ func TestOpeningPage(t *testing.T) {
 	require.Contains(t, body, `data-autostart="true"`)
 	require.Contains(t, body, `<button type="submit" class="pack-open" >`)
 
-	// Rarest cards first
-	chase := body[strings.Index(body, `class="pack-chase"`):]
-	require.Contains(t, chase, `href="/collections/1/"`)
-	require.Less(t, strings.Index(chase, "LEGENDARY"), strings.Index(chase, "RARE"))
+	// The booster and its panel wait for the opening to show
+	require.Contains(t, body, `<div class="pack-page is-opening">`)
+	require.Contains(t, body, `data-again-label="Open again"`)
+	require.NotContains(t, body, "pack-chase")
 
 	// Opening refreshes the progress with the distinct cards obtained
 	code, resp := openBooster(t, router, cookie, booster.ID)
@@ -316,6 +316,7 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 	require.Regexp(t, `<button type="submit" class="pack-open" hidden>`, body)
 	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" aria-label="Open again for 250 coins"\s+>`, body)
 	require.Contains(t, body, `data-autostart="false"`)
+	require.Contains(t, body, `<div class="pack-page">`)
 	require.Contains(t, body, `<span id="pack-coins">0 coins</span>`)
 	// Topping up comes back here
 	require.Contains(t, body, `id="shop-topup-popup"`)
@@ -340,6 +341,7 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	body = stripIsolation(rec.Body.String())
 	require.Contains(t, body, `data-auto-buy="true"`)
+	require.Contains(t, body, `<div class="pack-page is-opening">`)
 	require.Contains(t, body, `<span id="pack-coins">500 coins</span>`)
 
 	// Unknown collections still go back to the inventory

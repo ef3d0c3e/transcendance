@@ -263,8 +263,6 @@ pack-opening-odds-foil = Foil
 pack-opening-odds-note = Each card of the booster is rolled on its own.
 pack-opening-progress-title = Collection progress
 pack-opening-progress-note = Different cards of this collection you own.
-pack-opening-chase-title = Rarest cards of this collection
-pack-opening-chase-all = See the whole collection
 
 shop-title = Shop
 shop-balance = Balance

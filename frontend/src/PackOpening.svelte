@@ -7,6 +7,7 @@
 		openLabel,
 		retryLabel,
 		errorLabel,
+		againLabel,
 		coins: initialCoins = 0,
 		autostart = false,
 		// Back from a top-up: buy the booster it was for
@@ -18,10 +19,24 @@
 	let failed = $state(false);
 	let colors = $state({ primary: "#407fff", secondary: "#7f2fff" });
 	let busy = $state(false);
+	// The reels are turning: the payline blinks faster
+	let spinning = $state(false);
+	// Every reel landed: the payline flashes
+	let settled = $state(false);
 	// Card scale in the reels, fitted to the viewport once they are mounted
 	let reelScale = $state(null);
 
 	let stageElement = $state();
+	let againButton = $state();
+	// Height of the previous and next cards peeking around the won one, in px
+	let reelPeek = $state(0);
+	// What the stage's button does once the reels stopped: "open" the next
+	// booster of the stack, or "buy" one. null while spinning.
+	let stageAction = $state(null);
+	// Price shown on the stage's button when it buys, the page's buy button markup
+	let priceHtml = $state("");
+	// Rare and legendary landings flash the whole stage
+	let stageFlash = $state({ key: 0, rarity: "" });
 	// The page's form, with its open button for boosters left in the stack,
 	// and its buy button once they are all opened
 	let pageForm;
@@ -49,12 +64,28 @@
 	const RUN_CELLS = 12;
 	// Share of the viewport the reels may use
 	const REELS_MAX_WIDTH = 0.92;
-	const REELS_MAX_HEIGHT = 0.7;
+	// Share of the screen under the header for the won cards, the rest is for
+	// the cards peeking around them and the button under the reels
+	const REELS_MAX_HEIGHT = 0.6;
+	// Room kept around the reels for the button under them and the stage's
+	// spacing, in px
+	const ACTIONS_HEIGHT = 190;
+	// The peeking cards show at most this share of themselves
+	const PEEK_MAX = 0.6;
 	const REELS_MAX_SCALE = 1;
-	// Time to look at the landed cards before going back to the open button
-	const REVEAL_MS = 1200;
 	// Buys a booster of a collection and opens it at once
 	const BUY_URL = "/opening/buy";
+	// Time for the owned cards count to roll up to its new value
+	const COUNT_UP_MS = 700;
+	// Cards fade the further they are from the middle of their reel: fully
+	// opaque within FADE_FULL of a card from it, then opacity drops by
+	// FADE_RATE per card of distance, down to FADE_MIN
+	const FADE_FULL = 0.2;
+	const FADE_RATE = 0.7;
+	const FADE_MIN = 0.12;
+	// The cards keep being followed this long after the last reel locked, its
+	// bounce included
+	const FADE_SETTLE_MS = 500;
 	// Period of the cards' sway, picked per reel so they never move in sync
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
@@ -70,28 +101,62 @@
 		// offsetWidth/Height ignore the transform: the unscaled card size
 		const cardWidth = inner.offsetWidth;
 		const cardHeight = inner.offsetHeight;
-		const gap = Number.parseFloat(getComputedStyle(stageElement).columnGap) || 0;
+		const row = stageElement.querySelector(".pack-reels");
+		const gap = Number.parseFloat(getComputedStyle(row).columnGap) || 0;
 		const count = reels.length;
 
 		const width = Math.min(window.innerWidth * REELS_MAX_WIDTH, window.innerWidth - 32);
+		const header = document.querySelector("body > header")?.offsetHeight ?? 0;
+		const height = window.innerHeight - header - ACTIONS_HEIGHT;
 		const byWidth = (width - (count - 1) * gap) / count / cardWidth;
-		const byHeight = (window.innerHeight * REELS_MAX_HEIGHT) / cardHeight;
+		const byHeight = (height * REELS_MAX_HEIGHT) / cardHeight;
 
 		reelScale = Math.min(byWidth, byHeight, REELS_MAX_SCALE);
+		// The rest of the height shows the cards before and after the won one
+		const scaled = cardHeight * reelScale;
+		reelPeek = Math.floor(Math.max(0, Math.min(scaled * PEEK_MAX, (height - scaled) / 2)));
 	}
 
-	function scrollBehavior() {
-		return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+	// The page around the reels: the booster and its information panel
+	function packPage() {
+		return document.querySelector(".pack-page");
 	}
 
-	function scrollToReels() {
-		stageElement.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+	// While opening, the reels have the screen to themselves
+	function hidePage() {
+		const page = packPage();
+		if (page && !page.classList.contains("is-opening")) {
+			page.classList.add("is-opening");
+			page.classList.remove("is-revealed");
+			window.scrollTo({ top: 0, behavior: "instant" });
+		}
 	}
 
-	// Back to the top of the page, where the open buttons are
-	function scrollToForm(button) {
-		window.scrollTo({ top: 0, behavior: scrollBehavior() });
-		button.focus({ preventScroll: true });
+	// Once opened, the booster and its panel come back above the reels. They
+	// push the reels down, the page scrolls along so the cards stay in place.
+	function revealPage() {
+		const page = packPage();
+		if (!page?.classList.contains("is-opening")) {
+			return;
+		}
+		// The reels when shown, else the stage holding the message. Measured
+		// before the header and footer come back too.
+		const anchor = stageElement?.querySelector(".pack-reels") ?? stageElement;
+		const before = anchor?.getBoundingClientRect().top;
+		page.classList.remove("is-opening");
+		page.classList.add("is-revealed");
+		if (before !== undefined) {
+			window.scrollBy({ top: anchor.getBoundingClientRect().top - before, behavior: "instant" });
+		}
+	}
+
+	// The stage's button: same as the page's open or buy button
+	function openAgain() {
+		if (stageAction === "open") {
+			openPack();
+		} else if (stageAction === "buy") {
+			buyOrTopUp();
+		}
 	}
 
 	// Failure reported by the server, its message is shown as is
@@ -101,6 +166,7 @@
 		failed = true;
 		message = text;
 		reels = [];
+		revealPage();
 	}
 
 	function clearTimers() {
@@ -108,6 +174,53 @@
 			clearTimeout(timer);
 		}
 		timers = [];
+		stopFading();
+	}
+
+	// Set each card's opacity from its distance to the middle of its reel.
+	// Every position is read before any opacity is written, to lay out once.
+	function fadeCells() {
+		const updates = [];
+		for (const reelWindow of stageElement?.querySelectorAll(".pack-window") ?? []) {
+			const box = reelWindow.getBoundingClientRect();
+			const middle = box.top + box.height / 2;
+			for (const cell of reelWindow.querySelectorAll(".pack-cell")) {
+				const rect = cell.getBoundingClientRect();
+				// Out of the window, it is cut anyway
+				if (rect.bottom < box.top || rect.top > box.bottom) {
+					updates.push([cell, 0]);
+					continue;
+				}
+				const distance = Math.abs(rect.top + rect.height / 2 - middle) / rect.height;
+				const opacity = 1 - Math.max(0, distance - FADE_FULL) * FADE_RATE;
+				updates.push([cell, Math.max(FADE_MIN, opacity)]);
+			}
+		}
+		for (const [cell, opacity] of updates) {
+			cell.style.opacity = opacity.toFixed(3);
+		}
+	}
+
+	let fadeFrame = 0;
+
+	// Follow the cards while the reels turn
+	function startFading() {
+		cancelAnimationFrame(fadeFrame);
+		const step = () => {
+			fadeCells();
+			fadeFrame = requestAnimationFrame(step);
+		};
+		step();
+	}
+
+	// The reels stopped: a last pass for where the cards rest
+	function stopFading() {
+		if (!fadeFrame) {
+			return;
+		}
+		cancelAnimationFrame(fadeFrame);
+		fadeFrame = 0;
+		fadeCells();
 	}
 
 	function delay(ms) {
@@ -178,9 +291,9 @@
 		return first.getBoundingClientRect().height + gap;
 	}
 
-	// The window is one card tall, so the won card lands at translateY(-i * pitch)
+	// The won card lands in the middle of the window, under the peeking one
 	function restOffset(element, winnerIndex) {
-		return -winnerIndex * cellPitch(element);
+		return reelPeek - winnerIndex * cellPitch(element);
 	}
 
 	// Drop from above the stack, past the payline, and stop just short of it
@@ -221,10 +334,10 @@
 
 			timers.push(setTimeout(async () => {
 				reels[index].landed = true;
-				// Only the won card stays in the strip, which then needs no offset
-				await tick();
-				element.style.transition = "none";
-				element.style.transform = "none";
+				// Good pulls light up the whole stage
+				if (reels[index].rarity !== "common") {
+					stageFlash = { key: stageFlash.key + 1, rarity: reels[index].rarity };
+				}
 			}, duration + BOUNCE_MS));
 
 			return duration;
@@ -252,6 +365,8 @@
 		reels = [];
 		failed = false;
 		message = "";
+		stageAction = null;
+		hidePage();
 		setButtonsDisabled(true);
 		openButton?.classList.remove("is-ready");
 		buyButton?.classList.remove("is-ready");
@@ -282,12 +397,18 @@
 			await tick();
 			fitReels();
 			await tick();
-			scrollToReels();
+			settled = false;
+			spinning = true;
 			const durations = spinReels(result.reels);
+			startFading();
 
 			await delay(Math.max(...durations) + BOUNCE_MS + 80);
+			timers.push(setTimeout(stopFading, FADE_SETTLE_MS));
+			spinning = false;
+			settled = true;
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
+			revealPage();
 			openButton.textContent = retryLabel ?? openLabel;
 			openButton.hidden = !chained;
 			buyButton.hidden = chained;
@@ -295,9 +416,11 @@
 			const next = chained ? openButton : buyButton;
 			next.classList.add("is-ready");
 
-			// The won cards stay on the reels, the button is ready for the next one
-			await delay(REVEAL_MS);
-			scrollToForm(next);
+			// The won cards stay on the stage, its button opens the next one
+			priceHtml = chained ? "" : (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "");
+			stageAction = chained ? "open" : "buy";
+			await tick();
+			againButton?.focus();
 		} catch (error) {
 			showFailure(error instanceof PackError ? error.message : errorLabel);
 		} finally {
@@ -316,6 +439,31 @@
 		openTopup(price - coins);
 	}
 
+	// Roll a number up to its new value, then make it pop
+	function countUp(element, to) {
+		const from = Number(element.textContent) || 0;
+		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (to === from || reduced) {
+			element.textContent = String(to);
+			return;
+		}
+
+		const start = performance.now();
+		function step(now) {
+			const progress = Math.min(1, (now - start) / COUNT_UP_MS);
+			element.textContent = String(Math.round(from + (to - from) * progress));
+			if (progress < 1) {
+				requestAnimationFrame(step);
+			}
+		}
+		requestAnimationFrame(step);
+
+		// Restart the pop even when it just ran
+		element.classList.remove("is-updated");
+		void element.offsetWidth;
+		element.classList.add("is-updated");
+	}
+
 	// Refresh the stack and collection progress shown on the page
 	function updatePageInfo(result) {
 		const left = document.querySelector("#pack-remaining");
@@ -332,7 +480,7 @@
 		}
 
 		if (owned && typeof result.owned === "number") {
-			owned.textContent = String(result.owned);
+			countUp(owned, result.owned);
 			if (bar && total > 0) {
 				bar.style.width = `${Math.floor((result.owned * 100) / total)}%`;
 			}
@@ -373,6 +521,11 @@
 			}
 		}
 
+		// Nothing opening: the page shows as is
+		if (!busy) {
+			revealPage();
+		}
+
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
 			buyButton?.removeEventListener("click", buyOrTopUp);
@@ -381,31 +534,51 @@
 	});
 </script>
 
-{#if message}
-	<section class={failed ? "section-error" : "section-success"}>{message}</section>
-{/if}
+<div class="pack-stage" class:is-active={busy || reels.length > 0} aria-label={againLabel} bind:this={stageElement}>
+	{#key stageFlash.key}
+		{#if stageFlash.rarity}
+			<div class="pack-stage-flash" data-rarity={stageFlash.rarity} aria-hidden="true"></div>
+		{/if}
+	{/key}
 
-{#if reels.length > 0}
-	<div class="pack-reels" bind:this={stageElement}
-		style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
-		{#each reels as reel}
-			<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity} style={reel.sway}>
-				<div class="pack-strip">
-					{#each reel.slots as cell}
-						<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}>
-							<div class="pack-cell-inner">
-								{@html cell.html}
-							</div>
+	{#if message}
+		<section class={failed ? "section-error" : "section-success"}>{message}</section>
+	{/if}
+
+	{#if reels.length > 0}
+		<div class="pack-reels" class:is-spinning={spinning} class:is-settled={settled}
+			style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; --pack-peek: {reelPeek}px; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
+			{#each reels as reel}
+				<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity} style={reel.sway}>
+					<div class="pack-rays" aria-hidden="true"></div>
+					<div class="pack-window">
+						<div class="pack-strip">
+							{#each reel.slots as cell}
+								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}>
+									<div class="pack-cell-inner">
+										{@html cell.html}
+									</div>
+								</div>
+							{/each}
 						</div>
-					{/each}
+					</div>
+					<div class="pack-flash" aria-hidden="true"></div>
+					<div class="pack-shine" aria-hidden="true"></div>
 				</div>
-				<div class="pack-flash" aria-hidden="true"></div>
-			</div>
-		{/each}
-		<div class="pack-payline" aria-hidden="true"></div>
-	</div>
-{/if}
+			{/each}
+			<div class="pack-payline" aria-hidden="true"></div>
+		</div>
+	{/if}
 
+	<div class="pack-stage-actions">
+		{#if stageAction}
+			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
+				{againLabel}
+				{#if priceHtml}{@html priceHtml}{/if}
+			</button>
+		{/if}
+	</div>
+</div>
 
 <style>
 	.pack-reels {
@@ -419,22 +592,130 @@
 		display: flex;
 		gap: var(--pack-gap);
 		width: var(--pack-width);
-		/* Centered on the page column, overflowing it on both sides when wider */
-		margin: 1.5rem calc((100% - var(--pack-width)) / 2);
+		flex: none;
 	}
 
-	/* Each column is a reel window: one card tall, the stack turning behind it */
+	/* The reels and the button under them. While opening, the stage takes
+		the screen under the header, the reels in its middle. */
+	.pack-stage {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		gap: 2rem;
+	}
+
+	.pack-stage.is-active {
+		min-height: calc(100dvh - 5rem);
+	}
+
+	/* Keeps its height while spinning, so the reels don't move when the button shows */
+	.pack-stage-actions {
+		display: flex;
+		justify-content: center;
+		min-height: 4.5rem;
+	}
+
+	/* The next opening, large and calling for a click */
+	.pack-again {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.9rem;
+
+		min-height: 4.5rem;
+		padding: 0.9rem 3rem;
+
+		color: var(--color-text-alt);
+		background: linear-gradient(110deg,
+				var(--color-accent-primary) 30%,
+				var(--color-accent-primary-lighter) 50%,
+				var(--color-accent-primary) 70%);
+		background-size: 250% 100%;
+		border: 0;
+		border-radius: 1rem;
+		box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
+
+		font-size: 1.6rem;
+		font-weight: 800;
+
+		animation:
+			pack-again-in 0.45s cubic-bezier(0.34, 1.5, 0.64, 1) both,
+			pack-again-pulse 1.6s ease-out 0.45s infinite,
+			pack-again-shine 2.4s linear infinite;
+
+		&:hover {
+			background: var(--color-accent-primary-dark);
+		}
+
+		:global(.pack-buy-price) {
+			font-size: 1.15rem;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pack-again {
+			animation: none;
+		}
+	}
+
+	/* Rare and legendary landings wash the stage in their color */
+	.pack-stage-flash {
+		position: fixed;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+		opacity: 0;
+		animation: pack-stage-flash 1.1s ease-out both;
+	}
+
+	.pack-stage-flash[data-rarity="rare"] {
+		background: radial-gradient(circle, rgb(255 20 64 / 45%), transparent 70%);
+	}
+
+	.pack-stage-flash[data-rarity="legendary"] {
+		background: radial-gradient(circle, rgb(255 236 150 / 85%), rgb(255 220 80 / 35%) 45%, transparent 80%);
+		animation-duration: 1.6s;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pack-stage-flash {
+			display: none;
+		}
+	}
+
+	/* Each column is a reel: the won card in the middle, the cards before and
+		after it peeking above and below. --rarity is the color of the card it
+		lands on. */
 	.pack-reel {
+		--rarity: #407fff;
+
 		position: relative;
 		flex: 0 0 auto;
 		width: var(--pack-cell);
-		height: var(--pack-cell-height);
-		/* The swaying card may spill a little out of its window, less than
-			the gap so the neighbouring cards stay hidden */
-		overflow: hidden;
-		overflow: clip;
-		overflow-clip-margin: calc(var(--pack-gap) / 2);
-		border-radius: 0.5rem;
+		height: calc(var(--pack-cell-height) + 2 * var(--pack-peek, 0px));
+	}
+
+	/* The stack turns behind the window. Cut at its top and bottom, but not
+		on its sides where the won card tilts. The peeking cards fade out. */
+	.pack-window {
+		position: relative;
+		/* Above the rays of every reel, not only its own */
+		z-index: 1;
+		height: 100%;
+		overflow-x: visible;
+		overflow-y: clip;
+
+		/* Soft edges, the cards' own opacity follows their distance to the
+			middle (fadeCells) */
+		mask-image: linear-gradient(to bottom,
+				transparent,
+				#000 calc(var(--pack-peek) * 0.6),
+				#000 calc(100% - var(--pack-peek) * 0.6),
+				transparent);
+		mask-size: calc(100% + 2 * var(--pack-gap)) 100%;
+		mask-position: center;
+		mask-repeat: no-repeat;
+		mask-clip: no-clip;
 	}
 
 	.pack-strip {
@@ -443,8 +724,7 @@
 		gap: var(--pack-gap);
 		transform: translateY(0);
 		will-change: transform;
-		/* Unclipped once landed, the strip runs far over the page: only the
-			won card may take the pointer */
+		/* Only the won card may take the pointer */
 		pointer-events: none;
 	}
 
@@ -474,16 +754,13 @@
 		pointer-events: auto;
 	}
 
-	/* A locked reel only keeps its won card, which can then sway and tilt
-		freely without being cut by the window */
-	.pack-reel.is-landed {
-		overflow: visible;
+	/* Once locked, the cards around the won one gray out */
+	.pack-cell[data-win="false"] {
+		transition: filter 400ms ease;
 	}
 
-	/* Out of the layout, not only hidden: the unclipped strip would
-		otherwise stretch the page by its whole length */
 	.pack-reel.is-landed .pack-cell[data-win="false"] {
-		display: none;
+		filter: grayscale(0.85);
 	}
 
 	.pack-reel:not(.is-landed) .pack-cell :global(.card-effect),
@@ -522,6 +799,31 @@
 		box-shadow:
 			0 0 14px rgb(255 215 106 / 80%),
 			0 0 34px rgb(255 215 106 / 45%);
+		animation: pack-payline-blink 1.6s ease-in-out infinite;
+	}
+
+	/* Scanning while the reels turn */
+	.is-spinning .pack-payline {
+		animation-duration: 0.45s;
+	}
+
+	/* Every reel locked: two bright flashes, then it fades out until the next spin */
+	.is-settled .pack-payline {
+		animation:
+			pack-payline-flash 0.3s ease-out 2,
+			pack-payline-out 0.8s ease-in 0.6s forwards;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pack-payline,
+		.is-spinning .pack-payline,
+		.is-settled .pack-payline {
+			animation: none;
+		}
+
+		.is-settled .pack-payline {
+			opacity: 0;
+		}
 	}
 
 	.pack-payline::before,
@@ -546,26 +848,113 @@
 		border-left: 13px solid #ffd76a;
 	}
 
-	/* The flare lights the window the reel's card lands in */
-	.pack-flash {
+	.pack-reel[data-rarity="rare"] {
+		--rarity: #ff1440;
+	}
+
+	.pack-reel[data-rarity="legendary"] {
+		--rarity: #ffdc50;
+	}
+
+	/* Landing: a ring in the rarity's color bursts out of the card, twice
+		for good pulls */
+	.pack-flash,
+	.pack-flash::after {
 		position: absolute;
-		inset: -8%;
+		inset: var(--pack-peek, 0px) 0;
+		z-index: 3;
 		pointer-events: none;
 		opacity: 0;
-		z-index: 3;
+
+		border: 3px solid var(--rarity);
 		border-radius: 0.75rem;
+		box-shadow:
+			0 0 18px var(--rarity),
+			inset 0 0 18px var(--rarity);
 	}
 
-	.pack-reel[data-rarity="common"] .pack-flash {
-		background: radial-gradient(circle, #407fff 0%, transparent 68%);
+	.pack-flash::after {
+		content: "";
+		inset: -3px;
 	}
 
-	.pack-reel[data-rarity="rare"] .pack-flash {
-		background: radial-gradient(circle, #ff1440 0%, transparent 68%);
+	.is-landed .pack-flash {
+		animation: pack-ring 0.8s ease-out both;
 	}
 
-	.pack-reel[data-rarity="legendary"] .pack-flash {
-		background: radial-gradient(circle, #ffdc50 0%, transparent 70%);
+	.is-landed:is([data-rarity="rare"], [data-rarity="legendary"]) .pack-flash::after {
+		animation: pack-ring 0.9s ease-out 0.25s both;
+	}
+
+	/* Landing: a light sweeps across the card */
+	.pack-shine {
+		position: absolute;
+		inset: var(--pack-peek, 0px) 0;
+		z-index: 3;
+		overflow: hidden;
+		pointer-events: none;
+		border-radius: 0.5rem;
+	}
+
+	.pack-shine::before {
+		content: "";
+		position: absolute;
+		top: -50%;
+		bottom: -50%;
+		left: -60%;
+		width: 40%;
+		opacity: 0;
+		transform: rotate(20deg);
+		background: linear-gradient(90deg, transparent, rgb(255 255 255 / 80%), transparent);
+	}
+
+	.is-landed .pack-shine::before {
+		animation: pack-shine 0.7s ease-out 0.05s both;
+	}
+
+	/* Good pulls: light rays turning behind the cards, all of them: they are
+		under every window (z-index 1), whichever reel they belong to */
+	.pack-rays {
+		--rays-opacity: 0.55;
+
+		position: absolute;
+		left: 50%;
+		top: 50%;
+		z-index: 0;
+		width: 260%;
+		aspect-ratio: 1;
+		translate: -50% -50%;
+		pointer-events: none;
+		opacity: 0;
+
+		background: repeating-conic-gradient(
+			color-mix(in srgb, var(--rarity) 75%, transparent) 0deg 7deg,
+			transparent 7deg 18deg);
+		mask-image: radial-gradient(circle, #000 0%, transparent 62%);
+		border-radius: 50%;
+	}
+
+	.pack-reel[data-rarity="legendary"] .pack-rays {
+		--rays-opacity: 0.95;
+	}
+
+	.is-landed:is([data-rarity="rare"], [data-rarity="legendary"]) .pack-rays {
+		animation:
+			pack-rays-in 0.6s ease-out both,
+			pack-rays-spin 14s linear infinite;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.is-landed .pack-flash,
+		.is-landed .pack-flash::after,
+		.is-landed .pack-shine::before {
+			animation: none;
+		}
+
+		.is-landed:is([data-rarity="rare"], [data-rarity="legendary"]) .pack-rays {
+			animation: none;
+			opacity: var(--rays-opacity);
+		}
 	}
 
 	/* Only the landing card pops, and only once its reel locked */
@@ -576,18 +965,29 @@
 			pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
 	}
 
+	/* Rare and legendary cards keep glowing in their rarity's color */
+	.is-landed[data-rarity="rare"] .pack-cell[data-win="true"],
+	.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
+		animation:
+			pack-pop 0.75s ease-out both,
+			pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate,
+			pack-glow 1.4s ease-in-out infinite alternate;
+	}
+
+	.is-landed[data-rarity="rare"] .pack-cell[data-win="true"] {
+		--glow: #ff1440;
+	}
+
+	.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
+		--glow: #ffdc50;
+	}
+
 	@media (prefers-reduced-motion: reduce) {
-		.is-landed .pack-cell[data-win="true"] {
+		.is-landed .pack-cell[data-win="true"],
+		.is-landed[data-rarity="rare"] .pack-cell[data-win="true"],
+		.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
 			animation: pack-pop 0.75s ease-out both;
 		}
-	}
-
-	.is-landed .pack-flash {
-		animation: pack-flash 1s ease-out both;
-	}
-
-	.is-landed[data-rarity="legendary"] .pack-flash {
-		animation-duration: 1.3s;
 	}
 
 	@media (width <= 1100px) {
@@ -605,6 +1005,124 @@
 	@media (width <= 560px) {
 		.pack-reels {
 			--pack-scale: 0.24;
+		}
+	}
+
+	@keyframes pack-ring {
+		0% {
+			opacity: 1;
+			transform: scale(0.96);
+		}
+
+		100% {
+			opacity: 0;
+			transform: scale(1.35);
+		}
+	}
+
+	@keyframes pack-shine {
+		0% {
+			left: -60%;
+			opacity: 1;
+		}
+
+		100% {
+			left: 130%;
+			opacity: 1;
+		}
+	}
+
+	@keyframes pack-rays-in {
+		from {
+			opacity: 0;
+			scale: 0.4;
+		}
+
+		to {
+			opacity: var(--rays-opacity);
+			scale: 1;
+		}
+	}
+
+	@keyframes pack-rays-spin {
+		to {
+			rotate: 360deg;
+		}
+	}
+
+	@keyframes pack-stage-flash {
+		0% {
+			opacity: 0;
+		}
+
+		15% {
+			opacity: 1;
+		}
+
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@keyframes pack-again-in {
+		from {
+			opacity: 0;
+			transform: translateY(1rem) scale(0.85);
+		}
+	}
+
+	@keyframes pack-again-pulse {
+		0% {
+			box-shadow:
+				0 10px 30px rgb(0 0 0 / 40%),
+				0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 75%, transparent);
+		}
+
+		100% {
+			box-shadow:
+				0 10px 30px rgb(0 0 0 / 40%),
+				0 0 0 1.25rem transparent;
+		}
+	}
+
+	@keyframes pack-again-shine {
+		from {
+			background-position: 100% 0;
+		}
+
+		to {
+			background-position: 0 0;
+		}
+	}
+
+	@keyframes pack-payline-out {
+		to {
+			opacity: 0;
+		}
+	}
+
+	@keyframes pack-payline-blink {
+		50% {
+			opacity: 0.35;
+		}
+	}
+
+	@keyframes pack-payline-flash {
+		50% {
+			opacity: 1;
+			box-shadow:
+				0 0 22px rgb(255 235 160),
+				0 0 60px rgb(255 215 106 / 80%);
+		}
+	}
+
+	@keyframes pack-glow {
+		from {
+			filter: drop-shadow(0 0 4px var(--glow));
+		}
+
+		to {
+			filter: drop-shadow(0 0 16px var(--glow));
 		}
 	}
 
@@ -634,19 +1152,4 @@
 		}
 	}
 
-	@keyframes pack-flash {
-		0% {
-			opacity: 0.95;
-			transform: scale(0.7);
-		}
-
-		55% {
-			opacity: 0.45;
-		}
-
-		100% {
-			opacity: 0;
-			transform: scale(1.3);
-		}
-	}
 </style>
