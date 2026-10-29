@@ -86,10 +86,20 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 
 // Account deletion, after confirmation, then land on a page visitors can see
 {
-	for (const button of document.querySelectorAll('[data-account-delete]')) {
-		const error = button.parentElement.querySelector('.section-error');
+	// Error message of a failed deletion response
+	async function deletionError(response, fallback) {
+		try {
+			const body = await response.json();
+			return body.message || fallback;
+		} catch {
+			return fallback;
+		}
+	}
 
-		button.addEventListener('click', async () => {
+	for (const target of document.querySelectorAll('[data-account-delete]')) {
+		target.addEventListener('click', async (event) => {
+			const button = event.currentTarget;
+			const error = button.parentElement.querySelector('.section-error');
 			if (!confirm(button.dataset.confirm)) {
 				return;
 			}
@@ -105,13 +115,14 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 					location.assign('/cards/search/');
 					return;
 				}
-				const body = await response.json().catch(() => ({}));
-				error.textContent = body.message || button.dataset.labelError;
+				error.textContent = await deletionError(response, button.dataset.labelError);
+				error.hidden = false;
 			} catch {
 				error.textContent = button.dataset.labelError;
+				error.hidden = false;
+			} finally {
+				button.disabled = false;
 			}
-			error.hidden = false;
-			button.disabled = false;
 		});
 	}
 }
