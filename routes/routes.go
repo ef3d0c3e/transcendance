@@ -54,7 +54,7 @@ func RegisterRoutes(
 	router.HEAD("/avatars/:id", controller.AvatarGet)
 
 	// account.go
-	router.GET("/api/account_delete", controller.AccountDeleteGet)
+	router.POST("/api/account_delete", controller.AccountDeletePost)
 
 	// user_search.go
 	router.GET("/search", controller.SearchUsersGet)

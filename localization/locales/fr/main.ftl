@@ -33,6 +33,10 @@ account-delete-success-self = Votre compte a été supprimé
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-error-missing = Il manque le nom du compte
 account-delete-error-permission = Vous n'avez pas la permission pour supprimer le compte de { $username }
+account-delete-title = Supprimer le compte
+account-delete-text = Effacer définitivement votre compte, profil, avatar, cartes, boosters, pièces et notifications. Cette action est irréversible.
+account-delete-submit = Supprimer mon compte
+account-delete-confirm = Votre compte et toutes ses données seront définitivement effacés. Continuer ?
 
 search-user-title = Rechercher des utilisateurs
 search-user-submit = Rechercher

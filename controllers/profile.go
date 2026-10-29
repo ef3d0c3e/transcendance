@@ -61,6 +61,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"Profile":           userProfile,
 		"Edit":              editMode,
 		"CanChangePassword": userProfile.UserID == user.ID,
+		"Own":               userProfile.UserID == user.ID,
 		"FormAction":        formAction,
 		"AvatarAction":      avatarAction,
 	})

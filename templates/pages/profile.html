@@ -101,6 +101,16 @@
 		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
 	</form>
 </section>
+{{ if .Data.Own }}
+<section class="account-delete">
+	<h2>{{ .T "account-delete-title" }}</h2>
+	<p>{{ .T "account-delete-text" }}</p>
+	<button type="button" class="button-danger" data-account-delete="/api/account_delete"
+		data-confirm="{{ .T "account-delete-confirm" }}"
+		data-label-error="{{ .T "account-delete-error-generic" }}">{{ .T "account-delete-submit" }}</button>
+	<p class="section-error" role="alert" hidden></p>
+</section>
+{{ end }}
 <div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"
 	data-label-unexpected-error="{{ .T "error-unexpected" }}"></div>
 {{ else }}
