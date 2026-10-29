@@ -14,6 +14,7 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
+import { openTopup } from './topup.js';
 
 // Navbar
 {
@@ -271,6 +272,8 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				openLabel: target.dataset.openLabel,
 				retryLabel: target.dataset.retryLabel,
 				errorLabel: target.dataset.errorLabel,
+				coins: Number(target.dataset.coins) || 0,
+				autoBuy: target.dataset.autoBuy === 'true',
 				autostart: target.dataset.autostart === 'true',
 			},
 		});
@@ -310,7 +313,7 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 		for (const button of document.querySelectorAll('.shop-topup-open')) {
 			button.addEventListener('click', () => {
 				returnFocus = button;
-				dialog.showModal();
+				openTopup();
 			});
 		}
 		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {

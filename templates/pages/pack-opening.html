@@ -13,11 +13,19 @@
 			<p class="pack-kicker">{{ .Data.CollectionTitle }}</p>
 			<h2>{{ .T "pack-opening-title" }}</h2>
 			<p class="pack-summary">{{ .Data.BoosterSize }} · <span id="pack-remaining">{{ .Data.Remaining }}</span></p>
+			<p class="pack-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="pack-coins">{{ .Data.CoinsLabel }}</span></p>
 
 			<form class="pack-form" id="pack-form" action="/opening" method="post">
 				<div id="form-result"></div>
-				<input type="hidden" name="booster" value="{{ .Data.BoosterID }}">
-				<button type="submit" class="pack-open">{{ .T "pack-opening-open" }}</button>
+				<input type="hidden" name="booster" value="{{ with .Data.BoosterID }}{{ . }}{{ end }}">
+				<button type="submit" class="pack-open" {{ if not .Data.BoosterID }}hidden{{ end }}>{{ .T "pack-opening-open" }}</button>
+				<!-- Out of boosters: buys one with coins, or offers coins when short -->
+				<button type="button" class="pack-open pack-buy" data-collection="{{ .Data.CollectionID }}"
+					data-price="{{ .Data.Price }}" aria-label="{{ .T "pack-opening-buy-label" "price" .Data.PriceLabel }}"
+					{{ if .Data.BoosterID }}hidden{{ end }}>
+					{{ .T "pack-opening-buy" }}
+					<span class="pack-buy-price">{{ template "coin-icon" }} {{ .Data.Price }}</span>
+				</button>
 				<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
 			</form>
 
@@ -57,7 +65,9 @@
 		data-open-label="{{ .T "pack-opening-open" }}"
 		data-retry-label="{{ .T "pack-opening-open-another" }}"
 		data-error-label="{{ .T "pack-opening-error-internal" }}"
-		data-autostart="true"></div>
+		data-coins="{{ .Data.Coins }}"
+		data-auto-buy="{{ if .Data.AutoBuy }}true{{ else }}false{{ end }}"
+		data-autostart="{{ if .Data.BoosterID }}true{{ else }}false{{ end }}"></div>
 
 	{{ if .Data.Chase }}
 	<div class="pack-chase">
@@ -72,5 +82,7 @@
 		</e-cluster>
 	</div>
 	{{ end }}
+
+	{{ template "topup-popup" . }}
 </div>
 {{ end }}

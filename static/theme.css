@@ -2031,19 +2031,37 @@ body:has(.pack-background) {
     color: var(--color-text-muted);
 }
 
-.pack-kicker {
-    margin: 0;
+.pack-balance {
+    display: flex;
+    align-items: center;
+    gap: 0.35em;
 
-    color: var(--color-text-muted);
-    font-size: 0.8rem;
-    font-weight: 700;
-    letter-spacing: 0.08em;
-    text-transform: uppercase;
+    margin: 0.25rem 0 0;
+    font-variant-numeric: tabular-nums;
 }
 
-.pack-summary {
-    margin: 0.25rem 0 0;
-    color: var(--color-text-muted);
+.pack-form .pack-buy {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.pack-buy-price {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+
+    padding: 0.1rem 0.6rem;
+
+    background: rgb(255 255 255 / 22%);
+    border-radius: 999px;
+
+    font-size: 0.95rem;
+    font-variant-numeric: tabular-nums;
 }
 
 .pack-info {
