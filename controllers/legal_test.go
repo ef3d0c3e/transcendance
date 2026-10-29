@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -66,12 +67,12 @@ func TestAccountDeleteButton(t *testing.T) {
 
 	// Only offered on the user's own profile editor
 	body := getInventory(t, router, cookie, "/profile")
-	require.Contains(t, body, `data-account-delete="/api/account_delete"`)
+	require.Contains(t, body, `data-account-delete="/profiles/`+fmt.Sprint(userID(t, "delbtn1"))+`/delete"`)
 	body = getInventory(t, router, cookie, "/profile/delbtn2")
 	require.NotContains(t, body, "data-account-delete")
 
 	// Deleting no longer works with a GET request, which other sites could trigger
-	req := httptest.NewRequest(http.MethodGet, "/api/account_delete", nil)
+	req := httptest.NewRequest(http.MethodGet, fmt.Sprintf("/profiles/%d/delete", userID(t, "delbtn1")), nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
