@@ -1,0 +1,11 @@
+# Alerts are not sent anywhere: the stack cannot reach a mail server.
+# Admins see them in Grafana (Alerts dashboard) and here, where they can be silenced.
+route:
+  receiver: admins
+  group_by: [alertname]
+  group_wait: 30s
+  group_interval: 5m
+  repeat_interval: 4h
+
+receivers:
+  - name: admins

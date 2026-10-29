@@ -16,11 +16,6 @@ import (
 	"transcendance/views"
 )
 
-type AuthController struct {
-	DB       *gorm.DB
-	Renderer *views.Renderer
-}
-
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
@@ -54,7 +49,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		var user models.User
-		err = db.
+		err = db.Select("id", "username", "rank", "coins").
 			Where("id = ?", session.UserID).
 			First(&user).
 			Error
@@ -66,7 +61,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID: session.UserID,
+			ID:       session.UserID,
 			Username: user.Username,
 			Rank: user.Rank,
 			Coins: user.Coins,
@@ -85,7 +80,7 @@ func GetAuthenticatedUser(c *gin.Context) *AuthenticatedUser {
 	return user.(*AuthenticatedUser)
 }
 
-func (ac *AuthController) RegisterGet(c *gin.Context) {
+func (ac *Controller) RegisterGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -101,14 +96,14 @@ func (ac *AuthController) RegisterGet(c *gin.Context) {
 		"User":  user,
 	})
 	builder.Add("register", "Content", map[string]any{
-		"User":  user,
+		"User": user,
 	})
 	ac.Renderer.Render(c, &builder)
 }
 
 var is_alphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
 
-func (ac *AuthController) RegisterPost(c *gin.Context) {
+func (ac *Controller) RegisterPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 	passwordConfirm := c.PostForm("password_confirm")
@@ -177,7 +172,15 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 		UpdatedAt:    now,
 	}
 
-	if err := ac.DB.Create(&user).Error; err != nil {
+	err = ac.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&user).Error; err != nil {
+			return err
+		}
+		return tx.Create(&models.UserProfile{
+			UserID: user.ID,
+		}).Error
+	})
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": ac.Renderer.T(c, "register-error-user"),
 		})
@@ -189,7 +192,7 @@ func (ac *AuthController) RegisterPost(c *gin.Context) {
 	})
 }
 
-func (ac *AuthController) LoginGet(c *gin.Context) {
+func (ac *Controller) LoginGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if v := c.Query("fragment"); v == "1" {
@@ -205,12 +208,12 @@ func (ac *AuthController) LoginGet(c *gin.Context) {
 		"User":  user,
 	})
 	builder.Add("login", "Content", map[string]any{
-		"User":  user,
+		"User": user,
 	})
 	ac.Renderer.Render(c, &builder)
 }
 
-func (ac *AuthController) LoginPost(c *gin.Context) {
+func (ac *Controller) LoginPost(c *gin.Context) {
 	username := c.PostForm("username")
 	password := c.PostForm("password")
 
@@ -229,7 +232,7 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 	}
 
 	var user models.User;
-	err := ac.DB.
+	err := ac.DB.Omit("avatar").
 		Where("username = ?", username).
 		First(&user).
 		Error
@@ -273,13 +276,15 @@ func (ac *AuthController) LoginPost(c *gin.Context) {
 		return
 	}
 
+	// Not sent along cross-site requests, so other sites cannot act as the user
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("session_token", token, 3600*24*3, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "login-success", "username", username),
 	})
 }
 
-func (ac *AuthController) LogoutGet(c *gin.Context) {
+func (ac *Controller) LogoutGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if user == nil {

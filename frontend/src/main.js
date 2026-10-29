@@ -12,6 +12,9 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
+import Profile from './ProfileEnhancement.svelte';
+import Notification from './Notification.svelte';
+import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 
 // Navbar
 {
@@ -39,6 +42,36 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 	}
 }
 
+// Notifications
+{
+	const target = document.querySelector('#notification');
+
+	if (target) {
+		mount(Notification, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
+// Notifications page
+{
+	const target = document.querySelector('#notification-list');
+
+	if (target) {
+		enhanceNotificationList(target);
+	}
+}
+
+// Relative dates of server rendered lists
+{
+	for (const list of document.querySelectorAll('[data-relative-times]')) {
+		enhanceRelativeTimes(list);
+	}
+}
+
 // Log out, then land on a page visitors can see
 {
 	for (const button of document.querySelectorAll('[data-logout]')) {
@@ -48,6 +81,49 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 				await fetch(button.dataset.logout, { credentials: 'same-origin' });
 			} finally {
 				location.assign('/cards/search/');
+			}
+		});
+	}
+}
+
+// Account deletion, after confirmation, then land on a page visitors can see
+{
+	// Error message of a failed deletion response
+	async function deletionError(response, fallback) {
+		try {
+			const body = await response.json();
+			return body.message || fallback;
+		} catch {
+			return fallback;
+		}
+	}
+
+	for (const target of document.querySelectorAll('[data-account-delete]')) {
+		target.addEventListener('click', async (event) => {
+			const button = event.currentTarget;
+			const error = button.parentElement.querySelector('.section-error');
+			if (!confirm(button.dataset.confirm)) {
+				return;
+			}
+
+			button.disabled = true;
+			error.hidden = true;
+			try {
+				const response = await fetch(button.dataset.accountDelete, {
+					method: 'POST',
+					credentials: 'same-origin',
+				});
+				if (response.ok) {
+					location.assign('/cards/search/');
+					return;
+				}
+				error.textContent = await deletionError(response, button.dataset.labelError);
+				error.hidden = false;
+			} catch {
+				error.textContent = button.dataset.labelError;
+				error.hidden = false;
+			} finally {
+				button.disabled = false;
 			}
 		});
 	}
@@ -144,6 +220,20 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 
 	if (target) {
 		mount(CardRender, {target});
+	}
+}
+
+// Profile form
+{
+	const target = document.querySelector('#profile-enhancement');
+
+	if (target) {
+		mount(Profile, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
 	}
 }
 

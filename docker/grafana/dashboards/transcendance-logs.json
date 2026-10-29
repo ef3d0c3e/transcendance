@@ -1,0 +1,250 @@
+{
+  "uid": "transcendance-logs",
+  "title": "Logs",
+  "tags": [
+    "transcendance"
+  ],
+  "timezone": "browser",
+  "schemaVersion": 41,
+  "version": 1,
+  "refresh": "30s",
+  "editable": false,
+  "time": {
+    "from": "now-6h",
+    "to": "now"
+  },
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Log lines by service",
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "logs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "logs"
+          },
+          "refId": "A",
+          "query": "*",
+          "timeField": "@timestamp",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "bucketAggs": [
+            {
+              "id": "2",
+              "type": "terms",
+              "field": "service.name",
+              "settings": {
+                "size": "10",
+                "order": "desc",
+                "orderBy": "_count",
+                "min_doc_count": "1"
+              }
+            },
+            {
+              "id": "3",
+              "type": "date_histogram",
+              "field": "@timestamp",
+              "settings": {
+                "interval": "auto"
+              }
+            }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "id": 1,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "type": "timeseries",
+      "title": "Warnings and errors by service",
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "logs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "logs"
+          },
+          "refId": "A",
+          "query": "log.level:(WARN OR WARNING OR ERROR OR FATAL) OR http.response.status_code:>=500",
+          "timeField": "@timestamp",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "count"
+            }
+          ],
+          "bucketAggs": [
+            {
+              "id": "2",
+              "type": "terms",
+              "field": "service.name",
+              "settings": {
+                "size": "10",
+                "order": "desc",
+                "orderBy": "_count",
+                "min_doc_count": "1"
+              }
+            },
+            {
+              "id": "3",
+              "type": "date_histogram",
+              "field": "@timestamp",
+              "settings": {
+                "interval": "auto"
+              }
+            }
+          ]
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "drawStyle": "bars",
+            "fillOpacity": 60,
+            "stacking": {
+              "mode": "normal"
+            }
+          }
+        },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom"
+        }
+      },
+      "id": 2,
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 0
+      }
+    },
+    {
+      "type": "logs",
+      "title": "Warnings and errors",
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "logs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "logs"
+          },
+          "refId": "A",
+          "query": "log.level:(WARN OR WARNING OR ERROR OR FATAL) OR http.response.status_code:>=500",
+          "timeField": "@timestamp",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "logs",
+              "settings": {
+                "limit": "500"
+              }
+            }
+          ],
+          "bucketAggs": []
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "id": 3,
+      "gridPos": {
+        "h": 12,
+        "w": 24,
+        "x": 0,
+        "y": 8
+      }
+    },
+    {
+      "type": "logs",
+      "title": "All logs",
+      "datasource": {
+        "type": "elasticsearch",
+        "uid": "logs"
+      },
+      "targets": [
+        {
+          "datasource": {
+            "type": "elasticsearch",
+            "uid": "logs"
+          },
+          "refId": "A",
+          "query": "*",
+          "timeField": "@timestamp",
+          "metrics": [
+            {
+              "id": "1",
+              "type": "logs",
+              "settings": {
+                "limit": "500"
+              }
+            }
+          ],
+          "bucketAggs": []
+        }
+      ],
+      "options": {
+        "showTime": true,
+        "wrapLogMessage": true,
+        "sortOrder": "Descending",
+        "enableLogDetails": true
+      },
+      "id": 4,
+      "gridPos": {
+        "h": 14,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      }
+    }
+  ],
+  "templating": {
+    "list": []
+  },
+  "annotations": {
+    "list": []
+  }
+}

@@ -4,29 +4,36 @@
 	let { id } = $props();
 	let relation = $state([])
 	let action = $state("")
+	let error = $state("")
 
 	async function loadRelation() {
 		let target = "/api/friends/" + id
-		const response = await fetch(target, {
-			method: "GET",
-		});
-		const data = await response.json();
-		relation = data.relation;
-		switch (relation.toString()) {
-			case "pending":
-				action  = "cancel"
-				break
-			case "friends":
-				action  = "unfriend"
-				break
-			case "blocked":
-				action =  "unblock"
-				break
-			case "respond":
-				action =  "accept"
-				break
-			default:
-				action = "add"
+		try {
+			const response = await fetch(target, {
+				method: "GET",
+			});
+			const data = await response.json();
+			relation = data.relation;
+			switch (relation.toString()) {
+				case "pending":
+					action  = "cancel"
+					break
+				case "friends":
+					action  = "unfriend"
+					break
+				case "blocked":
+					action =  "unblock"
+					break
+				case "respond":
+					action =  "accept"
+					break
+				default:
+					action = "add"
+			}
+		}
+		catch (err)
+		{
+			error = err;
 		}
 	}
 
@@ -42,8 +49,10 @@
 	}
 </script>
 
+{#if error != ""}
+	<span>error: {{error}}</span>
+{/if}
 {#if relation == "respond"}
-	<p>This user has sent you a friend request</p>
 	<button class="deny" onclick={()=>relationAction("deny")}>deny</button>
 {/if}
 <button class={relation} onclick={()=>relationAction(action)}>{ action }</button>
