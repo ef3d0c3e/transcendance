@@ -112,6 +112,7 @@
 		<p id="username">{{ .Data.Profile.User.Username }}</p>
 	</div>
 	<div>
+		<strong id="contact-birthdate">{{ .T "profile-birthdate" }}</strong>
 		{{ if not .Data.Profile.BirthDate.IsZero }}
 		<p id="birthdate">{{ .Data.Profile.BirthDate.Format "2006-01-02" }}</p>
 		{{ else }}
@@ -119,6 +120,7 @@
 		{{ end }}
 	</div>
 	<div>
+		<strong id="contact-info">{{ .T "profile-contact" }}</strong>
 		{{ if .Data.Profile.ContactInfo }}
 		<p id="contact">{{ .Data.Profile.ContactInfo }}</p>
 		{{ else }}
@@ -126,7 +128,7 @@
 		{{ end }}
 	</div>
 	<div>
-		<p id="bio-label">{{ .T "profile-bio" }}</p>
+		<strong id="bio-label">{{ .T "profile-bio" }}</strong>
 		{{ if .Data.Profile.Bio }}
 		<p id="bio" aria-labelledby="bio-label">{{ .Data.Profile.Bio }}</p>
 		{{ else }}
