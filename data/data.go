@@ -105,22 +105,22 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 		return "", err
 	}
 
-	// Card image size is 330x192, make the thumbnail a bit larger for zoomed in users
+	// Card image size is 330x192
 	// Scale shortest side to image display size, while preserving aspect ratio
 	thumbX := src.Bounds().Max.X
 	thumbY := src.Bounds().Max.Y
 	if thumbX > thumbY {
-		thumbY = 192 * 2
+		thumbY = 192
 		thumbX = (thumbY * thumbX) / src.Bounds().Max.Y
 	} else {
-		thumbX = 330 * 2
+		thumbX = 330
 		thumbY = (thumbX * thumbY) / src.Bounds().Max.X
 	}
 
 	dst := image.NewRGBA(image.Rect(0, 0, thumbX, thumbY))
 	draw.CatmullRom.Scale(dst, dst.Bounds(), src, src.Bounds(), draw.Over, nil)
 
-	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 95}); err != nil {
+	if err := webp.Save(outputPath, dst, &webp.Options{Quality: 85}); err != nil {
 		return "", err
 	}
 	return outputPath, nil

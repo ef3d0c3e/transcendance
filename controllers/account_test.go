@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"transcendance/models"
 	"transcendance/tests"
@@ -90,7 +91,7 @@ func TestAccountDeleteSelf1(t *testing.T) {
 
 	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
-		http.MethodGet,
+		http.MethodPost,
 		"/api/account_delete",
 		nil,
 	)
@@ -110,6 +111,40 @@ func TestAccountDeleteSelf1(t *testing.T) {
 	require.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
+// Deleting an account erases the user and everything that belongs to them
+func TestAccountDeleteErasesData(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "erase1", "123456789", 0)
+	cookie := login(t, router, "erase1", "123456789")
+
+	var user models.User
+	require.NoError(t, tests.DB.Where("username = ?", "erase1").First(&user).Error)
+	now := time.Now()
+	require.NoError(t, tests.DB.Create(&models.Notification{UserID: user.ID, Type: "test"}).Error)
+	require.NoError(t, tests.DB.Create(&models.Card{CardID: 1, Acquired: now, OwnerID: user.ID}).Error)
+	require.NoError(t, tests.DB.Create(&models.Booster{CollectionID: 1, Size: 1, Acquired: now, OwnerID: user.ID}).Error)
+
+	req := httptest.NewRequest(http.MethodPost, "/api/account_delete", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusNoContent, rec.Code)
+	// The session cookie is cleared
+	require.Contains(t, strings.Join(rec.Header().Values("Set-Cookie"), "\n"), "session_token=;")
+
+	count := func(model any, column string) int64 {
+		var n int64
+		require.NoError(t, tests.DB.Unscoped().Model(model).Where(column+" = ?", user.ID).Count(&n).Error)
+		return n
+	}
+	require.Zero(t, count(&models.User{}, "id"), "user row is kept")
+	require.Zero(t, count(&models.UserProfile{}, "user_id"), "profile is kept")
+	require.Zero(t, count(&models.UserSession{}, "user_id"), "sessions are kept")
+	require.Zero(t, count(&models.Notification{}, "user_id"), "notifications are kept")
+	require.Zero(t, count(&models.Card{}, "owner_id"), "cards are kept")
+	require.Zero(t, count(&models.Booster{}, "owner_id"), "boosters are kept")
+}
+
 func TestAccountDeleteSelf2(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foo2", "123456789", 0)
@@ -119,10 +154,11 @@ func TestAccountDeleteSelf2(t *testing.T) {
 
 	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
-		http.MethodGet,
-		"/api/account_delete?username=foo2",
-		nil,
+		http.MethodPost,
+		"/api/account_delete",
+		strings.NewReader("username=foo2"),
 	)
+	deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	deleteReq.AddCookie(cookie)
 
 	deleteRec := httptest.NewRecorder()
@@ -151,10 +187,11 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
-			http.MethodGet,
-			"/api/account_delete?username=other1",
-			nil,
+			http.MethodPost,
+			"/api/account_delete",
+			strings.NewReader("username=other1"),
 		)
+		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		deleteReq.AddCookie(cookie)
 
 		deleteRec := httptest.NewRecorder()
@@ -174,10 +211,11 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
-			http.MethodGet,
-			"/api/account_delete?username=other2",
-			nil,
+			http.MethodPost,
+			"/api/account_delete",
+			strings.NewReader("username=other2"),
 		)
+		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		deleteReq.AddCookie(cookie)
 
 		deleteRec := httptest.NewRecorder()
@@ -204,10 +242,11 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
-			http.MethodGet,
-			"/api/account_delete?username=other3",
-			nil,
+			http.MethodPost,
+			"/api/account_delete",
+			strings.NewReader("username=other3"),
 		)
+		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		deleteReq.AddCookie(cookie)
 
 		deleteRec := httptest.NewRecorder()
@@ -227,10 +266,11 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
-			http.MethodGet,
-			"/api/account_delete?username=other4",
-			nil,
+			http.MethodPost,
+			"/api/account_delete",
+			strings.NewReader("username=other4"),
 		)
+		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		deleteReq.AddCookie(cookie)
 
 		deleteRec := httptest.NewRecorder()
@@ -257,10 +297,11 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
-			http.MethodGet,
-			"/api/account_delete?username=other5",
-			nil,
+			http.MethodPost,
+			"/api/account_delete",
+			strings.NewReader("username=other5"),
 		)
+		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 		deleteReq.AddCookie(cookie)
 
 		deleteRec := httptest.NewRecorder()

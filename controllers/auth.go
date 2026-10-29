@@ -284,6 +284,8 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		return
 	}
 
+	// Not sent along cross-site requests, so other sites cannot act as the user
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.SetCookie("session_token", token, 3600*24*3, "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "login-success", "username", username),
