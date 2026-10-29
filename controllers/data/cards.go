@@ -3,13 +3,10 @@ package data
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"transcendance/controllers"
 	"transcendance/data"
-	"transcendance/models"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
@@ -126,7 +123,6 @@ func getCollectionData(c *gin.Context, loc string, renderer *views.Renderer, col
 
 // collections/* route
 func (dc *DataController) CollectionsGet(c *gin.Context) {
-	user := controllers.GetAuthenticatedUser(c)
 	first := c.Param("FIRST")
 	second := c.Param("SECOND")
 
@@ -154,72 +150,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 
 	// Show cards in collection
 	if second == "/" || second == "" {
-		loc := dc.Renderer.Localizer.GetLocale(c)
-		title, err := collection.Translate(loc, "title")
-		if err != nil {
-			log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		builder := views.PageBuilder("base", map[string]any{
-			"Title": dc.Renderer.T(c, "collection-title", "collection", title),
-			"User":  user,
-		})
-
-		// Logged in, the cards not collected yet are grayed out
-		var owned map[int]bool
-		if user != nil {
-			var ids []int
-			if err := dc.DB.
-				Model(&models.Card{}).
-				Where("owner_id = ? AND card_id > ? AND card_id < ?", user.ID, collection.ID*1000, (collection.ID+1)*1000).
-				Distinct("card_id").
-				Pluck("card_id", &ids).
-				Error; err != nil {
-				log.Printf("[WARN] Failed to get the cards of collection '%s' owned by '%s': %s", collection.Name, user.Username, err)
-			} else {
-				owned = make(map[int]bool, len(ids))
-				for _, id := range ids {
-					owned[id] = true
-				}
-			}
-		}
-
-		cards := make([]map[string]any, len(collection.Cards))
-		for i := range collection.Cards {
-			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
-			data, err := GetCardData(c, loc, dc.Renderer, collection, card)
-			if err != nil {
-				log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "collection-search-error-internal"),
-				})
-			}
-
-			if owned != nil && data != nil {
-				data["CardMissing"] = !owned[collection.ID*1000+i+1]
-			}
-			cards[i] = map[string]any{
-				"Data": data,
-			}
-		}
-
-		fields := map[string]any{
-			"CollectionTitle": title,
-			"Cards":           cards,
-		}
-		if owned != nil && len(collection.Cards) > 0 {
-			fields["Progress"] = map[string]any{
-				"Owned":   len(owned),
-				"Total":   len(collection.Cards),
-				"Percent": len(owned) * 100 / len(collection.Cards),
-			}
-		}
-		builder.Add("card-collection", "Content", fields)
-
-		dc.Renderer.Render(c, &builder)
+		dc.collectionCards(c, collection)
 		return
 	}
 
