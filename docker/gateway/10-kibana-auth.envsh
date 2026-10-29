@@ -1,0 +1,4 @@
+#!/bin/sh
+# Kibana login sent by the gateway once an admin is signed in
+KIBANA_BASIC_AUTH=$(printf 'kibana_gateway:%s' "${KIBANA_GATEWAY_PASSWORD:?}" | base64 | tr -d '\n')
+export KIBANA_BASIC_AUTH
