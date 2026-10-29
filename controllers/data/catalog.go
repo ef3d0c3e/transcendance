@@ -58,6 +58,8 @@ type catalogView struct {
 	Page  int
 	// Number of matching cards or collections
 	Count int
+	// Collection whose cards are listed, nil on the catalog
+	Scope *data.Collection
 }
 
 // Every collection, in ID order
@@ -74,6 +76,9 @@ func (dc *DataController) sortedCollections() []*data.Collection {
 
 func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	title := dc.Renderer.T(c, "catalog-title")
+	if v.Scope != nil {
+		title = dc.Renderer.T(c, "collection-title", "collection", dc.collectionTitle(c, v.Scope))
+	}
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": title,
 		"User":  controllers.GetAuthenticatedUser(c),
@@ -82,7 +87,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		v.Items = make([]map[string]any, 0)
 	}
 	searching := strings.TrimSpace(v.Query) != "" ||
-		(v.Tab == catalogTabCards && (v.Rarity != "" || v.Collection != 0))
+		(v.Tab == catalogTabCards && (v.Rarity != "" || (v.Collection != 0 && v.Scope == nil)))
 	if v.Message == "" && len(v.Items) == 0 {
 		if v.Tab == catalogTabCollections {
 			v.Message = dc.Renderer.T(c, "collection-search-empty")
@@ -112,6 +117,9 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		}
 		return tabBase[tab] + "?" + url.Values{"q": {v.Query}}.Encode()
 	}
+	if v.Scope != nil {
+		tabBase[catalogTabCards] = fmt.Sprint("/collections/", v.Scope.ID, "/")
+	}
 	totalPages := (v.Count + pageSize - 1) / pageSize
 	fields := map[string]any{
 		"Title":             title,
@@ -126,6 +134,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		"Filtered":          searching,
 		"ClearUrl":          tabBase[v.Tab],
 		"Pages":             totalPages,
+		"Scoped":            v.Scope != nil,
 	}
 	if v.Tab == catalogTabCards {
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
@@ -134,18 +143,12 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 			}
 			return dc.Renderer.T(c, "card-rarity-"+value)
 		})
-		loc := dc.Renderer.Localizer.GetLocale(c)
 		collections := []string{""}
 		titles := map[string]string{"": dc.Renderer.T(c, "catalog-filter-collection-all")}
 		for _, collection := range dc.sortedCollections() {
 			id := strconv.Itoa(collection.ID)
-			title, err := collection.Translate(loc, "title")
-			if err != nil {
-				log.Printf("WARN collection %d has no title: %s", collection.ID, err)
-				title = collection.Name
-			}
 			collections = append(collections, id)
-			titles[id] = title
+			titles[id] = dc.collectionTitle(c, collection)
 		}
 		current := ""
 		if v.Collection != 0 {
@@ -181,7 +184,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	if v.Rarity != "" {
 		params.Set("rarity", v.Rarity)
 	}
-	if v.Collection != 0 {
+	if v.Collection != 0 && v.Scope == nil {
 		params.Set("collection", strconv.Itoa(v.Collection))
 	}
 	if v.Tab == catalogTabCards && v.Sort != defaultCatalogSort(v.Query) {
@@ -199,6 +202,16 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	dc.Renderer.Render(c, &builder)
 }
 
+// Translated title of a collection, its name when missing
+func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Collection) string {
+	title, err := collection.Translate(dc.Renderer.Localizer.GetLocale(c), "title")
+	if err != nil {
+		log.Printf("WARN collection %d has no title: %s", collection.ID, err)
+		return collection.Name
+	}
+	return title
+}
+
 // Page number from the query, 1 when missing or invalid
 func catalogPage(c *gin.Context) int {
 	page, err := strconv.Atoi(c.Query("p"))
@@ -210,15 +223,28 @@ func catalogPage(c *gin.Context) int {
 
 // cards/search: every card, or the ones matching the search and filters
 func (dc *DataController) catalogCards(c *gin.Context) {
+	dc.searchCards(c, nil)
+}
+
+// collections/:id: the collection's cards, with the catalog search and filters
+func (dc *DataController) collectionCards(c *gin.Context, collection *data.Collection) {
+	dc.searchCards(c, collection)
+}
+
+// Card search page, within scope when it isn't nil
+func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	v := &catalogView{
 		Tab:   catalogTabCards,
 		Query: c.Query("q"),
 		Page:  catalogPage(c),
+		Scope: scope,
 	}
 	if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
 		v.Rarity = rarity
 	}
-	if id, err := strconv.Atoi(c.Query("collection")); err == nil && dc.Data.GetCollection(id) != nil {
+	if scope != nil {
+		v.Collection = scope.ID
+	} else if id, err := strconv.Atoi(c.Query("collection")); err == nil && dc.Data.GetCollection(id) != nil {
 		v.Collection = id
 	}
 	v.Sort = defaultCatalogSort(v.Query)

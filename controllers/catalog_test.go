@@ -86,3 +86,31 @@ func TestCatalogCollectionsTab(t *testing.T) {
 	// Card filters are only on the cards tab
 	require.NotContains(t, body, `name="rarity"`)
 }
+
+func TestCollectionCardsFilterAndSort(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+
+	// The collection's cards, with the catalog filters applied within it
+	cases := map[string][]string{
+		"/collections/1/": {"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Tungsten"},
+		"/collections/1/?rarity=common&sort=name-desc": {"Tungsten", "Pythagorean tiling", "Flying Scotsman"},
+		"/collections/1/?rarity=rare":                  {"McMurdo Station"},
+		"/collections/1/?q=tungsten":                   {"Tungsten"},
+		// The collection can't be swapped through the query
+		"/collections/1/?collection=2&rarity=rare": {"McMurdo Station"},
+	}
+	for target, titles := range cases {
+		body := getPage(t, router, target)
+		require.Equal(t, titles, cardTitles(body), target)
+	}
+
+	body := getPage(t, router, "/collections/1/?rarity=rare")
+	require.Contains(t, body, `action="/collections/1/"`)
+
+	empty := getPage(t, router, "/collections/1/?q=tungsten&rarity=rare")
+	require.Contains(t, empty, `<a href="/collections/1/">Clear search</a>`)
+	require.Contains(t, body, `name="rarity"`)
+	// No tabs or collection picker inside a collection
+	require.NotContains(t, body, `name="collection"`)
+	require.NotContains(t, body, `inventory-tab-cards`)
+}

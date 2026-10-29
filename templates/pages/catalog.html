@@ -20,6 +20,7 @@
 		</form>
 	</div>
 
+	{{ if not .Data.Scoped }}
 	<nav class="inventory-tabs" aria-label="{{ .T "catalog-tabs-label" }}">
 		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
 			{{ .T "catalog-tab-cards" }}
@@ -28,6 +29,7 @@
 			{{ .T "catalog-tab-collections" }}
 		</a>
 	</nav>
+	{{ end }}
 
 	{{ if eq .Data.Tab "cards" }}
 	<div class="inventory-filters">
@@ -39,6 +41,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ if not .Data.Scoped }}
 		<label>
 			<span>{{ .T "catalog-filter-collection" }}</span>
 			<select name="collection" form="search-form" data-autosubmit>
@@ -47,6 +50,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
 			<select name="sort" form="search-form" data-autosubmit>
