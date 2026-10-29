@@ -17,7 +17,7 @@
 			<form class="pack-form" id="pack-form" action="/opening" method="post">
 				<div id="form-result"></div>
 				<input type="hidden" name="booster" value="{{ .Data.BoosterID }}">
-				<button type="submit">{{ .T "pack-opening-open" }}</button>
+				<button type="submit" class="pack-open">{{ .T "pack-opening-open" }}</button>
 				<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
 			</form>
 

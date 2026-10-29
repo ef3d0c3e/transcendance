@@ -1953,6 +1953,84 @@ body:has(.pack-background) {
     }
 }
 
+.pack-form .pack-open {
+    min-height: 3.25rem;
+    padding: 0.7rem 2rem;
+
+    border: 0;
+    border-radius: 0.75rem;
+
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+/* A spin finished: the button pulses until the next opening */
+.pack-form .pack-open.is-ready {
+    background: linear-gradient(110deg,
+            var(--color-accent-primary) 30%,
+            var(--color-accent-primary-lighter) 50%,
+            var(--color-accent-primary) 70%);
+    background-size: 250% 100%;
+    animation:
+        pack-ready-pulse 1.6s ease-out infinite,
+        pack-ready-shine 2.4s linear infinite;
+
+    &:hover {
+        background: var(--color-accent-primary-dark);
+    }
+}
+
+@keyframes pack-ready-pulse {
+    0% {
+        box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
+        scale: 1;
+    }
+
+    15% {
+        scale: 1.06;
+    }
+
+    30% {
+        scale: 1;
+    }
+
+    100% {
+        box-shadow: 0 0 0 1rem transparent;
+    }
+}
+
+@keyframes pack-ready-shine {
+    from {
+        background-position: 100% 0;
+    }
+
+    to {
+        background-position: 0 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pack-form .pack-open.is-ready {
+        animation: none;
+        box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent-primary) 45%, transparent);
+    }
+}
+
+.pack-kicker {
+    margin: 0;
+
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pack-summary {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+}
+
 .pack-kicker {
     margin: 0;
 

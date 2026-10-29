@@ -223,6 +223,7 @@
 		failed = false;
 		message = "";
 		button.disabled = true;
+		button.classList.remove("is-ready");
 
 		try {
 			const result = await requestPack(form);
@@ -254,6 +255,8 @@
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			button.textContent = retryLabel ?? openLabel;
+			// Calls for the next opening, until it is clicked
+			button.classList.add("is-ready");
 
 			// The won cards stay on the reels, the open button is ready for the next one
 			await delay(REVEAL_MS);
