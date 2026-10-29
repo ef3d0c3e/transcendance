@@ -105,3 +105,29 @@ func TestProfilePasswordRevokesOtherSessions(t *testing.T) {
 	require.Equal(t, []string{current.Value}, tokens)
 	require.NotEqual(t, current.Value, other.Value)
 }
+
+// The inventory button shows on other users' profiles only
+func TestProfileInventoryButton(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "profbtn1", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "profbtn2", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "profbtnadm", "foo-bar-baz-qux", 2)
+
+	button := `<a class="profile-inventory" href="/inventory?u=profbtn2">View inventory</a>`
+
+	cookie := login(t, router, "profbtn1", "foo-bar-baz-qux")
+
+	// Someone else's profile links to their inventory
+	require.Contains(t, getInventory(t, router, cookie, "/profile/profbtn2"), button)
+
+	// One's own profile has none, in edit or read-only form
+	own := getInventory(t, router, cookie, "/profile")
+	require.NotContains(t, own, button)
+	require.NotContains(t, own, "View inventory")
+	require.NotContains(t, getInventory(t, router, cookie, "/profile/profbtn1"), button)
+
+	// An admin editing another user's profile gets the button too
+	admin := login(t, router, "profbtnadm", "foo-bar-baz-qux")
+	require.Contains(t, getInventory(t, router, admin, "/profile/profbtn2"), button)
+	require.NotContains(t, getInventory(t, router, admin, "/profile"), "View inventory")
+}
