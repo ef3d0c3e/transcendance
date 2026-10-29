@@ -3,11 +3,9 @@ package data
 import (
 	"fmt"
 	"html/template"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"transcendance/controllers"
 	"transcendance/data"
 	"transcendance/views"
 
@@ -125,7 +123,6 @@ func getCollectionData(c *gin.Context, loc string, renderer *views.Renderer, col
 
 // collections/* route
 func (dc *DataController) CollectionsGet(c *gin.Context) {
-	user := controllers.GetAuthenticatedUser(c)
 	first := c.Param("FIRST")
 	second := c.Param("SECOND")
 
@@ -153,42 +150,7 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 
 	// Show cards in collection
 	if second == "/" || second == "" {
-		loc := dc.Renderer.Localizer.GetLocale(c)
-		title, err := collection.Translate(loc, "title")
-		if err != nil {
-			log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		builder := views.PageBuilder("base", map[string]any{
-			"Title": dc.Renderer.T(c, "collection-title", "collection", title),
-			"User":  user,
-		})
-
-		cards := make([]map[string]any, len(collection.Cards))
-		for i := range collection.Cards {
-			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
-			data, err := GetCardData(c, loc, dc.Renderer, collection, card)
-			if err != nil {
-				log.Printf("[WARN] Failed to build data for collection '%s': %s", collection.Name, err)
-				c.JSON(http.StatusInternalServerError, gin.H{
-					"message": dc.Renderer.T(c, "collection-search-error-internal"),
-				})
-			}
-
-			cards[i] = map[string]any{
-				"Data": data,
-			}
-		}
-
-		builder.Add("card-collection", "Content", map[string]any{
-			"CollectionTitle": title,
-			"Cards":           cards,
-		})
-
-		dc.Renderer.Render(c, &builder)
+		dc.collectionCards(c, collection)
 		return
 	}
 
