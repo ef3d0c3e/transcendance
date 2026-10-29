@@ -37,7 +37,7 @@ func TestHealthzDatabaseDown(t *testing.T) {
 	t.Cleanup(func() { _ = conn.Close() })
 
 	router := gin.New()
-	health := controllers.HealthController{DB: db}
+	health := controllers.Controller{DB: db}
 	router.GET("/healthz", health.HealthzGet)
 
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
