@@ -1,0 +1,2 @@
+title = HMS Prince of Wales
+description = HMS Prince of Wales was a King George V-class battleship of the Royal Navy that was built at the Cammell Laird shipyard in Birkenhead. Despite being sunk less than a year after she was commissioned, Prince of Wales had an extensive battle history, first seeing action in August 1940 while still being outfitted in her drydock, when she was attacked and damaged by German aircraft.

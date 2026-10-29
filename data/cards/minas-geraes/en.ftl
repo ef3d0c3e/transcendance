@@ -1,0 +1,2 @@
+title = Minas Geraes
+description = Minas Geraes, spelled Minas Gerais in some sources, was a dreadnought battleship of the Brazilian Navy. Named in honor of the state of Minas Gerais, the ship was laid down in April 1907 as the lead ship of its class, making the country the third to have a dreadnought under construction and igniting a naval arms race between Brazil, Argentina, and Chile.

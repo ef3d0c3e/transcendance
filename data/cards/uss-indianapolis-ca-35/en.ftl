@@ -1,0 +1,2 @@
+title = USS Indianapolis (CA-35)
+description = USS Indianapolis (CL/CA-35) was a Portland-class heavy cruiser of the United States Navy, named for the city of Indianapolis, Indiana. Launched in 1931, she was the flagship of the commander of Scouting Force 1 for eight years, then flagship for Admiral Raymond Spruance from 1943 to 1945 while he commanded the Fifth Fleet in battles across the Central Pacific during World War II.
