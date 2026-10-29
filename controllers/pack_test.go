@@ -245,6 +245,7 @@ func TestOpeningPage(t *testing.T) {
 	require.Regexp(t, `data-rarity="rare">\s*<span class="pack-odds-label">Rare</span>\s*<span class="pack-odds-value">15%</span>`, body)
 	require.Regexp(t, `data-rarity="legendary">\s*<span class="pack-odds-label">Legendary</span>\s*<span class="pack-odds-value">5%</span>`, body)
 	require.Regexp(t, `data-rarity="foil">\s*<span class="pack-odds-label">Foil</span>\s*<span class="pack-odds-value">5%</span>`, body)
+	require.Contains(t, body, `id="pack-background"`)
 
 	// Rarest cards first
 	chase := body[strings.Index(body, `class="pack-chase"`):]

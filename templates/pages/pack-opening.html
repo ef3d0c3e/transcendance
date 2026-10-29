@@ -1,5 +1,9 @@
 {{ define "pack-opening" }}
 <div class="pack-page">
+	<div id="pack-background" class="pack-background" aria-hidden="true"
+		data-color-primary="{{ .Data.ColorPrimary }}"
+		data-color-secondary="{{ .Data.ColorSecondary }}"></div>
+
 	<div class="pack-hero">
 		<div class="pack-booster">
 			{{ template "collection" .Data.Booster }}
