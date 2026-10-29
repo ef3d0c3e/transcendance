@@ -199,8 +199,12 @@
 				bounceReel(element, winnerIndex);
 			}, duration));
 
-			timers.push(setTimeout(() => {
+			timers.push(setTimeout(async () => {
 				reels[index].landed = true;
+				// Only the won card stays in the strip, which then needs no offset
+				await tick();
+				element.style.transition = "none";
+				element.style.transform = "none";
 			}, duration + BOUNCE_MS));
 
 			return duration;
@@ -368,6 +372,9 @@
 		gap: var(--pack-gap);
 		transform: translateY(0);
 		will-change: transform;
+		/* Unclipped once landed, the strip runs far over the page: only the
+			won card may take the pointer */
+		pointer-events: none;
 	}
 
 	.pack-cell {
@@ -402,8 +409,10 @@
 		overflow: visible;
 	}
 
+	/* Out of the layout, not only hidden: the unclipped strip would
+		otherwise stretch the page by its whole length */
 	.pack-reel.is-landed .pack-cell[data-win="false"] {
-		visibility: hidden;
+		display: none;
 	}
 
 	.pack-reel:not(.is-landed) .pack-cell :global(.card-effect),
