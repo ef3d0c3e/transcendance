@@ -28,6 +28,9 @@
 			</div>
 		</div>
 		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
+		{{ if not .Data.Own }}
+		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		{{ end }}
 	</div>
 	<dialog id="avatar-delete-dialog" class="profile-confirm-dialog" aria-labelledby="avatar-delete-title" aria-describedby="avatar-delete-description">
 		<h2 id="avatar-delete-title">{{ .T "profile-avatar-delete-title" }}</h2>
@@ -145,6 +148,9 @@
 	</div>
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
+		{{ if not .Data.Own }}
+		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		{{ end }}
 	</div>
 	<div class="profile-detail">
 		<p class="profile-label">{{ .T "profile-birthdate" }}</p>
