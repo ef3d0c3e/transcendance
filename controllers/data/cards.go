@@ -100,7 +100,7 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 	case "/artwork":
 		c.File(card.ArtworkPath)
 	case "/thumbnail":
-		c.File(card.ArtworkPath)
+		c.File(card.ThumbnailPath)
 	}
 }
 
