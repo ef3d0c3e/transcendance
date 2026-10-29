@@ -9,6 +9,7 @@ import (
 	"strings"
 	"transcendance/controllers"
 	"transcendance/data"
+	"transcendance/models"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
@@ -167,6 +168,25 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 			"User":  user,
 		})
 
+		// Logged in, the cards not collected yet are grayed out
+		var owned map[int]bool
+		if user != nil {
+			var ids []int
+			if err := dc.DB.
+				Model(&models.Card{}).
+				Where("owner_id = ? AND card_id > ? AND card_id < ?", user.ID, collection.ID*1000, (collection.ID+1)*1000).
+				Distinct("card_id").
+				Pluck("card_id", &ids).
+				Error; err != nil {
+				log.Printf("[WARN] Failed to get the cards of collection '%s' owned by '%s': %s", collection.Name, user.Username, err)
+			} else {
+				owned = make(map[int]bool, len(ids))
+				for _, id := range ids {
+					owned[id] = true
+				}
+			}
+		}
+
 		cards := make([]map[string]any, len(collection.Cards))
 		for i := range collection.Cards {
 			card, _ := dc.Data.GetCard(collection.ID*1000 + i + 1)
@@ -178,15 +198,26 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 				})
 			}
 
+			if owned != nil && data != nil {
+				data["CardMissing"] = !owned[collection.ID*1000+i+1]
+			}
 			cards[i] = map[string]any{
 				"Data": data,
 			}
 		}
 
-		builder.Add("card-collection", "Content", map[string]any{
+		fields := map[string]any{
 			"CollectionTitle": title,
 			"Cards":           cards,
-		})
+		}
+		if owned != nil && len(collection.Cards) > 0 {
+			fields["Progress"] = map[string]any{
+				"Owned":   len(owned),
+				"Total":   len(collection.Cards),
+				"Percent": len(owned) * 100 / len(collection.Cards),
+			}
+		}
+		builder.Add("card-collection", "Content", fields)
 
 		dc.Renderer.Render(c, &builder)
 		return

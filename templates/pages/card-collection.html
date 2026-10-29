@@ -1,5 +1,15 @@
 {{ define "card-collection" }}
 <h2>{{ .Data.CollectionTitle }}</h2>
+{{ with .Data.Progress }}
+<div class="collection-progress">
+    <span class="collection-progress-label">{{ $.T "pack-opening-progress-title" }}</span>
+    <p class="pack-progress-count"><strong>{{ .Owned }}</strong> / {{ .Total }}</p>
+    <div class="pack-progress is-static" role="progressbar" aria-valuemin="0" aria-valuemax="{{ .Total }}"
+        aria-valuenow="{{ .Owned }}" aria-label="{{ $.T "pack-opening-progress-title" }}">
+        <div class="pack-progress-bar" style="width: {{ .Percent }}%"></div>
+    </div>
+</div>
+{{ end }}
 <e-cluster justify="center">
     {{ range $val := .Data.Cards }}
         {{ template "card" $val }}

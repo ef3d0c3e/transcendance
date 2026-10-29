@@ -2203,6 +2203,44 @@ body:has(.pack-page.is-opening) > .site-footer {
     }
 }
 
+/* Same bar on a collection's page, standing still */
+.pack-progress.is-static,
+.pack-progress.is-static .pack-progress-bar,
+.pack-progress.is-static .pack-progress-bar::after {
+    animation: none;
+}
+
+.pack-progress.is-static .pack-progress-bar::after {
+    display: none;
+}
+
+.collection-progress {
+    width: min(28rem, 100%);
+    margin: 0 auto 1.5rem;
+
+    .pack-progress-count {
+        font-size: 1.2rem;
+    }
+}
+
+.collection-progress-label {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+/* A card of the collection not collected yet */
+.card-container.is-missing {
+    filter: grayscale(0.9) opacity(0.5);
+    transition: filter 200ms ease;
+
+    &:hover {
+        filter: grayscale(0.5) opacity(0.8);
+    }
+}
+
 /* The owned count pops when it rolls up after an opening */
 #pack-owned {
     display: inline-block;

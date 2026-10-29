@@ -86,3 +86,24 @@ func TestCatalogCollectionsTab(t *testing.T) {
 	// Card filters are only on the cards tab
 	require.NotContains(t, body, `name="rarity"`)
 }
+
+func TestCollectionShowsProgress(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "colprogress1", "foo-bar-baz-qux", 0)
+	giveCards(t, "colprogress1", cardTungsten, 2)
+	giveCards(t, "colprogress1", cardFordT, 1)
+	cookie := login(t, router, "colprogress1", "foo-bar-baz-qux")
+
+	// 2 of the 5 dev cards collected, the 3 others are grayed out
+	body := getInventory(t, router, cookie, "/collections/1/")
+	require.Contains(t, body, `<p class="pack-progress-count"><strong>2</strong> / 5</p>`)
+	require.Contains(t, body, `<div class="pack-progress-bar" style="width: 40%"></div>`)
+	require.Contains(t, body, `class="pack-progress is-static"`)
+	require.Equal(t, 3, strings.Count(body, `class="card-container is-missing"`))
+	require.Equal(t, 5, strings.Count(body, `<article class="card"`))
+
+	// Visitors see every card as is, without progress
+	visitor := getPage(t, router, "/collections/1/")
+	require.NotContains(t, visitor, "is-missing")
+	require.NotContains(t, visitor, "pack-progress")
+}
