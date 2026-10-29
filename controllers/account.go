@@ -34,7 +34,7 @@ func (ac *Controller) AccountDeleteGet(c *gin.Context) {
 	}
 
 	var otherUser models.User
-	err := ac.DB.Where("username = ?", username).First(&otherUser).Error
+	err := ac.DB.Omit("avatar").Where("username = ?", username).First(&otherUser).Error
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-generic"),

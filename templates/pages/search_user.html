@@ -47,11 +47,7 @@
 	<ul class="user-results" data-relative-times data-locale="{{ .Data.Locale }}">
 		{{ range .Data.Users }}
 		<li class="user-result">
-			{{ if .Avatar }}
-			<img class="user-result-avatar" src="{{ .Avatar }}" alt="" width="48" height="48">
-			{{ else }}
-			<img class="user-result-avatar" src="/static/profile-picture.svg" alt="" width="48" height="48">
-			{{ end }}
+			<img class="user-result-avatar" src="/avatars/{{ .ID }}" alt="" width="48" height="48">
 			<div class="user-result-body">
 				<a class="user-result-name" href="/profile/{{ .Username }}">{{ .Username }}</a>
 				<dl class="user-result-stats">

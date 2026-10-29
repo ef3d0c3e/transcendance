@@ -52,5 +52,14 @@ func ConnectDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-	return db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.Notification{}, &models.Card{}, &models.Booster{})
+	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Notification{}, &models.Card{}, &models.Booster{}); err != nil {
+		return err
+	}
+	// Updating user entries that were created before user profile was introduced
+	return db.Exec(`
+		INSERT INTO user_profiles (user_id)
+		SELECT users.id FROM users
+		LEFT JOIN user_profiles ON user_profiles.user_id = users.id
+		WHERE users.deleted_at IS NULL AND user_profiles.user_id IS NULL
+	`).Error
 }

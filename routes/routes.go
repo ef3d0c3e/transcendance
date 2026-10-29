@@ -41,12 +41,23 @@ func RegisterRoutes(
 	router.POST("/login", controller.LoginPost)
 	router.GET("/api/logout", controller.LogoutGet)
 
+	// profile.go
+	router.GET("/profile", controller.ProfileGet)
+	router.GET("/profile/:username", controller.ProfileGet)
+	router.POST("/profile", controller.ProfilePost)
+	router.POST("/profile/avatar", controller.AvatarPost)
+	router.POST("/profile/avatar/delete", controller.AvatarDelete)
+	router.POST("/profiles/:id", controller.ProfilePost)
+	router.POST("/profiles/:id/avatar", controller.AvatarPost)
+	router.POST("/profiles/:id/avatar/delete", controller.AvatarDelete)
+	router.GET("/avatars/:id", controller.AvatarGet)
+	router.HEAD("/avatars/:id", controller.AvatarGet)
+
 	// account.go
 	router.GET("/api/account_delete", controller.AccountDeleteGet)
 
 	// user_search.go
 	router.GET("/search", controller.SearchUsersGet)
-
 
 	// notifications.go
 	router.GET("/notifications", controller.NotificationsGet)
