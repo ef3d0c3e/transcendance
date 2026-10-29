@@ -107,6 +107,15 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+
+profile-username = Nom d’utilisateur
+profile-bio = Bio
+profile-birthdate = Date de naissance
+profile-contact = Contact
+profile-new-password = Nouveau mot de passe
+profile-confirm-password = Confirmer le mot de passe
+profile-current-password = Mot de passe actuel
+profile-username-hint = 3 à 16 caractères : lettres, chiffres ou '_'.
 profile-title = Profil
 profile-error-user = L'utilisateur n'existe pas
 profile-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit faire entre 3 et 16 caractères et ne peut contenir que des lettres, des chiffres et '_'
@@ -120,14 +129,6 @@ profile-error-passwords-do-not-match = Les mots de passe ne correspondent pas
 profile-error-password-missing = Ce champ est requis pour changer de mot de passe
 profile-empty-field = Non renseigné
 profile-submit = Enregistrer
-profile-username = Nom d'utilisateur
-profile-username-hint = 3 à 16 caractères : lettres, chiffres et '_'
-profile-bio = Bio
-profile-birthdate = Date de naissance
-profile-contact = Contact
-profile-new-password = Nouveau mot de passe
-profile-confirm-password = Confirmer le mot de passe
-profile-current-password = Mot de passe actuel
 profile-error-network = Impossible de contacter le serveur
 
 error-unexpected = Une erreur est survenue
@@ -138,9 +139,13 @@ error-title = Erreur
 profile-avatar-label = Photo de profil
 profile-avatar-alt = Photo de profil de { $username }
 profile-avatar-help = JPEG, PNG ou WebP. Maximum 5 Mio, 1024 par 1024 pixels.
-profile-avatar-upload = Envoyer la photo
+profile-avatar-upload = Modifier la photo
 profile-avatar-delete = Supprimer la photo
 profile-avatar-invalid = Image invalide. Formats acceptés : JPEG, PNG ou WebP, 5 Mio maximum, 1024 par 1024 pixels.
+profile-avatar-view = Ouvrir la photo de profil en taille réelle (nouvel onglet)
+profile-avatar-delete-title = Supprimer la photo de profil ?
+profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
+profile-avatar-cancel = Annuler
 
 notification-title = Notifications
 notification-unread = non lues
