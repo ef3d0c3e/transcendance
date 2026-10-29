@@ -1,0 +1,101 @@
+groups:
+  - name: availability
+    rules:
+      - alert: TargetDown
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.job }} is unreachable"
+          description: "Prometheus cannot scrape {{ $labels.instance }} ({{ $labels.job }}) for 2 minutes."
+
+      - alert: ProbeFailed
+        expr: probe_success == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "{{ $labels.instance }} does not answer"
+          description: "The {{ $labels.job }} probe of {{ $labels.instance }} fails for 2 minutes."
+
+      - alert: ContainerRestarting
+        expr: changes(container_start_time_seconds{container_label_com_docker_compose_service!=""}[15m]) > 2
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.container_label_com_docker_compose_service }} keeps restarting"
+          description: "The container restarted {{ $value }} times in 15 minutes."
+
+  - name: application
+    rules:
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5.."}[5m]))
+            / sum(rate(http_requests_total[5m])) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "The site answers with server errors"
+          description: "{{ $value | humanizePercentage }} of requests fail with a 5xx status."
+
+      - alert: SlowResponses
+        expr: histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket[5m]))) > 1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "The site is slow"
+          description: "95% of requests take up to {{ $value | humanizeDuration }}."
+
+      - alert: DatabaseConnectionsExhausted
+        expr: mysql_global_status_threads_connected / mysql_global_variables_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "The database is running out of connections"
+          description: "{{ $value | humanizePercentage }} of MariaDB connections are in use."
+
+  - name: resources
+    rules:
+      - alert: DiskAlmostFull
+        expr: |
+          1 - node_filesystem_avail_bytes{fstype!~"tmpfs|overlay|squashfs"}
+            / node_filesystem_size_bytes{fstype!~"tmpfs|overlay|squashfs"} > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Disk {{ $labels.mountpoint }} is almost full"
+          description: "{{ $value | humanizePercentage }} of {{ $labels.mountpoint }} is used."
+
+      - alert: LowMemory
+        expr: node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes < 0.1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "The host is low on memory"
+          description: "Only {{ $value | humanizePercentage }} of the memory is available."
+
+      - alert: ContainerNearMemoryLimit
+        expr: |
+          container_memory_working_set_bytes{container_label_com_docker_compose_service!=""}
+            / (container_spec_memory_limit_bytes > 0) > 0.9
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "{{ $labels.container_label_com_docker_compose_service }} is near its memory limit"
+          description: "It uses {{ $value | humanizePercentage }} of its limit and may be killed."
+
+      - alert: ElasticsearchRed
+        expr: elasticsearch_cluster_health_status{color="red"} == 1
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Elasticsearch is red"
+          description: "Some log indices are unavailable, logs may be lost."

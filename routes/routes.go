@@ -27,6 +27,9 @@ func RegisterRoutes(
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
+	// health.go
+	router.GET("/healthz", controller.HealthzGet)
+
 	// Static pages
 	pages := Pages{
 		DB:       db,
