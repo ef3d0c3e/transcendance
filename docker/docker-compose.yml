@@ -200,7 +200,7 @@ services:
     mem_limit: 1g
     logging: *logging
 
-  # Data view of the logs, applied on every start
+  # Data view and dashboard of the logs, applied on every start
   kibana-setup:
     image: elasticsearch:9.5.5
     restart: on-failure
@@ -209,6 +209,7 @@ services:
       KIBANA_GATEWAY_PASSWORD: ${KIBANA_GATEWAY_PASSWORD:?}
     volumes:
       - ./elasticsearch/kibana-setup.sh:/kibana-setup.sh:ro
+      - ./elasticsearch/kibana-objects.ndjson:/kibana-objects.ndjson:ro
     depends_on:
       kibana:
         condition: service_healthy
