@@ -1,25 +1,4 @@
 {{ define "search_user" }}
-<style>
-.profile-picture {
-	height: 2em;
-	width: 2em;
-	margin: 0;
-	padding: 0;
-	vertical-align: -.7em;
-}
-</style>
-<e-center intrinsic>
-<form
-	class="search-form"
-	id="search-form"
-	action="{{ .Data.FormAction }}"
-	method="get">
-	<input
-		type="text"
-		id="username"
-		name="username"
-		placeholder="{{ .T "search-user-form-placeholder" }}"
-		value="{{ .Data.Username }}">
 <div class="inventory user-search">
 	<div class="inventory-header">
 		<div class="inventory-heading">
@@ -40,6 +19,14 @@
 			<span>{{ .T "search-user-filter-joined" }}</span>
 			<select name="joined" form="search-form" data-autosubmit>
 				{{ range .Data.JoinedOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
+			<span>{{ .T "search-user-filter-status" }}</span>
+			<select name="status" form="search-form" data-autosubmit>
+				{{ range .Data.StatusOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
 			</select>
