@@ -40,6 +40,9 @@
 	const REELS_MAX_SCALE = 1;
 	// Time to look at the landed cards before going back to the open button
 	const REVEAL_MS = 1200;
+	// Period of the cards' sway, picked per reel so they never move in sync
+	const SWAY_MIN_S = 2.6;
+	const SWAY_MAX_S = 4.2;
 
 	// Scale the cards so the reels fill the viewport width, while a whole
 	// card stays visible in height
@@ -127,10 +130,14 @@
 		return stacks.map((slots) => {
 			const winner = slots.find((cell) => cell.win);
 
+			const sway = SWAY_MIN_S + Math.random() * (SWAY_MAX_S - SWAY_MIN_S);
+
 			return {
 				slots,
 				rarity: winner?.rarity ?? "common",
 				landed: false,
+				// Negative delay: the sway starts mid-swing
+				sway: `--sway-duration: ${sway.toFixed(2)}s; --sway-delay: -${(Math.random() * sway).toFixed(2)}s`,
 			};
 		});
 	}
@@ -305,7 +312,7 @@
 	<div class="pack-reels" bind:this={stageElement}
 		style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
 		{#each reels as reel}
-			<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity}>
+			<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity} style={reel.sway}>
 				<div class="pack-strip">
 					{#each reel.slots as cell}
 						<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}>
@@ -315,7 +322,6 @@
 						</div>
 					{/each}
 				</div>
-				<div class="pack-shade" aria-hidden="true"></div>
 				<div class="pack-flash" aria-hidden="true"></div>
 			</div>
 		{/each}
@@ -346,7 +352,11 @@
 		flex: 0 0 auto;
 		width: var(--pack-cell);
 		height: var(--pack-cell-height);
+		/* The swaying card may spill a little out of its window, less than
+			the gap so the neighbouring cards stay hidden */
 		overflow: hidden;
+		overflow: clip;
+		overflow-clip-margin: calc(var(--pack-gap) / 2);
 		border-radius: 0.5rem;
 	}
 
@@ -384,29 +394,36 @@
 		pointer-events: auto;
 	}
 
+	/* A locked reel only keeps its won card, which can then sway and tilt
+		freely without being cut by the window */
+	.pack-reel.is-landed {
+		overflow: visible;
+	}
+
+	.pack-reel.is-landed .pack-cell[data-win="false"] {
+		visibility: hidden;
+	}
+
 	.pack-reel:not(.is-landed) .pack-cell :global(.card-effect),
 	.pack-reel .pack-cell[data-win="false"] :global(.card-effect) {
 		display: none;
 	}
 
-	/* Cylinder shading so the card curves away at the edges of the window */
-	.pack-shade {
-		position: absolute;
-		inset: 0;
-		z-index: 2;
-		pointer-events: none;
-		border-radius: inherit;
-		background:
-			linear-gradient(180deg,
-				rgb(0 0 0 / 45%) 0%,
-				transparent 20%,
-				transparent 80%,
-				rgb(0 0 0 / 45%) 100%),
-			linear-gradient(90deg,
-				rgb(0 0 0 / 35%) 0%,
-				transparent 16%,
-				transparent 84%,
-				rgb(0 0 0 / 35%) 100%);
+	/* Cards sway in their window on their reel's clock. translate and rotate
+		leave transform to the landing pop. */
+	.pack-cell {
+		animation: pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.pack-cell {
+			animation: none;
+		}
+	}
+
+	/* The badge's backdrop blur renders broken inside a rotating card */
+	.pack-cell :global(.card-badge) {
+		backdrop-filter: none;
 	}
 
 	/* The single payline every reel stops against */
@@ -472,7 +489,15 @@
 	/* Only the landing card pops, and only once its reel locked */
 	.is-landed .pack-cell[data-win="true"] {
 		z-index: 1;
-		animation: pack-pop 0.75s ease-out both;
+		animation:
+			pack-pop 0.75s ease-out both,
+			pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.is-landed .pack-cell[data-win="true"] {
+			animation: pack-pop 0.75s ease-out both;
+		}
 	}
 
 	.is-landed .pack-flash {
@@ -498,6 +523,18 @@
 	@media (width <= 560px) {
 		.pack-reels {
 			--pack-scale: 0.24;
+		}
+	}
+
+	@keyframes pack-sway {
+		from {
+			translate: 0 -0.2rem;
+			rotate: -0.8deg;
+		}
+
+		to {
+			translate: 0 0.2rem;
+			rotate: 0.8deg;
 		}
 	}
 
