@@ -1,5 +1,5 @@
 {{ define "card" }}
-<div class="card-container" {{ .Data.CardContainerData }} {{ with .Data.CardAcquiredFirst }}data-copies="{{ $.Data.CardCopies }}"
+<div class="card-container{{ if .Data.CardMissing }} is-missing{{ end }}" {{ .Data.CardContainerData }} {{ with .Data.CardAcquiredFirst }}data-copies="{{ $.Data.CardCopies }}"
 	data-acquired-first="{{ . }}" data-acquired-last="{{ $.Data.CardAcquiredLast }}"{{ end }}>
 	<article class="card"
 		style="--c1: {{ .Data.CardColorPrimary }}; --c2: {{ .Data.CardColorSecondary }}; --badge-color: {{ .Data.CardBadgeColor }}">
