@@ -195,22 +195,16 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 
 // Friend Button
 {
-	if (document.querySelector("#friend-button") != null) {
-		const friendbutton = mount(FriendButton, {
-			target: document.querySelector('#friend-button'),
-			props: {
-				id: document.querySelector('#friend-button').getAttribute('data-id'),
-			}
-		});
-	}
-}
-
-// Friends List
-{
-	const target = document.querySelector('#friends-list');
-
-	if (target) {
-		mount(Friends, {target});
+	if (document.querySelector(".friend-button") != null) {
+		let targets = document.querySelectorAll(".friend-button");
+		for (let i = 0; i < targets.length; i++) {
+			mount(FriendButton, {
+				target: targets[i],
+				props: {
+					id: targets[i].getAttribute('data-id'),
+				}
+			});
+		}
 	}
 }
 

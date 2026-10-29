@@ -22,7 +22,6 @@
 		{#each relations as relation}
 			<div>
 				<p>{relation.Target.Username}</p>
-				<p>{relation.TargetID}</p>
 				<FriendButton data-id={relation.TargetID}></FriendButton>
 			</div>
 		{/each}

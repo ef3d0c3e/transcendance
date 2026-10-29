@@ -200,7 +200,7 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 		})
 		return
 	}
-	sc.renderSearch(c, v)
+	sc.renderSearch(c, v, "search-user-title")
 }
 
 // Options of the filter and sort selects
@@ -232,9 +232,9 @@ func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[strin
 	}
 }
 
-func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
+func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView, t string) {
 	user := GetAuthenticatedUser(c)
-	title := sc.Renderer.T(c, "search-user-title")
+	title := sc.Renderer.T(c, t)
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": title,
 		"User":  user,
