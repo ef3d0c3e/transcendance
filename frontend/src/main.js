@@ -84,6 +84,49 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 	}
 }
 
+// Account deletion, after confirmation, then land on a page visitors can see
+{
+	// Error message of a failed deletion response
+	async function deletionError(response, fallback) {
+		try {
+			const body = await response.json();
+			return body.message || fallback;
+		} catch {
+			return fallback;
+		}
+	}
+
+	for (const target of document.querySelectorAll('[data-account-delete]')) {
+		target.addEventListener('click', async (event) => {
+			const button = event.currentTarget;
+			const error = button.parentElement.querySelector('.section-error');
+			if (!confirm(button.dataset.confirm)) {
+				return;
+			}
+
+			button.disabled = true;
+			error.hidden = true;
+			try {
+				const response = await fetch(button.dataset.accountDelete, {
+					method: 'POST',
+					credentials: 'same-origin',
+				});
+				if (response.ok) {
+					location.assign('/cards/search/');
+					return;
+				}
+				error.textContent = await deletionError(response, button.dataset.labelError);
+				error.hidden = false;
+			} catch {
+				error.textContent = button.dataset.labelError;
+				error.hidden = false;
+			} finally {
+				button.disabled = false;
+			}
+		});
+	}
+}
+
 // Login popup
 {
 	const target = document.querySelector('#login-popup');
