@@ -1845,11 +1845,196 @@ section {
 /* }}} */
 
 /* {{{ Pack opening */
+
+.pack-page {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+
+    width: min(76rem, 100% - 2rem);
+    margin: 0 auto;
+}
+
+/* Panels over the background */
+.pack-panel,
+.pack-chase {
+    padding: 1.25rem;
+
+    background: color-mix(in srgb, var(--color-bg-2) 88%, transparent);
+    border: 1px solid var(--color-border-1);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px var(--color-shadow);
+    backdrop-filter: blur(6px);
+}
+
+.pack-hero {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem 2.5rem;
+}
+
 .pack-booster {
     display: flex;
     justify-content: center;
 
-    margin: 1rem 0 1.5rem;
+    animation: pack-float 4s ease-in-out infinite;
+}
+
+@keyframes pack-float {
+    50% {
+        transform: translateY(-0.6rem);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .pack-booster {
+        animation: none;
+    }
+}
+
+.pack-panel {
+    flex: 1 1 26rem;
+    max-width: 40rem;
+
+    h2 {
+        margin: 0;
+    }
+
+    .pack-form {
+        justify-content: flex-start;
+        margin: 1rem 0 1.25rem;
+    }
+}
+
+.pack-kicker {
+    margin: 0;
+
+    color: var(--color-text-muted);
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.pack-summary {
+    margin: 0.25rem 0 0;
+    color: var(--color-text-muted);
+}
+
+.pack-info {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+    gap: 1rem;
+}
+
+.pack-info-block {
+    padding: 0.9rem 1rem;
+
+    background: var(--color-bg-3);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.75rem;
+
+    h3 {
+        margin: 0 0 0.5rem;
+        font-size: 1rem;
+    }
+}
+
+.pack-note {
+    margin: 0.5rem 0 0;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+}
+
+.pack-odds {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        --rarity: var(--color-border-2);
+
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    li::before {
+        content: "";
+        width: 0.65rem;
+        height: 0.65rem;
+
+        border-radius: 50%;
+        background: var(--rarity);
+        box-shadow: 0 0 6px var(--rarity);
+    }
+
+    /* Same colors as the card badges */
+    [data-rarity="common"] {
+        --rarity: #407fff;
+    }
+
+    [data-rarity="rare"] {
+        --rarity: #ff1440;
+    }
+
+    [data-rarity="legendary"] {
+        --rarity: #ffdc50;
+    }
+
+    [data-rarity="foil"] {
+        --rarity: #ffaf5f;
+    }
+}
+
+.pack-odds-value {
+    margin-left: auto;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.pack-progress-count {
+    margin: 0;
+    font-size: 1.4rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.pack-progress {
+    height: 0.5rem;
+    margin-top: 0.4rem;
+    overflow: hidden;
+
+    background: var(--color-bg-4);
+    border-radius: 999px;
+}
+
+.pack-progress-bar {
+    height: 100%;
+    max-width: 100%;
+
+    background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
+    border-radius: inherit;
+    transition: width 600ms ease;
+}
+
+.pack-chase-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem 1rem;
+
+    margin-bottom: 1rem;
+
+    h3 {
+        margin: 0;
+    }
 }
 
 .pack-form {

@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -26,6 +27,9 @@ const (
 	reelAbove = 2
 	reelBelow = 24
 )
+
+// Rarest cards of the collection shown on the opening page
+const packChaseCards = 4
 
 // Rarity tiers ordered from highest to lowest. Used to fall back to a lower
 // tier when the rolled rarity has no card in the opened collection.
@@ -153,6 +157,51 @@ func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*dat
 	return pack
 }
 
+// Chance in percent for each card of a booster to be of a rarity, after the
+// fallback of the tiers the collection lacks. Tiers that can't drop are left out.
+func boosterOdds(byRarity map[string][]*data.Card) map[string]int {
+	available := make(map[string]bool, len(rarityTiers))
+	for _, tier := range rarityTiers {
+		available[tier] = len(byRarity[tier]) > 0
+	}
+	weights := map[string]int{
+		"common":    weightCommon,
+		"rare":      weightRare,
+		"legendary": weightLegendary,
+	}
+	total := weightCommon + weightRare + weightLegendary
+	odds := make(map[string]int, len(rarityTiers))
+	for _, rolled := range rarityTiers {
+		if tier := pickTier(rolled, available); tier != "" {
+			odds[tier] += weights[rolled] * 100 / total
+		}
+	}
+	return odds
+}
+
+// Number of boosters left in a stack (same collection and size) of a user
+func (dc *DataController) countBoosters(ownerID uint, collectionID uint, size uint) (int64, error) {
+	var count int64
+	err := dc.DB.
+		Model(&models.Booster{}).
+		Where("owner_id = ? AND collection_id = ? AND size = ?", ownerID, collectionID, size).
+		Count(&count).
+		Error
+	return count, err
+}
+
+// Number of distinct cards of a collection owned by a user
+func (dc *DataController) countOwnedCards(ownerID uint, collection *data.Collection) (int64, error) {
+	var count int64
+	err := dc.DB.
+		Model(&models.Card{}).
+		Where("owner_id = ? AND card_id > ? AND card_id < ?", ownerID, collection.ID*1000, (collection.ID+1)*1000).
+		Distinct("card_id").
+		Count(&count).
+		Error
+	return count, err
+}
+
 // Oldest booster of a stack (same collection and size) owned by a user, nil when none is left
 func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint) (*models.Booster, error) {
 	var booster models.Booster
@@ -201,14 +250,85 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		return
 	}
 	boosterData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(booster.Size))
+	collectionTitle, err := collection.Translate(loc, "title")
+	if err != nil {
+		log.Printf("[WARN] Failed to translate collection '%s': %s", collection.Name, err)
+		collectionTitle = collection.Name
+	}
+
+	// Side information, the page still works without it
+	remaining, err := dc.countBoosters(user.ID, booster.CollectionID, booster.Size)
+	if err != nil {
+		log.Printf("[WARN] Failed to count boosters for user '%s': %s", user.Username, err)
+	}
+	owned, err := dc.countOwnedCards(user.ID, collection)
+	if err != nil {
+		log.Printf("[WARN] Failed to count cards for user '%s': %s", user.Username, err)
+	}
+	total := len(collection.Cards)
+	progress := 0
+	if total > 0 {
+		progress = int(owned) * 100 / total
+	}
+
+	byRarity := groupByRarity(dc.Data.Cards, collection)
+	odds := boosterOdds(byRarity)
+	rates := make([]map[string]any, 0, len(rarityTiers))
+	for i := len(rarityTiers) - 1; i >= 0; i-- {
+		tier := rarityTiers[i]
+		if odds[tier] == 0 {
+			continue
+		}
+		rates = append(rates, map[string]any{
+			"Rarity":  tier,
+			"Label":   dc.Renderer.T(c, "card-rarity-"+tier),
+			"Percent": odds[tier],
+		})
+	}
+
+	// The rarest cards of the collection, as a teaser of what can drop
+	stacks := make([]cardStack, 0, len(collection.Cards))
+	for _, entry := range collection.Cards {
+		card := dc.Data.Cards[entry.Name]
+		if card == nil {
+			continue
+		}
+		stacks = append(stacks, cardStack{
+			CardID:     uint(collection.ID*1000 + card.ID),
+			card:       card,
+			collection: collection,
+		})
+	}
+	sortCardStacks(stacks, inventorySortRarity, loc, nil)
+	chase := make([]map[string]any, 0, packChaseCards)
+	for _, stack := range stacks[:min(packChaseCards, len(stacks))] {
+		cardData, err := GetCardData(c, loc, dc.Renderer, collection, stack.card)
+		if err != nil {
+			log.Printf("[WARN] Failed to build data for card '%s': %s", stack.card.Name, err)
+			continue
+		}
+		chase = append(chase, map[string]any{"Data": cardData})
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": dc.Renderer.T(c, "pack-opening-title"),
 		"User":  user,
 	})
 	builder.Add("pack-opening", "Content", map[string]any{
-		"BoosterID": booster.ID,
-		"Booster":   map[string]any{"Data": boosterData},
+		"BoosterID":       booster.ID,
+		"Booster":         map[string]any{"Data": boosterData},
+		"CollectionTitle": collectionTitle,
+		"CollectionUrl":   fmt.Sprint("/collections/", collection.ID, "/"),
+		"ColorPrimary":    collection.ColorPrimary,
+		"ColorSecondary":  collection.ColorSecondary,
+		"BoosterSize":     dc.Renderer.T(c, "collection-booster", "count", int(booster.Size)),
+		"Remaining":       dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
+		"Owned":           owned,
+		"Total":           total,
+		"Progress":        progress,
+		"Rates":           rates,
+		"FoilChance":      foilChance,
+		"Chase":           chase,
 	})
 	dc.Renderer.Render(c, &builder)
 }
@@ -359,13 +479,14 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 	} else if nextBooster != nil {
 		next = nextBooster.ID
 	}
-	var remaining int64
-	if err := dc.DB.
-		Model(&models.Booster{}).
-		Where("owner_id = ? AND collection_id = ? AND size = ?", user.ID, booster.CollectionID, booster.Size).
-		Count(&remaining).
-		Error; err != nil {
+	remaining, err := dc.countBoosters(user.ID, booster.CollectionID, booster.Size)
+	if err != nil {
 		log.Printf("[WARN] Failed to count boosters for user '%s': %s", user.Username, err)
+	}
+	// Refreshes the collection progress of the page
+	owned, err := dc.countOwnedCards(user.ID, collection)
+	if err != nil {
+		log.Printf("[WARN] Failed to count cards for user '%s': %s", user.Username, err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -373,6 +494,7 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		"next":           next,
 		"remaining":      remaining,
 		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
+		"owned":          owned,
 		"colors": gin.H{
 			"primary":   collection.ColorPrimary,
 			"secondary": collection.ColorSecondary,

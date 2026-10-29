@@ -112,7 +112,7 @@
 			throw new PackError(data.message ?? errorLabel);
 		}
 
-		const { reels: stacks, colors: palette, next, remaining: left, remainingLabel: leftLabel } = data;
+		const { reels: stacks, colors: palette, next, remaining: left, remainingLabel: leftLabel, owned } = data;
 
 		return {
 			reels: stacks ?? [],
@@ -120,6 +120,7 @@
 			next: next ?? 0,
 			remaining: left ?? 0,
 			remainingLabel: leftLabel ?? "",
+			owned,
 		};
 	}
 
@@ -249,6 +250,8 @@
 
 			await delay(Math.max(...durations) + BOUNCE_MS + 80);
 			showcase = buildShowcase(result.reels);
+			// Updated once the cards are revealed, not to spoil them
+			updatePageInfo(result);
 			button.textContent = retryLabel ?? openLabel;
 
 			// Obtained cards are shown in a popup
@@ -259,6 +262,24 @@
 		} finally {
 			busy = false;
 			button.disabled = false;
+		}
+	}
+
+	// Refresh the stack and collection progress shown on the page
+	function updatePageInfo(result) {
+		const left = document.querySelector("#pack-remaining");
+		if (left && result.remainingLabel) {
+			left.textContent = result.remainingLabel;
+		}
+
+		const owned = document.querySelector("#pack-owned");
+		const total = Number(document.querySelector("#pack-total")?.textContent);
+		const bar = document.querySelector("#pack-progress-bar");
+		if (owned && typeof result.owned === "number") {
+			owned.textContent = String(result.owned);
+			if (bar && total > 0) {
+				bar.style.width = `${Math.floor((result.owned * 100) / total)}%`;
+			}
 		}
 	}
 
