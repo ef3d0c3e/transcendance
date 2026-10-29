@@ -1,4 +1,8 @@
 {{ define "error" }}
-<h1>{{ .T "error-title" }}{{ if .Data.StatusCode }} {{ .Data.StatusCode }}{{ end }}</h1>
-<h3>{{ .Data.ErrorMessage }}</h3>
+<div class="error-page">
+	<h1 id="error-title">{{ .T "error-title" }}{{ if .Data.StatusCode }} {{ .Data.StatusCode }}{{ end }}</h1>
+	<section class="error-panel" aria-labelledby="error-title">
+		<p class="section-error">{{ .Data.ErrorMessage }}</p>
+	</section>
+</div>
 {{ end }}
