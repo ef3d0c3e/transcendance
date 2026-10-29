@@ -107,18 +107,27 @@ collection-search-submit = Rechercher
 collection-search-error-internal = Echec de la recherche
 
 collection-error-not-found = Collection non trouvée
+profile-username = Nom d’utilisateur
+profile-bio = Biographie
+profile-birthdate = Date de naissance
+profile-contact = Coordonnées
+profile-new-password = Nouveau mot de passe
+profile-confirm-password = Confirmer le mot de passe
+profile-current-password = Mot de passe actuel
+profile-username-help = 3 à 16 caractères : lettres, chiffres ou tiret du 8.
+profile-save-error = Impossible d’enregistrer les modifications. Veuillez réessayer.
 profile-title = Profil
 profile-error-user = L'utilisateur n'existe pas
 profile-error-username = Nom d'utilisateur invalide. Le nom d'utilisateur doit faire entre 3 et 16 caractères et peut être composé de lettres, chiffres et '_'
 profile-error-username-taken = Nom d'utilisateur déjà utilisé
-profile-error-bio = La bio ne doit faire pas plus de 244 caractères de long
+profile-error-bio = La bio ne doit pas dépasser 244 caractères
 profile-error-birthdate = La date de naissance doit être entre l'an 0 et le jour présent
 profile-error-contactinfo = Le contact ne doit faire pas plus de 256 caractères de long
-profile-error-password = Le mot de passe ne correspond pas avec le mot de passe actuel
+profile-error-password = Le mot de passe ne correspond pas au mot de passe actuel
 profile-error-new_password = Le mot de passe est invalide. Le mot de passe doit faire entre 8 et 72 caractères
 profile-error-passwords-do-not-match = Les mots de passe doivent correspondre
 profile-error-password-missing = Veuillez remplir ce champ pour changer de mot de passe
-profile-empty-field = Non Spécifié
+profile-empty-field = Non renseigné
 profile-submit = Sauvegarder
 
 error-unexpected = Une erreur est survenue
@@ -128,9 +137,13 @@ Error = Erreur
 
 profile-avatar-label = Photo de profil
 profile-avatar-help = JPEG, PNG ou WebP. Maximum 5 Mio, 1024 par 1024 pixels.
-profile-avatar-upload = Envoyer la photo
+profile-avatar-upload = Modifier la photo
 profile-avatar-delete = Supprimer la photo
 profile-avatar-invalid = Image invalide. JPEG, PNG ou WebP valide de 5 Mio maximum, 1024 par 1024 pixels.
+profile-avatar-view = Ouvrir la photo de profil en taille réelle (nouvel onglet)
+profile-avatar-delete-title = Supprimer la photo de profil ?
+profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
+profile-avatar-cancel = Annuler
 
 notification-title = Notifications
 notification-unread = non lues

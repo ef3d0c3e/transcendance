@@ -1,22 +1,45 @@
 {{ define "profile" }}
+<div class="profile-page">
 <h1>{{ .T "profile-title" }}</h1>
 {{ if .Data.Edit }}
-<section>
-	<div class="profile-error" id="profile-result"></div>
-	<div id="avatar">
-		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="Avatar" width="128" height="128" style="object-fit: contain" />
+<section class="profile-panel">
+	<div class="profile-error" id="profile-result" role="status" aria-live="polite"></div>
+	<div class="profile-avatar-editor">
+		<div class="profile-avatar">
+			<a href="/avatars/{{ .Data.Profile.UserID }}" target="_blank" rel="noopener" aria-label="{{ .T "profile-avatar-view" }}" title="{{ .T "profile-avatar-view" }}">
+				<img src="/avatars/{{ .Data.Profile.UserID }}" alt="{{ .T "profile-avatar-label" }}" width="128" height="128" />
+			</a>
+			<div class="profile-avatar-actions">
+				<form id="avatar-upload-form" method="post" action="{{ .Data.AvatarAction }}" enctype="multipart/form-data">
+					<input type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png,image/webp" required hidden aria-label="{{ .T "profile-avatar-label" }}">
+					<button type="button" id="avatar-upload-button" class="profile-avatar-action" aria-label="{{ .T "profile-avatar-upload" }}" title="{{ .T "profile-avatar-upload" }}">
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
+							<path d="m15 5 4 4M4 20l5-1L20 8a2.8 2.8 0 0 0-4-4L5 15l-1 5Z" />
+						</svg>
+					</button>
+				</form>
+				<form id="avatar-delete-form" method="post" action="{{ .Data.AvatarAction }}/delete">
+					<button type="button" id="avatar-delete-button" aria-haspopup="dialog" aria-controls="avatar-delete-dialog" class="profile-avatar-action profile-avatar-remove" aria-label="{{ .T "profile-avatar-delete" }}" title="{{ .T "profile-avatar-delete" }}">
+						<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true" focusable="false">
+							<path d="m6 6 12 12M18 6 6 18" />
+						</svg>
+					</button>
+				</form>
+			</div>
+		</div>
+		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
 	</div>
-	<form method="post" action="{{ .Data.AvatarAction }}" enctype="multipart/form-data">
-		<label for="avatar-file">{{ .T "profile-avatar-label" }}</label>
-		<input type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png,image/webp" required title="{{ .T "profile-avatar-help" }}">
-		<button type="submit">{{ .T "profile-avatar-upload" }}</button>
-	</form>
-	<form method="post" action="{{ .Data.AvatarAction }}/delete">
-		<button type="submit">{{ .T "profile-avatar-delete" }}</button>
-	</form>
-	<form id="profile-form" method="post" action="{{ .Data.FormAction }}">
-		<div class="field field-disabled">
-			<label for="username">Username</label>
+	<dialog id="avatar-delete-dialog" class="profile-confirm-dialog" aria-labelledby="avatar-delete-title" aria-describedby="avatar-delete-description">
+		<h2 id="avatar-delete-title">{{ .T "profile-avatar-delete-title" }}</h2>
+		<p id="avatar-delete-description">{{ .T "profile-avatar-delete-description" }}</p>
+		<form method="dialog" class="profile-confirm-actions">
+			<button type="submit" class="profile-confirm-cancel" autofocus>{{ .T "profile-avatar-cancel" }}</button>
+			<button type="submit" form="avatar-delete-form" class="profile-confirm-delete">{{ .T "profile-avatar-delete" }}</button>
+		</form>
+	</dialog>
+	<form class="profile-fields" id="profile-form" data-save-error="{{ .T "profile-save-error" }}" method="post" action="{{ .Data.FormAction }}">
+		<div class="profile-field profile-field-wide">
+			<label for="username">{{ .T "profile-username" }}</label>
 			<input
 				type="text"
 				name="username"
@@ -25,22 +48,22 @@
 				minlength="3"
 				maxlength="16"
 				pattern="[a-zA-Z0-9_]{3,16}"
-				title="3–16 chars, letters/digits/underscore"
+				title="{{ .T "profile-username-help" }}"
 				value="{{ .Data.Profile.User.Username }}">
 			<p class="profile-error" id="profile-error-username" hidden></p>
 		</div>
-		<div class="field field-disabled">
-			<label for="bio">Bio</label>
+		<div class="profile-field profile-field-wide">
+			<label for="bio">{{ .T "profile-bio" }}</label>
 			<textarea
-				type="text"
+				rows="4"
 				name="bio"
 				id="bio"
 				maxlength="244"
 				placeholder="{{ .T "profile-empty-field" }}">{{ .Data.Profile.Bio }}</textarea>
 			<p class="profile-error" id="profile-error-bio" hidden></p>
 		</div>
-		<div class="field field-disabled">
-			<label for="birthdate">Birth date</label>
+		<div class="profile-field">
+			<label for="birthdate">{{ .T "profile-birthdate" }}</label>
 			<input
 				type="date"
 				name="birthdate"
@@ -50,8 +73,8 @@
 				value="{{ if not .Data.Profile.BirthDate.IsZero }}{{ .Data.Profile.BirthDate.Format "2006-01-02" }}{{ end }}">
 			<p class="profile-error" id="profile-error-birthdate" hidden></p>
 		</div>
-		<div class="field field-disabled">
-			<label for="contact">Contact Info</label>
+		<div class="profile-field">
+			<label for="contact">{{ .T "profile-contact" }}</label>
 			<input
 				type="text"
 				name="contact"
@@ -63,8 +86,8 @@
 			<p class="profile-error" id="profile-error-contact" hidden></p>
 		</div>
 		{{ if .Data.CanChangePassword }}
-		<div class="field field-disabled">
-			<label for="new_password">New Password</label>
+		<div class="profile-field">
+			<label for="new_password">{{ .T "profile-new-password" }}</label>
 			<input
 				type="password"
 				name="new_password"
@@ -73,8 +96,8 @@
 				minlength="8">
 				<p class="profile-error" id="profile-error-new_password" hidden></p>
 		</div>
-		<div class="field field-disabled" hidden>
-			<label for="confirm_password">Confirm Password</label>
+		<div class="profile-field" hidden>
+			<label for="confirm_password">{{ .T "profile-confirm-password" }}</label>
 			<input
 				required
 				disabled
@@ -85,8 +108,8 @@
 				minlength="8">
 				<p class="profile-error" id="profile-error-confirm_password" hidden></p>
 		</div>
-		<div class="field field-disabled" hidden>
-			<label for="password">Current Password</label>
+		<div class="profile-field" hidden>
+			<label for="password">{{ .T "profile-current-password" }}</label>
 			<input
 				required
 				disabled
@@ -103,29 +126,33 @@
 </section>
 <div id="profile-enhancement"></div>
 {{ else }}
-<section>
-	<div id="avatar">
-		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="Avatar" width="128" height="128" style="object-fit: contain" />
+<section class="profile-panel profile-readonly">
+	<div class="profile-avatar">
+		<a href="/avatars/{{ .Data.Profile.UserID }}" target="_blank" rel="noopener" aria-label="{{ .T "profile-avatar-view" }}" title="{{ .T "profile-avatar-view" }}">
+			<img src="/avatars/{{ .Data.Profile.UserID }}" alt="{{ .T "profile-avatar-label" }}" width="128" height="128" />
+		</a>
 	</div>
 	<div>
-		<p id="username">{{ .Data.Profile.User.Username }}</p>
+		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 	</div>
-	<div>
+	<div class="profile-detail">
+		<p class="profile-label">{{ .T "profile-birthdate" }}</p>
 		{{ if not .Data.Profile.BirthDate.IsZero }}
 		<p id="birthdate">{{ .Data.Profile.BirthDate.Format "2006-01-02" }}</p>
 		{{ else }}
 		<p id="birthdate">{{ .T "profile-empty-field" }}</p>
 		{{ end }}
 	</div>
-	<div>
+	<div class="profile-detail">
+		<p class="profile-label">{{ .T "profile-contact" }}</p>
 		{{ if .Data.Profile.ContactInfo }}
 		<p id="contact">{{ .Data.Profile.ContactInfo }}</p>
 		{{ else }}
 		<p id="contact">{{ .T "profile-empty-field" }}</p>
 		{{ end }}
 	</div>
-	<div>
-		<p id="bio-label">Bio</p>
+	<div class="profile-detail profile-field-wide">
+		<p id="bio-label" class="profile-label">{{ .T "profile-bio" }}</p>
 		{{ if .Data.Profile.Bio }}
 		<p id="bio" aria-labelledby="bio-label">{{ .Data.Profile.Bio }}</p>
 		{{ else }}
@@ -134,4 +161,5 @@
 	</div>
 </section>
 {{ end }}
+</div>
 {{ end }}

@@ -108,6 +108,15 @@ collection-search-submit = Search
 collection-search-error-internal = Search failed
 
 collection-error-not-found = Collection not found
+profile-username = Username
+profile-bio = Bio
+profile-birthdate = Birth date
+profile-contact = Contact information
+profile-new-password = New password
+profile-confirm-password = Confirm password
+profile-current-password = Current password
+profile-username-help = 3–16 characters: letters, digits or underscores.
+profile-save-error = Unable to save changes. Please try again.
 profile-title = Profile
 profile-error-user = User doesn't exist
 profile-error-username = Invalid username. Username must be between 3 and 16 characters long and may contain letters, numbers and '_'
@@ -115,15 +124,15 @@ profile-error-username-taken = Username already taken
 profile-error-bio = Bio must be no more than 244 characters long
 profile-error-birthdate = Birthdate must be between year 0 and the present day
 profile-error-contactinfo = Contact must be no more than 256 characters long
-profile-error-password = Password doesn't not match the current password
+profile-error-password = Password does not match the current password
 profile-error-new_password = Invalid password. Your password must be between 8 and 72 characters long
 profile-error-passwords-do-not-match = Passwords do not match
 profile-error-password-missing = Must provide this field to change password
 profile-empty-field = Not Specified
 profile-submit = Save
 
-error-unexpected = An error occured
-error-unauthorized = You must be logged in to access this ressource
+error-unexpected = An error occurred
+error-unauthorized = You must be logged in to access this resource
 
 Error = Error
 
@@ -132,6 +141,10 @@ profile-avatar-help = JPEG, PNG or WebP. Maximum 5 MiB, 1024 by 1024 pixels.
 profile-avatar-upload = Upload picture
 profile-avatar-delete = Delete picture
 profile-avatar-invalid = Invalid image. JPEG, PNG or WebP image up to 5 MiB, 1024 by 1024 pixels.
+profile-avatar-view = Open full-size profile picture (new tab)
+profile-avatar-delete-title = Delete profile picture?
+profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
+profile-avatar-cancel = Cancel
 
 notification-title = Notifications
 notification-unread = unread
