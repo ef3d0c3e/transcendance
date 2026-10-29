@@ -28,9 +28,6 @@ const (
 	reelBelow = 12
 )
 
-// Rarest cards of the collection shown on the opening page
-const packChaseCards = 4
-
 // Rarity tiers ordered from highest to lowest. Used to fall back to a lower
 // tier when the rolled rarity has no card in the opened collection.
 var rarityTiers = []string{"legendary", "rare", "common"}
@@ -294,30 +291,6 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		})
 	}
 
-	// The rarest cards of the collection, as a teaser of what can drop
-	stacks := make([]cardStack, 0, len(collection.Cards))
-	for _, entry := range collection.Cards {
-		card := dc.Data.Cards[entry.Name]
-		if card == nil {
-			continue
-		}
-		stacks = append(stacks, cardStack{
-			CardID:     uint(collection.ID*1000 + card.ID),
-			card:       card,
-			collection: collection,
-		})
-	}
-	sortCardStacks(stacks, inventorySortRarity, loc, nil)
-	chase := make([]map[string]any, 0, packChaseCards)
-	for _, stack := range stacks[:min(packChaseCards, len(stacks))] {
-		cardData, err := GetCardData(c, loc, dc.Renderer, collection, stack.card)
-		if err != nil {
-			log.Printf("[WARN] Failed to build data for card '%s': %s", stack.card.Name, err)
-			continue
-		}
-		chase = append(chase, map[string]any{"Data": cardData})
-	}
-
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": dc.Renderer.T(c, "pack-opening-title"),
 		"User":  user,
@@ -326,7 +299,6 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		"BoosterID":       booster.ID,
 		"Booster":         map[string]any{"Data": boosterData},
 		"CollectionTitle": collectionTitle,
-		"CollectionUrl":   fmt.Sprint("/collections/", collection.ID, "/"),
 		"ColorPrimary":    collection.ColorPrimary,
 		"ColorSecondary":  collection.ColorSecondary,
 		"BoosterSize":     dc.Renderer.T(c, "collection-booster", "count", int(size)),
@@ -336,7 +308,6 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		"Progress":        progress,
 		"Rates":           rates,
 		"FoilChance":      foilChance,
-		"Chase":           chase,
 		// Once out of boosters, more are bought with coins
 		"CollectionID": collection.ID,
 		"Coins":        user.Coins,

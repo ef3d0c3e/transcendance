@@ -263,8 +263,6 @@ pack-opening-odds-foil = Holographique
 pack-opening-odds-note = Chaque carte du booster est tirée séparément.
 pack-opening-progress-title = Progression de la collection
 pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
-pack-opening-chase-title = Cartes les plus rares de la collection
-pack-opening-chase-all = Voir toute la collection
 
 shop-title = Boutique
 shop-balance = Solde

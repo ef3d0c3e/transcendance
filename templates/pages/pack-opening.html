@@ -1,5 +1,5 @@
 {{ define "pack-opening" }}
-<div class="pack-page">
+<div class="pack-page{{ if or .Data.BoosterID .Data.AutoBuy }} is-opening{{ end }}">
 	<div id="pack-background" class="pack-background" aria-hidden="true"
 		data-color-primary="{{ .Data.ColorPrimary }}"
 		data-color-secondary="{{ .Data.ColorSecondary }}"></div>
@@ -65,23 +65,11 @@
 		data-open-label="{{ .T "pack-opening-open" }}"
 		data-retry-label="{{ .T "pack-opening-open-another" }}"
 		data-error-label="{{ .T "pack-opening-error-internal" }}"
+		data-again-label="{{ .T "pack-opening-buy" }}"
 		data-coins="{{ .Data.Coins }}"
 		data-auto-buy="{{ if .Data.AutoBuy }}true{{ else }}false{{ end }}"
 		data-autostart="{{ if .Data.BoosterID }}true{{ else }}false{{ end }}"></div>
 
-	{{ if .Data.Chase }}
-	<div class="pack-chase">
-		<div class="pack-chase-header">
-			<h3>{{ .T "pack-opening-chase-title" }}</h3>
-			<a href="{{ .Data.CollectionUrl }}">{{ .T "pack-opening-chase-all" }}</a>
-		</div>
-		<e-cluster class="inventory-cards">
-			{{ range $val := .Data.Chase }}
-			{{ template "card" $val }}
-			{{ end }}
-		</e-cluster>
-	</div>
-	{{ end }}
 
 	{{ template "topup-popup" . }}
 </div>
