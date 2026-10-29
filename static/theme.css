@@ -1769,6 +1769,42 @@ section {
     }
 }
 
+/* Online dot followed by "Online" or when the user was last seen */
+.user-status {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.3rem;
+
+    margin: 0.2rem 0 0;
+
+    color: var(--color-text-muted);
+    font-size: 0.8125rem;
+
+    &::before {
+        content: "";
+        flex: none;
+        width: 0.5rem;
+        height: 0.5rem;
+        margin-right: 0.1rem;
+
+        border-radius: 50%;
+        background: var(--color-border-2);
+    }
+
+    &.is-online {
+        color: var(--color-success-3);
+
+        &::before {
+            background: var(--color-success-3);
+        }
+    }
+
+    time {
+        color: var(--color-text);
+    }
+}
+
 /* }}} */
 
 /* {{{ Pack opening */

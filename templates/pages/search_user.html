@@ -24,6 +24,14 @@
 			</select>
 		</label>
 		<label>
+			<span>{{ .T "search-user-filter-status" }}</span>
+			<select name="status" form="search-form" data-autosubmit>
+				{{ range .Data.StatusOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<label>
 			<span>{{ .T "inventory-sort" }}</span>
 			<select name="sort" form="search-form" data-autosubmit>
 				{{ range .Data.SortOptions }}
@@ -50,6 +58,16 @@
 			<img class="user-result-avatar" src="/avatars/{{ .ID }}" alt="" width="48" height="48">
 			<div class="user-result-body">
 				<a class="user-result-name" href="/profile/{{ .Username }}">{{ .Username }}</a>
+				<p class="user-status{{ if .Online }} is-online{{ end }}">
+					{{ if .Online }}
+					{{ $.T "user-status-online" }}
+					{{ else if .LastSeenAt }}
+					{{ $.T "user-status-last-seen" }}
+					<time datetime="{{ .LastSeenAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .LastSeenAt.Format "2006-01-02" }}</time>
+					{{ else }}
+					{{ $.T "user-status-offline" }}
+					{{ end }}
+				</p>
 				<dl class="user-result-stats">
 					<div>
 						<dt>{{ $.T "search-user-joined" }}</dt>

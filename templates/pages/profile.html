@@ -29,6 +29,18 @@
 		</div>
 		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
 	</div>
+	{{ if not .Data.Own }}
+	<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
+		{{ if .Data.Online }}
+		{{ .T "user-status-online" }}
+		{{ else if .Data.Profile.User.LastSeenAt }}
+		{{ .T "user-status-last-seen" }}
+		<time datetime="{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02" }}</time>
+		{{ else }}
+		{{ .T "user-status-offline" }}
+		{{ end }}
+	</p>
+	{{ end }}
 	<dialog id="avatar-delete-dialog" class="profile-confirm-dialog" aria-labelledby="avatar-delete-title" aria-describedby="avatar-delete-description">
 		<h2 id="avatar-delete-title">{{ .T "profile-avatar-delete-title" }}</h2>
 		<p id="avatar-delete-description">{{ .T "profile-avatar-delete-description" }}</p>
@@ -144,7 +156,17 @@
 		</a>
 	</div>
 	<div>
-		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
+		<p id="username">{{ .Data.Profile.User.Username }}</p>
+		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
+			{{ if .Data.Online }}
+			{{ .T "user-status-online" }}
+			{{ else if .Data.Profile.User.LastSeenAt }}
+			{{ .T "user-status-last-seen" }}
+			<time datetime="{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02" }}</time>
+			{{ else }}
+			{{ .T "user-status-offline" }}
+			{{ end }}
+		</p>
 	</div>
 	<div class="profile-detail">
 		<p class="profile-label">{{ .T "profile-birthdate" }}</p>
