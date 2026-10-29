@@ -56,6 +56,11 @@ func RegisterRoutes(
 	// account.go
 	router.POST("/api/account_delete", controller.AccountDeletePost)
 
+	// legal.go
+	router.GET("/terms", controller.TermsGet)
+	router.GET("/legal", controller.LegalGet)
+	router.GET("/contact", controller.ContactGet)
+
 	// user_search.go
 	router.GET("/search", controller.SearchUsersGet)
 

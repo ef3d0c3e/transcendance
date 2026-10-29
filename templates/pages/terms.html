@@ -1,0 +1,45 @@
+{{ define "terms" }}
+<article class="info-page">
+	<h1>{{ .T "terms-title" }}</h1>
+	<p class="info-page-updated">{{ .T "info-page-updated" }}</p>
+	<p>{{ .T "terms-intro" }}</p>
+
+	<h2>{{ .T "terms-service-title" }}</h2>
+	<p>{{ .T "terms-service-text" }}</p>
+
+	<h2>{{ .T "terms-account-title" }}</h2>
+	<p>{{ .T "terms-account-text" }}</p>
+
+	<h2>{{ .T "terms-conduct-title" }}</h2>
+	<p>{{ .T "terms-conduct-intro" }}</p>
+	<ul>
+		<li>{{ .T "terms-conduct-harass" }}</li>
+		<li>{{ .T "terms-conduct-content" }}</li>
+		<li>{{ .T "terms-conduct-spam" }}</li>
+		<li>{{ .T "terms-conduct-abuse" }}</li>
+	</ul>
+
+	<h2>{{ .T "terms-content-title" }}</h2>
+	<p>{{ .T "terms-content-text" }}</p>
+
+	<h2>{{ .T "terms-items-title" }}</h2>
+	<p>{{ .T "terms-items-text" }}</p>
+
+	<h2>{{ .T "terms-termination-title" }}</h2>
+	<p>{{ .T "terms-termination-text" }}</p>
+
+	<h2>{{ .T "terms-liability-title" }}</h2>
+	<p>{{ .T "terms-liability-text" }}</p>
+
+	<h2>{{ .T "terms-changes-title" }}</h2>
+	<p>{{ .T "terms-changes-text" }}</p>
+
+	<h2>{{ .T "terms-law-title" }}</h2>
+	<p>{{ .T "terms-law-text" }}</p>
+
+	<p class="info-page-links">
+		<a href="/legal">{{ .T "legal-title" }}</a>
+		<a href="/contact">{{ .T "contact-title" }}</a>
+	</p>
+</article>
+{{ end }}

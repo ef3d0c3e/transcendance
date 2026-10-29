@@ -87,6 +87,16 @@
 	<main>
 		{{ .Children.Content }}
 	</main>
+	<footer class="site-footer">
+		<p>{{ .T "footer-project" }}</p>
+		<nav aria-label="{{ .T "footer-label" }}">
+			<ul>
+				<li><a href="/terms" {{ if eq .Path "/terms" }}aria-current="page"{{ end }}>{{ .T "terms-title" }}</a></li>
+				<li><a href="/legal" {{ if eq .Path "/legal" }}aria-current="page"{{ end }}>{{ .T "legal-title" }}</a></li>
+				<li><a href="/contact" {{ if eq .Path "/contact" }}aria-current="page"{{ end }}>{{ .T "contact-title" }}</a></li>
+			</ul>
+		</nav>
+	</footer>
 	<!-- Card rendering styles and interactions, mounted once for every card on the page -->
 	<div id="card-rendering"></div>
 </body>
