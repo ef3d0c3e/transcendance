@@ -28,7 +28,6 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 	}
 
 	profileUsername := c.Param("username")
-	editMode := profileUsername == "" || user.Rank == 2
 	if profileUsername == "" {
 		profileUsername = user.Username
 	}
@@ -45,6 +44,8 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		})
 		return
 	}
+
+	editMode := c.Param("username") == "" || (user.Rank == 2 && userProfile.UserID != user.ID)
 
 	builder := views.PageBuilder("base", gin.H{
 		"Title": pc.Renderer.T(c, "profile-title"),
