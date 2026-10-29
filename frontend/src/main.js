@@ -271,10 +271,6 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				openLabel: target.dataset.openLabel,
 				retryLabel: target.dataset.retryLabel,
 				errorLabel: target.dataset.errorLabel,
-				obtainedLabel: target.dataset.obtainedLabel,
-				returnLabel: target.dataset.returnLabel,
-				returnUrl: target.dataset.returnUrl,
-				openAgainLabel: target.dataset.openAgainLabel,
 				autostart: target.dataset.autostart === 'true',
 			},
 		});

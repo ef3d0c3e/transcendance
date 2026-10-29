@@ -6,15 +6,10 @@
 		openLabel,
 		retryLabel,
 		errorLabel,
-		obtainedLabel,
-		returnLabel,
-		returnUrl,
-		openAgainLabel,
 		autostart = false,
 	} = $props();
 
 	let reels = $state([]);
-	let showcase = $state([]);
 	let message = $state("");
 	let failed = $state(false);
 	let colors = $state({ primary: "#407fff", secondary: "#7f2fff" });
@@ -23,14 +18,6 @@
 	let reelScale = $state(null);
 
 	let stageElement = $state();
-	let resultDialog;
-	// Boosters left in the opened stack, shown on the popup's open again button
-	let remaining = $state(0);
-	let remainingLabel = $state("");
-	let remainingBadge = $derived(remaining > 9 ? "9+" : String(remaining));
-	// Form and button of the page, reused to open again from the popup
-	let pageForm;
-	let pageButton;
 	let timers = [];
 
 	// Slot machine: five vertical reels side by side. Each drops past its
@@ -51,6 +38,8 @@
 	const REELS_MAX_WIDTH = 0.92;
 	const REELS_MAX_HEIGHT = 0.7;
 	const REELS_MAX_SCALE = 1;
+	// Time to look at the landed cards before going back to the open button
+	const REVEAL_MS = 1200;
 
 	// Scale the cards so the reels fill the viewport width, while a whole
 	// card stays visible in height
@@ -73,9 +62,19 @@
 		reelScale = Math.min(byWidth, byHeight, REELS_MAX_SCALE);
 	}
 
+	function scrollBehavior() {
+		return window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+	}
+
 	function scrollToReels() {
-		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-		stageElement.scrollIntoView({ behavior: reduced ? "auto" : "smooth", block: "center" });
+		stageElement.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
+	}
+
+	// Back to the top of the page, where the open button is
+	function scrollToForm(form, button) {
+		window.scrollTo({ top: 0, behavior: scrollBehavior() });
+		const target = button.hidden ? form.querySelector("a") : button;
+		target?.focus({ preventScroll: true });
 	}
 
 	// Failure reported by the server, its message is shown as is
@@ -85,7 +84,6 @@
 		failed = true;
 		message = text;
 		reels = [];
-		showcase = [];
 	}
 
 	function clearTimers() {
@@ -135,11 +133,6 @@
 				landed: false,
 			};
 		});
-	}
-
-	// The cards actually won, held back until every reel has stopped
-	function buildShowcase(stacks) {
-		return stacks.map((slots) => slots.find((cell) => cell.win)).filter(Boolean);
 	}
 
 	// Distance between the top edges of two neighbouring cards
@@ -212,10 +205,8 @@
 
 		busy = true;
 		clearTimers();
-		resultDialog?.close();
 		// Clear the stage so the previous reels cannot flash back into view
 		reels = [];
-		showcase = [];
 		failed = false;
 		message = "";
 		button.disabled = true;
@@ -230,8 +221,6 @@
 
 			// The booster is consumed: chain into the next one of the stack, if any
 			const input = form.querySelector("input[name=booster]");
-			remaining = result.remaining;
-			remainingLabel = result.remainingLabel;
 			if (result.next && input) {
 				input.value = result.next;
 			} else {
@@ -249,14 +238,13 @@
 			const durations = spinReels(result.reels);
 
 			await delay(Math.max(...durations) + BOUNCE_MS + 80);
-			showcase = buildShowcase(result.reels);
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			button.textContent = retryLabel ?? openLabel;
 
-			// Obtained cards are shown in a popup
-			await tick();
-			resultDialog.showModal();
+			// The won cards stay on the reels, the open button is ready for the next one
+			await delay(REVEAL_MS);
+			scrollToForm(form, button);
 		} catch (error) {
 			showFailure(error instanceof PackError ? error.message : errorLabel);
 		} finally {
@@ -283,19 +271,8 @@
 		}
 	}
 
-	// Open the next booster of the stack, the page form already points to it
-	function openAgain() {
-		if (remaining === 0 || !pageForm) {
-			return;
-		}
-		resultDialog.close();
-		openPack(pageForm, pageButton);
-	}
-
 	onMount(() => {
 		const form = document.querySelector(formSelector);
-		pageForm = form;
-		pageButton = form?.querySelector("button[type=submit]");
 
 		if (!form) {
 			return;
@@ -346,32 +323,6 @@
 	</div>
 {/if}
 
-<dialog class="pack-result" aria-labelledby="pack-result-title" bind:this={resultDialog}>
-	{#if showcase.length > 0}
-	<section class="pack-showcase">
-		<h3 class="pack-showcase-title" id="pack-result-title">{obtainedLabel}</h3>
-		<div class="pack-showcase-row" style="--pack-count: {showcase.length}">
-			{#each showcase as card, index}
-				<div class="pack-showcase-card" data-rarity={card.rarity}
-					style="animation-delay: {index * 90}ms">
-					<div class="pack-showcase-inner">
-						{@html card.html}
-					</div>
-				</div>
-			{/each}
-		</div>
-		<div class="pack-result-actions">
-			<button type="button" class="pack-result-again" disabled={remaining === 0}
-				title={remainingLabel} onclick={openAgain}>
-				{openAgainLabel}
-				<span class="pack-result-count" aria-label={remainingLabel}>{remainingBadge}</span>
-			</button>
-			<!-- svelte-ignore a11y_autofocus -->
-			<a class="pack-result-return" href={returnUrl} autofocus>{returnLabel}</a>
-		</div>
-	</section>
-	{/if}
-</dialog>
 
 <style>
 	.pack-reels {
@@ -423,13 +374,18 @@
 	}
 
 	/* Reels are the machine, not the prize: cards on them never take
-		pointer input and never wear their effects. Hovering and effects
-		belong to the obtained cards in the showcase. */
+		pointer input and never wear their effects. Only the won card, once
+		its reel locked, shows its foil and can be tilted. */
 	.pack-reel .pack-cell {
 		pointer-events: none;
 	}
 
-	.pack-reel .pack-cell :global(.card-effect) {
+	.pack-reel.is-landed .pack-cell[data-win="true"] {
+		pointer-events: auto;
+	}
+
+	.pack-reel:not(.is-landed) .pack-cell :global(.card-effect),
+	.pack-reel .pack-cell[data-win="false"] :global(.card-effect) {
 		display: none;
 	}
 
@@ -527,190 +483,9 @@
 		animation-duration: 1.3s;
 	}
 
-	/* The prize: the five obtained cards, bigger and fully interactive */
-	/* Popup with the obtained cards */
-	/* The dialog is the panel, it scrolls when the cards don't fit */
-	.pack-result {
-		width: min(100% - 2rem, 90rem);
-		max-width: none;
-		max-height: min(100dvh - 2rem, 60rem);
-		padding: 0;
-		overflow: auto;
-		overscroll-behavior: contain;
-
-		color: var(--color-text);
-		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
-		border-radius: 1rem;
-		box-shadow: 0 10px 30px var(--color-shadow);
-	}
-
-	/* Without the global section panel, the dialog already draws it */
-	.pack-result .pack-showcase {
-		padding: 1.5rem 1rem 0;
-
-		background: none;
-		border: 0;
-		border-radius: 0;
-		box-shadow: none;
-	}
-
-	/* Small or zoomed in screens: the popup takes the whole screen */
-	@media (max-width: 640px), (max-height: 600px) {
-		.pack-result {
-			inset: 0;
-			width: auto;
-			height: auto;
-			max-height: none;
-			margin: 0;
-
-			border: 0;
-			border-radius: 0;
-		}
-	}
-
-	.pack-result::backdrop {
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
-	}
-
-	/* The page behind the popup doesn't scroll */
-	:global(html:has(.pack-result[open])) {
-		overflow: hidden;
-	}
-
-	/* Stays visible at the bottom while the cards scroll */
-	.pack-result-actions {
-		position: sticky;
-		bottom: 0;
-
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: 0.75rem;
-
-		margin-top: 0.5rem;
-		padding: 1rem 0 max(1rem, env(safe-area-inset-bottom));
-
-		background: var(--color-bg-2);
-	}
-
-	/* Looks like the page's open button */
-	.pack-result-again {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-		gap: 0.6rem;
-
-		min-height: 2.5rem;
-		padding: 0.45rem 0.75rem 0.45rem 1.25rem;
-
-		color: var(--color-text-alt);
-		background: var(--color-accent-primary);
-
-		&:hover:not(:disabled) {
-			background: var(--color-accent-primary-dark);
-		}
-
-		&:disabled {
-			color: var(--color-text-muted);
-			background: var(--color-bg-4);
-			opacity: 1;
-		}
-	}
-
-	.pack-result-count {
-		min-width: 1.6rem;
-		padding: 0.1rem 0.45rem;
-
-		background: rgb(255 255 255 / 22%);
-		border-radius: 999px;
-
-		font-size: 0.8rem;
-		font-weight: 700;
-		font-variant-numeric: tabular-nums;
-		text-align: center;
-	}
-
-	.pack-result-again:disabled .pack-result-count {
-		background: var(--color-bg-2);
-	}
-
-	/* Looks like the generic buttons */
-	.pack-result-return {
-		display: inline-flex;
-		align-items: center;
-		justify-content: center;
-
-		min-height: 2.5rem;
-		min-width: 8rem;
-		padding: 0.45rem 1.25rem;
-
-		color: var(--color-text-alt);
-		background: var(--color-accent-secondary);
-		border-radius: 0.55rem;
-
-		font-weight: 600;
-		line-height: 1.3;
-		text-decoration: none;
-
-		transition: background-color 120ms ease;
-	}
-
-	.pack-result-return:hover {
-		color: var(--color-text-alt);
-		background: var(--color-accent-secondary-dark);
-	}
-
-	.pack-result-return:focus-visible {
-		outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
-		outline-offset: 2px;
-	}
-
-	.pack-showcase {
-		--showcase-scale: 0.8;
-		--showcase-cell: calc(30ch * var(--showcase-scale));
-		--showcase-cell-height: calc(30em * var(--showcase-scale));
-		--showcase-gap: 1.15rem;
-
-		margin: 0 auto;
-	}
-
-	.pack-showcase-title {
-		margin: 0 0 1rem;
-		text-align: center;
-	}
-
-	.pack-showcase-row {
-		display: flex;
-		flex-wrap: wrap;
-		justify-content: center;
-		gap: var(--showcase-gap);
-		width: calc(var(--pack-count) * var(--showcase-cell) + (var(--pack-count) - 1) * var(--showcase-gap));
-		max-width: 100%;
-		margin: 0 auto;
-	}
-
-	.pack-showcase-card {
-		width: var(--showcase-cell);
-		height: var(--showcase-cell-height);
-		animation: showcase-in 0.55s cubic-bezier(0.34, 1.4, 0.64, 1) both;
-	}
-
-	.pack-showcase-inner {
-		width: 30ch;
-		height: 30em;
-		transform: scale(var(--showcase-scale));
-		transform-origin: top left;
-	}
-
 	@media (width <= 1100px) {
 		.pack-reels {
 			--pack-scale: 0.42;
-		}
-
-		.pack-showcase {
-			--showcase-scale: 0.68;
 		}
 	}
 
@@ -718,19 +493,11 @@
 		.pack-reels {
 			--pack-scale: 0.32;
 		}
-
-		.pack-showcase {
-			--showcase-scale: 0.54;
-		}
 	}
 
 	@media (width <= 560px) {
 		.pack-reels {
 			--pack-scale: 0.24;
-		}
-
-		.pack-showcase {
-			--showcase-scale: 0.42;
 		}
 	}
 
@@ -761,18 +528,6 @@
 		100% {
 			opacity: 0;
 			transform: scale(1.3);
-		}
-	}
-
-	@keyframes showcase-in {
-		0% {
-			opacity: 0;
-			transform: scale(0.7);
-		}
-
-		100% {
-			opacity: 1;
-			transform: scale(1);
 		}
 	}
 </style>

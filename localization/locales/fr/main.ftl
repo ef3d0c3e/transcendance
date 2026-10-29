@@ -249,10 +249,7 @@ pack-opening-open-another = Ouvrir un autre booster
 pack-opening-error-collection = Collection introuvable
 pack-opening-error-empty = Ce booster ne contient aucune carte
 pack-opening-error-internal = Impossible d'ouvrir le booster
-pack-opening-obtained = Cartes obtenues
 pack-opening-back = Retour à l'inventaire
-pack-opening-return = Retour
-pack-opening-open-again = Ouvrir à nouveau
 pack-opening-remaining = { $count ->
     [0] Plus aucun booster
     [one] { $count } booster restant
