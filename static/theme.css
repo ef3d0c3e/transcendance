@@ -1089,6 +1089,28 @@ section {
 
 /* }}} */
 
+/* {{{ Error page */
+.error-page {
+    width: 100%;
+    max-width: 48rem;
+    margin-inline: auto;
+    padding-inline: 1rem;
+}
+
+.error-page > h1 {
+    margin-bottom: 1.5rem;
+}
+
+.error-panel {
+    padding: clamp(1rem, 3vw, 2rem);
+    text-align: center;
+}
+
+.error-panel > p {
+    margin: 0;
+}
+/* }}} */
+
 /* {{{ Profile */
 .profile-page {
     width: 100%;
