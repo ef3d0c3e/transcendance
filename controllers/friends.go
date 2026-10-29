@@ -43,19 +43,11 @@ func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 }
 
 func (fc *FriendsController) ApiFriendsGet(c *gin.Context) {
-	userID := GetAuthenticatedUser(c).ID;
 	targetID := c.Param("target")
-	if (targetID == "/") { //no target, query all relations from active user
-		var rel []models.Relation;
-		res := fc.DB.Find(&rel).
-		Where("user_id = ?", userID).
-		Order("Type")
-		if res.RowsAffected == 0 {
-			//c.JSON(http.StatusOK, "No friends or pending requests")
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"relations": rel})
-	} else { //query specific relation
+	if (targetID == "/") {
+		c.JSON(http.StatusBadRequest, "No specified user")
+		return;
+	} else {
 		targetID = strings.ReplaceAll(targetID, "/", "")
 		targetID, _ := strconv.Atoi(targetID)
 		target := models.User{}
@@ -163,13 +155,23 @@ func (fc *FriendsController) FriendsGet(c *gin.Context) {
 		c.Redirect(http.StatusTemporaryRedirect, "/login")
 	}
 
+	var relation models.Relation
+	var friends []models.User
+	fc.DB.Model(&relation).
+	Where("user_id = ? and type = ?", user.ID, "friends").
+	Association("Target").
+	Find(&friends)
+
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": fc.Renderer.T(c, "friends-title"),
 		"User":  user,
 	})
 
-	builder.Add("friends", "Content", map[string]any{
+	builder.Add("search_user", "Content", map[string]any{
 		"User":     user,
+		"Username": user.Username,
+		"Users": friends,
+		"FormAction": "/friends",
 	})
 
 	fc.Renderer.Render(c, &builder)
