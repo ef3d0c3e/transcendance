@@ -249,10 +249,7 @@ pack-opening-open-another = Open another pack
 pack-opening-error-collection = Collection not found
 pack-opening-error-empty = This booster has no cards
 pack-opening-error-internal = Failed to open the pack
-pack-opening-obtained = Cards obtained
 pack-opening-back = Back to inventory
-pack-opening-return = Return
-pack-opening-open-again = Open again
 pack-opening-remaining = { $count ->
     [0] No boosters left
     [one] { $count } booster left
