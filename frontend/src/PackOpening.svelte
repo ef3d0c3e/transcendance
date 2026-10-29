@@ -25,7 +25,9 @@
 	// onto the card it landed on.
 	const SPIN_MIN_MS = 5000;
 	const SPIN_MAX_MS = 9000;
-	const SPIN_EASE = "cubic-bezier(0.08, 0.72, 0.16, 1)";
+	// Starts from rest, peaks at about twice the average speed a third of the
+	// way in, then slows down onto the payline
+	const SPIN_EASE = "cubic-bezier(0.4, 0.15, 0.3, 1)";
 	const BOUNCE_MS = 280;
 	const BOUNCE_EASE = "cubic-bezier(0.34, 1.3, 0.64, 1)";
 	// How far the reel drops past the won card before springing back, in cards.
@@ -33,7 +35,7 @@
 	const OVERSHOOT_CELLS = 0.3;
 	// How far the stack is pulled up before it starts its drop, in cards.
 	// Matches reelBelow on the server, the cards stacked beneath the winner
-	const RUN_CELLS = 24;
+	const RUN_CELLS = 12;
 	// Share of the viewport the reels may use
 	const REELS_MAX_WIDTH = 0.92;
 	const REELS_MAX_HEIGHT = 0.7;
