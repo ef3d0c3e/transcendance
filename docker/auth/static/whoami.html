@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Admin session · transcendance</title>
+	<link rel="stylesheet" href="/auth/static/style.css">
+</head>
+<body>
+	<main class="panel">
+		<h1>Signed in</h1>
+		<p>You are signed in as <strong>{{ .User }}</strong> until {{ .Expires }}.</p>
+		<nav class="tools">
+			<a href="/grafana/">Grafana</a>
+			<a href="/kibana/">Kibana</a>
+			<a href="/prometheus/">Prometheus</a>
+			<a href="/alertmanager/">Alertmanager</a>
+		</nav>
+		<form method="post" action="/auth/logout">
+			<button type="submit">Sign out</button>
+		</form>
+	</main>
+</body>
+</html>
