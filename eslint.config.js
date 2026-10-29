@@ -10,6 +10,7 @@ export default [
 			'eslint.config.js',
 			'frontend/dist/',
 			'frontend/vite.config.js',
+			'static/vendor/e-layout.min.js',
 		],
 	},
 
