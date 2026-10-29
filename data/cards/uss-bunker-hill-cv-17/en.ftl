@@ -1,0 +1,2 @@
+title = USS Bunker Hill (CV-17)
+description = USS Bunker Hill was one of 24 Essex-class aircraft carriers built during World War II for the United States Navy. Commissioned in May 1943, Bunker Hill was the first U.S. Navy ship to have been named for the 1775 Battle of Bunker Hill, and received the Presidential Unit Citation in recognition of her distinguished service throughout the Pacific Theater.
