@@ -161,6 +161,58 @@ func TestDrawPackRespectsSingleRarityPool(t *testing.T) {
 	}
 }
 
+func TestBoosterOdds(t *testing.T) {
+	cases := []struct {
+		name     string
+		byRarity map[string][]*data.Card
+		want     map[string]int
+	}{
+		{
+			name: "every tier",
+			byRarity: map[string][]*data.Card{
+				"common":    {testCard("c", "common")},
+				"rare":      {testCard("r", "rare")},
+				"legendary": {testCard("l", "legendary")},
+			},
+			want: map[string]int{"common": 80, "rare": 15, "legendary": 5},
+		},
+		{
+			name: "missing legendary falls to rare",
+			byRarity: map[string][]*data.Card{
+				"common": {testCard("c", "common")},
+				"rare":   {testCard("r", "rare")},
+			},
+			want: map[string]int{"common": 80, "rare": 20},
+		},
+		{
+			name: "common only",
+			byRarity: map[string][]*data.Card{
+				"common": {testCard("c", "common")},
+			},
+			want: map[string]int{"common": 100},
+		},
+		{
+			name:     "empty collection",
+			byRarity: map[string][]*data.Card{},
+			want:     map[string]int{},
+		},
+	}
+
+	for _, tc := range cases {
+		got := boosterOdds(tc.byRarity)
+		if len(got) != len(tc.want) {
+			t.Errorf("%s: boosterOdds = %v, want %v", tc.name, got, tc.want)
+			continue
+		}
+		for tier, percent := range tc.want {
+			if got[tier] != percent {
+				t.Errorf("%s: boosterOdds = %v, want %v", tc.name, got, tc.want)
+				break
+			}
+		}
+	}
+}
+
 func TestDrawPackEmptyCollection(t *testing.T) {
 	rnd := rand.New(rand.NewPCG(1, 2))
 	if pack := drawPack(rnd, map[string][]*data.Card{}, testPackSize); pack != nil {

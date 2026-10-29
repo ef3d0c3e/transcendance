@@ -29,6 +29,7 @@ type openingResponse struct {
 	Next           uint            `json:"next"`
 	Remaining      int             `json:"remaining"`
 	RemainingLabel string          `json:"remainingLabel"`
+	Owned          int             `json:"owned"`
 	Message        string          `json:"message"`
 }
 
@@ -218,6 +219,46 @@ func TestOpenBoosterOfOtherUser(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	require.Equal(t, "/inventory?tab=boosters", rec.Header().Get("Location"))
+}
+
+func TestOpeningPage(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packopen8", "foo-bar-baz-qux", 0)
+	giveBoosters(t, "packopen8", collectionDev, 5, 2)
+	cookie := login(t, router, "packopen8", "foo-bar-baz-qux")
+
+	booster := ownedBoosters(t, "packopen8")[0]
+	page := func() string {
+		req := httptest.NewRequest(http.MethodGet, "/opening?booster="+strconv.FormatUint(uint64(booster.ID), 10), nil)
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		require.Equal(t, http.StatusOK, rec.Code)
+		return stripIsolation(rec.Body.String())
+	}
+
+	body := page()
+	require.Contains(t, body, `<span id="pack-remaining">2 boosters left</span>`)
+	require.Contains(t, body, `<strong id="pack-owned">0</strong> / <span id="pack-total">5</span>`)
+	// The dev collection holds every rarity, so the drop table is unchanged
+	require.Regexp(t, `data-rarity="common">\s*<span class="pack-odds-label">Common</span>\s*<span class="pack-odds-value">80%</span>`, body)
+	require.Regexp(t, `data-rarity="rare">\s*<span class="pack-odds-label">Rare</span>\s*<span class="pack-odds-value">15%</span>`, body)
+	require.Regexp(t, `data-rarity="legendary">\s*<span class="pack-odds-label">Legendary</span>\s*<span class="pack-odds-value">5%</span>`, body)
+	require.Regexp(t, `data-rarity="foil">\s*<span class="pack-odds-label">Foil</span>\s*<span class="pack-odds-value">5%</span>`, body)
+
+	// Rarest cards first
+	chase := body[strings.Index(body, `class="pack-chase"`):]
+	require.Contains(t, chase, `href="/collections/1/"`)
+	require.Less(t, strings.Index(chase, "LEGENDARY"), strings.Index(chase, "RARE"))
+
+	// Opening refreshes the progress with the distinct cards obtained
+	code, resp := openBooster(t, router, cookie, booster.ID)
+	require.Equal(t, http.StatusOK, code)
+	distinct := map[uint]bool{}
+	for _, card := range ownedCards(t, "packopen8") {
+		distinct[card.CardID] = true
+	}
+	require.Equal(t, len(distinct), resp.Owned)
 }
 
 func TestOpenBoosterUnauthenticated(t *testing.T) {
