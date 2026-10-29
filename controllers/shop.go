@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -36,6 +37,12 @@ func boosterPrice(collectionID int) uint {
 		return price
 	}
 	return defaultBoosterPrice
+}
+
+// BoosterPrice returns the coin price of one booster of a collection, as sold
+// by the shop.
+func BoosterPrice(collectionID int) uint {
+	return boosterPrice(collectionID)
 }
 
 // topupPack is one bundle of coins sold by the shop's checkout.
@@ -73,11 +80,39 @@ type shopBooster struct {
 	Data       map[string]any
 }
 
-// One coin pack on sale in the shop
-type shopTopup struct {
-	ID    string
-	Label string
-	Price string
+// One coin pack on sale in the top-up popup
+type TopupChoice struct {
+	ID string
+	// Coins credited, lets the page gray out packs that fall short
+	Amount uint
+	Label  string
+	Price  string
+}
+
+// TopupChoices returns the coin packs of the top-up popup, with their labels
+func TopupChoices(c *gin.Context, renderer *views.Renderer) []TopupChoice {
+	topups := make([]TopupChoice, 0, len(topupPacks))
+	for _, pack := range topupPacks {
+		// Euros and cents go as strings so they skip number grouping
+		topups = append(topups, TopupChoice{
+			ID:     pack.ID,
+			Amount: pack.Amount,
+			Label:  renderer.T(c, "shop-price", "amount", pack.Amount),
+			Price: renderer.T(c, "shop-topup-price",
+				"euros", strconv.Itoa(int(pack.PriceCents/100)),
+				"cents", fmt.Sprintf("%02d", pack.PriceCents%100)),
+		})
+	}
+	return topups
+}
+
+// topupReturn returns where to go back after a top-up, "" when the requested
+// page isn't a path of this site
+func topupReturn(raw string) string {
+	if !strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") || strings.HasPrefix(raw, "/\\") {
+		return ""
+	}
+	return raw
 }
 
 // collectionTitle returns the localized title of a collection, falling back
@@ -182,18 +217,9 @@ func (sc *Controller) ShopGet(c *gin.Context) {
 	})
 
 	// Checkout is only offered once logged in
-	topups := make([]shopTopup, 0, len(topupPacks))
+	var topups []TopupChoice
 	if user != nil {
-		for _, pack := range topupPacks {
-			// Euros and cents go as strings so they skip number grouping
-			topups = append(topups, shopTopup{
-				ID:    pack.ID,
-				Label: sc.Renderer.T(c, "shop-price", "amount", pack.Amount),
-				Price: sc.Renderer.T(c, "shop-topup-price",
-					"euros", strconv.Itoa(int(pack.PriceCents/100)),
-					"cents", fmt.Sprintf("%02d", pack.PriceCents%100)),
-			})
-		}
+		topups = TopupChoices(c, sc.Renderer)
 	}
 
 	notice := sc.notice(c)
@@ -320,5 +346,10 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		return
 	}
 
+	// Pages offering the popup outside the shop get the user back to them
+	if back := topupReturn(c.PostForm("return")); back != "" {
+		c.Redirect(http.StatusSeeOther, back)
+		return
+	}
 	c.Redirect(http.StatusSeeOther, "/shop?topup="+packID)
 }

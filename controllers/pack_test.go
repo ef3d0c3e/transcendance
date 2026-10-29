@@ -246,6 +246,8 @@ func TestOpeningPage(t *testing.T) {
 	require.Regexp(t, `data-rarity="legendary">\s*<span class="pack-odds-label">Legendary</span>\s*<span class="pack-odds-value">5%</span>`, body)
 	require.Regexp(t, `data-rarity="foil">\s*<span class="pack-odds-label">Foil</span>\s*<span class="pack-odds-value">5%</span>`, body)
 	require.Contains(t, body, `id="pack-background"`)
+	require.Contains(t, body, `data-autostart="true"`)
+	require.Contains(t, body, `<button type="submit" class="pack-open" >`)
 
 	// Rarest cards first
 	chase := body[strings.Index(body, `class="pack-chase"`):]
@@ -260,6 +262,107 @@ func TestOpeningPage(t *testing.T) {
 		distinct[card.CardID] = true
 	}
 	require.Equal(t, len(distinct), resp.Owned)
+}
+
+func TestOpeningBuyWithCoins(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packbuy1", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "packbuy1", "foo-bar-baz-qux")
+	// One booster of the dev collection costs 250 coins
+	require.NoError(t, tests.DB.Model(&models.User{}).Where("id = ?", userID(t, "packbuy1")).Update("coins", 400).Error)
+
+	rec := postForm(t, router, cookie, "/opening/buy", url.Values{"collection": {"1"}})
+	require.Equal(t, http.StatusOK, rec.Code)
+	var resp struct {
+		openingResponse
+		Coins      uint   `json:"coins"`
+		CoinsLabel string `json:"coinsLabel"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &resp))
+	require.Len(t, resp.Reels, 5)
+	require.Equal(t, uint(150), resp.Coins)
+	require.Equal(t, "150 coins", stripIsolation(resp.CoinsLabel))
+	require.Equal(t, uint(150), shopBalance(t, "packbuy1"))
+	// Opened right away: cards, but no booster left behind
+	require.Len(t, ownedCards(t, "packbuy1"), 5)
+	require.Empty(t, ownedBoosters(t, "packbuy1"))
+
+	// 150 coins don't cover another one
+	rec = postForm(t, router, cookie, "/opening/buy", url.Values{"collection": {"1"}})
+	require.Equal(t, http.StatusPaymentRequired, rec.Code)
+	require.Equal(t, uint(150), shopBalance(t, "packbuy1"))
+	require.Len(t, ownedCards(t, "packbuy1"), 5)
+
+	rec = postForm(t, router, cookie, "/opening/buy", url.Values{"collection": {"999"}})
+	require.Equal(t, http.StatusNotFound, rec.Code)
+
+	rec = postForm(t, router, nil, "/opening/buy", url.Values{"collection": {"1"}})
+	require.Equal(t, http.StatusForbidden, rec.Code)
+}
+
+func TestOpeningPageWithoutBooster(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packbuy2", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "packbuy2", "foo-bar-baz-qux")
+
+	req := httptest.NewRequest(http.MethodGet, "/opening?collection=1", nil)
+	req.AddCookie(cookie)
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body := stripIsolation(rec.Body.String())
+
+	// Nothing to open: the buy button shows instead, and nothing starts on its own
+	require.Regexp(t, `<button type="submit" class="pack-open" hidden>`, body)
+	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" aria-label="Open again for 250 coins"\s+>`, body)
+	require.Contains(t, body, `data-autostart="false"`)
+	require.Contains(t, body, `<span id="pack-coins">0 coins</span>`)
+	// Topping up comes back here
+	require.Contains(t, body, `id="shop-topup-popup"`)
+	require.Contains(t, body, `<input type="hidden" name="return" value="/opening?collection=1&amp;buy=1">`)
+	require.Contains(t, body, `data-auto-buy="false"`)
+	// Each pack tells how much it credits, to gray out the ones falling short
+	require.Contains(t, body, `data-amount="100"`)
+
+	// Back from the top-up, the page buys the booster it was for
+	rec = shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
+		"pack":   {"medium"},
+		"return": {"/opening?collection=1&buy=1"},
+	}, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/opening?collection=1&buy=1", rec.Header().Get("Location"))
+	require.Equal(t, uint(500), shopBalance(t, "packbuy2"))
+
+	req = httptest.NewRequest(http.MethodGet, "/opening?collection=1&buy=1", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusOK, rec.Code)
+	body = stripIsolation(rec.Body.String())
+	require.Contains(t, body, `data-auto-buy="true"`)
+	require.Contains(t, body, `<span id="pack-coins">500 coins</span>`)
+
+	// Unknown collections still go back to the inventory
+	req = httptest.NewRequest(http.MethodGet, "/opening?collection=999", nil)
+	req.AddCookie(cookie)
+	rec = httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+}
+
+func TestShopTopupIgnoresForeignReturn(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packbuy3", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "packbuy3", "foo-bar-baz-qux")
+
+	for _, back := range []string{"https://example.com/", "//example.com/", "/\\example.com/", "opening"} {
+		rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
+			"pack":   {"small"},
+			"return": {back},
+		}, cookie)
+		require.Equal(t, http.StatusSeeOther, rec.Code)
+		require.Equal(t, "/shop?topup=small", rec.Header().Get("Location"), back)
+	}
 }
 
 func TestOpenBoosterUnauthenticated(t *testing.T) {

@@ -256,6 +256,8 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-buy = Ouvrir à nouveau
+pack-opening-buy-label = Ouvrir à nouveau pour { $price }
 pack-opening-odds-title = Taux d'obtention
 pack-opening-odds-foil = Holographique
 pack-opening-odds-note = Chaque carte du booster est tirée séparément.

@@ -1,12 +1,16 @@
 <script>
 	import { onMount, tick } from "svelte";
+	import { openTopup } from "./topup.js";
 
 	let {
 		formSelector,
 		openLabel,
 		retryLabel,
 		errorLabel,
+		coins: initialCoins = 0,
 		autostart = false,
+		// Back from a top-up: buy the booster it was for
+		autoBuy = false,
 	} = $props();
 
 	let reels = $state([]);
@@ -18,6 +22,13 @@
 	let reelScale = $state(null);
 
 	let stageElement = $state();
+	// The page's form, with its open button for boosters left in the stack,
+	// and its buy button once they are all opened
+	let pageForm;
+	let openButton;
+	let buyButton;
+	// Balance, kept up to date by every purchase
+	let coins = initialCoins;
 	let timers = [];
 
 	// Slot machine: five vertical reels side by side. Each drops past its
@@ -42,6 +53,8 @@
 	const REELS_MAX_SCALE = 1;
 	// Time to look at the landed cards before going back to the open button
 	const REVEAL_MS = 1200;
+	// Buys a booster of a collection and opens it at once
+	const BUY_URL = "/opening/buy";
 	// Period of the cards' sway, picked per reel so they never move in sync
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
@@ -75,11 +88,10 @@
 		stageElement.scrollIntoView({ behavior: scrollBehavior(), block: "center" });
 	}
 
-	// Back to the top of the page, where the open button is
-	function scrollToForm(form, button) {
+	// Back to the top of the page, where the open buttons are
+	function scrollToForm(button) {
 		window.scrollTo({ top: 0, behavior: scrollBehavior() });
-		const target = button.hidden ? form.querySelector("a") : button;
-		target?.focus({ preventScroll: true });
+		button.focus({ preventScroll: true });
 	}
 
 	// Failure reported by the server, its message is shown as is
@@ -104,11 +116,17 @@
 		});
 	}
 
-	async function requestPack(form) {
-		const response = await fetch(form.action, {
-			method: form.method,
-			body: new FormData(form),
-		});
+	// Opens the booster of the form, or buys one of the collection with coins
+	async function requestPack(buy) {
+		const response = buy
+			? await fetch(BUY_URL, {
+				method: "POST",
+				body: new URLSearchParams({ collection: buyButton.dataset.collection }),
+			})
+			: await fetch(pageForm.action, {
+				method: pageForm.method,
+				body: new FormData(pageForm),
+			});
 		const data = await response.json();
 
 		if (!response.ok) {
@@ -124,6 +142,8 @@
 			remaining: left ?? 0,
 			remainingLabel: leftLabel ?? "",
 			owned,
+			coins: data.coins,
+			coinsLabel: data.coinsLabel ?? "",
 		};
 	}
 
@@ -211,7 +231,17 @@
 		});
 	}
 
-	async function openPack(form, button) {
+	// Disable both buttons while a pack is opening
+	function setButtonsDisabled(disabled) {
+		for (const button of [openButton, buyButton]) {
+			if (button) {
+				button.disabled = disabled;
+			}
+		}
+	}
+
+	// Open the next booster of the stack, or buy one with coins when buy is set
+	async function openPack(buy = false) {
 		if (busy) {
 			return;
 		}
@@ -222,23 +252,27 @@
 		reels = [];
 		failed = false;
 		message = "";
-		button.disabled = true;
-		button.classList.remove("is-ready");
+		setButtonsDisabled(true);
+		openButton?.classList.remove("is-ready");
+		buyButton?.classList.remove("is-ready");
 
 		try {
-			const result = await requestPack(form);
+			const result = await requestPack(buy);
 
 			if (result.reels.length === 0) {
 				showFailure(errorLabel);
 				return;
 			}
 
-			// The booster is consumed: chain into the next one of the stack, if any
-			const input = form.querySelector("input[name=booster]");
-			if (result.next && input) {
+			// The booster is consumed: chain into the next one of the stack, if
+			// any, else the next ones are bought
+			const input = pageForm.querySelector("input[name=booster]");
+			const chained = Boolean(result.next && input);
+			if (chained) {
 				input.value = result.next;
-			} else {
-				button.hidden = true;
+			}
+			if (typeof result.coins === "number") {
+				coins = result.coins;
 			}
 
 			reels = buildReels(result.reels);
@@ -254,19 +288,32 @@
 			await delay(Math.max(...durations) + BOUNCE_MS + 80);
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
-			button.textContent = retryLabel ?? openLabel;
+			openButton.textContent = retryLabel ?? openLabel;
+			openButton.hidden = !chained;
+			buyButton.hidden = chained;
 			// Calls for the next opening, until it is clicked
-			button.classList.add("is-ready");
+			const next = chained ? openButton : buyButton;
+			next.classList.add("is-ready");
 
-			// The won cards stay on the reels, the open button is ready for the next one
+			// The won cards stay on the reels, the button is ready for the next one
 			await delay(REVEAL_MS);
-			scrollToForm(form, button);
+			scrollToForm(next);
 		} catch (error) {
 			showFailure(error instanceof PackError ? error.message : errorLabel);
 		} finally {
 			busy = false;
-			button.disabled = false;
+			setButtonsDisabled(false);
 		}
+	}
+
+	// Buy the next booster when the balance covers it, else offer coins
+	function buyOrTopUp() {
+		const price = Number(buyButton.dataset.price);
+		if (coins >= price) {
+			openPack(true);
+			return;
+		}
+		openTopup(price - coins);
 	}
 
 	// Refresh the stack and collection progress shown on the page
@@ -279,6 +326,11 @@
 		const owned = document.querySelector("#pack-owned");
 		const total = Number(document.querySelector("#pack-total")?.textContent);
 		const bar = document.querySelector("#pack-progress-bar");
+		const balance = document.querySelector("#pack-coins");
+		if (balance && result.coinsLabel) {
+			balance.textContent = result.coinsLabel;
+		}
+
 		if (owned && typeof result.owned === "number") {
 			owned.textContent = String(result.owned);
 			if (bar && total > 0) {
@@ -293,21 +345,37 @@
 		if (!form) {
 			return;
 		}
+		pageForm = form;
+		openButton = form.querySelector("button[type=submit]");
+		buyButton = form.querySelector(".pack-buy");
 
 		function handleSubmit(event) {
 			event.preventDefault();
-			openPack(form, form.querySelector("button[type=submit]"));
+			openPack();
 		}
 
 		form.addEventListener("submit", handleSubmit);
+		buyButton?.addEventListener("click", buyOrTopUp);
 
 		// Coming from the inventory's open button: no need to click again
 		if (autostart) {
-			openPack(form, form.querySelector("button[type=submit]"));
+			openPack();
+		}
+
+		// Back from a top-up. The flag leaves the address first, so reloading
+		// the page never buys again.
+		if (autoBuy && buyButton) {
+			const url = new URL(window.location.href);
+			url.searchParams.delete("buy");
+			history.replaceState(history.state, "", url);
+			if (coins >= Number(buyButton.dataset.price)) {
+				openPack(true);
+			}
 		}
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
+			buyButton?.removeEventListener("click", buyOrTopUp);
 			clearTimers();
 		};
 	});
