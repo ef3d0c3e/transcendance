@@ -33,6 +33,10 @@ account-delete-success-self = Your account has been deleted
 account-delete-error-generic = Failed to delete account
 account-delete-error-missing = Missing account name
 account-delete-error-permission = You do not have permissions to delete { $username }'s account
+account-delete-title = Delete account
+account-delete-text = Permanently erase your account, profile, avatar, cards, boosters, coins and notifications. This cannot be undone.
+account-delete-submit = Delete my account
+account-delete-confirm = Your account and all of its data will be permanently erased. Continue?
 
 search-user-title = Search for users
 search-user-submit = Search

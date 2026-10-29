@@ -6,17 +6,17 @@ import (
 	"transcendance/models"
 
 	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 )
 
-func (ac *Controller) AccountDeleteGet(c *gin.Context) {
+// /api/account_delete POST: permanently delete the authenticated user's account, or the `username` account
+func (ac *Controller) AccountDeletePost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	username := ""
 	if user != nil {
 		username = user.Username
 	}
-	if v := c.Query("username"); v != "" {
+	if v := c.PostForm("username"); v != "" {
 		username = v
 	}
 
@@ -50,8 +50,9 @@ func (ac *Controller) AccountDeleteGet(c *gin.Context) {
 		return
 	}
 
-	count, err := gorm.G[models.User](ac.DB).Where("id = ?", otherUser.ID).Delete(c.Request.Context())
-	if err != nil || count != 1 {
+	// Permanently erase the user, related rows are removed by their ON DELETE CASCADE constraint
+	result := ac.DB.WithContext(c.Request.Context()).Unscoped().Delete(&models.User{}, otherUser.ID)
+	if result.Error != nil || result.RowsAffected != 1 {
 		log.Printf("Failed to delete user `%s'", username)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": ac.Renderer.T(c, "account-delete-error-generic"),
@@ -59,7 +60,8 @@ func (ac *Controller) AccountDeleteGet(c *gin.Context) {
 		return
 	}
 	log.Printf("Deleted user `%s'", username)
-	c.JSON(http.StatusNoContent, gin.H{
-		"message": ac.Renderer.T(c, "account-delete-success", "username", username),
-	})
+	if otherUser.ID == user.ID {
+		c.SetCookie("session_token", "", -1, "/", "", false, true)
+	}
+	c.Status(http.StatusNoContent)
 }
