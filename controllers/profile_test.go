@@ -68,20 +68,20 @@ func TestProfileBirthDate(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestProfileLengthsInCharacters(t *testing.T) {
+func TestProfileLengthsInBytes(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "proflength", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "proflength", "foo-bar-baz-qux")
 
-	// 244 characters, 488 bytes
-	bio := strings.Repeat("é", 244)
-	rec := postForm(t, router, cookie, "/profile", url.Values{"bio": {bio}, "contact": {strings.Repeat("ü", 256)}})
+	// 122 two-byte characters, 244 bytes
+	bio := strings.Repeat("é", 122)
+	rec := postForm(t, router, cookie, "/profile", url.Values{"bio": {bio}, "contact": {strings.Repeat("ü", 128)}})
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 	require.Equal(t, bio, userProfile(t, "proflength").Bio)
 
 	rec = postForm(t, router, cookie, "/profile", url.Values{"bio": {bio + "é"}})
 	require.Equal(t, http.StatusBadRequest, rec.Code)
-	rec = postForm(t, router, cookie, "/profile", url.Values{"contact": {strings.Repeat("ü", 257)}})
+	rec = postForm(t, router, cookie, "/profile", url.Values{"contact": {strings.Repeat("ü", 129)}})
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
