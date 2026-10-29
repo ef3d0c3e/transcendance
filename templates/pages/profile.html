@@ -6,6 +6,18 @@
 	<div id="avatar">
 		<img src="/avatars/{{ .Data.Profile.UserID }}" alt="{{ .T "profile-avatar-alt" "username" .Data.Profile.User.Username }}" width="128" height="128" style="object-fit: contain" />
 	</div>
+	{{ if not .Data.Own }}
+	<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
+		{{ if .Data.Online }}
+		{{ .T "user-status-online" }}
+		{{ else if .Data.Profile.User.LastSeenAt }}
+		{{ .T "user-status-last-seen" }}
+		<time datetime="{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02" }}</time>
+		{{ else }}
+		{{ .T "user-status-offline" }}
+		{{ end }}
+	</p>
+	{{ end }}
 	<form method="post" action="{{ .Data.AvatarAction }}" enctype="multipart/form-data">
 		<label for="avatar-file">{{ .T "profile-avatar-label" }}</label>
 		<input type="file" id="avatar-file" name="avatar" accept="image/jpeg,image/png,image/webp" required title="{{ .T "profile-avatar-help" }}">
@@ -110,6 +122,16 @@
 	</div>
 	<div>
 		<p id="username">{{ .Data.Profile.User.Username }}</p>
+		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
+			{{ if .Data.Online }}
+			{{ .T "user-status-online" }}
+			{{ else if .Data.Profile.User.LastSeenAt }}
+			{{ .T "user-status-last-seen" }}
+			<time datetime="{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .Data.Profile.User.LastSeenAt.Format "2006-01-02" }}</time>
+			{{ else }}
+			{{ .T "user-status-offline" }}
+			{{ end }}
+		</p>
 	</div>
 	<div>
 		{{ if not .Data.Profile.BirthDate.IsZero }}

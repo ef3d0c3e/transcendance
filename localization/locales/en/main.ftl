@@ -57,6 +57,12 @@ search-user-sort-oldest = Oldest members
 search-user-sort-cards = Most cards
 search-user-joined = Joined:
 search-user-cards = Cards:
+search-user-filter-status = Status
+search-user-filter-status-all = Anyone
+search-user-filter-status-online = Online
+user-status-online = Online
+user-status-offline = Offline
+user-status-last-seen = Last seen:
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
