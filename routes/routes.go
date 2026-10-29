@@ -27,6 +27,9 @@ func RegisterRoutes(
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
+	// health.go
+	router.GET("/healthz", controller.HealthzGet)
+
 	// Static pages
 	pages := Pages{
 		DB:       db,
@@ -54,7 +57,12 @@ func RegisterRoutes(
 	router.HEAD("/avatars/:id", controller.AvatarGet)
 
 	// account.go
-	router.GET("/api/account_delete", controller.AccountDeleteGet)
+	router.POST("/api/account_delete", controller.AccountDeletePost)
+
+	// legal.go
+	router.GET("/terms", controller.TermsGet)
+	router.GET("/legal", controller.LegalGet)
+	router.GET("/contact", controller.ContactGet)
 
 	// user_search.go
 	router.GET("/search", controller.SearchUsersGet)
