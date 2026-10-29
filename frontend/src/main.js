@@ -90,20 +90,22 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 		const error = button.parentElement.querySelector('.section-error');
 
 		button.addEventListener('click', async () => {
-			if (!confirm(button.dataset.confirm)) return;
+			if (!confirm(button.dataset.confirm)) {
+				return;
+			}
 
 			button.disabled = true;
 			error.hidden = true;
 			try {
-				const res = await fetch(button.dataset.accountDelete, {
+				const response = await fetch(button.dataset.accountDelete, {
 					method: 'POST',
 					credentials: 'same-origin',
 				});
-				if (res.ok) {
+				if (response.ok) {
 					location.assign('/cards/search/');
 					return;
 				}
-				const body = await res.json().catch(() => ({}));
+				const body = await response.json().catch(() => ({}));
 				error.textContent = body.message || button.dataset.labelError;
 			} catch {
 				error.textContent = button.dataset.labelError;
