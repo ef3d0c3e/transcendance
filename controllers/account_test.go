@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -92,7 +93,7 @@ func TestAccountDeleteSelf1(t *testing.T) {
 	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
 		http.MethodPost,
-		"/api/account_delete",
+		fmt.Sprintf("/profiles/%d/delete", userID(t, "foo1")),
 		nil,
 	)
 	deleteReq.AddCookie(cookie)
@@ -124,7 +125,7 @@ func TestAccountDeleteErasesData(t *testing.T) {
 	require.NoError(t, tests.DB.Create(&models.Card{CardID: 1, Acquired: now, OwnerID: user.ID}).Error)
 	require.NoError(t, tests.DB.Create(&models.Booster{CollectionID: 1, Size: 1, Acquired: now, OwnerID: user.ID}).Error)
 
-	req := httptest.NewRequest(http.MethodPost, "/api/account_delete", nil)
+	req := httptest.NewRequest(http.MethodPost, fmt.Sprintf("/profiles/%d/delete", userID(t, "erase1")), nil)
 	req.AddCookie(cookie)
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
@@ -155,7 +156,7 @@ func TestAccountDeleteSelf2(t *testing.T) {
 	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
 		http.MethodPost,
-		"/api/account_delete",
+		fmt.Sprintf("/profiles/%d/delete", userID(t, "foo2")),
 		strings.NewReader("username=foo2"),
 	)
 	deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -188,7 +189,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
-			"/api/account_delete",
+			fmt.Sprintf("/profiles/%d/delete", userID(t, "other1")),
 			strings.NewReader("username=other1"),
 		)
 		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -200,7 +201,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		require.Equal(t, http.StatusForbidden, deleteRec.Code)
 	}
 
-	// Mod -> User: Ok
+	// Mod -> User: Fail
 	{
 		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo4", "123456789", 1)
@@ -212,7 +213,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
-			"/api/account_delete",
+			fmt.Sprintf("/profiles/%d/delete", userID(t, "other2")),
 			strings.NewReader("username=other2"),
 		)
 		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -221,14 +222,14 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		deleteRec := httptest.NewRecorder()
 		router.ServeHTTP(deleteRec, deleteReq)
 
-		require.Equal(t, http.StatusNoContent, deleteRec.Code)
+		require.Equal(t, http.StatusForbidden, deleteRec.Code)
 
 		var user models.User
 		err := tests.DB.
 			Where("username = ?", "other2").
 			First(&user).
 			Error
-		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
+		require.NoError(t, err)
 	}
 
 	// Mod -> Mod: Fail
@@ -243,7 +244,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
-			"/api/account_delete",
+			fmt.Sprintf("/profiles/%d/delete", userID(t, "other3")),
 			strings.NewReader("username=other3"),
 		)
 		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -267,7 +268,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
-			"/api/account_delete",
+			fmt.Sprintf("/profiles/%d/delete", userID(t, "other4")),
 			strings.NewReader("username=other4"),
 		)
 		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")
@@ -298,7 +299,7 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
-			"/api/account_delete",
+			fmt.Sprintf("/profiles/%d/delete", userID(t, "other5")),
 			strings.NewReader("username=other5"),
 		)
 		deleteReq.Header.Set("Content-Type", "application/x-www-form-urlencoded")

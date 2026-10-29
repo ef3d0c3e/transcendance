@@ -3,6 +3,7 @@ package controllers
 import (
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"net/url"
 	"strconv"
@@ -34,7 +35,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 
 	var userProfile models.UserProfile
 	if err := pc.DB.
-		Joins("User", pc.DB.Select("id", "username", "last_seen_at")).
+		Joins("User", pc.DB.Select("id", "username", "rank", "last_seen_at")).
 		Where("User.username = ?", profileUsername).
 		First(&userProfile).Error; err != nil {
 		pc.Renderer.RenderError(c, views.ErrorPage{
@@ -62,6 +63,8 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"Profile":           userProfile,
 		"Edit":              editMode,
 		"CanChangePassword": userProfile.UserID == user.ID,
+		"Admin":             user.Rank == 2,
+		"DeleteAction":      fmt.Sprintf("/profiles/%d/delete", userProfile.UserID),
 		"Own":               userProfile.UserID == user.ID,
 		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
 		"Locale":            pc.Renderer.Localizer.GetLocale(c),
@@ -84,6 +87,11 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		c.JSON(status, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
 		return
 	}
+	rank, processRank := c.GetPostForm("rank")
+	if processRank && authUser.Rank != 2 {
+		c.JSON(http.StatusForbidden, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
+		return
+	}
 	username, processUsername := c.GetPostForm("username")
 	bio, processBio := c.GetPostForm("bio")
 	birthDate, processBirthDate := c.GetPostForm("birthdate")
@@ -102,6 +110,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		"profile": {},
 	}
 	errorMessages := gin.H{
+		"rank":             "",
 		"username":         "",
 		"bio":              "",
 		"birthdate":        "",
@@ -111,6 +120,15 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		"confirm_password": "",
 	}
 	validRequest := true
+	if processRank {
+		value, err := strconv.ParseUint(rank, 10, 8)
+		if err != nil || value > 2 {
+			errorMessages["rank"] = pc.Renderer.T(c, "profile-error-rank")
+			validRequest = false
+		} else {
+			updates["user"]["rank"] = uint(value)
+		}
+	}
 
 	if processUsername && username != target.Username {
 		if len(username) < 3 || len(username) > 16 || !is_alphanumeric.MatchString(username) {
@@ -294,4 +312,33 @@ func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*
 		return nil, http.StatusInternalServerError
 	}
 	return target, 0
+}
+
+// ProfileDeletePost permanently deletes the account selected by profile ID.
+func (pc *Controller) ProfileDeletePost(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusForbidden, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
+		return
+	}
+	target, status := pc.profileTarget(c, user)
+	if status != 0 {
+		c.JSON(status, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
+		return
+	}
+
+	// Permanently erase the user, related rows are removed by their ON DELETE CASCADE constraint
+	result := pc.DB.WithContext(c.Request.Context()).Unscoped().Delete(&models.User{}, target.ID)
+	if result.Error != nil || result.RowsAffected != 1 {
+		log.Printf("Failed to delete user `%s'", target.Username)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": pc.Renderer.T(c, "account-delete-error-generic"),
+		})
+		return
+	}
+	log.Printf("Deleted user `%s'", target.Username)
+	if target.ID == user.ID {
+		c.SetCookie("session_token", "", -1, "/", "", false, true)
+	}
+	c.Status(http.StatusNoContent)
 }
