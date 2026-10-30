@@ -29,7 +29,10 @@
 		</div>
 		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
 		{{ if not .Data.Own }}
-		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		<div class="profile-links">
+			<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+			<a class="profile-inventory profile-message" href="?chat={{ .Data.Profile.User.Username }}" data-chat-open="{{ .Data.Profile.User.Username }}">{{ .T "profile-message" }}</a>
+		</div>
 		{{ end }}
 	</div>
 	{{ if not .Data.Own }}
@@ -162,7 +165,10 @@
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 		{{ if not .Data.Own }}
-		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		<div class="profile-links">
+			<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+			<a class="profile-inventory profile-message" href="?chat={{ .Data.Profile.User.Username }}" data-chat-open="{{ .Data.Profile.User.Username }}">{{ .T "profile-message" }}</a>
+		</div>
 		{{ end }}
 		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
 			{{ if .Data.Online }}

@@ -156,6 +156,7 @@ profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
 profile-inventory = View inventory
+profile-message = Send a message
 
 profile-rank = Rank
 profile-rank-user = User
