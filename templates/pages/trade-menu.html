@@ -1,0 +1,18 @@
+{{ define "trade-menu" }}
+<div class="trade-menu-page">
+	<h1 class="trade-menu-heading">{{ .T "trade-menu-title" "username" .Data.Target }}</h1>
+	<div id="trade-menu" data-target="{{ .Data.Target }}" data-stacks-url="{{ .Data.StacksUrl }}"
+		data-submit-url="{{ .Data.SubmitUrl }}" data-counter-id="{{ .Data.CounterID }}"
+		data-prefill-give="{{ .Data.GivePrefill }}" data-prefill-want="{{ .Data.WantPrefill }}"
+		data-label-give="{{ .T "trade-you-give" }}" data-label-get="{{ .T "trade-you-get" }}"
+		data-label-coins="{{ .T "trade-coins" }}" data-label-send="{{ .T "trade-send" }}"
+		data-label-counter="{{ .T "trade-counter-send" }}" data-label-back="{{ .T "trade-back" }}"
+		data-label-empty="{{ .T "trade-menu-empty" }}"
+		data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+		data-label-loading="{{ .T "trade-menu-loading" }}" data-label-increase="{{ .T "trade-menu-increase" }}"
+		data-label-decrease="{{ .T "trade-menu-decrease" }}" data-label-error="{{ .T "trade-menu-error-network" }}"></div>
+	<noscript>
+		<p class="trade-menu-noscript">{{ .T "trade-menu-noscript" }}</p>
+	</noscript>
+</div>
+{{ end }}

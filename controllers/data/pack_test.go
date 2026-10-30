@@ -285,9 +285,42 @@ func TestDrawDefaultPackEmptyPool(t *testing.T) {
 	}
 }
 
+func TestDrawDefaultPackRarityOdds(t *testing.T) {
+	// The default booster rolls the same drop table as a collection booster
+	pool := []poolCard{
+		testPoolCard("a", "common"),
+		testPoolCard("b", "common"),
+		testPoolCard("c", "rare"),
+		testPoolCard("d", "legendary"),
+	}
+
+	rnd := rand.New(rand.NewPCG(3, 4))
+	counts := map[string]int{}
+	samples := 100_000
+	for i := 0; i < samples; i++ {
+		for _, drawn := range drawDefaultPack(rnd, pool, 1) {
+			counts[drawn.card.Rarity]++
+		}
+	}
+
+	// Drop table is common 80%, rare 15%, legendary 5%
+	expected := map[string]float64{
+		"common":    0.80,
+		"rare":      0.15,
+		"legendary": 0.05,
+	}
+	for rarity, ratio := range expected {
+		got := float64(counts[rarity]) / float64(samples)
+		if got < ratio-0.02 || got > ratio+0.02 {
+			t.Errorf("rarity %s: share %.3f, want %.2f ± 0.02", rarity, got, ratio)
+		}
+	}
+}
+
 func TestDrawDefaultPackIsUniformAcrossCollections(t *testing.T) {
-	// A collection with one card and a collection with three: every card
-	// must be drawn as often as the others, whatever its collection
+	// A collection with one card and a collection with three: cards of the
+	// same rarity must be drawn as often as each other, whatever their
+	// collection
 	small := &data.Collection{ID: 1}
 	big := &data.Collection{ID: 2}
 	pool := []poolCard{
@@ -306,10 +339,11 @@ func TestDrawDefaultPackIsUniformAcrossCollections(t *testing.T) {
 		}
 	}
 
-	for _, drawn := range pool {
-		share := float64(counts[drawn.card.Name]) / float64(samples)
-		if share < 0.25-0.02 || share > 0.25+0.02 {
-			t.Errorf("card %s: share %.3f, want 0.25 ± 0.02", drawn.card.Name, share)
+	// The two commons split the common 80% of the drop table evenly
+	for _, name := range []string{"s", "x"} {
+		share := float64(counts[name]) / float64(samples)
+		if share < 0.40-0.02 || share > 0.40+0.02 {
+			t.Errorf("card %s: share %.3f, want 0.40 ± 0.02", name, share)
 		}
 	}
 }
