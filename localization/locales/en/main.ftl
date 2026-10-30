@@ -182,9 +182,6 @@ notification-info-title = { $title }
 notification-info-desc = { $description }
 
 catalog-title = Card catalog
-catalog-tabs-label = Catalog sections
-catalog-tab-cards = Cards
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -192,6 +189,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = All collections
 catalog-sort-number = Collection order
+catalog-filter-status = Collected
+catalog-filter-status-all = All cards
+catalog-filter-status-owned = Collected
+catalog-filter-status-missing = Missing
+catalog-sort-missing = Missing first
 
 inventory-title = Your inventory
 inventory-title-other = { $username }'s inventory
@@ -225,6 +227,7 @@ inventory-sort-name-desc = Name (Z-A)
 inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
