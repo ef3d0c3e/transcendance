@@ -1,0 +1,2 @@
+title = Churro
+description = A churro is a type of fried dough from Spanish and Portuguese cuisine, made with choux pastry dough piped into hot oil with a piping bag and large closed star tip or similar shape. They are also found in Latin American cuisine, Philippine cuisine and in other areas that have received immigration from Spanish- and Portuguese-speaking countries, especially in France and the Southwestern United States.

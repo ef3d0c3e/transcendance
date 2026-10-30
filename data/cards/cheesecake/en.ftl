@@ -1,0 +1,2 @@
+title = Cheesecake
+description = Cheesecake is a dessert made with a soft fresh cheese, and sugar, with either eggs or cream depending if it is to be baked or not. It may have a crust or base made from crushed cookies, digestive biscuits, graham crackers, pastry, or sometimes sponge cake. Cheesecake is known for its rich, creamy flavor and smooth texture. It may be baked or unbaked and is usually served chilled.

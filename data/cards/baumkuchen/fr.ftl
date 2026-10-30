@@ -1,0 +1,2 @@
+title = Gâteau à la broche
+description = Un gâteau à la broche est un gâteau cuit usuellement au feu de bois particulièrement populaire dans la cuisine polonaise, lituanienne, biélorusse, ou encore dans certaines régions françaises et semblable au Baumkuchen allemand. C'est un gâteau composé de beurre, d'œufs, de farine, de sucre et de crème, cuit à la broche tournante au four ou sur un feu ouvert.

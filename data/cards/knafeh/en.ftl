@@ -1,0 +1,2 @@
+title = Knafeh
+description = Knafeh is a traditional Arab dessert made with kadayif layered with cheese and soaked in a sweet, sugar-based syrup called attar. Knafeh is popular throughout the Arab world, especially Egypt and the Levant. Knafeh is often served on special occasions, holidays and Ramadan. The most common variant in Jordan and Palestine, Knafeh Nabulseyeh, originated in the Palestinian city of Nablus.

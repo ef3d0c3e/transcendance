@@ -1,0 +1,2 @@
+title = Churro
+description = Un churro est une pâtisserie originaire d'Espagne et du Portugal. Il se présente sous la forme d'une pâte frite en forme de « gros spaghetti » ou d'un beignet allongé qu'on sucre selon le goût. On en vend souvent dans les foires, dans des chocolateries ou dans les churrerias. À Séville, on les appelle des calentitos ou masa frita, à Jaén des tallos et à Grenade, des tejeringos.
