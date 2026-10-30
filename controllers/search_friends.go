@@ -18,7 +18,7 @@ func (sc *Controller) searchFriends(c *gin.Context, v *userSearchView) error {
 	}
 	v.Users = make([]userSearchResult, 0, userSearchPageSize)
 	return sc.userQuery(c, v).
-		Raw("SELECT users.id, username, users.created_at from users RIGHT JOIN relations ON users.id=relations.target_id WHERE (type = ? OR type = ?) AND relations.user_id = ?", "friends", "pending", GetAuthenticatedUser(c).ID).
+		Raw("SELECT users.id, username, users.created_at from users RIGHT JOIN relations ON users.id=relations.target_id WHERE type != ? AND relations.user_id = ?", "blocked", GetAuthenticatedUser(c).ID).
 		Order(clause.OrderBy{Expression: userOrder(v)}).
 		Offset((v.Page - 1) * userSearchPageSize).
 		Limit(userSearchPageSize).

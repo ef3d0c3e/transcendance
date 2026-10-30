@@ -14,6 +14,9 @@ import (
 func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 	user := models.User{}
 	db.First(&user, GetAuthenticatedUser(c).ID)
+	if user.ID == target.ID {
+		return "you"
+	}
 	relation := models.Relation{}
 	res := db.First(&relation, "user_id = ? and target_id = ?", user.ID, target.ID)
 	if res.RowsAffected == 0 {
