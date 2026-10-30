@@ -1,0 +1,2 @@
+title = Crème brûlée
+description = Crème brûlée, also known as burnt cream, Cambridge burnt cream, or Trinity cream, and virtually identical to crema catalana, is a dessert consisting of a rich custard base topped with a layer of hardened caramelized sugar. It is normally served slightly chilled; the heat from the caramelizing process tends to warm the top of the custard, while leaving the center cool.

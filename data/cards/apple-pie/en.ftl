@@ -1,0 +1,2 @@
+title = Apple pie
+description = An apple pie is a fruit pie in which the principal filling is apples. It generally has shortcrust pastry both above and below the filling; the upper pastry may be solid or latticed. The bottom pastry base may be baked separately to prevent it from getting soggy. Tarte Tatin is baked with the pastry on top, but this is served the opposite way round with the fruit exposed.

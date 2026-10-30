@@ -1,0 +1,2 @@
+title = Shortbread
+description = Shortbread or shortie is a traditional Scottish biscuit usually made from one part white sugar, two parts butter and three to four parts plain wheat flour. Shortbread does not contain leavening, such as baking powder or baking soda. Shortbread is widely associated with Christmas and Hogmanay festivities in Scotland, and some Scottish brands are exported around the world.
