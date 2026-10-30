@@ -21,6 +21,8 @@
 		maxlength="16"
 		pattern="[a-zA-Z0-9_]{3,16}"
 		title="3–16 chars, letters/digits/underscore">
+	<label for="email">{{ .T "account-email" }}</label>
+	<input type="text" inputmode="email" id="email" name="email" autocomplete="email" required maxlength="254">
 	<label for="password">{{ .T "register-password" }}</label>
 	<input
 		type="password"

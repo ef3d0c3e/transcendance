@@ -20,6 +20,7 @@ import (
 func createAccount(t *testing.T, router *gin.Engine, username string, password string, rank uint) {
 	form := url.Values{
 		"username":         {username},
+		"email":            {username + "@example.test"},
 		"password":         {password},
 		"password_confirm": {password},
 		"tos_agree":        {"on"},
