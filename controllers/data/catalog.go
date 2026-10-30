@@ -2,6 +2,7 @@ package data
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ import (
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 // Catalog card sort keeping the collection order, used when not searching
@@ -67,7 +69,10 @@ type catalogView struct {
 	Count int
 	// Collection whose cards are listed, nil on the catalog
 	Scope *data.Collection
-	// In a collection, the cards of it the logged in user owns, nil otherwise
+	// Viewed inventory owner; Viewed is empty for the authenticated user.
+	OwnerID uint
+	Viewed  string
+	// Cards owned by that user within the collection, nil for public views.
 	Owned map[uint]bool
 }
 
@@ -125,18 +130,35 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		"ClearUrl": action,
 		"Pages":    totalPages,
 		"Scoped":   v.Scope != nil,
+		"Viewed":   v.Viewed,
 	}
-	// A collection's cards are part of the logged in user's inventory: its
-	// tabs stay, on the collections one
-	if user := controllers.GetAuthenticatedUser(c); v.Scope != nil && user != nil {
-		cards, boosters, err := dc.inventoryCounts(user.ID)
+	if v.Viewed != "" {
+		fields["ViewedTitle"] = dc.Renderer.T(c, "inventory-title-other", "username", v.Viewed)
+		fields["ClearUrl"] = action + "?" + url.Values{"u": {v.Viewed}}.Encode()
+	}
+	// Keep the viewed inventory's tabs and counts over its collection cards.
+	if v.Scope != nil && v.OwnerID != 0 {
+		cards, boosters, err := dc.inventoryCounts(v.OwnerID)
 		if err != nil {
-			log.Printf("WARN failed to count the inventory of '%s': %s", user.Username, err)
+			log.Printf("WARN failed to count the inventory of user %d: %s", v.OwnerID, err)
 		} else {
+			tabURL := func(tab string) string {
+				params := url.Values{}
+				if v.Viewed != "" {
+					params.Set("u", v.Viewed)
+				}
+				if tab != inventoryTabBoosters {
+					params.Set("tab", tab)
+				}
+				if len(params) == 0 {
+					return "/inventory"
+				}
+				return "/inventory?" + params.Encode()
+			}
 			fields["Tab"] = inventoryTabCollections
-			fields["TabCardsUrl"] = "/inventory?tab=cards"
-			fields["TabBoostersUrl"] = "/inventory"
-			fields["TabCollectionsUrl"] = "/inventory?tab=collections"
+			fields["TabCardsUrl"] = tabURL(inventoryTabCards)
+			fields["TabBoostersUrl"] = tabURL(inventoryTabBoosters)
+			fields["TabCollectionsUrl"] = tabURL(inventoryTabCollections)
 			fields["TotalCards"] = cards
 			fields["TotalBoosters"] = boosters
 			fields["TotalCollections"] = len(dc.Data.Collections)
@@ -205,6 +227,9 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	}
 	content := builder.Add("catalog", "Content", fields)
 	params := url.Values{}
+	if v.Viewed != "" {
+		params.Set("u", v.Viewed)
+	}
 	if v.Query != "" {
 		params.Set("q", v.Query)
 	}
@@ -291,11 +316,27 @@ func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	}
 	if scope != nil {
 		v.Collection = scope.ID
-		// Logged in, the cards not collected yet are grayed out
+		// Use the same inventory owner as the collection tile that was opened.
 		if user := controllers.GetAuthenticatedUser(c); user != nil {
-			owned, err := dc.ownedCards(user.ID, scope)
+			v.OwnerID = user.ID
+			if viewed := c.Query("u"); viewed != "" && !strings.EqualFold(viewed, user.Username) {
+				var other models.User
+				if err := dc.DB.Select("id", "username").Where("username = ?", viewed).First(&other).Error; err != nil {
+					status := http.StatusInternalServerError
+					key := "card-search-error-internal"
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						status = http.StatusNotFound
+						key = "inventory-message-user-not-found"
+					}
+					dc.Renderer.RenderError(c, views.ErrorPage{User: user, StatusCode: status, Message: dc.Renderer.T(c, key)})
+					return
+				}
+				v.OwnerID = other.ID
+				v.Viewed = other.Username
+			}
+			owned, err := dc.ownedCards(v.OwnerID, scope)
 			if err != nil {
-				log.Printf("WARN failed to get the cards of collection %d owned by '%s': %s", scope.ID, user.Username, err)
+				log.Printf("WARN failed to get the cards of collection %d owned by user %d: %s", scope.ID, v.OwnerID, err)
 			} else {
 				v.Owned = owned
 			}

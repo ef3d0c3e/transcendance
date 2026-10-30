@@ -635,10 +635,14 @@ func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *i
 		if total > 0 {
 			percent = owned[collection.ID] * 100 / total
 		}
+		collectionURL := fmt.Sprint("/collections/", collection.ID, "/")
+		if userID != controllers.GetAuthenticatedUser(c).ID {
+			collectionURL += "?" + url.Values{"u": {v.Username}}.Encode()
+		}
 		v.Items = append(v.Items, map[string]any{
 			"Data": data,
-			// Lists the collection's cards
-			"Url":     fmt.Sprint("/collections/", collection.ID, "/"),
+			// Lists the collection's cards for the viewed user
+			"Url":     collectionURL,
 			"Owned":   owned[collection.ID],
 			"Total":   total,
 			"Percent": percent,

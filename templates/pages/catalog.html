@@ -3,11 +3,13 @@
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			{{ with .Data.ViewedTitle }}<p class="inventory-count">{{ . }}</p>{{ end }}
 			{{ if ne (len .Data.Items) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
 		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Action }}" method="get">
+			{{ with .Data.Viewed }}<input type="hidden" name="u" value="{{ . }}">{{ end }}
 			<input type="text" id="q" name="q" placeholder="{{ .T "card-search-placeholder" }}"
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "card-search-submit" }}></button>
