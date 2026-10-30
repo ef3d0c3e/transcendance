@@ -40,6 +40,8 @@ type ShoutboxController struct {
 	hub *shoutboxHub
 	// Messages are saved and broadcast one at a time, so clients receive them in order
 	postMu sync.Mutex
+	// Held while a user's ignores are saved or loaded and handed to the hub, so it never gets an outdated list
+	ignoreMu sync.Mutex
 }
 
 func NewShoutboxController(db *gorm.DB, renderer *views.Renderer) *ShoutboxController {
@@ -61,45 +63,83 @@ type shoutboxMessage struct {
 // Server to client frame
 //
 // Types:
-//   - `history`: the latest `messages`, oldest first, and the user's `locale`, sent on connection
-//   - `message`: a new `message` was posted
-//   - `ack`: the client's last message was posted
-//   - `error`: the client's last message was rejected, with the `error` code and `retryAfter` in milliseconds
+//   - `history`: the latest shoutbox `messages`, oldest first, the user's `conversations`, latest first, the users
+//     they `ignored` and their `locale`, sent on connection
+//   - `message`: a new shoutbox `message` was posted
+//   - `private`: a `private` message was sent to or by the user
+//   - `conversation`: the latest `privates` exchanged `with` a user, oldest first, in reply to `view`
+//   - `read`: the conversation `with` a user was read in another tab
+//   - `ignored`: the users the user now `ignored`
+//   - `ack`: the client's last request succeeded
+//   - `error`: the client's last request was rejected, with the `error` code and `retryAfter` in milliseconds
 //     when rate limited
 type shoutboxEvent struct {
-	Type       string            `json:"type"`
-	Locale     string            `json:"locale,omitempty"`
-	Messages   []shoutboxMessage `json:"messages,omitempty"`
-	Message    *shoutboxMessage  `json:"message,omitempty"`
-	Error      string            `json:"error,omitempty"`
-	RetryAfter int64             `json:"retryAfter,omitempty"`
+	Type          string               `json:"type"`
+	Locale        string               `json:"locale,omitempty"`
+	Messages      []shoutboxMessage    `json:"messages,omitempty"`
+	Message       *shoutboxMessage     `json:"message,omitempty"`
+	Conversations []chatConversation   `json:"conversations,omitempty"`
+	Private       *chatPrivateMessage  `json:"private,omitempty"`
+	With          string               `json:"with,omitempty"`
+	Privates      []chatPrivateMessage `json:"privates,omitempty"`
+	Ignored       []chatIgnoredUser    `json:"ignored,omitempty"`
+	Error         string               `json:"error,omitempty"`
+	RetryAfter    int64                `json:"retryAfter,omitempty"`
 }
 
-// Client to server frame, the only type is `send`
+// Client to server frame
+//
+// Types:
+//   - `send`: post `body` to the shoutbox, or privately `to` a user
+//   - `view`: show the conversation `with` a user, which is marked read and returned, or none when empty. New
+//     messages of a shown conversation are read right away and don't notify.
+//   - `ignore`: ignore a user (`username`) for a `duration`: `hour`, `day` or `week`
+//   - `unignore`: stop ignoring a user (`username`)
 type shoutboxRequest struct {
-	Type string  `json:"type"`
-	Body *string `json:"body"`
+	Type     string  `json:"type"`
+	Body     *string `json:"body"`
+	To       *string `json:"to"`
+	With     *string `json:"with"`
+	Username *string `json:"username"`
+	Duration *string `json:"duration"`
 }
 
-// Decode a client frame, which must be exactly one valid request
-func decodeShoutboxRequest(data []byte) (string, bool) {
+// Decode a client frame, which must be exactly one valid request with only the fields of its type
+func decodeShoutboxRequest(data []byte) (shoutboxRequest, bool) {
 	var req shoutboxRequest
 	dec := json.NewDecoder(bytes.NewReader(data))
 	dec.DisallowUnknownFields()
 	if err := dec.Decode(&req); err != nil {
-		return "", false
+		return req, false
 	}
 	if _, err := dec.Token(); !errors.Is(err, io.EOF) {
-		return "", false
+		return req, false
 	}
-	if req.Type != "send" || req.Body == nil {
-		return "", false
+
+	switch req.Type {
+	case "send":
+		return req, req.Body != nil && req.With == nil && req.Username == nil && req.Duration == nil
+	case "view":
+		return req, req.With != nil && req.Body == nil && req.To == nil && req.Username == nil && req.Duration == nil
+	case "ignore":
+		_, ok := chatIgnoreDurations[deref(req.Duration)]
+		return req, ok && req.Username != nil && req.Body == nil && req.To == nil && req.With == nil
+	case "unignore":
+		return req, req.Username != nil && req.Body == nil && req.To == nil && req.With == nil && req.Duration == nil
+	default:
+		return req, false
 	}
-	return *req.Body, true
 }
 
-// The latest messages, oldest first
-func (sc *ShoutboxController) history(ctx context.Context) ([]shoutboxMessage, error) {
+func deref(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+// The latest messages, oldest first, without those of users the user ignores
+func (sc *ShoutboxController) history(ctx context.Context, userID uint) ([]shoutboxMessage, error) {
 	var rows []struct {
 		ID        uint
 		Username  string
@@ -111,6 +151,8 @@ func (sc *ShoutboxController) history(ctx context.Context) ([]shoutboxMessage, e
 		Table("shoutbox_messages AS m").
 		Select("m.id, u.username, m.body, m.created_at").
 		Joins("JOIN users AS u ON u.id = m.user_id AND u.deleted_at IS NULL").
+		Where("NOT EXISTS (SELECT 1 FROM user_ignores AS i WHERE i.user_id = ? AND i.ignored_id = m.user_id AND i.until > ?)",
+			userID, time.Now()).
 		Order("m.id DESC").
 		Limit(shoutboxHistorySize).
 		Scan(&rows).
@@ -129,6 +171,25 @@ func (sc *ShoutboxController) history(ctx context.Context) ([]shoutboxMessage, e
 		}
 	}
 	return messages, nil
+}
+
+// The `history` event sent on connection
+func (sc *ShoutboxController) historyEvent(ctx context.Context, c *gin.Context, userID uint, ignored []chatIgnoredUser) ([]byte, error) {
+	history, err := sc.history(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	conversations, err := sc.conversations(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+	return json.Marshal(shoutboxEvent{
+		Type:          "history",
+		Locale:        sc.Renderer.Localizer.GetLocale(c),
+		Messages:      history,
+		Conversations: conversations,
+		Ignored:       ignored,
+	})
 }
 
 // Whether the session the client connected with is still valid
@@ -163,12 +224,13 @@ func queueShoutboxEvent(client *shoutboxClient, event shoutboxEvent) {
 	client.queue(payload)
 }
 
-// Validate, save and broadcast a message, returns false if the client must be disconnected
-func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, token string, username string, raw string) bool {
+// Check a message can be posted, queues the error for the client otherwise. Returns the sanitized body, and
+// false if the client must be disconnected.
+func (sc *ShoutboxController) prepare(ctx context.Context, client *shoutboxClient, token string, raw string) (string, bool) {
 	body, code := sanitizeShoutboxMessage(raw)
 	if code != "" {
 		queueShoutboxEvent(client, shoutboxEvent{Type: "error", Error: code})
-		return true
+		return "", true
 	}
 	if ok, wait := sc.hub.allow(client.userID); !ok {
 		queueShoutboxEvent(client, shoutboxEvent{
@@ -176,13 +238,17 @@ func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, 
 			Error:      shoutboxErrorRateLimited,
 			RetryAfter: (wait + time.Millisecond - 1).Milliseconds(),
 		})
-		return true
+		return "", true
 	}
 	// Logging out doesn't close other tabs' connections
 	if !sc.sessionValid(ctx, token) {
-		return false
+		return "", false
 	}
+	return body, true
+}
 
+// Save and broadcast a shoutbox message
+func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, username string, body string) {
 	sc.postMu.Lock()
 	defer sc.postMu.Unlock()
 
@@ -190,7 +256,7 @@ func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, 
 	if err := sc.DB.WithContext(ctx).Create(&msg).Error; err != nil {
 		log.Printf("Shoutbox: failed to save message: %s", err)
 		queueShoutboxEvent(client, shoutboxEvent{Type: "error", Error: shoutboxErrorInternal})
-		return true
+		return
 	}
 	payload, err := json.Marshal(shoutboxEvent{
 		Type: "message",
@@ -203,11 +269,39 @@ func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, 
 	})
 	if err != nil {
 		log.Printf("Shoutbox: failed to encode message: %s", err)
-		return true
+		return
 	}
-	sc.hub.broadcast(payload)
+	sc.hub.broadcast(client.userID, payload)
 	// Queued after the broadcast, so the sender has its message when the ack arrives
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
+}
+
+// Handle a client request, returns false if the client must be disconnected
+func (sc *ShoutboxController) handle(ctx context.Context, client *shoutboxClient, token string, user *AuthenticatedUser, req shoutboxRequest) bool {
+	if req.Type == "send" {
+		body, ok := sc.prepare(ctx, client, token, *req.Body)
+		if !ok || body == "" {
+			return ok
+		}
+		if req.To == nil {
+			sc.post(ctx, client, user.Username, body)
+		} else {
+			sc.sendPrivate(ctx, client, user.Username, *req.To, body)
+		}
+		return true
+	}
+
+	if !sc.sessionValid(ctx, token) {
+		return false
+	}
+	switch req.Type {
+	case "view":
+		sc.view(ctx, client, *req.With)
+	case "ignore":
+		sc.ignore(ctx, client, *req.Username, chatIgnoreDurations[*req.Duration])
+	case "unignore":
+		sc.ignore(ctx, client, *req.Username, 0)
+	}
 	return true
 }
 
@@ -261,29 +355,27 @@ func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 	defer func() { _ = conn.CloseNow() }()
 	conn.SetReadLimit(shoutboxReadLimit)
 
+	ctx, cancel := context.WithCancel(c.Request.Context())
+	defer cancel()
+
 	client := newShoutboxClient(user.ID)
-	if !sc.hub.register(client) {
+	registered, ignored, err := sc.registerClient(ctx, client)
+	if err != nil {
+		log.Printf("Shoutbox: failed to load ignored users: %s", err)
+		_ = conn.Close(websocket.StatusInternalError, "internal error")
+		return
+	}
+	if !registered {
 		_ = conn.Close(shoutboxCloseTooManyConnections, "too many connections")
 		return
 	}
 	defer sc.hub.unregister(client)
 
-	ctx, cancel := context.WithCancel(c.Request.Context())
-	defer cancel()
-
 	// Registered first so no message is missed, clients ignore the ones they already have
-	history, err := sc.history(ctx)
+	payload, err := sc.historyEvent(ctx, c, user.ID, ignored)
 	if err != nil {
 		log.Printf("Shoutbox: failed to load history: %s", err)
 		_ = conn.Close(websocket.StatusInternalError, "internal error")
-		return
-	}
-	payload, err := json.Marshal(shoutboxEvent{
-		Type:     "history",
-		Locale:   sc.Renderer.Localizer.GetLocale(c),
-		Messages: history,
-	})
-	if err != nil {
 		return
 	}
 	if err := writeShoutboxEvent(ctx, conn, payload); err != nil {
@@ -308,12 +400,12 @@ func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 			_ = conn.Close(websocket.StatusUnsupportedData, "text frames only")
 			return
 		}
-		body, ok := decodeShoutboxRequest(data)
+		req, ok := decodeShoutboxRequest(data)
 		if !ok {
 			_ = conn.Close(websocket.StatusPolicyViolation, "malformed request")
 			return
 		}
-		if !sc.post(ctx, client, token, user.Username, body) {
+		if !sc.handle(ctx, client, token, user, req) {
 			_ = conn.Close(shoutboxCloseUnauthorized, "unauthorized")
 			return
 		}

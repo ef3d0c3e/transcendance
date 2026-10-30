@@ -186,6 +186,11 @@ notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-private-message-title = { $count ->
+    [one] New message from { $username }
+   *[other] { $count } new messages from { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
 catalog-tabs-label = Catalog sections

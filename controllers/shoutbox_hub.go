@@ -34,6 +34,10 @@ const (
 	shoutboxErrorTooLong     = "too-long"
 	shoutboxErrorRateLimited = "rate-limited"
 	shoutboxErrorInternal    = "internal"
+	// Private messages and ignores
+	shoutboxErrorUserNotFound = "user-not-found"
+	shoutboxErrorSelf         = "self"
+	shoutboxErrorBlocked      = "blocked"
 )
 
 // Clean up a message body, returns an error code if it can't be posted
@@ -104,37 +108,43 @@ func (b *shoutboxBucket) take(now time.Time) (bool, time.Duration) {
 
 // Connected shoutbox clients
 type shoutboxHub struct {
-	mu      sync.Mutex
-	clients map[*shoutboxClient]struct{}
-	// Open connections per user
-	connections map[uint]int
+	mu sync.Mutex
+	// Open connections per user, one for each tab
+	users map[uint]map[*shoutboxClient]struct{}
 	// Rate limits are per user, opening more connections doesn't give more messages
 	buckets map[uint]*shoutboxBucket
+	// Users ignored by each connected user, until when
+	ignores map[uint]map[uint]time.Time
 }
 
 func newShoutboxHub() *shoutboxHub {
 	return &shoutboxHub{
-		clients:     make(map[*shoutboxClient]struct{}),
-		connections: make(map[uint]int),
-		buckets:     make(map[uint]*shoutboxBucket),
+		users:   make(map[uint]map[*shoutboxClient]struct{}),
+		buckets: make(map[uint]*shoutboxBucket),
+		ignores: make(map[uint]map[uint]time.Time),
 	}
 }
 
-// Add a client, fails when its user has too many connections
-func (h *shoutboxHub) register(client *shoutboxClient) bool {
+// Add a client with its user's ignores, fails when its user has too many connections
+func (h *shoutboxHub) register(client *shoutboxClient, ignores map[uint]time.Time) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	if h.connections[client.userID] >= shoutboxMaxConnections {
+	clients := h.users[client.userID]
+	if len(clients) >= shoutboxMaxConnections {
 		return false
 	}
-	h.clients[client] = struct{}{}
-	h.connections[client.userID]++
+	if clients == nil {
+		clients = make(map[*shoutboxClient]struct{})
+		h.users[client.userID] = clients
+	}
+	clients[client] = struct{}{}
+	h.ignores[client.userID] = ignores
 
 	// Full buckets of disconnected users are the same as new ones
 	now := time.Now()
 	for id, bucket := range h.buckets {
-		if h.connections[id] == 0 {
+		if len(h.users[id]) == 0 {
 			bucket.refill(now)
 			if bucket.tokens >= shoutboxBurst {
 				delete(h.buckets, id)
@@ -144,17 +154,23 @@ func (h *shoutboxHub) register(client *shoutboxClient) bool {
 	return true
 }
 
+// Remove a client, the caller holds the lock
+func (h *shoutboxHub) remove(client *shoutboxClient) {
+	clients, ok := h.users[client.userID]
+	if !ok {
+		return
+	}
+	delete(clients, client)
+	if len(clients) == 0 {
+		delete(h.users, client.userID)
+		delete(h.ignores, client.userID)
+	}
+}
+
 func (h *shoutboxHub) unregister(client *shoutboxClient) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
-
-	if _, ok := h.clients[client]; !ok {
-		return
-	}
-	delete(h.clients, client)
-	if h.connections[client.userID]--; h.connections[client.userID] <= 0 {
-		delete(h.connections, client.userID)
-	}
+	h.remove(client)
 }
 
 // Take one of the user's message tokens
@@ -171,17 +187,75 @@ func (h *shoutboxHub) allow(userID uint) (bool, time.Duration) {
 	return bucket.take(now)
 }
 
-// Queue a payload for every client, slow clients that can't keep up are disconnected
-func (h *shoutboxHub) broadcast(payload []byte) {
+// Replace the ignores of a user, if connected
+func (h *shoutboxHub) setIgnores(userID uint, ignores map[uint]time.Time) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	if _, ok := h.users[userID]; ok {
+		h.ignores[userID] = ignores
+	}
+}
+
+// Whether a connected user ignores another, the caller holds the lock
+func (h *shoutboxHub) ignoring(userID uint, otherID uint, now time.Time) bool {
+	until, ok := h.ignores[userID][otherID]
+	return ok && now.Before(until)
+}
+
+// Set the user whose conversation a client shows, 0 for none
+func (h *shoutboxHub) setViewing(client *shoutboxClient, partnerID uint) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	client.viewing = partnerID
+}
+
+// Whether one of the user's clients shows the conversation with a partner
+func (h *shoutboxHub) viewing(userID uint, partnerID uint) bool {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for client := range h.users[userID] {
+		if client.viewing == partnerID {
+			return true
+		}
+	}
+	return false
+}
+
+// Queue a payload for a client, slow clients that can't keep up are disconnected. The caller holds the lock.
+func (h *shoutboxHub) queue(client *shoutboxClient, payload []byte) {
+	if !client.queue(payload) {
+		h.remove(client)
+	}
+}
+
+// Queue a payload for every client, except those of users ignoring the sender
+func (h *shoutboxHub) broadcast(senderID uint, payload []byte) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
-	for client := range h.clients {
-		if !client.queue(payload) {
-			delete(h.clients, client)
-			if h.connections[client.userID]--; h.connections[client.userID] <= 0 {
-				delete(h.connections, client.userID)
-			}
+	now := time.Now()
+	for userID, clients := range h.users {
+		if h.ignoring(userID, senderID, now) {
+			continue
+		}
+		for client := range clients {
+			h.queue(client, payload)
+		}
+	}
+}
+
+// Queue a payload for every client of the given users
+func (h *shoutboxHub) deliver(payload []byte, userIDs ...uint) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+
+	for i, userID := range userIDs {
+		// A user messaging themselves would get it twice
+		if i > 0 && userID == userIDs[0] {
+			continue
+		}
+		for client := range h.users[userID] {
+			h.queue(client, payload)
 		}
 	}
 }
@@ -189,7 +263,9 @@ func (h *shoutboxHub) broadcast(payload []byte) {
 // A websocket connection to the shoutbox
 type shoutboxClient struct {
 	userID uint
-	send   chan []byte
+	// User whose conversation is shown, 0 for none. Guarded by the hub's lock.
+	viewing uint
+	send    chan []byte
 	// Closed when the client is dropped for being too slow
 	dropped   chan struct{}
 	closeOnce sync.Once

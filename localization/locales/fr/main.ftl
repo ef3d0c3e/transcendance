@@ -186,6 +186,11 @@ notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-private-message-title = { $count ->
+    [one] Nouveau message de { $username }
+   *[other] { $count } nouveaux messages de { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Catalogue de cartes
 catalog-tabs-label = Sections du catalogue
