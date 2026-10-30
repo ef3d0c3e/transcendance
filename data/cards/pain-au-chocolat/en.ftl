@@ -1,0 +1,2 @@
+title = Pain au chocolat
+description = Pain au chocolat, also known as chocolatine in the south-west part of France and in French speaking parts of Canada, couque au chocolat in Belgium, or chocolate croissant in many English-speaking countries, is a type of viennoiserie consisting of a cuboid-shaped piece of yeast-leavened laminated viennoiserie dough, similar in texture to a puff pastry, with one or two pieces of dark chocolate in the center.

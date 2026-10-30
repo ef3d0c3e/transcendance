@@ -1,0 +1,2 @@
+title = Banana split
+description = A banana split is an American ice cream-based dessert consisting of a peeled banana cut in half lengthwise, and served with ice cream and sauce between the two pieces. There are many variations, but the classic banana split is made with three scoops of ice cream. A sauce or sauces are drizzled onto the ice cream, which is topped with whipped cream and maraschino cherries. Crushed nuts are optional.
