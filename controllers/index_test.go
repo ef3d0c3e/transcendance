@@ -14,7 +14,8 @@ func TestIndexPage(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 
 	body := getPage(t, router, "/")
-	require.Contains(t, body, "<h1>Collect, open and show off your cards</h1>")
+	require.Contains(t, body, "<h1>Collect, trade and show off your cards</h1>")
+	require.Contains(t, body, "<h2>Trade cards</h2>")
 	require.Contains(t, body, `<p class="index-stats">156 cards · 2 collections</p>`)
 	// Visitors are invited to register
 	require.Contains(t, body, `<a class="index-action-primary" href="/register">Create an account</a>`)
@@ -41,6 +42,7 @@ func TestIndexPageFrench(t *testing.T) {
 	rec := httptest.NewRecorder()
 	router.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, rec.Body.String(), "<h1>Collectionnez, ouvrez et exposez vos cartes</h1>")
+	require.Contains(t, rec.Body.String(), "<h1>Collectionnez, troquez et exposez vos cartes</h1>")
+	require.Contains(t, rec.Body.String(), "<h2>Troquez vos cartes</h2>")
 	require.Contains(t, rec.Body.String(), "Créer un compte</a>")
 }
