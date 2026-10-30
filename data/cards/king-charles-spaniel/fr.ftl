@@ -1,0 +1,2 @@
+title = King Charles Spaniel
+description = Le King Charles Spaniel, ou épagneul King Charles, est une race de chiens épagneuls anglais d'agrément et de compagnie. Il ne doit pas être confondu avec son cousin le Cavalier King Charles plus courant. Ils appartiennent à la même lignée, mais le King est plus petit, présente de côté une silhouette carrée (more coby disent les Britanniques) et a une face plate.

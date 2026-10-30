@@ -1,0 +1,2 @@
+title = Bouvier bernois
+description = Le bouvier bernois est une race de chien dont la Fédération cynologique internationale attribue l'origine à la Suisse. Chien de ferme originellement conçu pour la garde des bâtiments, des bovins et le transport du lait, il est aujourd'hui un chien d’utilité polyvalent et chien de famille, mais reste sportif et peut être gardien même si ce n'est pas sa spécialité.

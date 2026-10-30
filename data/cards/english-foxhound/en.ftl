@@ -1,0 +1,2 @@
+title = English Foxhound
+description = The English Foxhound is one of the four foxhound breeds of dog. It is a cousin of the American Foxhound. They are scent hounds, bred to hunt foxes by scent.

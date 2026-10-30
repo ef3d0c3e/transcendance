@@ -1,0 +1,2 @@
+title = Border Collie
+description = The Border Collie is a breed of British herding dog of the collie type of medium size. It originates in the region of the Anglo-Scottish border, and descends from the traditional sheepdogs once found all over the British Isles. It is kept predominantly as a sheep-herding dog or as a companion animal.
