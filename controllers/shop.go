@@ -235,18 +235,44 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		return
 	}
 
+	// Pages topping up without leaving ask for the new balance instead
+	asJSON := c.GetHeader("Accept") == "application/json"
+
 	packID := c.PostForm("pack")
 	amount, ok := topupAmount(packID)
 	if !ok {
+		if asJSON {
+			c.JSON(http.StatusBadRequest, gin.H{"error": sc.Renderer.T(c, "shop-error-pack")})
+			return
+		}
 		c.Redirect(http.StatusSeeOther, "/inventory?error=pack")
 		return
 	}
 
-	if err := sc.DB.Model(&models.User{}).
-		Where("id = ?", user.ID).
-		Update("coins", gorm.Expr("coins + ?", amount)).Error; err != nil {
+	var coins uint
+	err := sc.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.User{}).
+			Where("id = ?", user.ID).
+			Update("coins", gorm.Expr("coins + ?", amount)).Error; err != nil {
+			return err
+		}
+		return tx.Model(&models.User{}).Where("id = ?", user.ID).Pluck("coins", &coins).Error
+	})
+	if err != nil {
 		log.Printf("WARN failed to credit %d coins to user %d: %s", amount, user.ID, err)
+		if asJSON {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": sc.Renderer.T(c, "shop-error-internal")})
+			return
+		}
 		c.Redirect(http.StatusSeeOther, "/inventory?error=internal")
+		return
+	}
+
+	if asJSON {
+		c.JSON(http.StatusOK, gin.H{
+			"coins":      coins,
+			"coinsLabel": sc.Renderer.T(c, "shop-price", "amount", coins),
+		})
 		return
 	}
 
