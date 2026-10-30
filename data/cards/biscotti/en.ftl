@@ -1,0 +1,2 @@
+title = Biscotti
+description = Biscotti are Italian almond biscuits originating in the city of Prato, Tuscany. They are twice-baked, oblong-shaped, dry, and crunchy. In Italy, they are known as cantucci, biscotti di Prato or biscotti etruschi and may be dipped in a drink, traditionally Vin Santo. Smaller biscotti may be known as biscottini or cantuccini. In Italian, the word biscotti encompasses all types of biscuits or cookies.

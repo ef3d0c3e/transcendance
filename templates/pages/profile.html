@@ -68,6 +68,11 @@
 			<p class="profile-error" id="profile-error-username" hidden></p>
 		</div>
 		<div class="profile-field profile-field-wide">
+			<label for="email">{{ .T "account-email" }}</label>
+			<input type="text" inputmode="email" id="email" name="email" autocomplete="email" maxlength="254" value="{{ with .Data.Profile.User.Email }}{{ . }}{{ end }}">
+			<p class="profile-error" id="profile-error-email" hidden></p>
+		</div>
+		<div class="profile-field profile-field-wide">
 			<label for="bio">{{ .T "profile-bio" }}</label>
 			<textarea
 				rows="4"
@@ -189,6 +194,12 @@
 		<p id="contact">{{ .T "profile-empty-field" }}</p>
 		{{ end }}
 	</div>
+	{{ if .Data.CanSeeEmail }}
+	<div class="profile-detail">
+		<p class="profile-label">{{ .T "account-email" }}</p>
+		<p>{{ with .Data.Profile.User.Email }}{{ . }}{{ else }}{{ $.T "profile-empty-field" }}{{ end }}</p>
+	</div>
+	{{ end }}
 	<div class="profile-detail">
 		<p class="profile-label">{{ .T "profile-rank" }}</p>
 		<p>{{ template "profile-rank-name" . }}</p>

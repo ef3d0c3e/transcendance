@@ -1,0 +1,2 @@
+title = Pumpkin pie
+description = Pumpkin pie is a dessert pie with a spiced, pumpkin-based custard filling. The pumpkin and pumpkin pie are both a symbol of harvest time, and pumpkin pie is generally eaten during the fall and early winter. In the United States and Canada it is usually prepared for Thanksgiving, Christmas, and other occasions when pumpkin is in season. Pumpkin is in season generally from mid-October through November.

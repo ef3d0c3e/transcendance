@@ -1,0 +1,2 @@
+title = Prinsesstårta
+description = Le prinsesstårta est un gâteau suédois traditionnel, composé de couches successives de génoise, de confiture de framboise, d'une sorte de crème pâtissière vanillée et de crème fouettée, enveloppé d'une fine couverture de pâte d'amandes. Cette dernière est généralement verte, parfois rose, légèrement saupoudrée de sucre glace, souvent surmontée d'une rose en pâte d'amandes rouge.

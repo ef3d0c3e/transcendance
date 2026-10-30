@@ -1,0 +1,2 @@
+title = Canelé
+description = A canelé is a small French pâtisserie flavoured with rum and vanilla, having a soft and tender centre and a dark, thick, caramelized crust. It takes the form of a small, striated cylinder up to five centimetres in height, with a depression at the top. A specialty of the region around Bordeaux in southwestern France, today it is widely available in pâtisseries in France and abroad.

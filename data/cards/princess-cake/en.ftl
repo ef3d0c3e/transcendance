@@ -1,0 +1,2 @@
+title = Princess cake
+description = Princess cake or princess torte is a traditional Swedish layer cake or torte consisting of alternating layers of airy sponge cake, pastry cream, and a thick-domed layer of whipped cream. The cake is covered by a layer of rolled marzipan, giving it a smooth, rounded top. The marzipan overlay is usually green, sprinkled with powdered sugar, and often decorated with a pink marzipan rose.

@@ -1,0 +1,2 @@
+title = Viennoiserie danoise
+description = Une viennoiserie danoise ou tout simplement une danoise est une pâtisserie feuilletée sucrée appartenant à la catégorie des viennoiseries. Elle fut introduite au Danemark par des boulangers autrichiens, avant de devenir une spécialité danoise. Tout comme les autres viennoiseries, par exemple les croissants, elle se prépare avec une pâte feuilletée levée, ce qui lui donne une texture en plusieurs couches.
