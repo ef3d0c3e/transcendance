@@ -9,6 +9,9 @@
 			{{ if .Data.Count }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
+			{{ if ne (len .Data.Viewed) 0 }}
+			<a class="inventory-trade" href="/trades/new?u={{ .Data.Viewed }}">{{ .T "inventory-trade" }}</a>
+			{{ end }}
 		</div>
 		{{ if eq .Data.Tab "cards" }}
 		<form class="search-form inventory-search" id="search-form" action="/inventory" method="get">

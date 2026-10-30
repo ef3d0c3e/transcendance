@@ -98,6 +98,15 @@ func RegisterRoutes(
 	router.GET("/add_booster", dataController.AddBoosterGet)
 	router.POST("/add_booster", dataController.AddBoosterPost)
 
+	// trade.go
+	router.GET("/trades", controller.TradesGet)
+	router.GET("/trades/new", controller.TradeMenuGet)
+	router.POST("/trades", controller.TradePost)
+	router.POST("/trades/:ID/accept", controller.TradeAcceptPost)
+	router.POST("/trades/:ID/decline", controller.TradeDeclinePost)
+	router.POST("/trades/:ID/cancel", controller.TradeCancelPost)
+	router.GET("/api/trade/stacks", dataController.TradeStacksGet)
+
 	// shop.go
 	router.GET("/shop", controller.ShopGet)
 	router.POST("/shop/topup", controller.ShopTopupPost)
