@@ -249,8 +249,9 @@ func TestOpeningPage(t *testing.T) {
 	require.Contains(t, body, `data-autostart="true"`)
 	require.Contains(t, body, `<button type="submit" class="pack-open" >`)
 
-	// The booster and its panel wait for the opening to show
-	require.Contains(t, body, `<div class="pack-page is-opening">`)
+	// The server leaves the controls visible until JavaScript starts opening.
+	require.Contains(t, body, `<div class="pack-page">`)
+	require.NotContains(t, body, `class="pack-page is-opening"`)
 	require.Contains(t, body, `data-again-label="Open again"`)
 	require.NotContains(t, body, "pack-chase")
 
