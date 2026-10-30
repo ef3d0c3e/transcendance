@@ -10,10 +10,8 @@ import (
 	"time"
 	"transcendance/models"
 	"transcendance/views"
-	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-sql-driver/mysql"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
@@ -35,7 +33,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 
 	var userProfile models.UserProfile
 	if err := pc.DB.
-		Joins("User", pc.DB.Select("id", "username", "rank", "last_seen_at")).
+		Joins("User", pc.DB.Select("id", "username", "email", "rank", "last_seen_at")).
 		Where("User.username = ?", profileUsername).
 		First(&userProfile).Error; err != nil {
 		pc.Renderer.RenderError(c, views.ErrorPage{
@@ -44,6 +42,11 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 			Message:    pc.Renderer.T(c, "profile-error-user"),
 		})
 		return
+	}
+
+	canSeeEmail := userProfile.UserID == user.ID || user.Rank > userProfile.User.Rank
+	if !canSeeEmail {
+		userProfile.User.Email = ""
 	}
 
 	editMode := c.Param("username") == "" || (user.Rank == 2 && userProfile.UserID != user.ID)
@@ -65,6 +68,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"CanChangePassword": userProfile.UserID == user.ID,
 		"Admin":             user.Rank == 2,
 		"DeleteAction":      fmt.Sprintf("/profiles/%d/delete", userProfile.UserID),
+		"CanSeeEmail":       canSeeEmail,
 		"Own":               userProfile.UserID == user.ID,
 		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
 		"Locale":            pc.Renderer.Localizer.GetLocale(c),
@@ -87,6 +91,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		c.JSON(status, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
 		return
 	}
+	email, processEmail := c.GetPostForm("email")
 	rank, processRank := c.GetPostForm("rank")
 	if processRank && authUser.Rank != 2 {
 		c.JSON(http.StatusForbidden, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
@@ -110,6 +115,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		"profile": {},
 	}
 	errorMessages := gin.H{
+		"email":            "",
 		"rank":             "",
 		"username":         "",
 		"bio":              "",
@@ -120,6 +126,23 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		"confirm_password": "",
 	}
 	validRequest := true
+	if processEmail {
+		if email == "" || len(email) > 254 {
+			errorMessages["email"] = pc.Renderer.T(c, "account-error-email")
+			validRequest = false
+		} else {
+			var count int64
+			if err := pc.DB.Unscoped().Model(&models.User{}).Where("email = ? AND id <> ?", email, target.ID).Count(&count).Error; err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"message": pc.Renderer.T(c, "error-unexpected")})
+				return
+			}
+			if count != 0 {
+				errorMessages["email"] = pc.Renderer.T(c, "account-error-email-taken")
+				validRequest = false
+			}
+			updates["user"]["email"] = email
+		}
+	}
 	if processRank {
 		value, err := strconv.ParseUint(rank, 10, 8)
 		if err != nil || value > 2 {
@@ -147,7 +170,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processBio {
-		if utf8.RuneCountInString(bio) > 244 {
+		if len(bio) > 244 {
 			errorMessages["bio"] = pc.Renderer.T(c, "profile-error-bio")
 			validRequest = false
 		}
@@ -168,7 +191,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processContactInfo {
-		if utf8.RuneCountInString(contactInfo) > 256 {
+		if len(contactInfo) > 256 {
 			errorMessages["contact"] = pc.Renderer.T(c, "profile-error-contactinfo")
 			validRequest = false
 		}
@@ -252,14 +275,14 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 			return nil
 		})
 		if err != nil {
-			var mysqlErr *mysql.MySQLError
-
-			// Handling duplicate-username race condition
-			if processUsername &&
-				username != target.Username &&
-				errors.As(err, &mysqlErr) &&
-				mysqlErr.Number == 1062 {
-				errorMessages["username"] = pc.Renderer.T(c, "profile-error-username-taken")
+			field := duplicateUserField(err)
+			switch field {
+			case "email":
+				errorMessages[field] = pc.Renderer.T(c, "account-error-email-taken")
+			case "username":
+				errorMessages[field] = pc.Renderer.T(c, "profile-error-username-taken")
+			}
+			if field != "" {
 				c.JSON(http.StatusBadRequest, gin.H{"message": errorMessages})
 				return
 			}

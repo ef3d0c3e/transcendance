@@ -10,13 +10,25 @@
 	action="/login"
 	method="post">
 	<div id="form-result"></div>
-	<label for="username">{{ .T "login-username" }}</label>
-	<input
-		type="text"
-		id="username"
-		name="username"
-		autocomplete="username"
-		required>
+	<fieldset class="login-type-switch">
+		<legend>{{ .T "login-type" }}</legend>
+		<label class="login-type-option">
+			<input type="radio" name="login_type" value="username" checked>
+			<span>{{ .T "login-username" }}</span>
+		</label>
+		<label class="login-type-option">
+			<input type="radio" name="login_type" value="email">
+			<span>{{ .T "account-email" }}</span>
+		</label>
+	</fieldset>
+	<div data-login-field="username">
+		<label for="username">{{ .T "login-username" }}</label>
+		<input type="text" id="username" name="username" autocomplete="username" required minlength="3" maxlength="16" pattern="[a-zA-Z0-9_]{3,16}" title="{{ .T "profile-username-hint" }}">
+	</div>
+	<div data-login-field="email" hidden>
+		<label for="email">{{ .T "account-email" }}</label>
+		<input type="text" inputmode="email" id="email" name="email" autocomplete="email" maxlength="254" disabled>
+	</div>
 	<label for="password">{{ .T "login-password" }}</label>
 	<input
 		type="password"
