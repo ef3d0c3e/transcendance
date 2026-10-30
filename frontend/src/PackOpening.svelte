@@ -460,7 +460,8 @@
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			revealPage();
-			openButton.textContent = retryLabel ?? openLabel;
+			// Its light stays, only its label changes
+			openButton.querySelector(".pack-open-label").textContent = retryLabel ?? openLabel;
 			openButton.hidden = !chained;
 			buyButton.hidden = chained;
 			// Calls for the next opening, until it is clicked
@@ -634,6 +635,7 @@
 	<div class="pack-stage-actions">
 		{#if stageAction}
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
+				<span class="pack-again-shine" aria-hidden="true"></span>
 				{againLabel}
 				{#if priceHtml}{@html priceHtml}{/if}
 			</button>
@@ -699,8 +701,12 @@
 		min-height: 4.5rem;
 	}
 
-	/* The next opening, large and calling for a click */
+	/* The next opening, large and calling for a click. Its ring and light
+		only move and fade, the browser doesn't repaint them. */
 	.pack-again {
+		position: relative;
+		/* The ring and the light stay between the background and the label */
+		isolation: isolate;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.9rem;
@@ -709,11 +715,7 @@
 		padding: 0.9rem 3rem;
 
 		color: var(--color-text-alt);
-		background: linear-gradient(110deg,
-				var(--color-accent-primary) 30%,
-				var(--color-accent-primary-lighter) 50%,
-				var(--color-accent-primary) 70%);
-		background-size: 250% 100%;
+		background: var(--color-accent-primary);
 		border: 0;
 		border-radius: 1rem;
 		box-shadow: 0 10px 30px rgb(0 0 0 / 40%);
@@ -721,13 +723,28 @@
 		font-size: 1.6rem;
 		font-weight: 800;
 
-		animation:
-			pack-again-in 0.45s cubic-bezier(0.34, 1.5, 0.64, 1) both,
-			pack-again-pulse 1.6s ease-out 0.45s infinite,
-			pack-again-shine 2.4s linear infinite;
+		animation: pack-again-in 0.45s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+
+		/* A ring bursting out of the button */
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0;
+			z-index: -1;
+			pointer-events: none;
+			opacity: 0;
+
+			border-radius: inherit;
+			box-shadow: 0 0 0 0.4rem color-mix(in srgb, var(--color-accent-primary) 75%, transparent);
+			animation: pack-again-ring 1.6s ease-out 0.45s infinite;
+		}
 
 		&:hover {
 			background: var(--color-accent-primary-dark);
+
+			.pack-again-shine {
+				display: none;
+			}
 		}
 
 		:global(.pack-buy-price) {
@@ -735,9 +752,40 @@
 		}
 	}
 
+	/* A light sweeping across the button, cut to its shape */
+	.pack-again-shine {
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		overflow: hidden;
+		pointer-events: none;
+		border-radius: inherit;
+
+		&::before {
+			content: "";
+			position: absolute;
+			inset: 0 auto 0 0;
+			width: 250%;
+
+			background: linear-gradient(110deg,
+					transparent 30%,
+					var(--color-accent-primary-lighter) 50%,
+					transparent 70%);
+			animation: pack-again-shine 2.4s linear infinite;
+		}
+	}
+
 	@media (prefers-reduced-motion: reduce) {
 		.pack-again {
 			animation: none;
+
+			&::before {
+				display: none;
+			}
+		}
+
+		.pack-again-shine {
+			display: none;
 		}
 	}
 
@@ -1047,12 +1095,19 @@
 		animation: pack-pop 0.75s ease-out both;
 	}
 
-	/* Rare and legendary cards keep glowing in their rarity's color */
-	.is-landed[data-rarity="rare"] .pack-cell[data-win="true"],
-	.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
-		animation:
-			pack-pop 0.75s ease-out both,
-			pack-glow 1.4s ease-in-out infinite alternate;
+	/* Rare and legendary cards keep glowing in their rarity's color: a glow
+		behind the card that only fades, the browser doesn't repaint it */
+	.is-landed:is([data-rarity="rare"], [data-rarity="legendary"]) .pack-cell[data-win="true"]::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		pointer-events: none;
+		opacity: 0.25;
+
+		border-radius: calc(0.5rem * var(--pack-scale));
+		box-shadow: 0 0 16px var(--glow);
+		animation: pack-glow 1.4s ease-in-out infinite alternate;
 	}
 
 	.is-landed[data-rarity="rare"] .pack-cell[data-win="true"] {
@@ -1064,10 +1119,12 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.is-landed .pack-cell[data-win="true"],
-		.is-landed[data-rarity="rare"] .pack-cell[data-win="true"],
-		.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
+		.is-landed .pack-cell[data-win="true"] {
 			animation: pack-pop 0.75s ease-out both;
+		}
+
+		.is-landed .pack-cell[data-win="true"]::before {
+			display: none;
 		}
 	}
 
@@ -1101,14 +1158,15 @@
 		}
 	}
 
+	/* Across the card, in widths of the light: from -60% to 130% of the card */
 	@keyframes pack-shine {
 		0% {
-			left: -60%;
+			translate: 0 0;
 			opacity: 1;
 		}
 
 		100% {
-			left: 130%;
+			translate: 475% 0;
 			opacity: 1;
 		}
 	}
@@ -1152,27 +1210,26 @@
 		}
 	}
 
-	@keyframes pack-again-pulse {
-		0% {
-			box-shadow:
-				0 10px 30px rgb(0 0 0 / 40%),
-				0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 75%, transparent);
-		}
-
-		100% {
-			box-shadow:
-				0 10px 30px rgb(0 0 0 / 40%),
-				0 0 0 1.25rem transparent;
-		}
-	}
-
-	@keyframes pack-again-shine {
+	@keyframes pack-again-ring {
 		from {
-			background-position: 100% 0;
+			opacity: 1;
+			scale: 1;
 		}
 
 		to {
-			background-position: 0 0;
+			opacity: 0;
+			scale: 1.1 1.5;
+		}
+	}
+
+	/* The band crosses from before the left edge to past the right one */
+	@keyframes pack-again-shine {
+		from {
+			translate: -60% 0;
+		}
+
+		to {
+			translate: 0 0;
 		}
 	}
 
@@ -1198,12 +1255,8 @@
 	}
 
 	@keyframes pack-glow {
-		from {
-			filter: drop-shadow(0 0 4px var(--glow));
-		}
-
 		to {
-			filter: drop-shadow(0 0 16px var(--glow));
+			opacity: 1;
 		}
 	}
 

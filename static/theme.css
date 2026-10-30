@@ -2105,6 +2105,9 @@ body:has(.pack-page.is-opening) > .site-footer {
 }
 
 .pack-form .pack-open {
+    position: relative;
+    /* The ring and the light stay between the background and the label */
+    isolation: isolate;
     min-height: 3.25rem;
     padding: 0.7rem 2rem;
 
@@ -2115,25 +2118,65 @@ body:has(.pack-page.is-opening) > .site-footer {
     font-weight: 700;
 }
 
-/* A spin finished: the button pulses until the next opening */
+.pack-open-shine {
+    display: none;
+}
+
+/* A spin finished: the button pulses until the next opening. The ring and
+    the light only move and fade, the browser doesn't repaint them. */
 .pack-form .pack-open.is-ready {
-    background: linear-gradient(110deg,
-            var(--color-accent-primary) 30%,
-            var(--color-accent-primary-lighter) 50%,
-            var(--color-accent-primary) 70%);
-    background-size: 250% 100%;
-    animation:
-        pack-ready-pulse 1.6s ease-out infinite,
-        pack-ready-shine 2.4s linear infinite;
+    background: var(--color-accent-primary);
+    animation: pack-ready-pulse 1.6s ease-out infinite;
+
+    /* A ring bursting out of the button */
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        opacity: 0;
+
+        border-radius: inherit;
+        box-shadow: 0 0 0 0.35rem color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
+        animation: pack-ready-ring 1.6s ease-out infinite;
+    }
+
+    /* A light sweeping across it, cut to its shape */
+    .pack-open-shine {
+        display: block;
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+        border-radius: inherit;
+
+        &::before {
+            content: "";
+            position: absolute;
+            inset: 0 auto 0 0;
+            width: 250%;
+
+            background: linear-gradient(110deg,
+                    transparent 30%,
+                    var(--color-accent-primary-lighter) 50%,
+                    transparent 70%);
+            animation: pack-ready-shine 2.4s linear infinite;
+        }
+    }
 
     &:hover {
         background: var(--color-accent-primary-dark);
+
+        .pack-open-shine {
+            display: none;
+        }
     }
 }
 
 @keyframes pack-ready-pulse {
     0% {
-        box-shadow: 0 0 0 0 color-mix(in srgb, var(--color-accent-primary) 70%, transparent);
         scale: 1;
     }
 
@@ -2144,19 +2187,28 @@ body:has(.pack-page.is-opening) > .site-footer {
     30% {
         scale: 1;
     }
-
-    100% {
-        box-shadow: 0 0 0 1rem transparent;
-    }
 }
 
-@keyframes pack-ready-shine {
+@keyframes pack-ready-ring {
     from {
-        background-position: 100% 0;
+        opacity: 1;
+        scale: 1;
     }
 
     to {
-        background-position: 0 0;
+        opacity: 0;
+        scale: 1.08 1.45;
+    }
+}
+
+/* The band crosses from before the left edge to past the right one */
+@keyframes pack-ready-shine {
+    from {
+        translate: -60% 0;
+    }
+
+    to {
+        translate: 0 0;
     }
 }
 
@@ -2164,6 +2216,11 @@ body:has(.pack-page.is-opening) > .site-footer {
     .pack-form .pack-open.is-ready {
         animation: none;
         box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent-primary) 45%, transparent);
+
+        &::before,
+        .pack-open-shine {
+            display: none;
+        }
     }
 }
 
@@ -2297,46 +2354,66 @@ body:has(.pack-page.is-opening) > .site-footer {
     font-variant-numeric: tabular-nums;
 }
 
+/* The bar's glow, brightening and light only move and fade: the browser
+    doesn't repaint them */
 .pack-progress {
+    position: relative;
     height: 0.5rem;
     margin-top: 0.4rem;
-    overflow: hidden;
 
     background: var(--color-bg-4);
     border-radius: 999px;
 
-    animation: pack-progress-pulse 2.2s ease-in-out infinite;
+    /* Glow around the bar */
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0;
+
+        border-radius: inherit;
+        box-shadow: 0 0 10px 1px color-mix(in srgb, var(--color-accent-secondary) 60%, transparent);
+        animation: pack-progress-pulse 2.2s ease-in-out infinite;
+    }
 }
 
 .pack-progress-bar {
     position: relative;
     height: 100%;
     max-width: 100%;
+    overflow: hidden;
 
     background: linear-gradient(90deg, var(--color-accent-primary), var(--color-accent-secondary));
     border-radius: inherit;
     transition: width 600ms ease;
-    animation: pack-progress-bright 2.2s ease-in-out infinite;
+
+    /* Brightens the filled part */
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+
+        background: rgb(255 255 255 / 18%);
+        animation: pack-progress-pulse 2.2s ease-in-out infinite;
+    }
 
     /* A light sweeping along the filled part */
     &::after {
         content: "";
         position: absolute;
-        inset: 0;
+        inset: 0 auto 0 0;
+        width: 40%;
 
-        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 55%), transparent) no-repeat;
-        background-size: 40% 100%;
+        background: linear-gradient(90deg, transparent, rgb(255 255 255 / 55%), transparent);
         animation: pack-progress-shine 2.6s ease-in-out infinite;
     }
 }
 
 /* Same bar on a collection's page, standing still */
-.pack-progress.is-static,
-.pack-progress.is-static .pack-progress-bar,
-.pack-progress.is-static .pack-progress-bar::after {
-    animation: none;
-}
-
+.pack-progress.is-static::before,
+.pack-progress.is-static .pack-progress-bar::before,
 .pack-progress.is-static .pack-progress-bar::after {
     display: none;
 }
@@ -2379,23 +2456,18 @@ body:has(.pack-page.is-opening) > .site-footer {
 
 @keyframes pack-progress-pulse {
     50% {
-        box-shadow: 0 0 10px 1px color-mix(in srgb, var(--color-accent-secondary) 60%, transparent);
+        opacity: 1;
     }
 }
 
-@keyframes pack-progress-bright {
-    50% {
-        filter: brightness(1.25) saturate(1.2);
-    }
-}
-
+/* From just before the bar's start to just past its end, in widths of the light */
 @keyframes pack-progress-shine {
     from {
-        background-position: -60% 0;
+        translate: -90% 0;
     }
 
     to {
-        background-position: 160% 0;
+        translate: 240% 0;
     }
 }
 
@@ -2407,11 +2479,15 @@ body:has(.pack-page.is-opening) > .site-footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .pack-progress,
-    .pack-progress-bar,
+    .pack-progress::before,
+    .pack-progress-bar::before,
     .pack-progress-bar::after,
     #pack-owned.is-updated {
         animation: none;
+    }
+
+    .pack-progress-bar::after {
+        display: none;
     }
 }
 
