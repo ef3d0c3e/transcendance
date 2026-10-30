@@ -127,11 +127,19 @@ func TestCollectionMissingCards(t *testing.T) {
 	require.Contains(t, body, `<option value="missing" selected>Missing</option>`)
 	require.Contains(t, body, `<option value="missing" >Missing first</option>`)
 	require.Contains(t, body, `<p class="inventory-count">3 cards found</p>`)
+	// Still in the inventory: its tabs stay, on the collections one
+	require.Contains(t, body, `<a class="inventory-tab-collections" href="/inventory?tab=collections" aria-current="page">`)
+	require.Contains(t, body, `<a class="inventory-tab-cards" href="/inventory?tab=cards" >`)
+	require.Contains(t, body, `<a class="inventory-tab-boosters" href="/inventory" >`)
+	require.Contains(t, body, `Cards <span class="inventory-tab-count">2</span>`)
+	require.Contains(t, body, `<li><a href="/inventory" aria-current="page">Inventory</a></li>`)
+	require.Contains(t, body, `<li><a href="/cards/search/" >Cards</a></li>`)
 
 	// Visitors don't own anything: no such filter or sort, and they're ignored
 	visitor := getPage(t, router, "/collections/1/?status=missing&sort=missing")
 	require.NotContains(t, visitor, `name="status"`)
 	require.NotContains(t, visitor, "Missing first")
+	require.NotContains(t, visitor, "inventory-tab")
 	require.Len(t, cardTitles(visitor), 5)
 	// Nor on the whole catalog
 	all := getInventory(t, router, cookie, "/cards/search/?status=missing")

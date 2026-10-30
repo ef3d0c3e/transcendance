@@ -1,0 +1,15 @@
+{{/* Inventory tabs, also over a collection's cards. Needs .Data.Tab, the
+.Data.Tab*Url links and the .Data.Total* counts. */}}
+{{ define "inventory-tabs" }}
+<nav class="inventory-tabs" aria-label="{{ .T "inventory-tabs-label" }}">
+	<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
+		{{ .T "inventory-tab-cards" }} <span class="inventory-tab-count">{{ .Data.TotalCards }}</span>
+	</a>
+	<a class="inventory-tab-boosters" href="{{ .Data.TabBoostersUrl }}" {{ if eq .Data.Tab "boosters" }}aria-current="page"{{ end }}>
+		{{ .T "inventory-tab-boosters" }} <span class="inventory-tab-count">{{ .Data.TotalBoosters }}</span>
+	</a>
+	<a class="inventory-tab-collections" href="{{ .Data.TabCollectionsUrl }}" {{ if eq .Data.Tab "collections" }}aria-current="page"{{ end }}>
+		{{ .T "inventory-tab-collections" }} <span class="inventory-tab-count">{{ .Data.TotalCollections }}</span>
+	</a>
+</nav>
+{{ end }}

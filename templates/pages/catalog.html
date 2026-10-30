@@ -14,6 +14,10 @@
 		</form>
 	</div>
 
+	{{ if .Data.Tab }}
+	{{ template "inventory-tabs" . }}
+	{{ end }}
+
 	{{ with .Data.Progress }}
 	<div class="collection-progress">
 		<span class="collection-progress-label">{{ $.T "pack-opening-progress-title" }}</span>
