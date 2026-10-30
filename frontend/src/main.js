@@ -298,6 +298,8 @@ import { openTopup } from './topup.js';
 				coins: Number(target.dataset.coins) || 0,
 				autoBuy: target.dataset.autoBuy === 'true',
 				autostart: target.dataset.autostart === 'true',
+				soundOnLabel: target.dataset.soundOn,
+				soundOffLabel: target.dataset.soundOff,
 			},
 		});
 	}
