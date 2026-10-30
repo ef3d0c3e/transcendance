@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -166,6 +167,42 @@ func TestShopTopupUnknownPack(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	require.Equal(t, "/inventory?error=pack", rec.Header().Get("Location"))
 	require.Equal(t, uint(0), shopBalance(t, "shopcarol"))
+}
+
+func TestShopTopupJSON(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "shopjson", "foo-bar-qux", 0)
+	cookie := login(t, router, "shopjson", "foo-bar-qux")
+
+	topup := func(pack string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPost, "/shop/topup", strings.NewReader(url.Values{
+			"pack":   {pack},
+			"return": {"/opening?collection=1&buy=1"},
+		}.Encode()))
+		req.Header.Set("Accept-Language", "en")
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		return rec
+	}
+
+	// The opening page tops up without leaving: the new balance, no redirect
+	rec := topup("medium")
+	require.Equal(t, http.StatusOK, rec.Code)
+	var result struct {
+		Coins      uint   `json:"coins"`
+		CoinsLabel string `json:"coinsLabel"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &result))
+	require.Equal(t, uint(500), result.Coins)
+	require.Equal(t, "500 coins", stripIsolation(result.CoinsLabel))
+	require.Equal(t, uint(500), shopBalance(t, "shopjson"))
+
+	rec = topup("unknown")
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Equal(t, uint(500), shopBalance(t, "shopjson"))
 }
 
 func TestShopTopupCreditsCoins(t *testing.T) {

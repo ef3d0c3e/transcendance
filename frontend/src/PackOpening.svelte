@@ -485,7 +485,15 @@
 			openPack(true, true);
 			return;
 		}
-		openTopup(price - coins);
+		// Credited without leaving: the clicked pack goes on with the purchase
+		openTopup(price - coins, (result) => {
+			coins = result.coins;
+			const balance = document.querySelector("#pack-coins");
+			if (balance && result.coinsLabel) {
+				balance.textContent = result.coinsLabel;
+			}
+			buyOrTopUp();
+		});
 	}
 
 	// Roll a number up to its new value, then make it pop
