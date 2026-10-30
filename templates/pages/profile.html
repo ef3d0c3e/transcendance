@@ -157,6 +157,9 @@
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 		{{ if not .Data.Own }}
+		<div>
+			<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-block="true"></div>
+		</div>
 		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
 		{{ end }}
 		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
