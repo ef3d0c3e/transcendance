@@ -1,5 +1,4 @@
-{{/* Coin top-up popup, opened by the page. Needs .Data.Topups, and
-.Data.TopupReturn to come back to the page instead of the shop. */}}
+{{/* Coin top-up popup, opened by the page. Needs .Data.Topups. */}}
 {{ define "topup-popup" }}
 <style>
 	.shop-topup-popup {
@@ -141,12 +140,12 @@
 	<div class="shop-topup-content">
 		<h2 id="shop-topup-popup-title">{{ .T "shop-topup-title" }}</h2>
 		<p class="shop-note">{{ .T "shop-topup-note" }}</p>
+		<p class="section-error" data-shop-topup-error role="alert" hidden>{{ .T "shop-topup-error-unconfirmed" }}</p>
 		<ul class="shop-topup-packs">
 		{{ range .Data.Topups }}
 			<li>
 				<form class="shop-topup-pack" action="/shop/topup" method="post" data-amount="{{ .Amount }}">
 					<input type="hidden" name="pack" value="{{ .ID }}">
-					{{ with $.Data.TopupReturn }}<input type="hidden" name="return" value="{{ . }}">{{ end }}
 					<span class="shop-topup-amount">{{ template "coin-icon" }} {{ .Label }}</span>
 					<button type="submit">{{ .Price }}</button>
 				</form>

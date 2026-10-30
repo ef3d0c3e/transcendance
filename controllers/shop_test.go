@@ -176,8 +176,7 @@ func TestShopTopupJSON(t *testing.T) {
 
 	topup := func(pack string) *httptest.ResponseRecorder {
 		req := httptest.NewRequest(http.MethodPost, "/shop/topup", strings.NewReader(url.Values{
-			"pack":   {pack},
-			"return": {"/opening?collection=1&buy=1"},
+			"pack": {pack},
 		}.Encode()))
 		req.Header.Set("Accept-Language", "en")
 		req.Header.Set("Accept", "application/json")

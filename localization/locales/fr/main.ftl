@@ -272,6 +272,7 @@ shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-error-unconfirmed = Impossible de confirmer l’ajout de pièces. Actualisez la page pour vérifier votre solde avant de réessayer.
 shop-topup-price = { $euros },{ $cents } €
 shop-topup-open = Acheter des pièces
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde

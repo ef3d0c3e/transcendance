@@ -6,7 +6,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -98,15 +97,6 @@ func TopupChoices(c *gin.Context, renderer *views.Renderer) []TopupChoice {
 		})
 	}
 	return topups
-}
-
-// topupReturn returns where to go back after a top-up, "" when the requested
-// page isn't a path of this site
-func topupReturn(raw string) string {
-	if !strings.HasPrefix(raw, "/") || strings.HasPrefix(raw, "//") || strings.HasPrefix(raw, "/\\") {
-		return ""
-	}
-	return raw
 }
 
 // ShopNotice is the message shown after buying coins or a failed purchase, if any
@@ -276,10 +266,5 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		return
 	}
 
-	// Pages offering the popup outside the shop get the user back to them
-	if back := topupReturn(c.PostForm("return")); back != "" {
-		c.Redirect(http.StatusSeeOther, back)
-		return
-	}
 	c.Redirect(http.StatusSeeOther, "/inventory?topup="+packID)
 }
