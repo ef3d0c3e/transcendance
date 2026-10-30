@@ -34,24 +34,12 @@ frozen = Frozen dessert
 pie = Pie
 confectionery = Confectionery
 austria = Austria
-<<<<<<< HEAD
-sweden = Sweden
-denmark = Denmark
-turkey = Turkey
-india = India
-thailand = Thailand
-korea = South Korea
-philippines = Philippines
-afghanistan = Afghanistan
-argentina = Argentina
-=======
 hungary = Hungary
 sweden = Sweden
 denmark = Denmark
 turkey = Turkey
 spain = Spain
 portugal = Portugal
->>>>>>> b67e809 (chore: fix merge conflicts)
 belgium = Belgium
 mexico = Mexico
 argentina = Argentina
