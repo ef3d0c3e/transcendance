@@ -1,0 +1,2 @@
+title = Petit lévrier italien
+description = Comme son nom l'indique, le petit lévrier italien, aussi appelé levrette d'Italie, est originaire d'Italie. C'est le plus petit des chiens classés dans le groupe 10, lévriers, section 3, standard no 200, selon la nomenclature de la Fédération cynologique internationale. Il s'agit d'une race à part entière et non de la forme naine d’une autre race canine.

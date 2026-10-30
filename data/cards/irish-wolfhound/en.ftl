@@ -1,0 +1,2 @@
+title = Irish Wolfhound
+description = The Irish Wolfhound (Irish: Cú Faoil) is a breed of large sighthound that has, by its presence and substantial size, inspired literature, poetry and mythology. One of the largest of all breeds of dog, the breed is used by coursing hunters who have prized it for its ability to dispatch game caught by other, swifter sighthounds.
