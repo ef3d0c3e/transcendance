@@ -2,7 +2,6 @@ import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
 import FriendButton from './FriendButton.svelte';
-import Friends from './FriendsEnhancement.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
@@ -202,6 +201,7 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				target: targets[i],
 				props: {
 					id: targets[i].getAttribute('data-id'),
+					block: targets[i].getAttribute('data-block'),
 				}
 			});
 		}

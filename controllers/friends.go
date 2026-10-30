@@ -107,6 +107,9 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 	var target  models.User
 	fc.DB.First(&target, targetID)
 	if target.ID == user.ID {
+		c.JSON(http.StatusOK, gin.H{
+			"response": fc.Renderer.T(c, "friends-yourself-error"),
+		})
 		return;
 	}
 	var relation models.Relation
@@ -117,7 +120,7 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 	case relationStr == "" && action == "add":
 		if activeInvite {
 			c.JSON(http.StatusOK, gin.H{
-				"message": fc.Renderer.T(c, "friends-spam-error"),
+				"response": fc.Renderer.T(c, "friends-spam-error"),
 			})
 			return
 		}
@@ -139,9 +142,8 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 		updateRelation(fc.DB, user, target, "delete")
 		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "blocked")
-	default:
-		c.JSON(http.StatusOK, gin.H{
-			"message": fc.Renderer.T(c, "friend-unknown-error"),
-		})
 	}
+	c.JSON(http.StatusOK, gin.H{
+		"response": "ok",
+	})
 }
