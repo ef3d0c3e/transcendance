@@ -1,0 +1,2 @@
+title = Australian Cattle Dog
+description = The Australian Cattle Dog, or simply Cattle Dog, is a breed of herding dog developed in Australia for droving cattle over long distances across rough terrain. This breed is a medium-sized, short-coated dog that occurs in two main colour forms. It has either red or black hair distributed fairly evenly through a white coat, which gives the appearance of a "red" or "blue" dog.

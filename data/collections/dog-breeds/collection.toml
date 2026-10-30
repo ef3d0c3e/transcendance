@@ -1,0 +1,454 @@
+id = 3
+tags = ["dog"]
+color-primary = "#e0a458"
+color-secondary = "#452c18"
+
+[[cards]]
+name = "affenpinscher"
+
+[[cards]]
+name = "afghan-hound"
+
+[[cards]]
+name = "airedale-terrier"
+
+[[cards]]
+name = "akbash"
+
+[[cards]]
+name = "akita"
+
+[[cards]]
+name = "alaskan-malamute"
+
+[[cards]]
+name = "american-cocker-spaniel"
+
+[[cards]]
+name = "american-eskimo-dog"
+
+[[cards]]
+name = "american-foxhound"
+
+[[cards]]
+name = "american-pit-bull-terrier"
+
+[[cards]]
+name = "american-staffordshire-terrier"
+
+[[cards]]
+name = "american-water-spaniel"
+
+[[cards]]
+name = "australian-cattle-dog"
+
+[[cards]]
+name = "australian-shepherd"
+
+[[cards]]
+name = "australian-terrier"
+
+[[cards]]
+name = "basenji"
+
+[[cards]]
+name = "basset-hound"
+
+[[cards]]
+name = "beagle"
+
+[[cards]]
+name = "beauceron"
+
+[[cards]]
+name = "bedlington-terrier"
+
+[[cards]]
+name = "belgian-malinois"
+
+[[cards]]
+name = "bernese-mountain-dog"
+
+[[cards]]
+name = "bichon-frise"
+
+[[cards]]
+name = "black-russian-terrier"
+
+[[cards]]
+name = "bloodhound"
+
+[[cards]]
+name = "bolognese"
+
+[[cards]]
+name = "border-collie"
+
+[[cards]]
+name = "border-terrier"
+
+[[cards]]
+name = "borzoi"
+
+[[cards]]
+name = "boston-terrier"
+
+[[cards]]
+name = "bouvier-des-flandres"
+
+[[cards]]
+name = "boxer"
+
+[[cards]]
+name = "bracco-italiano"
+
+[[cards]]
+name = "briard"
+
+[[cards]]
+name = "brittany"
+
+[[cards]]
+name = "bull-terrier"
+
+[[cards]]
+name = "bulldog"
+
+[[cards]]
+name = "bullmastiff"
+
+[[cards]]
+name = "cairn-terrier"
+
+[[cards]]
+name = "cane-corso"
+
+[[cards]]
+name = "cardigan-welsh-corgi"
+
+[[cards]]
+name = "cavalier-king-charles-spaniel"
+
+[[cards]]
+name = "chesapeake-bay-retriever"
+
+[[cards]]
+name = "chihuahua"
+
+[[cards]]
+name = "chinese-crested"
+
+[[cards]]
+name = "chow-chow"
+
+[[cards]]
+name = "clumber-spaniel"
+
+[[cards]]
+name = "papillon"
+
+[[cards]]
+name = "coton-de-tulear"
+
+[[cards]]
+name = "curly-coated-retriever"
+
+[[cards]]
+name = "dachshund"
+
+[[cards]]
+name = "dalmatian"
+
+[[cards]]
+name = "doberman"
+
+[[cards]]
+name = "dogo-argentino"
+
+[[cards]]
+name = "dutch-shepherd"
+
+[[cards]]
+name = "english-cocker-spaniel"
+
+[[cards]]
+name = "english-foxhound"
+
+[[cards]]
+name = "mastiff"
+
+[[cards]]
+name = "english-setter"
+
+[[cards]]
+name = "english-springer-spaniel"
+
+[[cards]]
+name = "fila-brasileiro"
+
+[[cards]]
+name = "finnish-spitz"
+
+[[cards]]
+name = "flat-coated-retriever"
+
+[[cards]]
+name = "fox-terrier"
+
+[[cards]]
+name = "french-bulldog"
+
+[[cards]]
+name = "german-shepherd"
+
+[[cards]]
+name = "german-shorthaired-pointer"
+
+[[cards]]
+name = "german-wirehaired-pointer"
+
+[[cards]]
+name = "giant-schnauzer"
+
+[[cards]]
+name = "golden-retriever"
+
+[[cards]]
+name = "gordon-setter"
+
+[[cards]]
+name = "great-dane"
+
+[[cards]]
+name = "greater-swiss-mountain-dog"
+
+[[cards]]
+name = "greyhound"
+
+[[cards]]
+name = "brussels-griffon"
+
+[[cards]]
+name = "harrier"
+
+[[cards]]
+name = "havanese"
+
+[[cards]]
+name = "ibizan-hound"
+
+[[cards]]
+name = "irish-red-and-white-setter"
+
+[[cards]]
+name = "irish-setter"
+
+[[cards]]
+name = "irish-terrier"
+
+[[cards]]
+name = "irish-water-spaniel"
+
+[[cards]]
+name = "irish-wolfhound"
+
+[[cards]]
+name = "italian-greyhound"
+
+[[cards]]
+name = "jack-russell-terrier"
+
+[[cards]]
+name = "japanese-chin"
+
+[[cards]]
+name = "anatolian-shepherd"
+
+[[cards]]
+name = "keeshond"
+
+[[cards]]
+name = "kerry-blue-terrier"
+
+[[cards]]
+name = "king-charles-spaniel"
+
+[[cards]]
+name = "komondor"
+
+[[cards]]
+name = "kuvasz"
+
+[[cards]]
+name = "labrador-retriever"
+
+[[cards]]
+name = "lagotto-romagnolo"
+
+[[cards]]
+name = "lakeland-terrier"
+
+[[cards]]
+name = "leonberger"
+
+[[cards]]
+name = "lhasa-apso"
+
+[[cards]]
+name = "maltese"
+
+[[cards]]
+name = "manchester-terrier"
+
+[[cards]]
+name = "miniature-pinscher"
+
+[[cards]]
+name = "miniature-schnauzer"
+
+[[cards]]
+name = "neapolitan-mastiff"
+
+[[cards]]
+name = "newfoundland"
+
+[[cards]]
+name = "norfolk-terrier"
+
+[[cards]]
+name = "norwegian-buhund"
+
+[[cards]]
+name = "norwegian-elkhound"
+
+[[cards]]
+name = "norwich-terrier"
+
+[[cards]]
+name = "nova-scotia-duck-tolling-retriever"
+
+[[cards]]
+name = "old-english-sheepdog"
+
+[[cards]]
+name = "parson-russell-terrier"
+
+[[cards]]
+name = "pekingese"
+
+[[cards]]
+name = "pembroke-welsh-corgi"
+
+[[cards]]
+name = "petit-basset-griffon-vendeen"
+
+[[cards]]
+name = "pharaoh-hound"
+
+[[cards]]
+name = "english-pointer"
+
+[[cards]]
+name = "pomeranian"
+
+[[cards]]
+name = "poodle"
+
+[[cards]]
+name = "portuguese-water-dog"
+
+[[cards]]
+name = "pug"
+
+[[cards]]
+name = "puli"
+
+[[cards]]
+name = "great-pyrenees"
+
+[[cards]]
+name = "rhodesian-ridgeback"
+
+[[cards]]
+name = "rottweiler"
+
+[[cards]]
+name = "rough-collie"
+
+[[cards]]
+name = "saluki"
+
+[[cards]]
+name = "samoyed"
+
+[[cards]]
+name = "schipperke"
+
+[[cards]]
+name = "scottish-deerhound"
+
+[[cards]]
+name = "scottish-terrier"
+
+[[cards]]
+name = "shar-pei"
+
+[[cards]]
+name = "shetland-sheepdog"
+
+[[cards]]
+name = "shiba-inu"
+
+[[cards]]
+name = "shih-tzu"
+
+[[cards]]
+name = "siberian-husky"
+
+[[cards]]
+name = "sloughi"
+
+[[cards]]
+name = "soft-coated-wheaten-terrier"
+
+[[cards]]
+name = "spinone-italiano"
+
+[[cards]]
+name = "saint-bernard"
+
+[[cards]]
+name = "staffordshire-bull-terrier"
+
+[[cards]]
+name = "standard-schnauzer"
+
+[[cards]]
+name = "tibetan-mastiff"
+
+[[cards]]
+name = "tibetan-terrier"
+
+[[cards]]
+name = "toy-fox-terrier"
+
+[[cards]]
+name = "vizsla"
+
+[[cards]]
+name = "weimaraner"
+
+[[cards]]
+name = "welsh-terrier"
+
+[[cards]]
+name = "west-highland-white-terrier"
+
+[[cards]]
+name = "whippet"
+
+[[cards]]
+name = "xoloitzcuintli"
+
+[[cards]]
+name = "yorkshire-terrier"
