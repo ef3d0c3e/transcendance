@@ -164,19 +164,16 @@ func drawPack(rnd *rand.Rand, byRarity map[string][]poolCard, size int) []poolCa
 	return pack
 }
 
-// drawDefaultPack draws `size` cards among the pool, each of them uniformly
-// across every collection. Duplicates are allowed. Returns nil when the pool
-// holds no card.
+// drawDefaultPack draws `size` cards among the pool of every collection. It
+// rolls the same rarity drop table as a collection booster, then picks a card
+// uniformly among the pool's cards of that tier. Duplicates are allowed.
+// Returns nil when the pool holds no card.
 func drawDefaultPack(rnd *rand.Rand, pool []poolCard, size int) []poolCard {
-	if len(pool) == 0 {
-		return nil
+	byRarity := make(map[string][]poolCard, len(rarityTiers))
+	for _, entry := range pool {
+		byRarity[entry.card.Rarity] = append(byRarity[entry.card.Rarity], entry)
 	}
-
-	pack := make([]poolCard, 0, size)
-	for i := 0; i < size; i++ {
-		pack = append(pack, pool[rnd.N(len(pool))])
-	}
-	return pack
+	return drawPack(rnd, byRarity, size)
 }
 
 // Oldest booster of a stack (same collection and size) owned by a user, nil when none is left

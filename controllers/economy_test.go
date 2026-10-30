@@ -60,7 +60,7 @@ func TestDailyRewardClaim(t *testing.T) {
 
 	rec := claimDaily(t, router, cookie, "")
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?claimed=1", rec.Header().Get("Location"))
 
 	// The first day of the ladder pays 200 coins
 	require.Equal(t, uint(200), shopBalance(t, "streak1"))
@@ -240,7 +240,25 @@ func TestDailyRewardSectionClaimsFromTheTab(t *testing.T) {
 	// The claim comes back to the tab it was made from
 	rec := claimDaily(t, router, cookie, "boosters")
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=boosters", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?claimed=1&tab=boosters", rec.Header().Get("Location"))
+}
+
+// The claim of the bonus is confirmed with the amount credited to the balance
+func TestDailyRewardClaimNotice(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "streak14", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "streak14", "foo-bar-baz-qux")
+	// The fifth day of the ladder pays 1000 coins
+	yesterday := daysAgo(1)
+	setDailyStreak(t, "streak14", 4, 4, &yesterday)
+
+	rec := claimDaily(t, router, cookie, "")
+	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
+	require.Contains(t, body, "1,000 coins added to your balance")
+
+	// The message follows the claim only, not every visit of the inventory
+	body = getInventory(t, router, cookie, "/inventory")
+	require.NotContains(t, body, "added to your balance")
 }
 
 func TestDailyRewardUnauthenticated(t *testing.T) {

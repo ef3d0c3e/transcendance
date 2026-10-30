@@ -1,0 +1,122 @@
+{{ define "trades" }}
+<div class="trades-page">
+	<h1 class="trades-title">{{ .T "trades-title" }}</h1>
+	{{ with .Data.Error }}
+	<p class="trade-message">{{ . }}</p>
+	{{ end }}
+
+	<section class="trades-section">
+		<h2 class="trades-section-title">{{ .T "trade-incoming" }}</h2>
+		{{ if .Data.Incoming }}
+		<ul class="trade-list">
+			{{ range .Data.Incoming }}
+			<li class="trade-row">
+				<span class="trade-partner">{{ .Partner }}</span>
+				<div class="trade-sides">
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-give" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GiveLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-get" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GetLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+				</div>
+				<div class="trade-actions">
+					<form method="post" action="{{ .AcceptAction }}">
+						<button type="submit" class="trade-button trade-button-accept">{{ $.T "trade-accept" }}</button>
+					</form>
+					<form method="post" action="{{ .DeclineAction }}">
+						<button type="submit" class="trade-button trade-button-decline">{{ $.T "trade-decline" }}</button>
+					</form>
+					<a class="trade-button trade-button-counter" href="{{ .CounterUrl }}">{{ $.T "trade-counter" }}</a>
+				</div>
+			</li>
+			{{ end }}
+		</ul>
+		{{ else }}
+		<p class="trade-empty">{{ .T "trade-none-incoming" }}</p>
+		{{ end }}
+	</section>
+
+	<section class="trades-section">
+		<h2 class="trades-section-title">{{ .T "trade-outgoing" }}</h2>
+		{{ if .Data.Outgoing }}
+		<ul class="trade-list">
+			{{ range .Data.Outgoing }}
+			<li class="trade-row">
+				<span class="trade-partner">{{ .Partner }}</span>
+				<div class="trade-sides">
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-give" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GiveLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-get" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GetLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+				</div>
+				<div class="trade-actions">
+					<form method="post" action="{{ .CancelAction }}">
+						<button type="submit" class="trade-button trade-button-decline">{{ $.T "trade-cancel" }}</button>
+					</form>
+				</div>
+			</li>
+			{{ end }}
+		</ul>
+		{{ else }}
+		<p class="trade-empty">{{ .T "trade-none-outgoing" }}</p>
+		{{ end }}
+	</section>
+
+	<section class="trades-section">
+		<h2 class="trades-section-title">{{ .T "trade-history" }}</h2>
+		{{ if .Data.History }}
+		<ul class="trade-list">
+			{{ range .Data.History }}
+			<li class="trade-row">
+				<span class="trade-partner">{{ .Partner }}</span>
+				<div class="trade-sides">
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-give" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GiveLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+					<div class="trade-side">
+						<h3>{{ $.T "trade-you-get" }}</h3>
+						<ul class="trade-lines">
+							{{ range .GetLines }}
+							<li>{{ . }}</li>
+							{{ end }}
+						</ul>
+					</div>
+				</div>
+				<span class="trade-state">{{ .StateLabel }}</span>
+			</li>
+			{{ end }}
+		</ul>
+		{{ else }}
+		<p class="trade-empty">{{ .T "trade-none-history" }}</p>
+		{{ end }}
+	</section>
+</div>
+{{ end }}

@@ -19,5 +19,8 @@
 			{{- with .TimerValue }} <span data-countdown="{{ $.TimerSeconds }}">{{ . }}</span>{{ end -}}
 		</button>
 	</form>
+	{{ with .Notice }}
+	<p class="daily-streak-notice">{{ . }}</p>
+	{{ end }}
 </section>
 {{ end }}

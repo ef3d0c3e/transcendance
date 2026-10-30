@@ -3,6 +3,7 @@
 <html theme="{{ .Theme }}">
 
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
 	<script src="/static/vendor/e-layout.min.js"></script>
 	<link rel="stylesheet" href="/static/base.css">
 
@@ -53,6 +54,7 @@
 
 			<div class="nav-end">
 				{{ if .User }}
+					<span class="nav-balance">{{ template "coin-icon" }} {{ .T "header-balance" "amount" .User.Coins }}</span>
 					<span id="notification" data-label-title="{{ .T "notification-title" }}"
 						data-label-unread="{{ .T "notification-unread" }}"
 						data-label-loading="{{ .T "notification-loading" }}"

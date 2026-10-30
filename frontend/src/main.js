@@ -6,6 +6,7 @@ import InventoryCardPopup from './InventoryCardPopup.svelte';
 import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
+import TradeMenu from './TradeMenu.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -292,6 +293,20 @@ import { enhanceCountdowns } from './countdown.js';
 
 	if (target) {
 		mount(ShopBuyPopup, {
+			target,
+			props: {
+				target,
+			},
+		});
+	}
+}
+
+// Trade menu
+{
+	const target = document.querySelector('#trade-menu');
+
+	if (target) {
+		mount(TradeMenu, {
 			target,
 			props: {
 				target,

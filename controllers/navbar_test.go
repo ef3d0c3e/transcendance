@@ -40,6 +40,24 @@ func TestNavbarAuthenticated(t *testing.T) {
 	require.NotContains(t, body, `id="register-popup"`)
 }
 
+// The header shows the coin balance of the account on every page
+func TestNavbarShowsBalance(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "navcoin", "foo-bar-baz-qux", 0)
+	require.NoError(t, tests.DB.Model(&models.User{}).
+		Where("username = ?", "navcoin").
+		Update("coins", 1234).Error)
+
+	cookie := login(t, router, "navcoin", "foo-bar-baz-qux")
+	body := getInventory(t, router, cookie, "/shop")
+	require.Contains(t, body, `<span class="nav-balance">`)
+	require.Contains(t, body, "Balance: 1,234")
+
+	// Visitors have no balance to show
+	body = getPage(t, router, "/shop")
+	require.NotContains(t, body, "nav-balance")
+}
+
 func TestLogoutDeletesSession(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "logout1", "foo-bar-baz-qux", 0)

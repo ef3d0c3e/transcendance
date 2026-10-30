@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 
 	"transcendance/controllers"
@@ -49,6 +50,8 @@ type streakTile struct {
 	ClaimAction string
 	// Tab the section is rendered on, kept when claiming
 	Tab string
+	// Success message shown right after the bonus was claimed
+	Notice string
 }
 
 // streakTileData builds the template data of the daily streak section
@@ -96,6 +99,11 @@ func (dc *DataController) streakTileData(c *gin.Context, state *controllers.Stre
 	} else {
 		tile.ClaimLabel = dc.Renderer.T(c, "daily-streak-claim", "amount", int(state.Reward))
 	}
+	// The claim of the bonus is confirmed by a message, shown on the page
+	// the claim redirects to
+	if state.Claimed && c.Query("claimed") != "" {
+		tile.Notice = dc.Renderer.T(c, "daily-streak-claimed-notice", "amount", int(state.Reward))
+	}
 	return tile
 }
 
@@ -115,10 +123,18 @@ func (dc *DataController) InventoryClaimPost(c *gin.Context) {
 		return
 	}
 
-	// Back to the tab the bonus was claimed from
-	target := "/inventory"
+	// Back to the tab the bonus was claimed from, flagged with the claim
+	// when the bonus was credited just now
+	params := url.Values{}
 	if c.PostForm("tab") == inventoryTabBoosters {
-		target += "?tab=" + inventoryTabBoosters
+		params.Set("tab", inventoryTabBoosters)
+	}
+	if err == nil {
+		params.Set("claimed", "1")
+	}
+	target := "/inventory"
+	if len(params) != 0 {
+		target += "?" + params.Encode()
 	}
 	c.Redirect(http.StatusSeeOther, target)
 }
