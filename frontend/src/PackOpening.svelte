@@ -1,7 +1,7 @@
 <script>
 	import { onMount, tick } from "svelte";
 	import { openTopup } from "./topup.js";
-	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./packSounds.js";
+	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
 
 	let {
 		formSelector,
