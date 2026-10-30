@@ -22,13 +22,36 @@ type shoutboxMessage struct {
 	Body     string `json:"body"`
 }
 
+type chatPrivateMessage struct {
+	ID   uint   `json:"id"`
+	From string `json:"from"`
+	To   string `json:"to"`
+	Body string `json:"body"`
+}
+
+type chatConversation struct {
+	Username string             `json:"username"`
+	Last     chatPrivateMessage `json:"last"`
+	Unread   int                `json:"unread"`
+}
+
+type chatIgnoredUser struct {
+	Username string `json:"username"`
+	Until    string `json:"until"`
+}
+
 type shoutboxEvent struct {
-	Type       string            `json:"type"`
-	Locale     string            `json:"locale"`
-	Messages   []shoutboxMessage `json:"messages"`
-	Message    *shoutboxMessage  `json:"message"`
-	Error      string            `json:"error"`
-	RetryAfter int64             `json:"retryAfter"`
+	Type          string               `json:"type"`
+	Locale        string               `json:"locale"`
+	Messages      []shoutboxMessage    `json:"messages"`
+	Message       *shoutboxMessage     `json:"message"`
+	Conversations []chatConversation   `json:"conversations"`
+	Private       *chatPrivateMessage  `json:"private"`
+	With          string               `json:"with"`
+	Privates      []chatPrivateMessage `json:"privates"`
+	Ignored       []chatIgnoredUser    `json:"ignored"`
+	Error         string               `json:"error"`
+	RetryAfter    int64                `json:"retryAfter"`
 }
 
 func shoutboxDial(t *testing.T, server *httptest.Server, cookie *http.Cookie, origin string, extraCookies ...*http.Cookie) (*websocket.Conn, *http.Response, error) {
@@ -185,6 +208,12 @@ func TestShoutboxMalformedRequests(t *testing.T) {
 		`{"type":"send","body":42}`,
 		`{"type":"delete","body":"hi"}`,
 		`{"type":"send","body":"hi","extra":true}`,
+		`{"type":"send","body":"hi","with":"someone"}`,
+		`{"type":"view"}`,
+		`{"type":"view","with":"someone","body":"hi"}`,
+		`{"type":"ignore","username":"someone"}`,
+		`{"type":"ignore","username":"someone","duration":"forever"}`,
+		`{"type":"unignore"}`,
 		`{"type":"send","body":"hi"}{"type":"send","body":"hi"}`,
 	} {
 		conn, _ := shoutboxConnect(t, server, cookie)

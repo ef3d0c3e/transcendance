@@ -10,6 +10,8 @@ import (
 const (
 	NotificationFriendRequest = "friend-request"
 	NotificationInfo          = "info"
+	// Unread private messages from one user, a single notification is kept per sender
+	NotificationPrivateMessage = "private-message"
 )
 
 type Notification struct {
