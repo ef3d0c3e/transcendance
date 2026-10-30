@@ -51,13 +51,11 @@ func RegisterRoutes(
 	router.POST("/profile/avatar", controller.AvatarPost)
 	router.POST("/profile/avatar/delete", controller.AvatarDelete)
 	router.POST("/profiles/:id", controller.ProfilePost)
+	router.POST("/profiles/:id/delete", controller.ProfileDeletePost)
 	router.POST("/profiles/:id/avatar", controller.AvatarPost)
 	router.POST("/profiles/:id/avatar/delete", controller.AvatarDelete)
 	router.GET("/avatars/:id", controller.AvatarGet)
 	router.HEAD("/avatars/:id", controller.AvatarGet)
-
-	// account.go
-	router.POST("/api/account_delete", controller.AccountDeletePost)
 
 	// legal.go
 	router.GET("/terms", controller.TermsGet)

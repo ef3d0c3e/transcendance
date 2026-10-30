@@ -1,0 +1,2 @@
+title = HMS Repulse
+description = Le HMS Repulse est un croiseur de bataille de classe Renown qui servit dans la Royal Navy de 1916 au 10 décembre 1941, Portant des canons du plus fort calibre existant à cette époque et capables d'une vitesse supérieure à celle de ses congénères, les navires de cette classe sont néanmoins handicapés par un blindage dont la bataille du Jutland a montré l'insuffisance.

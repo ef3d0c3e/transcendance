@@ -52,6 +52,9 @@ var userJoinedDurations = map[string]time.Duration{
 	"year":  365 * 24 * time.Hour,
 }
 
+// Status filters, only online users for now
+var userStatusFilters = []string{"online"}
+
 // Number of cards owned by the user of the row
 const userCardCount = "(SELECT COUNT(*) FROM cards WHERE cards.owner_id = users.id)"
 
@@ -85,6 +88,9 @@ type userSearchResult struct {
 	Username  string
 	CreatedAt time.Time
 	CardCount int64
+	// nil when the user was never seen
+	LastSeenAt *time.Time
+	Online     bool
 }
 
 // Everything needed to render the user search page
@@ -92,6 +98,8 @@ type userSearchView struct {
 	Query string
 	// Join date filter, "" when unfiltered
 	Joined string
+	// Status filter, "" when unfiltered
+	Status string
 	// Always set
 	Sort  string
 	Page  int
@@ -100,7 +108,7 @@ type userSearchView struct {
 }
 
 func (v *userSearchView) filtered() bool {
-	return v.Query != "" || v.Joined != ""
+	return v.Query != "" || v.Joined != "" || v.Status != ""
 }
 
 // Query parameters of the search, without the page
@@ -111,6 +119,9 @@ func (v *userSearchView) params() url.Values {
 	}
 	if v.Joined != "" {
 		params.Set("joined", v.Joined)
+	}
+	if v.Status != "" {
+		params.Set("status", v.Status)
 	}
 	if v.Sort != defaultUserSort(v.Query) {
 		params.Set("sort", v.Sort)
@@ -130,6 +141,9 @@ func (sc *Controller) userQuery(c *gin.Context, v *userSearchView) *gorm.DB {
 	}
 	if v.Joined != "" {
 		db = db.Where("users.created_at >= ?", time.Now().Add(-userJoinedDurations[v.Joined]))
+	}
+	if v.Status == "online" {
+		db = db.Where("users.last_seen_at > ?", time.Now().Add(-models.OnlineWindow))
 	}
 	return db
 }
@@ -167,12 +181,16 @@ func (sc *Controller) searchUsers(c *gin.Context, v *userSearchView) error {
 		return err
 	}
 	v.Users = make([]userSearchResult, 0, userSearchPageSize)
-	return sc.userQuery(c, v).
-		Select("users.id, users.username, users.created_at, " + userCardCount + " AS card_count").
+	err := sc.userQuery(c, v).
+		Select("users.id, users.username, users.created_at, users.last_seen_at, " + userCardCount + " AS card_count").
 		Order(clause.OrderBy{Expression: userOrder(v)}).
 		Offset((v.Page - 1) * userSearchPageSize).
 		Limit(userSearchPageSize).
 		Scan(&v.Users).Error
+	for i := range v.Users {
+		v.Users[i].Online = models.IsOnline(v.Users[i].LastSeenAt)
+	}
+	return err
 }
 
 // search: every user, or the ones matching the search and filters
@@ -186,6 +204,9 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 	}
 	if joined := c.Query("joined"); slices.Contains(userJoinedFilters, joined) {
 		v.Joined = joined
+	}
+	if status := c.Query("status"); slices.Contains(userStatusFilters, status) {
+		v.Status = status
 	}
 	v.Sort = defaultUserSort(v.Query)
 	if sort := c.Query("sort"); slices.Contains(userSorts, sort) &&
@@ -212,6 +233,13 @@ func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[strin
 		return sc.Renderer.T(c, "search-user-filter-joined-"+value)
 	})
 
+	status := SelectOptions(append([]string{""}, userStatusFilters...), v.Status, func(value string) string {
+		if value == "" {
+			return sc.Renderer.T(c, "search-user-filter-status-all")
+		}
+		return sc.Renderer.T(c, "search-user-filter-status-"+value)
+	})
+
 	defaultSort := defaultUserSort(v.Query)
 	sorts := userSorts
 	if defaultSort != userSortRelevance {
@@ -228,6 +256,7 @@ func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[strin
 	}
 	return map[string]any{
 		"JoinedOptions": joined,
+		"StatusOptions": status,
 		"SortOptions":   sortOptions,
 	}
 }
