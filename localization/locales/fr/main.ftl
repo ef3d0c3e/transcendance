@@ -291,6 +291,32 @@ shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
 
+index-title = Transcendance, collectionnez des cartes
+index-heading = Collectionnez, troquez et exposez vos cartes
+index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
+index-stat-cards = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+index-stat-collections = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+index-action-register = Créer un compte
+index-action-browse = Parcourir les cartes
+index-action-inventory = Ouvrir votre inventaire
+index-action-shop = Visiter la boutique
+index-step-buy-title = Achetez des boosters
+index-step-buy-text = Dépensez vos pièces dans la boutique pour des boosters de la collection de votre choix.
+index-step-open-title = Ouvrez des paquets
+index-step-open-text = Chaque booster contient quelques cartes, dont certaines rares, légendaires ou holographiques.
+index-step-trade-title = Troquez vos cartes
+index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
+index-cards-title = Cartes les plus rares
+index-cards-all = Voir toutes les cartes
+index-collections-title = Collections
+index-collections-all = Voir toutes les collections
+
 footer-label = Informations sur le site
 footer-project = Transcendance, un projet étudiant
 
