@@ -255,7 +255,7 @@ import { openTopup } from './topup.js';
 	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
 	// Pointer travel (px) after which a press counts as a tilt drag
 	const dragThreshold = 6;
-	let press = null;
+	let press;
 
 	for (const tile of tiles) {
 		const booster = tile.closest('.inventory-booster');
@@ -274,10 +274,11 @@ import { openTopup } from './topup.js';
 			open();
 		});
 		tile.addEventListener('keydown', (event) => {
-			if (event.key === 'Enter') {
-				event.preventDefault();
-				open();
+			if (event.key !== 'Enter') {
+				return;
 			}
+			event.preventDefault();
+			open();
 		});
 	}
 }
