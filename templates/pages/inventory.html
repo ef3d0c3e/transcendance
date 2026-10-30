@@ -27,6 +27,9 @@
 		<a class="inventory-tab-boosters" href="{{ .Data.TabBoostersUrl }}" {{ if eq .Data.Tab "boosters" }}aria-current="page"{{ end }}>
 			{{ .T "inventory-tab-boosters" }} <span class="inventory-tab-count">{{ .Data.TotalBoosters }}</span>
 		</a>
+		<a class="inventory-tab-collections" href="{{ .Data.TabCollectionsUrl }}" {{ if eq .Data.Tab "collections" }}aria-current="page"{{ end }}>
+			{{ .T "inventory-tab-collections" }} <span class="inventory-tab-count">{{ .Data.TotalCollections }}</span>
+		</a>
 	</nav>
 
 	{{ if .Data.Notice.Message }}
@@ -104,6 +107,24 @@
 			{{ template "collection" $val }}
 		</div>
 		{{ end }}
+		{{ end }}
+	</e-cluster>
+	{{ else if eq .Data.Tab "collections" }}
+	<e-cluster class="inventory-boosters" justify="center">
+		{{ range $val := .Data.Items }}
+		<div class="inventory-collection">
+			<a class="catalog-collection" href="{{ $val.Url }}">
+				{{ template "collection" $val }}
+			</a>
+			<div class="inventory-collection-progress">
+				<p class="pack-progress-count"><strong>{{ $val.Owned }}</strong> / {{ $val.Total }}</p>
+				<div class="pack-progress is-static" role="progressbar" aria-valuemin="0"
+					aria-valuemax="{{ $val.Total }}" aria-valuenow="{{ $val.Owned }}"
+					aria-label="{{ $.T "pack-opening-progress-title" }}">
+					<div class="pack-progress-bar" style="width: {{ $val.Percent }}%"></div>
+				</div>
+			</div>
+		</div>
 		{{ end }}
 	</e-cluster>
 	{{ else }}

@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"transcendance/controllers"
 	"transcendance/data"
 	"transcendance/views"
 
@@ -128,7 +129,12 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 
 	switch first {
 	case "search":
-		dc.catalogCollections(c)
+		// Collections are listed in the inventory, with the user's progress
+		if controllers.GetAuthenticatedUser(c) == nil {
+			c.Redirect(http.StatusSeeOther, "/cards/search/")
+		} else {
+			c.Redirect(http.StatusSeeOther, "/inventory?tab=collections")
+		}
 		return
 	}
 

@@ -17,13 +17,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-const (
-	catalogTabCards       = "cards"
-	catalogTabCollections = "collections"
-)
-
 // Catalog card sort keeping the collection order, used when not searching
 const catalogSortNumber = "number"
+
+// In a collection, cards the user is missing first, then the collection order
+const catalogSortMissing = "missing"
+
+// In a collection, filter on the cards the user collected or is missing
+const (
+	catalogStatusOwned   = "owned"
+	catalogStatusMissing = "missing"
+)
+
+var catalogStatuses = []string{catalogStatusOwned, catalogStatusMissing}
 
 // Card sorts of the catalog, relevance is only available when searching
 var catalogSorts = []string{
@@ -44,20 +50,20 @@ func defaultCatalogSort(query string) string {
 
 // Everything needed to render the catalog page
 type catalogView struct {
-	// Displayed tab, cards or collections
-	Tab   string
 	Query string
 	// Card filters, "" or 0 when unfiltered
 	Rarity     string
 	Collection int
-	// Card sort, always set on the cards tab
+	// Collected or missing cards only, within a collection when logged in
+	Status string
+	// Card sort, always set
 	Sort string
 	// Error or empty state message
 	Message string
-	// Rendered cards or collections
+	// Rendered cards
 	Items []map[string]any
 	Page  int
-	// Number of matching cards or collections
+	// Number of matching cards
 	Count int
 	// Collection whose cards are listed, nil on the catalog
 	Scope *data.Collection
@@ -89,55 +95,36 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	if v.Items == nil {
 		v.Items = make([]map[string]any, 0)
 	}
-	searching := strings.TrimSpace(v.Query) != "" ||
-		(v.Tab == catalogTabCards && (v.Rarity != "" || (v.Collection != 0 && v.Scope == nil)))
+	searching := strings.TrimSpace(v.Query) != "" || v.Rarity != "" || v.Status != "" ||
+		(v.Collection != 0 && v.Scope == nil)
 	if v.Message == "" && len(v.Items) == 0 {
-		if v.Tab == catalogTabCollections {
-			v.Message = dc.Renderer.T(c, "collection-search-empty")
-		} else {
-			v.Message = dc.Renderer.T(c, "card-search-empty")
-		}
+		v.Message = dc.Renderer.T(c, "card-search-empty")
 	}
 	count := ""
 	if v.Count > 0 {
-		switch {
-		case v.Tab == catalogTabCollections:
-			count = dc.Renderer.T(c, "catalog-collection-count", "count", v.Count)
-		case searching:
+		if searching {
 			count = dc.Renderer.T(c, "inventory-search-count", "count", v.Count)
-		default:
+		} else {
 			count = dc.Renderer.T(c, "inventory-count", "count", v.Count)
 		}
 	}
-	tabBase := map[string]string{
-		catalogTabCards:       "/cards/search/",
-		catalogTabCollections: "/collections/search/",
-	}
-	// The search is kept when switching tabs
-	tabUrl := func(tab string) string {
-		if v.Query == "" {
-			return tabBase[tab]
-		}
-		return tabBase[tab] + "?" + url.Values{"q": {v.Query}}.Encode()
-	}
+	// The page lists every card, or a collection's
+	action := "/cards/search/"
 	if v.Scope != nil {
-		tabBase[catalogTabCards] = fmt.Sprint("/collections/", v.Scope.ID, "/")
+		action = fmt.Sprint("/collections/", v.Scope.ID, "/")
 	}
 	totalPages := (v.Count + pageSize - 1) / pageSize
 	fields := map[string]any{
-		"Title":             title,
-		"Message":           v.Message,
-		"Count":             count,
-		"Tab":               v.Tab,
-		"Action":            tabBase[v.Tab],
-		"TabCardsUrl":       tabUrl(catalogTabCards),
-		"TabCollectionsUrl": tabUrl(catalogTabCollections),
-		"Items":             v.Items,
-		"Query":             v.Query,
-		"Filtered":          searching,
-		"ClearUrl":          tabBase[v.Tab],
-		"Pages":             totalPages,
-		"Scoped":            v.Scope != nil,
+		"Title":    title,
+		"Message":  v.Message,
+		"Count":    count,
+		"Action":   action,
+		"Items":    v.Items,
+		"Query":    v.Query,
+		"Filtered": searching,
+		"ClearUrl": action,
+		"Pages":    totalPages,
+		"Scoped":   v.Scope != nil,
 	}
 	if v.Scope != nil && v.Owned != nil && len(v.Scope.Cards) > 0 {
 		fields["Progress"] = map[string]any{
@@ -146,7 +133,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 			"Percent": len(v.Owned) * 100 / len(v.Scope.Cards),
 		}
 	}
-	if v.Tab == catalogTabCards {
+	{
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
 			if value == "" {
 				return dc.Renderer.T(c, "inventory-filter-rarity-all")
@@ -167,14 +154,28 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		fields["CollectionOptions"] = controllers.SelectOptions(collections, current, func(value string) string {
 			return titles[value]
 		})
+		if v.Owned != nil {
+			fields["StatusOptions"] = controllers.SelectOptions(append([]string{""}, catalogStatuses...), v.Status, func(value string) string {
+				if value == "" {
+					return dc.Renderer.T(c, "catalog-filter-status-all")
+				}
+				return dc.Renderer.T(c, "catalog-filter-status-"+value)
+			})
+		}
 		defaultSort := defaultCatalogSort(v.Query)
-		sorts := catalogSorts
+		sorts := slices.Clone(catalogSorts)
 		if defaultSort != inventorySortRelevance {
 			sorts = sorts[1:]
 		}
+		if v.Owned != nil {
+			sorts = append(sorts, catalogSortMissing)
+		}
 		sortOptions := controllers.SelectOptions(sorts, v.Sort, func(value string) string {
-			if value == catalogSortNumber {
+			switch value {
+			case catalogSortNumber:
 				return dc.Renderer.T(c, "catalog-sort-number")
+			case catalogSortMissing:
+				return dc.Renderer.T(c, "catalog-sort-missing")
 			}
 			return dc.Renderer.T(c, "inventory-sort-"+value)
 		})
@@ -197,7 +198,10 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	if v.Collection != 0 && v.Scope == nil {
 		params.Set("collection", strconv.Itoa(v.Collection))
 	}
-	if v.Tab == catalogTabCards && v.Sort != defaultCatalogSort(v.Query) {
+	if v.Status != "" {
+		params.Set("status", v.Status)
+	}
+	if v.Sort != defaultCatalogSort(v.Query) {
 		params.Set("sort", v.Sort)
 	}
 	paginatorUrl := "?p="
@@ -262,7 +266,6 @@ func (dc *DataController) collectionCards(c *gin.Context, collection *data.Colle
 // Card search page, within scope when it isn't nil
 func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	v := &catalogView{
-		Tab:   catalogTabCards,
 		Query: c.Query("q"),
 		Page:  catalogPage(c),
 		Scope: scope,
@@ -284,8 +287,12 @@ func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	} else if id, err := strconv.Atoi(c.Query("collection")); err == nil && dc.Data.GetCollection(id) != nil {
 		v.Collection = id
 	}
+	// What the user owns is only known inside a collection, logged in
+	if status := c.Query("status"); v.Owned != nil && slices.Contains(catalogStatuses, status) {
+		v.Status = status
+	}
 	v.Sort = defaultCatalogSort(v.Query)
-	if sort := c.Query("sort"); slices.Contains(catalogSorts, sort) &&
+	if sort := c.Query("sort"); (slices.Contains(catalogSorts, sort) || (sort == catalogSortMissing && v.Owned != nil)) &&
 		(sort != inventorySortRelevance || v.Sort == inventorySortRelevance) {
 		v.Sort = sort
 	}
@@ -337,11 +344,21 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 
 	stacks = slices.DeleteFunc(stacks, func(stack cardStack) bool {
 		return (v.Rarity != "" && stack.card.Rarity != v.Rarity) ||
-			(v.Collection != 0 && stack.collection.ID != v.Collection)
+			(v.Collection != 0 && stack.collection.ID != v.Collection) ||
+			(v.Status == catalogStatusOwned && !v.Owned[stack.CardID]) ||
+			(v.Status == catalogStatusMissing && v.Owned[stack.CardID])
 	})
 	v.Count = len(stacks)
 	// The collection order is the ID tie-break
-	sortCardStacks(stacks, v.Sort, loc, relevance)
+	if v.Sort == catalogSortMissing {
+		sortCardStacks(stacks, catalogSortNumber, loc, relevance)
+		slices.SortStableFunc(stacks, func(a, b cardStack) int {
+			// Missing (false) before owned
+			return cmp.Compare(boolRank(v.Owned[a.CardID]), boolRank(v.Owned[b.CardID]))
+		})
+	} else {
+		sortCardStacks(stacks, v.Sort, loc, relevance)
+	}
 
 	start := min((v.Page-1)*pageSize, len(stacks))
 	end := min(start+pageSize, len(stacks))
@@ -361,57 +378,10 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 	return nil
 }
 
-// collections/search: every collection, or the ones matching the search
-func (dc *DataController) catalogCollections(c *gin.Context) {
-	v := &catalogView{
-		Tab:   catalogTabCollections,
-		Query: c.Query("q"),
-		Page:  catalogPage(c),
+// 0 for false, 1 for true, to sort on a flag
+func boolRank(b bool) int {
+	if b {
+		return 1
 	}
-	loc := dc.Renderer.Localizer.GetLocale(c)
-
-	var collections []*data.Collection
-	if strings.TrimSpace(v.Query) != "" {
-		ss, err := dc.GetCollectionSearchSet(loc)
-		if err != nil {
-			log.Printf("WARN failed to get collection search set for locale '%s': %s", loc, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		results, total, err := ss.Search(v.Query, pageSize, (v.Page-1)*pageSize)
-		if err != nil {
-			log.Printf("WARN search failed for locale: '%s', term '%s': %s", loc, v.Query, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		collections = results
-		v.Count = int(total)
-	} else {
-		all := dc.sortedCollections()
-		v.Count = len(all)
-		start := min((v.Page-1)*pageSize, len(all))
-		collections = all[start:min(start+pageSize, len(all))]
-	}
-
-	v.Items = make([]map[string]any, 0, len(collections))
-	for _, collection := range collections {
-		data, err := getCollectionData(c, loc, dc.Renderer, collection)
-		if err != nil {
-			log.Printf("WARN failed to build data for collection '%s': %s", collection.Name, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		v.Items = append(v.Items, map[string]any{
-			"Data": data,
-			// Lists the collection's cards
-			"Url": fmt.Sprint("/collections/", collection.ID, "/"),
-		})
-	}
-	dc.renderCatalog(c, v)
+	return 0
 }

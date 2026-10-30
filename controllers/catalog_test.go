@@ -32,7 +32,9 @@ func TestCatalogListsEveryCard(t *testing.T) {
 		"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Tungsten",
 	}, cardTitles(body)[:5])
 	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d cards</p>`, len(tests.Data.Cards)))
-	require.Contains(t, body, `<a class="inventory-tab-cards" href="/cards/search/" aria-current="page">`)
+	// Only cards: collections are in the inventory
+	require.NotContains(t, body, "inventory-tab")
+	require.NotContains(t, body, "/collections/search/")
 	// Relevance needs a search
 	require.NotContains(t, body, `value="relevance"`)
 }
@@ -59,8 +61,6 @@ func TestCatalogSearchFiltersAndSorts(t *testing.T) {
 
 	searched := getPage(t, router, "/cards/search/?q=tungsten")
 	require.Contains(t, searched, `<p class="inventory-count">1 card found</p>`)
-	// The search follows to the collections tab
-	require.Contains(t, searched, `href="/collections/search/?q=tungsten"`)
 
 	empty := getPage(t, router, "/cards/search/?q=tungsten&rarity=rare")
 	require.Contains(t, empty, "No cards found")
@@ -76,15 +76,67 @@ func TestCatalogCardsPaginate(t *testing.T) {
 	require.Contains(t, body, "No cards found")
 }
 
-func TestCatalogCollectionsTab(t *testing.T) {
+func TestCatalogCollectionsInInventory(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "colinv1", "foo-bar-baz-qux", 0)
+	giveCards(t, "colinv1", cardTungsten, 2)
+	giveCards(t, "colinv1", cardFordT, 1)
+	cookie := login(t, router, "colinv1", "foo-bar-baz-qux")
 
-	body := getPage(t, router, "/collections/search/")
+	// The old collections listing leads to the inventory, or the cards for visitors
+	rec := shopRequest(t, router, http.MethodGet, "/collections/search/", nil, cookie)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/inventory?tab=collections", rec.Header().Get("Location"))
+	rec = shopRequest(t, router, http.MethodGet, "/collections/search/", nil, nil)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/cards/search/", rec.Header().Get("Location"))
+
+	// Every collection, linking to its cards, with the user's progress in it
+	body := getInventory(t, router, cookie, "/inventory?tab=collections")
+	require.Contains(t, body, `<a class="inventory-tab-collections" href="/inventory?tab=collections" aria-current="page">`)
+	require.Contains(t, body, fmt.Sprintf(`<span class="inventory-tab-count">%d</span>`, len(tests.Data.Collections)))
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `class="inventory-collection"`))
 	require.Contains(t, body, `<a class="catalog-collection" href="/collections/1/">`)
+	require.Contains(t, body, `<p class="pack-progress-count"><strong>2</strong> / 5</p>`)
+	require.Contains(t, body, `<div class="pack-progress-bar" style="width: 40%"></div>`)
+	require.Contains(t, body, `<p class="pack-progress-count"><strong>0</strong> / 151</p>`)
 	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d collections</p>`, len(tests.Data.Collections)))
-	require.Contains(t, body, `<a class="inventory-tab-boosters" href="/collections/search/" aria-current="page">`)
-	// Card filters are only on the cards tab
 	require.NotContains(t, body, `name="rarity"`)
+}
+
+func TestCollectionMissingCards(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "colmiss1", "foo-bar-baz-qux", 0)
+	giveCards(t, "colmiss1", cardTungsten, 1)
+	giveCards(t, "colmiss1", cardFlyingScotsman, 1)
+	cookie := login(t, router, "colmiss1", "foo-bar-baz-qux")
+
+	cases := map[string][]string{
+		"/collections/1/?status=owned":   {"Flying Scotsman", "Tungsten"},
+		"/collections/1/?status=missing": {"Pythagorean tiling", "McMurdo Station", "Ford Model T"},
+		// Combined with the other filters
+		"/collections/1/?status=missing&rarity=common": {"Pythagorean tiling"},
+		// Missing first, each part in collection order
+		"/collections/1/?sort=missing": {"Pythagorean tiling", "McMurdo Station", "Ford Model T", "Flying Scotsman", "Tungsten"},
+	}
+	for target, titles := range cases {
+		require.Equal(t, titles, cardTitles(getInventory(t, router, cookie, target)), target)
+	}
+
+	body := getInventory(t, router, cookie, "/collections/1/?status=missing")
+	require.Contains(t, body, `<option value="missing" selected>Missing</option>`)
+	require.Contains(t, body, `<option value="missing" >Missing first</option>`)
+	require.Contains(t, body, `<p class="inventory-count">3 cards found</p>`)
+
+	// Visitors don't own anything: no such filter or sort, and they're ignored
+	visitor := getPage(t, router, "/collections/1/?status=missing&sort=missing")
+	require.NotContains(t, visitor, `name="status"`)
+	require.NotContains(t, visitor, "Missing first")
+	require.Len(t, cardTitles(visitor), 5)
+	// Nor on the whole catalog
+	all := getInventory(t, router, cookie, "/cards/search/?status=missing")
+	require.NotContains(t, all, `name="status"`)
+	require.Len(t, cardTitles(all), 20)
 }
 
 func TestCollectionShowsProgress(t *testing.T) {
