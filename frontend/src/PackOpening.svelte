@@ -94,9 +94,9 @@
 	// The cards keep being followed this long after the last reel locked, its
 	// bounce included
 	const FADE_SETTLE_MS = 500;
-	// Period of the cards' sway, picked per reel so they never move in sync
 	// Ticks the rolling sound plays for each card passing the payline
 	const TICKS_PER_CARD = 3;
+	// Period of the reels' sway, picked per reel so they never move in sync
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
 
@@ -851,14 +851,15 @@
 		display: none;
 	}
 
-	/* Cards sway in their window on their reel's clock. translate and rotate
-		leave transform to the landing pop. */
-	.pack-cell {
+	/* The cards sway with their window, on their reel's clock. A sway on each
+		card would be repainted every frame in Firefox, one per window runs on
+		the compositor. */
+	.pack-window {
 		animation: pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.pack-cell {
+		.pack-window {
 			animation: none;
 		}
 	}
@@ -1043,9 +1044,7 @@
 	/* Only the landing card pops, and only once its reel locked */
 	.is-landed .pack-cell[data-win="true"] {
 		z-index: 1;
-		animation:
-			pack-pop 0.75s ease-out both,
-			pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate;
+		animation: pack-pop 0.75s ease-out both;
 	}
 
 	/* Rare and legendary cards keep glowing in their rarity's color */
@@ -1053,7 +1052,6 @@
 	.is-landed[data-rarity="legendary"] .pack-cell[data-win="true"] {
 		animation:
 			pack-pop 0.75s ease-out both,
-			pack-sway var(--sway-duration, 3.4s) ease-in-out var(--sway-delay, 0s) infinite alternate,
 			pack-glow 1.4s ease-in-out infinite alternate;
 	}
 
