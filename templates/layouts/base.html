@@ -43,10 +43,10 @@
 			</label>
 
 			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
-				<li><a href="/cards/search/" {{ if or (hasPrefix .Path "/cards") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
+				<li><a href="/cards/search/" {{ if hasPrefix .Path "/cards" }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
-				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
+				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
 				{{ end }}
 			</ul>
 

@@ -348,15 +348,10 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	// Tab counts
-	if err := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&v.TotalCards).Error; err != nil {
-		fail("cards count", err)
+	if v.TotalCards, v.TotalBoosters, err = dc.inventoryCounts(userID); err != nil {
+		fail("counts", err)
 		return
 	}
-	if err := dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&v.TotalBoosters).Error; err != nil {
-		fail("boosters count", err)
-		return
-	}
-
 	v.TotalCollections = int64(len(dc.Data.Collections))
 
 	if v.Tab == inventoryTabCollections {
@@ -590,6 +585,15 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 	start := min((v.Page-1)*inventoryPageSize, len(items))
 	v.Items = items[start:min(start+inventoryPageSize, len(items))]
 	return nil
+}
+
+// Number of cards and boosters a user owns, shown in the inventory tabs
+func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters int64, err error) {
+	if err = dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&cards).Error; err != nil {
+		return
+	}
+	err = dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&boosters).Error
+	return
 }
 
 // Fill the view with every collection, and how many of its cards the user owns

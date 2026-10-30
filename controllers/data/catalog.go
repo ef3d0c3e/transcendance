@@ -126,6 +126,22 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		"Pages":    totalPages,
 		"Scoped":   v.Scope != nil,
 	}
+	// A collection's cards are part of the logged in user's inventory: its
+	// tabs stay, on the collections one
+	if user := controllers.GetAuthenticatedUser(c); v.Scope != nil && user != nil {
+		cards, boosters, err := dc.inventoryCounts(user.ID)
+		if err != nil {
+			log.Printf("WARN failed to count the inventory of '%s': %s", user.Username, err)
+		} else {
+			fields["Tab"] = inventoryTabCollections
+			fields["TabCardsUrl"] = "/inventory?tab=cards"
+			fields["TabBoostersUrl"] = "/inventory"
+			fields["TabCollectionsUrl"] = "/inventory?tab=collections"
+			fields["TotalCards"] = cards
+			fields["TotalBoosters"] = boosters
+			fields["TotalCollections"] = len(dc.Data.Collections)
+		}
+	}
 	if v.Scope != nil && v.Owned != nil && len(v.Scope.Cards) > 0 {
 		fields["Progress"] = map[string]any{
 			"Owned":   len(v.Owned),
