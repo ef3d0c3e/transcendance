@@ -52,10 +52,12 @@
 {#if error != ""}
 	<span>error: {{error}}</span>
 {/if}
-{#if relation == "respond"}
-	<button class="deny" onclick={()=>relationAction("deny")}>deny</button>
+{#if relation.toString() != "you"}
+	{#if relation.toString() == "respond"}
+		<button class="deny" onclick={()=>relationAction("deny")}>deny</button>
+	{/if}
+	<button class={relation} onclick={()=>relationAction(action)}>{ action }</button>
 {/if}
-<button class={relation} onclick={()=>relationAction(action)}>{ action }</button>
 
 
 <style>

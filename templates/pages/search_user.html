@@ -59,7 +59,9 @@
 			<div class="user-result-body">
 				<a class="user-result-name" href="/profile/{{ .Username }}">{{ .Username }}</a>
 				<dl class="user-result-stats">
-					<div class="friend-button" data-id="{{ .ID }}"></div>
+					{{ if $.Data.User }}
+						<div class="friend-button" data-id="{{ .ID }}"></div>
+					{{ end}}
 					<div>
 						<dt>{{ $.T "search-user-joined" }}</dt>
 						<dd><time datetime="{{ .CreatedAt.Format "2006-01-02T15:04:05Z07:00" }}">{{ .CreatedAt.Format "2006-01-02" }}</time></dd>
