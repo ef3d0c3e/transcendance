@@ -1,0 +1,63 @@
+{{ define "index" }}
+<div class="index">
+	<div class="index-hero">
+		<h1>{{ .T "index-heading" }}</h1>
+		<p class="index-tagline">{{ .T "index-tagline" }}</p>
+		<p class="index-stats">{{ .Data.CardCount }} · {{ .Data.CollectionCount }}</p>
+		<div class="index-actions">
+			{{ if .Data.User }}
+			<a class="index-action-primary" href="/inventory">{{ .T "index-action-inventory" }}</a>
+			<a class="index-action" href="/shop">{{ .T "index-action-shop" }}</a>
+			{{ else }}
+			<a class="index-action-primary" href="/register">{{ .T "index-action-register" }}</a>
+			<a class="index-action" href="/cards/search/">{{ .T "index-action-browse" }}</a>
+			{{ end }}
+		</div>
+	</div>
+
+	<ol class="index-steps">
+		<li>
+			<h2>{{ .T "index-step-buy-title" }}</h2>
+			<p>{{ .T "index-step-buy-text" }}</p>
+		</li>
+		<li>
+			<h2>{{ .T "index-step-open-title" }}</h2>
+			<p>{{ .T "index-step-open-text" }}</p>
+		</li>
+		<li>
+			<h2>{{ .T "index-step-trade-title" }}</h2>
+			<p>{{ .T "index-step-trade-text" }}</p>
+		</li>
+	</ol>
+
+	{{ if ne (len .Data.Cards) 0 }}
+	<div class="index-showcase">
+		<div class="index-showcase-header">
+			<h2>{{ .T "index-cards-title" }}</h2>
+			<a href="/cards/search/">{{ .T "index-cards-all" }}</a>
+		</div>
+		<e-cluster class="inventory-cards" justify="center">
+			{{ range $val := .Data.Cards }}
+			{{ template "card" $val }}
+			{{ end }}
+		</e-cluster>
+	</div>
+	{{ end }}
+
+	{{ if ne (len .Data.Collections) 0 }}
+	<div class="index-showcase">
+		<div class="index-showcase-header">
+			<h2>{{ .T "index-collections-title" }}</h2>
+			<a href="/collections/search/">{{ .T "index-collections-all" }}</a>
+		</div>
+		<e-cluster class="inventory-boosters" justify="center">
+			{{ range $val := .Data.Collections }}
+			<a class="catalog-collection" href="{{ $val.Url }}">
+				{{ template "collection" $val }}
+			</a>
+			{{ end }}
+		</e-cluster>
+	</div>
+	{{ end }}
+</div>
+{{ end }}
