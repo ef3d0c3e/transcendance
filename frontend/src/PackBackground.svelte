@@ -7,8 +7,8 @@
 
 	// The shader runs on a small buffer stretched to the screen: cheap, and
 	// the pixelated look is part of the style
-	const PIXEL_SIZE = 6;
-	const MAX_WIDTH = 480;
+	const PIXEL_SIZE = 3;
+	const MAX_WIDTH = 960;
 	// Seconds of animation per real second, slower when motion is reduced
 	const SPEED = 1;
 	const REDUCED_SPEED = 0.3;
