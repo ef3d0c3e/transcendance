@@ -1,0 +1,201 @@
+id = 3
+tags = ["dessert"]
+color-primary = "#e9a6b3"
+color-secondary = "#4a2c2a"
+
+[[cards]]
+name = "tiramisu"
+[[cards]]
+name = "black-forest-cake"
+[[cards]]
+name = "sachertorte"
+[[cards]]
+name = "cheesecake"
+[[cards]]
+name = "red-velvet-cake"
+[[cards]]
+name = "carrot-cake"
+[[cards]]
+name = "pavlova"
+[[cards]]
+name = "opera-cake"
+[[cards]]
+name = "baumkuchen"
+[[cards]]
+name = "castella"
+[[cards]]
+name = "panettone"
+[[cards]]
+name = "stollen"
+[[cards]]
+name = "madeleine"
+[[cards]]
+name = "canele"
+[[cards]]
+name = "kouign-amann"
+[[cards]]
+name = "molten-chocolate-cake"
+[[cards]]
+name = "chocolate-brownie"
+[[cards]]
+name = "tres-leches-cake"
+[[cards]]
+name = "lamington"
+[[cards]]
+name = "dobos-torte"
+[[cards]]
+name = "princess-cake"
+[[cards]]
+name = "baba-au-rhum"
+[[cards]]
+name = "mont-blanc"
+[[cards]]
+name = "croissant"
+[[cards]]
+name = "pain-au-chocolat"
+[[cards]]
+name = "eclair"
+[[cards]]
+name = "profiterole"
+[[cards]]
+name = "paris-brest"
+[[cards]]
+name = "croquembouche"
+[[cards]]
+name = "mille-feuille"
+[[cards]]
+name = "baklava"
+[[cards]]
+name = "knafeh"
+[[cards]]
+name = "cannoli"
+[[cards]]
+name = "apple-strudel"
+[[cards]]
+name = "danish-pastry"
+[[cards]]
+name = "cinnamon-roll"
+[[cards]]
+name = "churro"
+[[cards]]
+name = "doughnut"
+[[cards]]
+name = "belgian-waffle"
+[[cards]]
+name = "crepe-suzette"
+[[cards]]
+name = "pastel-de-nata"
+[[cards]]
+name = "loukoumades"
+[[cards]]
+name = "gulab-jamun"
+[[cards]]
+name = "jalebi"
+[[cards]]
+name = "macaron"
+[[cards]]
+name = "chocolate-chip-cookie"
+[[cards]]
+name = "gingerbread"
+[[cards]]
+name = "shortbread"
+[[cards]]
+name = "biscotti"
+[[cards]]
+name = "speculaas"
+[[cards]]
+name = "alfajor"
+[[cards]]
+name = "stroopwafel"
+[[cards]]
+name = "creme-brulee"
+[[cards]]
+name = "creme-caramel"
+[[cards]]
+name = "panna-cotta"
+[[cards]]
+name = "rice-pudding"
+[[cards]]
+name = "sticky-toffee-pudding"
+[[cards]]
+name = "christmas-pudding"
+[[cards]]
+name = "mousse"
+[[cards]]
+name = "trifle"
+[[cards]]
+name = "mango-sticky-rice"
+[[cards]]
+name = "kheer"
+[[cards]]
+name = "ice-cream"
+[[cards]]
+name = "gelato"
+[[cards]]
+name = "sorbet"
+[[cards]]
+name = "baked-alaska"
+[[cards]]
+name = "banana-split"
+[[cards]]
+name = "affogato"
+[[cards]]
+name = "kulfi"
+[[cards]]
+name = "halo-halo"
+[[cards]]
+name = "bingsu"
+[[cards]]
+name = "apple-pie"
+[[cards]]
+name = "pumpkin-pie"
+[[cards]]
+name = "pecan-pie"
+[[cards]]
+name = "key-lime-pie"
+[[cards]]
+name = "lemon-meringue-pie"
+[[cards]]
+name = "banoffee-pie"
+[[cards]]
+name = "tarte-tatin"
+[[cards]]
+name = "clafoutis"
+[[cards]]
+name = "linzer-torte"
+[[cards]]
+name = "bakewell-tart"
+[[cards]]
+name = "egg-tart"
+[[cards]]
+name = "chocolate-truffle"
+[[cards]]
+name = "fudge"
+[[cards]]
+name = "marshmallow"
+[[cards]]
+name = "nougat"
+[[cards]]
+name = "turkish-delight"
+[[cards]]
+name = "marzipan"
+[[cards]]
+name = "cotton-candy"
+[[cards]]
+name = "halva"
+[[cards]]
+name = "brigadeiro"
+[[cards]]
+name = "dulce-de-leche"
+[[cards]]
+name = "mochi"
+[[cards]]
+name = "dorayaki"
+[[cards]]
+name = "taiyaki"
+[[cards]]
+name = "tangyuan"
+[[cards]]
+name = "mooncake"
+[[cards]]
+name = "laddu"

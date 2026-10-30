@@ -1,0 +1,2 @@
+title = Crêpe Suzette
+description = Une crêpe Suzette est un dessert français composé d'une crêpe au beurre Suzette, une sauce à base de sucre caramélisé et de beurre, de jus de mandarine ou d'orange, de zeste et de liqueur Grand Marnier ou de curaçao. Les crêpes Suzette sont généralement servies flambées, même si certains ouvrages de cuisine notent que dans la recette originale, elles sont servies non flambées.

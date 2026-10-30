@@ -1,0 +1,2 @@
+title = Mango sticky rice
+description = Le riz gluant à la mangue, également connu sous son nom anglais mango sticky rice, est un dessert traditionnel d'Asie du Sud-Est et d'Asie du Sud, fait à base de riz gluant, de mangue fraîche et de lait de coco. Il peut être mangé avec une cuillère ou avec les mains. Il est particulièrement populaire en Thaïlande et au Laos mais est aussi consommé au Viêtnam, au Cambodge et aux Philippines sous une variante.

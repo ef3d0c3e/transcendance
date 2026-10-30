@@ -1,0 +1,2 @@
+title = Belgian waffle
+description = In English-speaking countries, Belgian waffles are a variety of waffle with a lighter batter, larger squares, and deeper pockets than North American waffles. Belgian waffles were originally leavened with yeast, but baking powder is now often used. They are often eaten as a breakfast food; toppings vary from whipped cream, confectioners' sugar, soft fruit, and chocolate spread, to syrup and butter or margarine.
