@@ -1,0 +1,2 @@
+title = Tiramisu
+description = Tiramisu is an Italian dessert made with coffee-soaked ladyfingers covered with a cream of egg yolks, sugar, mascarpone, and cocoa powder. It originated in northeastern Italy, and modern versions were popularized in restaurants from the late 1960s. Tiramisu has become one of the most internationally recognised Italian desserts and has inspired many variations in home and professional cooking.

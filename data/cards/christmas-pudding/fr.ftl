@@ -1,0 +1,2 @@
+title = Christmas pudding
+description = Le Christmas pudding, ou pudding de Noël, est un dessert de type pudding traditionnellement servi le jour de Noël dans les îles Britanniques et les pays de l'ancien Empire britannique. Originaire d'Angleterre, il est parfois nommé « plum-pudding », terme plus général qui peut aussi faire référence à d'autres sortes de puddings bouillis contenant des fruits secs. Il est fait sans l'utilisation d'un four.

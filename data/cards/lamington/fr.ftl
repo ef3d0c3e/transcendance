@@ -1,0 +1,2 @@
+title = Lamington
+description = Le lamington est un gâteau traditionnel australien constitué de cubes de gâteau éponge recouverts d'un glaçage au cacao et roulé dans de la noix de coco séchée. La préparation appliquée en couche fine est absorbée par l'extérieur du gâteau après un temps de repos, ce qui lui donne une texture particulière. Le lamington reste un encas populaire à travers toute l'Australie et la Nouvelle-Zélande.

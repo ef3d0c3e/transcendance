@@ -1,0 +1,2 @@
+title = Croquembouche
+description = Le croquembouche est un assemblage de pâtisseries croquantes faites de choux de pâte, de crème pâtissière et de caramel. En France, pays dont il est originaire, il est souvent servi comme gâteau de mariage et réalisé avec des choux à la crème et du sucre caramélisé (nougatine) montés en cône. Cette pâtisserie est alors appelée « pyramide de choux » voire « pièce montée ».

@@ -1,0 +1,2 @@
+title = Red velvet cake
+description = Le red velvet cake, ou gâteau rouge velours, est un gâteau d'origine américaine ayant une couleur rouge, rouge clair ou rouge foncé. Il est généralement préparé comme un gâteau à étages couvert de fromage à la crème ou de crème au beurre à l'hermine. Ce gâteau d'origine américaine date du XIXe siècle et est traditionnellement servi à Noël ou à la Saint-Valentin.
