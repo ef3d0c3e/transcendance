@@ -109,17 +109,7 @@ func topupReturn(raw string) string {
 	return raw
 }
 
-// collectionTitle returns the localized title of a collection, falling back
-// to its directory name.
-func collectionTitle(collection *data.Collection, locale string) string {
-	title, err := collection.Translate(locale, "title")
-	if err != nil {
-		return collection.Name
-	}
-	return title
-}
-
-// ShopNotice is the message shown after buying boosters or coins, if any
+// ShopNotice is the message shown after buying coins or a failed purchase, if any
 type ShopNotice struct {
 	Message   string
 	Error     bool
@@ -130,28 +120,6 @@ type ShopNotice struct {
 // notice builds the notice shown after a shop round-trip, if any.
 // GetShopNotice reads the outcome of a purchase from the query
 func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopNotice {
-	locale := renderer.Localizer.GetLocale(c)
-
-	if bought := c.Query("bought"); bought != "" {
-		id, err := strconv.Atoi(bought)
-		if err == nil {
-			if collection := d.GetCollection(id); collection != nil {
-				// A bare bought= means one booster; a bulk checkout adds its quantity.
-				count := 1
-				if raw := c.Query("qty"); raw != "" {
-					if n, err := strconv.Atoi(raw); err == nil && n >= 1 && n <= maxBuyQuantity {
-						count = n
-					}
-				}
-				return ShopNotice{
-					Message: renderer.T(c, "shop-buy-success",
-						"collection", collectionTitle(collection, locale),
-						"count", count),
-				}
-			}
-		}
-	}
-
 	if packID := c.Query("topup"); packID != "" {
 		if amount, ok := topupAmount(packID); ok {
 			return ShopNotice{Message: renderer.T(c, "shop-topup-success", "amount", amount)}
@@ -253,12 +221,8 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 		log.Printf("WARN failed to sell %d boosters of collection %d to user %d: %s", quantity, collection.ID, user.ID, err)
 		c.Redirect(http.StatusSeeOther, "/inventory?error=internal")
 	default:
-		// The quantity only needs saying when it is not the default one.
-		location := "/inventory?bought=" + strconv.Itoa(collection.ID)
-		if quantity > 1 {
-			location += "&qty=" + strconv.Itoa(quantity)
-		}
-		c.Redirect(http.StatusSeeOther, location)
+		// Straight to opening the first one, the page goes on with the rest
+		c.Redirect(http.StatusSeeOther, "/opening?booster="+strconv.FormatUint(uint64(boosters[0].ID), 10))
 	}
 }
 

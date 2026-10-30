@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -69,6 +70,7 @@ func shopBoosters(t *testing.T, username string) []models.Booster {
 	var boosters []models.Booster
 	require.NoError(t, tests.DB.
 		Where("owner_id = ?", user.ID).
+		Order("id").
 		Find(&boosters).
 		Error)
 	return boosters
@@ -121,9 +123,9 @@ func TestShopGetRedirectsToInventory(t *testing.T) {
 	require.Equal(t, "/inventory", rec.Header().Get("Location"))
 
 	// Purchase notices follow
-	rec = shopRequest(t, router, http.MethodGet, "/shop?bought=1&qty=3", nil, nil)
+	rec = shopRequest(t, router, http.MethodGet, "/shop?topup=medium", nil, nil)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?bought=1&qty=3", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 }
 
 func TestShopGetFollowsLocale(t *testing.T) {
@@ -326,21 +328,15 @@ func TestShopBuyAddsBoosterToInventory(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?bought=1", rec.Header().Get("Location"))
 	// 500 credited, one 250 coin booster bought
 	require.Equal(t, uint(250), shopBalance(t, "shopgail"))
 
-	// The booster lands in the inventory, ready for /opening
+	// The booster lands in the inventory, and the buyer on its opening
 	boosters := shopBoosters(t, "shopgail")
 	require.Len(t, boosters, 1)
 	require.Equal(t, uint(1), boosters[0].CollectionID)
 	require.Equal(t, uint(5), boosters[0].Size)
-
-	// The shop confirms the purchase and links to the inventory
-	rec = shopRequest(t, router, http.MethodGet, "/inventory?bought=1", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	body := shopBody(rec)
-	require.Contains(t, body, "A Development booster has been added to your inventory")
+	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
 }
 
 func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
@@ -359,8 +355,6 @@ func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	// The redirect carries the quantity so the banner can count the boosters
-	require.Equal(t, "/inventory?bought=1&qty=3", rec.Header().Get("Location"))
 	// 1000 credited, three 250 coin boosters bought
 	require.Equal(t, uint(250), shopBalance(t, "shophank"))
 
@@ -371,15 +365,8 @@ func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
 		require.Equal(t, uint(5), booster.Size)
 	}
 
-	rec = shopRequest(t, router, http.MethodGet, "/inventory?bought=1&qty=3", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	body := shopBody(rec)
-	require.Contains(t, body, "3 Development boosters have been added to your inventory")
-
-	// The banner plural follows the locale too
-	rec = shopRequest(t, router, http.MethodGet, "/inventory?bought=1&qty=3&lang=fr", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, shopBody(rec), "3 boosters Développement ont été ajoutés à votre inventaire")
+	// The first one opens, the page chains into the others
+	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
 }
 
 func TestShopBuyRejectsInvalidQuantity(t *testing.T) {

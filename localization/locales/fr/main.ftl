@@ -281,10 +281,6 @@ shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
 shop-error-quantity = Saisissez une quantité entre 1 et { $max }
 shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
-shop-buy-success = { $count ->
-    [one] Un booster { $collection } a été ajouté à votre inventaire
-   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
-}
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces

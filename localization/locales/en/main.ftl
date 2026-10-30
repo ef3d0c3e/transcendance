@@ -281,10 +281,6 @@ shop-error-funds = You do not have enough coins for this purchase
 shop-error-quantity = Enter a quantity between 1 and { $max }
 shop-error-internal = Failed to update your balance
 shop-buy-close = Close
-shop-buy-success = { $count ->
-    [one] A { $collection } booster has been added to your inventory
-   *[other] { $count } { $collection } boosters have been added to your inventory
-}
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
