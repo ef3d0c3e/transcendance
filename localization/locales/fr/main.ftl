@@ -288,8 +288,8 @@ shop-buy-total = Total
 shop-coins = pièces
 
 index-title = Transcendance, collectionnez des cartes
-index-heading = Collectionnez, ouvrez et exposez vos cartes
-index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters, ouvrez-les pour trouver des cartes communes, rares et légendaires, et complétez votre collection.
+index-heading = Collectionnez, troquez et exposez vos cartes
+index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
 index-stat-cards = { $count ->
     [one] { $count } carte
     *[other] { $count } cartes
@@ -306,8 +306,8 @@ index-step-buy-title = Achetez des boosters
 index-step-buy-text = Dépensez vos pièces dans la boutique pour des boosters de la collection de votre choix.
 index-step-open-title = Ouvrez des paquets
 index-step-open-text = Chaque booster contient quelques cartes, dont certaines rares, légendaires ou holographiques.
-index-step-collect-title = Complétez les collections
-index-step-collect-text = Gardez vos cartes dans votre inventaire et trouvez celles qui manquent à chaque collection.
+index-step-trade-title = Troquez vos cartes
+index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
 index-cards-title = Cartes les plus rares
 index-cards-all = Voir toutes les cartes
 index-collections-title = Collections
