@@ -187,44 +187,62 @@
 		stopFading();
 	}
 
+	// Where the cards sit in their reel, measured once per opening: while
+	// spinning, they only move with their strip's transform
+	let fadeGeometry = null;
+
+	function measureFade() {
+		return [...stageElement.querySelectorAll(".pack-window")].map((reelWindow) => {
+			const strip = reelWindow.querySelector(".pack-strip");
+			const cells = [...strip.querySelectorAll(".pack-cell")].map((element) => ({
+				element,
+				// Offset in the window, transforms ignored
+				top: element.offsetTop,
+				opacity: null,
+			}));
+			return {
+				strip,
+				cells,
+				height: reelWindow.clientHeight,
+				cellHeight: cells[0]?.element.offsetHeight ?? 1,
+				pitch: cells.length > 1 ? cells[1].top - cells[0].top : 0,
+			};
+		});
+	}
+
 	// Set each card's opacity from its distance to the middle of its reel.
-	// Every position is read before any opacity is written, to lay out once.
+	// Only the strip's transform is read per frame, and only the opacities that
+	// changed are written: every write repaints the reel.
 	function fadeCells() {
-		const updates = [];
-		const windows = stageElement?.querySelectorAll(".pack-window") ?? [];
-		windows.forEach((reelWindow, reel) => {
-			const box = reelWindow.getBoundingClientRect();
-			const middle = box.top + box.height / 2;
-			let firstTop = null;
-			let pitch = 0;
-			reelWindow.querySelectorAll(".pack-cell").forEach((cell, index) => {
-				const rect = cell.getBoundingClientRect();
-				if (index === 0) {
-					firstTop = rect.top;
-				} else if (index === 1) {
-					pitch = rect.top - firstTop;
-				}
+		fadeGeometry ??= measureFade();
+		fadeGeometry.forEach((reel, index) => {
+			const offset = new DOMMatrixReadOnly(getComputedStyle(reel.strip).transform).m42;
+			const middle = reel.height / 2;
+			for (const cell of reel.cells) {
+				const top = cell.top + offset;
 				// Out of the window, it is cut anyway
-				if (rect.bottom < box.top || rect.top > box.bottom) {
-					updates.push([cell, 0]);
-					return;
+				let opacity = 0;
+				if (top + reel.cellHeight >= 0 && top <= reel.height) {
+					const distance = Math.abs(top + reel.cellHeight / 2 - middle) / reel.cellHeight;
+					opacity = Math.max(FADE_MIN, 1 - Math.max(0, distance - FADE_FULL) * FADE_RATE);
 				}
-				const distance = Math.abs(rect.top + rect.height / 2 - middle) / rect.height;
-				const opacity = 1 - Math.max(0, distance - FADE_FULL) * FADE_RATE;
-				updates.push([cell, Math.max(FADE_MIN, opacity)]);
-			});
+				const value = opacity.toFixed(2);
+				if (value !== cell.opacity) {
+					cell.opacity = value;
+					cell.element.style.opacity = value;
+					// Hidden cards are skipped by the painting altogether
+					cell.element.style.visibility = opacity === 0 ? "hidden" : "";
+				}
+			}
 			// The rolling reel clicks a few times per card, until it landed
-			if (pitch > 0) {
-				const ticks = Math.floor(((middle - firstTop) / pitch) * TICKS_PER_CARD);
-				if (paylineTicks[reel] !== undefined && ticks !== paylineTicks[reel] && spinning && !reels[reel]?.landed) {
-					sounds.tick(reel);
+			if (reel.pitch > 0) {
+				const ticks = Math.floor(((middle - reel.cells[0].top - offset) / reel.pitch) * TICKS_PER_CARD);
+				if (paylineTicks[index] !== undefined && ticks !== paylineTicks[index] && spinning && !reels[index]?.landed) {
+					sounds.tick(index);
 				}
-				paylineTicks[reel] = ticks;
+				paylineTicks[index] = ticks;
 			}
 		});
-		for (const [cell, opacity] of updates) {
-			cell.style.opacity = opacity.toFixed(3);
-		}
 	}
 
 	let fadeFrame = 0;
@@ -393,6 +411,7 @@
 		}
 		clearTimers();
 		paylineTicks = [];
+		fadeGeometry = null;
 		// Clear the stage so the previous reels cannot flash back into view
 		reels = [];
 		failed = false;
