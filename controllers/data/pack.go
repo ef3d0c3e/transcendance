@@ -2,7 +2,6 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"math/rand/v2"
 	"net/http"
@@ -315,9 +314,6 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		"Price":        controllers.BoosterPrice(collection.ID),
 		"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", controllers.BoosterPrice(collection.ID)),
 		"Topups":       controllers.TopupChoices(c, dc.Renderer),
-		// Back here after a top-up, buying the booster it was for
-		"TopupReturn": fmt.Sprint("/opening?collection=", collection.ID, "&buy=1"),
-		"AutoBuy":     c.Query("buy") == "1" && booster.ID == 0,
 	})
 	dc.Renderer.Render(c, &builder)
 }

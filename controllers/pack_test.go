@@ -318,20 +318,19 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 	require.Contains(t, body, `data-autostart="false"`)
 	require.Contains(t, body, `<div class="pack-page">`)
 	require.Contains(t, body, `<span id="pack-coins">0 coins</span>`)
-	// Topping up comes back here
+	// Topping up is offered without a redirect-driven automatic purchase
 	require.Contains(t, body, `id="shop-topup-popup"`)
-	require.Contains(t, body, `<input type="hidden" name="return" value="/opening?collection=1&amp;buy=1">`)
-	require.Contains(t, body, `data-auto-buy="false"`)
+	require.NotContains(t, body, `name="return"`)
+	require.NotContains(t, body, `data-auto-buy`)
 	// Each pack tells how much it credits, to gray out the ones falling short
 	require.Contains(t, body, `data-amount="100"`)
 
-	// Back from the top-up, the page buys the booster it was for
+	// A crafted buy flag must not enable automatic purchasing
 	rec = shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack":   {"medium"},
-		"return": {"/opening?collection=1&buy=1"},
+		"pack": {"medium"},
 	}, cookie)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/opening?collection=1&buy=1", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 	require.Equal(t, uint(500), shopBalance(t, "packbuy2"))
 
 	req = httptest.NewRequest(http.MethodGet, "/opening?collection=1&buy=1", nil)
@@ -340,9 +339,10 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 	router.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body = stripIsolation(rec.Body.String())
-	require.Contains(t, body, `data-auto-buy="true"`)
-	require.Contains(t, body, `<div class="pack-page is-opening">`)
+	require.NotContains(t, body, `data-auto-buy`)
+	require.Contains(t, body, `<div class="pack-page">`)
 	require.Contains(t, body, `<span id="pack-coins">500 coins</span>`)
+	require.Equal(t, uint(500), shopBalance(t, "packbuy2"))
 
 	// Unknown collections still go back to the inventory
 	req = httptest.NewRequest(http.MethodGet, "/opening?collection=999", nil)
@@ -352,12 +352,12 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 }
 
-func TestShopTopupIgnoresForeignReturn(t *testing.T) {
+func TestShopTopupIgnoresReturn(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "packbuy3", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "packbuy3", "foo-bar-baz-qux")
 
-	for _, back := range []string{"https://example.com/", "//example.com/", "/\\example.com/", "opening"} {
+	for _, back := range []string{"https://example.com/", "//example.com/", "/\\example.com/", "/\t/example.com/", "opening", "/opening?collection=1"} {
 		rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
 			"pack":   {"small"},
 			"return": {back},

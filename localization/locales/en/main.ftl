@@ -272,6 +272,7 @@ shop-booster-buy = Buy
 shop-price = { $amount } coins
 shop-topup-title = Get coins
 shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-error-unconfirmed = Unable to confirm the top-up. Refresh the page to check your balance before trying again.
 shop-topup-price = €{ $euros }.{ $cents }
 shop-topup-open = Buy more coins
 shop-topup-success = { $amount } coins have been added to your balance

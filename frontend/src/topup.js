@@ -23,8 +23,7 @@ async function postTopup(form) {
 	}
 }
 
-// Buy a pack in the background. A failure posts the form after all, the
-// page it lands on tells what went wrong.
+// Buy a pack in the background
 async function creditInPlace(event) {
 	const callback = popup.onCredited;
 	if (!callback) {
@@ -40,7 +39,7 @@ async function creditInPlace(event) {
 
 	const result = await postTopup(form);
 	if (typeof result?.coins !== 'number') {
-		form.submit();
+		dialog.querySelector('[data-shop-topup-error]').hidden = false;
 		return;
 	}
 	dialog.close();
@@ -64,6 +63,7 @@ export function openTopup(missing, credited) {
 		}
 	}
 	popup.onCredited = credited;
+	dialog.querySelector('[data-shop-topup-error]').hidden = true;
 
 	for (const pack of dialog.querySelectorAll('.shop-topup-pack')) {
 		const isShort = Number(pack.dataset.amount) < (missing ?? 0);

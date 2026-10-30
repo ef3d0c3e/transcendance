@@ -11,8 +11,6 @@
 		againLabel,
 		coins: initialCoins = 0,
 		autostart = false,
-		// Back from a top-up: buy the booster it was for
-		autoBuy = false,
 		// Labels of the sound switch, while the sound is on and off
 		soundOnLabel = "Sound on",
 		soundOffLabel = "Sound off",
@@ -465,16 +463,15 @@
 
 	// Open right away when the browser lets the sounds play. Otherwise they
 	// would miss the spin: the page shows, its button calling for the click.
-	async function openOnArrival(open, buy) {
+	async function openOnArrival(open) {
 		if (open && (muted || (await soundsAllowed()))) {
-			openPack(buy);
+			openPack();
 			return;
 		}
 		revealPage();
 		if (open) {
-			const button = buy ? buyButton : openButton;
-			button?.classList.add("is-ready");
-			button?.focus();
+			openButton?.classList.add("is-ready");
+			openButton?.focus();
 		}
 	}
 
@@ -563,19 +560,8 @@
 		unlockSounds();
 		buyButton?.addEventListener("click", buyOrTopUp);
 
-		// Back from a top-up. The flag leaves the address first, so reloading
-		// the page never buys again.
-		let buy = false;
-		if (autoBuy && buyButton) {
-			const url = new URL(window.location.href);
-			url.searchParams.delete("buy");
-			history.replaceState(history.state, "", url);
-			buy = !autostart && coins >= Number(buyButton.dataset.price);
-		}
-
-		// Coming from the inventory's open button, or a top-up: no need to
-		// click again
-		openOnArrival(autostart || buy, buy);
+		// Coming from the inventory's open button: open the owned booster
+		openOnArrival(autostart);
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
