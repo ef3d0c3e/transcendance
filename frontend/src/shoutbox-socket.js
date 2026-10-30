@@ -22,7 +22,7 @@ function retryDelay(attempt) {
 	return (delay / 2) + (random * delay / 2);
 }
 
-// Connection to the shoutbox that reconnects until closed
+// Connection to the shoutbox and private messages that reconnects until closed
 //
 // `onEvent` receives every server event, `onStatus` the connection status: `connecting`, `open`, then
 // `closed` with a reason (`unauthorized`, `too-many` or `error`) when it won't reconnect
@@ -76,13 +76,32 @@ export class ShoutboxConnection {
 		this.#attempt += 1;
 	}
 
-	// Returns whether the message could be sent
-	send(body) {
+	// Returns whether the request could be sent
+	#request(request) {
 		if (this.#socket?.readyState !== WebSocket.OPEN) {
 			return false;
 		}
-		this.#socket.send(JSON.stringify({ type: 'send', body }));
+		this.#socket.send(JSON.stringify(request));
 		return true;
+	}
+
+	// Post to the shoutbox, or privately to a user. `to` is left out of the request when undefined.
+	send(body, to) {
+		return this.#request({ type: 'send', body, to });
+	}
+
+	// Show the conversation with a user, or none with an empty username
+	view(username) {
+		return this.#request({ type: 'view', with: username });
+	}
+
+	// Ignore a user for an `hour`, a `day` or a `week`
+	ignore(username, duration) {
+		return this.#request({ type: 'ignore', username, duration });
+	}
+
+	unignore(username) {
+		return this.#request({ type: 'unignore', username });
 	}
 
 	close() {

@@ -1,6 +1,8 @@
 <script>
 	import { onMount, tick } from 'svelte';
 	import ChatBubble from '../icons/ChatBubble.svelte';
+	import ChatConversations from './ChatConversations.svelte';
+	import ChatUserMenu from './ChatUserMenu.svelte';
 	import { relativeTime, fullDate } from './relative-time.js';
 	import { ShoutboxConnection } from './shoutbox-socket.js';
 
@@ -8,7 +10,7 @@
 
 	// Same as the server, counted in characters
 	const MAX_LENGTH = 500;
-	// Messages kept in memory
+	// Messages kept in memory, per list
 	const MAX_MESSAGES = 200;
 	// Give up waiting for the server's answer after this long
 	const PENDING_TIMEOUT_MS = 10_000;
@@ -16,11 +18,28 @@
 	const STICK_THRESHOLD_PX = 48;
 	// Relative times are updated this often while the panel is open
 	const CLOCK_MS = 30_000;
+	// Opens the chat on a conversation, used by private message notifications
+	const CHAT_PARAM = 'chat';
 
+	const me = $derived(dataset.username);
+
+	// Shoutbox messages
 	let messages = $state([]);
-	let unread = $state(0);
-	// `idle` until first opened, then `connecting`, `open` or `closed`
-	let status = $state('idle');
+	let shoutUnread = $state(0);
+	// Latest first
+	let conversations = $state([]);
+	let ignored = $state([]);
+
+	// `shout` or `messages`
+	let tab = $state('shout');
+	// Username of the conversation shown in the messages tab, none for the list
+	let active = $state('');
+	let privates = $state([]);
+	// Whether `privates` were received for `active`
+	let loaded = $state(false);
+
+	// `connecting`, `open` or `closed`
+	let status = $state('connecting');
 	let closedReason = $state('');
 	// Sent by the server, the browser's is used until then
 	let locale = $state(undefined);
@@ -28,9 +47,12 @@
 	let now = $state(Date.now());
 	let open = $state(false);
 	let compact = $state(false);
+	let visible = $state(document.visibilityState === 'visible');
 
-	let draft = $state('');
-	let pending = $state(false);
+	// Draft of each composer: `shout`, or `@<username>` for a conversation
+	let drafts = $state({});
+	// Requests waiting for their answer, in order: `{ kind, key }`
+	let waiting = $state([]);
 	let error = $state('');
 	let limitedUntil = $state(0);
 
@@ -43,11 +65,28 @@
 	let connection;
 	let pendingTimer;
 	let limitTimer;
+	// Conversation the server was last told is shown
+	let sentView;
 
+	const composerKey = $derived(tab === 'shout' ? 'shout' : active ? `@${active}` : '');
+	const draft = $derived(drafts[composerKey] ?? '');
 	const length = $derived([...draft.trim()].length);
 	const tooLong = $derived(length > MAX_LENGTH);
 	const limited = $derived(limitedUntil > 0);
+	const pending = $derived(waiting.some((request) => request.kind === 'send'));
 	const canSend = $derived(status === 'open' && !pending && !limited && length > 0 && !tooLong);
+
+	// Usernames ignored right now
+	const ignoring = $derived(new Set(ignored.filter((user) => Date.parse(user.until) > now).map((user) => user.username)));
+	const shown = $derived(messages.filter((message) => !ignoring.has(message.username)));
+	const privateUnread = $derived(conversations.reduce((total, conversation) => total + conversation.unread, 0));
+	const unread = $derived(privateUnread + shoutUnread);
+	// Conversation on screen, its new messages are read right away
+	const viewed = $derived(open && visible && tab === 'messages' ? active : '');
+
+	function sameUser(a, b) {
+		return a.toLowerCase() === b.toLowerCase();
+	}
 
 	// `current` is only there so Svelte re-renders the time when `now` changes
 	function ago(date, current) {
@@ -65,26 +104,80 @@
 		}
 	}
 
-	// Add messages the client doesn't have yet, the server can repeat some after reconnecting
+	// Messages of `incoming` not in `current` yet, the server can repeat some after reconnecting
+	function merge(current, incoming) {
+		const ids = new Set(current.map((message) => message.id));
+		const fresh = incoming.filter((message) => !ids.has(message.id));
+		return [fresh, [...current, ...fresh].toSorted((a, b) => a.id - b.id).slice(-MAX_MESSAGES)];
+	}
+
 	function addMessages(incoming) {
-		const lastId = messages.at(-1)?.id ?? 0;
-		const fresh = incoming.filter((message) => message.id > lastId);
+		const follow = nearBottom() || incoming.some((message) => message.username === me);
+		const [fresh, merged] = merge(messages, incoming);
 		if (fresh.length === 0) {
 			return;
 		}
-		const follow = nearBottom() || fresh.some((message) => message.username === dataset.username);
-		messages = [...messages, ...fresh].slice(-MAX_MESSAGES);
-		if (!open) {
-			unread += fresh.filter((message) => message.username !== dataset.username).length;
+		messages = merged;
+		if (!(open && tab === 'shout')) {
+			shoutUnread += fresh.filter((message) => message.username !== me).length;
 		}
-		if (follow) {
+		if (follow && tab === 'shout') {
 			scrollToBottom();
 		}
 	}
 
+	function addPrivate(message) {
+		const partner = message.from === me ? message.to : message.from;
+		const isUnread = message.from !== me && viewed !== partner;
+		const previous = conversations.find((conversation) => conversation.username === partner);
+		if (previous?.last.id >= message.id) {
+			return;
+		}
+		conversations = [
+			{ username: partner, last: message, unread: (previous?.unread ?? 0) + (isUnread ? 1 : 0) },
+			...conversations.filter((conversation) => conversation !== previous),
+		];
+
+		if (loaded && partner === active) {
+			const follow = nearBottom() || message.from === me;
+			privates = merge(privates, [message])[1];
+			if (follow) {
+				scrollToBottom();
+			}
+		}
+	}
+
+	function markRead(username) {
+		conversations = conversations.map((conversation) =>
+			conversation.username === username ? { ...conversation, unread: 0 } : conversation,
+		);
+	}
+
+	function showConversation(event) {
+		if (!active || !sameUser(event.with, active)) {
+			return;
+		}
+		// Typed with another case
+		active = event.with;
+		privates = merge([], event.privates ?? [])[1];
+		loaded = true;
+		markRead(event.with);
+		scrollToBottom();
+	}
+
 	function settle() {
-		pending = false;
 		clearTimeout(pendingTimer);
+		const [request, ...rest] = waiting;
+		waiting = rest;
+		return request;
+	}
+
+	function expect(kind, key) {
+		waiting = [...waiting, { kind, key }];
+		clearTimeout(pendingTimer);
+		pendingTimer = setTimeout(() => {
+			waiting = [];
+		}, PENDING_TIMEOUT_MS);
 	}
 
 	function rateLimited(retryAfter) {
@@ -98,10 +191,28 @@
 		}, retryAfter);
 	}
 
+	function handleError(event) {
+		const request = settle();
+		error = event.error;
+		if (event.error === 'rate-limited') {
+			rateLimited(event.retryAfter ?? 2000);
+		}
+		// Nobody to talk to, back to the list
+		if (['user-not-found', 'self'].includes(event.error) && request?.kind !== 'ignore' && !loaded) {
+			active = '';
+		}
+	}
+
 	function handleEvent(event) {
 		switch (event.type) {
 			case 'history': {
 				locale = event.locale;
+				ignored = event.ignored ?? [];
+				for (const conversation of (event.conversations ?? []).toReversed()) {
+					addPrivate(conversation.last);
+					const added = conversations.find((current) => current.username === conversation.username);
+					added.unread = conversation.unread;
+				}
 				addMessages(event.messages ?? []);
 				break;
 			}
@@ -109,18 +220,35 @@
 				addMessages([event.message]);
 				break;
 			}
+			case 'private': {
+				addPrivate(event.private);
+				break;
+			}
+			case 'conversation': {
+				if (waiting[0]?.kind === 'view') {
+					settle();
+				}
+				showConversation(event);
+				break;
+			}
+			case 'read': {
+				markRead(event.with);
+				break;
+			}
+			case 'ignored': {
+				ignored = event.ignored ?? [];
+				break;
+			}
 			case 'ack': {
-				settle();
-				draft = '';
+				const request = settle();
+				if (request?.kind === 'send') {
+					drafts[request.key] = '';
+				}
 				error = '';
 				break;
 			}
 			case 'error': {
-				settle();
-				error = event.error;
-				if (event.error === 'rate-limited') {
-					rateLimited(event.retryAfter ?? 2000);
-				}
+				handleError(event);
 				break;
 			}
 		}
@@ -129,25 +257,21 @@
 	function handleStatus(next, reason = '') {
 		status = next;
 		closedReason = reason;
-		// An answer won't come on a new connection
+		// Answers won't come on a new connection
 		if (next !== 'open') {
-			settle();
+			clearTimeout(pendingTimer);
+			waiting = [];
+			sentView = undefined;
 		}
 	}
 
 	function send(event) {
 		event.preventDefault();
-		if (!canSend) {
+		if (!canSend || !connection.send(draft, tab === 'shout' ? undefined : active)) {
 			return;
 		}
-		if (!connection.send(draft)) {
-			return;
-		}
-		pending = true;
+		expect('send', composerKey);
 		error = '';
-		pendingTimer = setTimeout(() => {
-			pending = false;
-		}, PENDING_TIMEOUT_MS);
 	}
 
 	function handleInputKeydown(event) {
@@ -155,6 +279,45 @@
 		if (event.key === 'Enter') {
 			send(event);
 		}
+	}
+
+	function ignore(username, duration) {
+		if (connection.ignore(username, duration)) {
+			expect('ignore');
+		}
+	}
+
+	function unignore(username) {
+		if (connection.unignore(username)) {
+			expect('ignore');
+		}
+	}
+
+	async function showTab(next) {
+		tab = next;
+		error = '';
+		if (next === 'shout') {
+			shoutUnread = 0;
+		}
+		await scrollToBottom();
+		input?.focus();
+	}
+
+	async function openConversation(username) {
+		const known = conversations.find((conversation) => sameUser(conversation.username, username));
+		const next = known?.username ?? username;
+		// Shown already, or loaded as soon as the tab is
+		if (next !== active) {
+			active = next;
+			privates = [];
+			loaded = false;
+		}
+		await showTab('messages');
+	}
+
+	function back() {
+		active = '';
+		error = '';
 	}
 
 	// Move the panel out of the compact header's side menu, where it can't be shown
@@ -169,11 +332,8 @@
 		};
 	}
 
-	async function toggle() {
-		open = !open;
-		if (!open) {
-			return;
-		}
+	async function show() {
+		open = true;
 		compact = Boolean(root?.closest('header.is-compact'));
 		if (compact) {
 			const navToggle = document.querySelector('#nav-toggle');
@@ -182,10 +342,23 @@
 				navToggle.dispatchEvent(new Event('change'));
 			}
 		}
-		unread = 0;
-		connection ??= new ShoutboxConnection({ onEvent: handleEvent, onStatus: handleStatus });
+		if (tab === 'shout') {
+			shoutUnread = 0;
+		}
 		await scrollToBottom();
 		input?.focus();
+	}
+
+	function toggle() {
+		if (open) {
+			open = false;
+			return;
+		}
+		// Straight to the unread messages
+		if (privateUnread > 0 && shoutUnread === 0 && !active) {
+			tab = 'messages';
+		}
+		show();
 	}
 
 	function close() {
@@ -198,6 +371,9 @@
 		'too-long': dataset.labelErrorTooLong,
 		'rate-limited': dataset.labelErrorRateLimited,
 		internal: dataset.labelErrorInternal,
+		'user-not-found': dataset.labelErrorUserNotFound,
+		self: dataset.labelErrorSelf,
+		blocked: dataset.labelErrorBlocked,
 	});
 
 	const closedLabels = $derived({
@@ -217,6 +393,20 @@
 		return () => clearInterval(clock);
 	});
 
+	// Tell the server which conversation is on screen, again after reconnecting
+	$effect(() => {
+		const target = viewed;
+		if (status !== 'open' || target === (sentView ?? '')) {
+			return;
+		}
+		if (connection.view(target)) {
+			sentView = target;
+			if (target) {
+				expect('view');
+			}
+		}
+	});
+
 	onMount(() => {
 		function handleOutsidePointer(event) {
 			if (open && !root?.contains(event.target) && !panel?.contains(event.target)) {
@@ -230,14 +420,45 @@
 			}
 		}
 
+		// Links to a conversation on the page, such as on profiles, open it here instead of reloading
+		function handleChatLink(event) {
+			const link = event.target.closest?.('[data-chat-open]');
+			if (!link || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+				return;
+			}
+			event.preventDefault();
+			openConversation(link.dataset.chatOpen);
+			show();
+		}
+
+		function handleVisibility() {
+			visible = document.visibilityState === 'visible';
+		}
+
 		document.addEventListener('pointerdown', handleOutsidePointer);
 		document.addEventListener('keydown', handleKeydown);
+		document.addEventListener('visibilitychange', handleVisibility);
+		document.addEventListener('click', handleChatLink);
+		// Connected right away, so private messages arrive live
+		connection = new ShoutboxConnection({ onEvent: handleEvent, onStatus: handleStatus });
+
+		const url = new URL(location.href);
+		const chat = url.searchParams.get(CHAT_PARAM);
+		if (chat) {
+			url.searchParams.delete(CHAT_PARAM);
+			history.replaceState(history.state, '', url);
+			openConversation(chat);
+			show();
+		}
+
 		return () => {
 			document.removeEventListener('pointerdown', handleOutsidePointer);
 			document.removeEventListener('keydown', handleKeydown);
+			document.removeEventListener('visibilitychange', handleVisibility);
+			document.removeEventListener('click', handleChatLink);
 			clearTimeout(pendingTimer);
 			clearTimeout(limitTimer);
-			connection?.close();
+			connection.close();
 		};
 	});
 </script>
@@ -271,7 +492,32 @@
 			use:portal={compact}
 		>
 			<div class="shout-head">
-				<span class="shout-title">{dataset.labelTitle}</span>
+				<div class="shout-tabs" role="tablist">
+					<button
+						type="button"
+						role="tab"
+						class="shout-tab"
+						aria-selected={tab === 'shout'}
+						onclick={() => showTab('shout')}
+					>
+						{dataset.labelTabShout}
+						{#if shoutUnread > 0}
+							<span class="shout-tab-badge">{shoutUnread > 9 ? '9+' : shoutUnread}</span>
+						{/if}
+					</button>
+					<button
+						type="button"
+						role="tab"
+						class="shout-tab"
+						aria-selected={tab === 'messages'}
+						onclick={() => showTab('messages')}
+					>
+						{dataset.labelTabMessages}
+						{#if privateUnread > 0}
+							<span class="shout-tab-badge is-private">{privateUnread > 9 ? '9+' : privateUnread}</span>
+						{/if}
+					</button>
+				</div>
 				<span class="shout-status" data-status={status} title={status === 'open' ? dataset.labelConnected : dataset.labelConnecting}>
 					<span class="shout-status-dot" aria-hidden="true"></span>
 					<span class="shout-status-text">{status === 'open' ? dataset.labelConnected : dataset.labelConnecting}</span>
@@ -283,25 +529,79 @@
 				</button>
 			</div>
 
-			<ol class="shout-list" bind:this={list} aria-live="polite" aria-relevant="additions" aria-busy={status !== 'open'}>
-				{#each messages as message (message.id)}
-					<li class="shout-message" class:is-self={message.username === dataset.username}>
-						<span class="shout-meta">
-							<a class="shout-author" href="/profile/{encodeURIComponent(message.username)}">{message.username}</a>
+			{#if tab === 'shout'}
+				<ol class="shout-list" bind:this={list} data-chat-scroll aria-live="polite" aria-relevant="additions" aria-busy={status !== 'open'}>
+					{#each shown as message (message.id)}
+						<li class="shout-message" class:is-self={message.username === me}>
+							<span class="shout-meta">
+								{#if message.username === me}
+									<a class="shout-author" href="/profile/{encodeURIComponent(message.username)}">{message.username}</a>
+								{:else}
+									<ChatUserMenu
+										username={message.username}
+										labels={dataset}
+										ignored={ignoring.has(message.username)}
+										onMessage={() => openConversation(message.username)}
+										onIgnore={(duration) => ignore(message.username, duration)}
+										onUnignore={() => unignore(message.username)}
+									/>
+								{/if}
+								<time datetime={message.createdAt} title={fullDate(message.createdAt, locale)}>
+									{ago(message.createdAt, now)}
+								</time>
+							</span>
+							<span class="shout-body">{message.body}</span>
+						</li>
+					{:else}
+						{#if status === 'open'}
+							<li class="shout-empty">{dataset.labelEmpty}</li>
+						{:else if status !== 'closed'}
+							<li class="shout-empty">{dataset.labelConnecting}</li>
+						{/if}
+					{/each}
+				</ol>
+			{:else if active}
+				<div class="shout-conversation-head">
+					<button type="button" class="shout-back" aria-label={dataset.labelBack} title={dataset.labelBack} onclick={back}>
+						<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+							<path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+						</svg>
+					</button>
+					<ChatUserMenu
+						username={active}
+						labels={dataset}
+						ignored={ignoring.has(active)}
+						onIgnore={(duration) => ignore(active, duration)}
+						onUnignore={() => unignore(active)}
+					/>
+				</div>
+				{#if ignoring.has(active)}
+					<p class="shout-notice">{dataset.labelIgnoringNotice}</p>
+				{/if}
+				<ol class="shout-list" bind:this={list} data-chat-scroll aria-live="polite" aria-relevant="additions" aria-busy={!loaded}>
+					{#each privates as message (message.id)}
+						<li class="shout-bubble" class:is-self={message.from === me}>
+							<span class="shout-body">{message.body}</span>
 							<time datetime={message.createdAt} title={fullDate(message.createdAt, locale)}>
 								{ago(message.createdAt, now)}
 							</time>
-						</span>
-						<span class="shout-body">{message.body}</span>
-					</li>
-				{:else}
-					{#if status === 'open'}
-						<li class="shout-empty">{dataset.labelEmpty}</li>
-					{:else if status !== 'closed'}
-						<li class="shout-empty">{dataset.labelConnecting}</li>
-					{/if}
-				{/each}
-			</ol>
+						</li>
+					{:else}
+						<li class="shout-empty">{loaded ? dataset.labelConversationEmpty : dataset.labelConnecting}</li>
+					{/each}
+				</ol>
+			{:else}
+				<ChatConversations
+					{conversations}
+					ignored={ignored.filter((user) => ignoring.has(user.username))}
+					username={me}
+					{locale}
+					{now}
+					labels={dataset}
+					onOpen={openConversation}
+					onUnignore={unignore}
+				/>
+			{/if}
 
 			{#if status === 'closed'}
 				<p class="section-error shout-alert" role="alert">{closedLabels[closedReason] ?? dataset.labelClosedError}</p>
@@ -309,26 +609,28 @@
 				<p class="section-error shout-alert" role="alert">{errorLabels[error] ?? dataset.labelErrorInternal}</p>
 			{/if}
 
-			<form class="shout-form" onsubmit={send}>
-				<input
-					bind:this={input}
-					bind:value={draft}
-					type="text"
-					class="shout-input"
-					placeholder={dataset.labelPlaceholder}
-					aria-label={dataset.labelPlaceholder}
-					aria-invalid={tooLong}
-					autocomplete="off"
-					disabled={status === 'closed'}
-					onkeydown={handleInputKeydown}
-				/>
-				{#if length > MAX_LENGTH - 50}
-					<span class="shout-count" class:is-over={tooLong} aria-live="polite">{MAX_LENGTH - length}</span>
-				{/if}
-				<button type="submit" class="shout-send" disabled={!canSend} aria-busy={pending}>
-					{dataset.labelSend}
-				</button>
-			</form>
+			{#if composerKey}
+				<form class="shout-form" onsubmit={send}>
+					<input
+						bind:this={input}
+						bind:value={() => draft, (value) => (drafts[composerKey] = value)}
+						type="text"
+						class="shout-input"
+						placeholder={tab === 'shout' ? dataset.labelPlaceholder : dataset.labelPrivatePlaceholder}
+						aria-label={tab === 'shout' ? dataset.labelPlaceholder : dataset.labelPrivatePlaceholder}
+						aria-invalid={tooLong}
+						autocomplete="off"
+						disabled={status === 'closed'}
+						onkeydown={handleInputKeydown}
+					/>
+					{#if length > MAX_LENGTH - 50}
+						<span class="shout-count" class:is-over={tooLong} aria-live="polite">{MAX_LENGTH - length}</span>
+					{/if}
+					<button type="submit" class="shout-send" disabled={!canSend} aria-busy={pending}>
+						{dataset.labelSend}
+					</button>
+				</form>
+			{/if}
 		</div>
 	{/if}
 </div>
@@ -473,16 +775,62 @@
 		border-bottom: 1px solid var(--color-border-1);
 	}
 
-	.shout-title {
+	.shout-tabs {
+		display: flex;
+		gap: 0.25rem;
+		min-width: 0;
+	}
+
+	.shout-tab {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+
+		padding: 0.35rem 0.6rem;
+
+		color: var(--color-text-muted);
+		background: transparent;
+		border-radius: 0.4rem;
+
 		font-weight: 700;
 		white-space: nowrap;
+
+		&:hover {
+			color: var(--color-text);
+			background: var(--color-bg-3);
+		}
+
+		&[aria-selected='true'] {
+			color: var(--color-text);
+			background: var(--color-bg-4);
+		}
+	}
+
+	.shout-tab-badge {
+		min-width: 1.1rem;
+		height: 1.1rem;
+		padding: 0 0.25rem;
+
+		color: var(--color-text);
+		background: var(--color-border-2);
+		border-radius: 999px;
+
+		font-size: 0.65rem;
+		line-height: 1.1rem;
+		font-variant-numeric: tabular-nums;
+		text-align: center;
+
+		&.is-private {
+			color: var(--color-text-alt);
+			background: var(--color-accent-secondary);
+		}
 	}
 
 	.shout-status {
 		display: inline-flex;
 		align-items: center;
 		gap: 0.35rem;
-		margin-inline-end: auto;
+		margin-inline: auto 0;
 
 		color: var(--color-text-muted);
 		font-size: 0.8rem;
@@ -532,8 +880,58 @@
 		}
 	}
 
+	/* The tabs need the room, the dot tells */
+	.shout-status-text {
+		position: absolute;
+		overflow: hidden;
+		width: 1px;
+		height: 1px;
+		clip-path: inset(50%);
+		white-space: nowrap;
+	}
+
+	.shout-conversation-head {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+
+		padding: 0.35rem 0.5rem;
+		border-bottom: 1px solid var(--color-border-1);
+	}
+
+	.shout-back {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+
+		min-width: 2rem;
+		min-height: 2rem;
+		padding: 0.25rem;
+
+		color: var(--color-text-muted);
+		background: transparent;
+		border-radius: 0.4rem;
+
+		&:hover {
+			color: var(--color-text);
+			background: var(--color-bg-4);
+		}
+	}
+
+	.shout-notice {
+		margin: 0;
+		padding: 0.4rem 0.75rem;
+
+		color: var(--color-text-muted);
+		background: var(--color-bg-3);
+		border-bottom: 1px solid var(--color-border-1);
+
+		font-size: 0.8rem;
+	}
+
 	.shout-list {
 		flex: 1;
+		min-height: 0;
 		display: flex;
 		flex-direction: column;
 		gap: 0.15rem;
@@ -593,6 +991,34 @@
 		color: var(--color-accent-secondary);
 	}
 
+	.shout-bubble {
+		display: flex;
+		flex-direction: column;
+		gap: 0.1rem;
+		align-self: flex-start;
+
+		max-width: 85%;
+		margin-block: 0.1rem;
+		padding: 0.35rem 0.65rem;
+
+		background: var(--color-bg-3);
+		border-radius: 0.75rem 0.75rem 0.75rem 0.25rem;
+
+		time {
+			color: var(--color-text-muted);
+			font-size: 0.7rem;
+			font-variant-numeric: tabular-nums;
+		}
+
+		&.is-self {
+			align-self: flex-end;
+			align-items: flex-end;
+
+			background: color-mix(in srgb, var(--color-accent-primary), var(--color-bg-2) 80%);
+			border-radius: 0.75rem 0.75rem 0.25rem;
+		}
+	}
+
 	.shout-body {
 		overflow-wrap: anywhere;
 		white-space: pre-wrap;
@@ -610,9 +1036,10 @@
 		margin: 0 0.5rem 0.5rem;
 	}
 
+	/* Stretched, the input is as tall as the button */
 	.shout-form {
 		display: flex;
-		align-items: center;
+		align-items: stretch;
 		gap: 0.4rem;
 
 		margin: 0;
@@ -623,6 +1050,7 @@
 	.shout-input {
 		flex: 1;
 		min-width: 0;
+		padding-inline: 0.75rem;
 
 		&[aria-invalid='true'] {
 			border-color: var(--color-error-3);
@@ -630,6 +1058,8 @@
 	}
 
 	.shout-count {
+		align-self: center;
+
 		color: var(--color-text-muted);
 		font-size: 0.75rem;
 		font-variant-numeric: tabular-nums;
