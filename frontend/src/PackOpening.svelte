@@ -1,6 +1,7 @@
 <script>
 	import { onMount, tick } from "svelte";
 	import { openTopup } from "./topup.js";
+	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./packSounds.js";
 
 	let {
 		formSelector,
@@ -12,7 +13,16 @@
 		autostart = false,
 		// Back from a top-up: buy the booster it was for
 		autoBuy = false,
+		// Labels of the sound switch, while the sound is on and off
+		soundOnLabel = "Sound on",
+		soundOffLabel = "Sound off",
 	} = $props();
+
+	let muted = $state(loadMuted());
+	let sounds = $derived(packSounds(muted));
+	// How far each reel rolled past the payline, in ticks: a tick plays when
+	// it changes
+	let paylineTicks = [];
 
 	let reels = $state([]);
 	let message = $state("");
@@ -87,6 +97,8 @@
 	// bounce included
 	const FADE_SETTLE_MS = 500;
 	// Period of the cards' sway, picked per reel so they never move in sync
+	// Ticks the rolling sound plays for each card passing the payline
+	const TICKS_PER_CARD = 3;
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
 
@@ -153,7 +165,7 @@
 	// The stage's button: same as the page's open or buy button
 	function openAgain() {
 		if (stageAction === "open") {
-			openPack();
+			openPack(false, true);
 		} else if (stageAction === "buy") {
 			buyOrTopUp();
 		}
@@ -181,21 +193,37 @@
 	// Every position is read before any opacity is written, to lay out once.
 	function fadeCells() {
 		const updates = [];
-		for (const reelWindow of stageElement?.querySelectorAll(".pack-window") ?? []) {
+		const windows = stageElement?.querySelectorAll(".pack-window") ?? [];
+		windows.forEach((reelWindow, reel) => {
 			const box = reelWindow.getBoundingClientRect();
 			const middle = box.top + box.height / 2;
-			for (const cell of reelWindow.querySelectorAll(".pack-cell")) {
+			let firstTop = null;
+			let pitch = 0;
+			reelWindow.querySelectorAll(".pack-cell").forEach((cell, index) => {
 				const rect = cell.getBoundingClientRect();
+				if (index === 0) {
+					firstTop = rect.top;
+				} else if (index === 1) {
+					pitch = rect.top - firstTop;
+				}
 				// Out of the window, it is cut anyway
 				if (rect.bottom < box.top || rect.top > box.bottom) {
 					updates.push([cell, 0]);
-					continue;
+					return;
 				}
 				const distance = Math.abs(rect.top + rect.height / 2 - middle) / rect.height;
 				const opacity = 1 - Math.max(0, distance - FADE_FULL) * FADE_RATE;
 				updates.push([cell, Math.max(FADE_MIN, opacity)]);
+			});
+			// The rolling reel clicks a few times per card, until it landed
+			if (pitch > 0) {
+				const ticks = Math.floor(((middle - firstTop) / pitch) * TICKS_PER_CARD);
+				if (paylineTicks[reel] !== undefined && ticks !== paylineTicks[reel] && spinning && !reels[reel]?.landed) {
+					sounds.tick(reel);
+				}
+				paylineTicks[reel] = ticks;
 			}
-		}
+		});
 		for (const [cell, opacity] of updates) {
 			cell.style.opacity = opacity.toFixed(3);
 		}
@@ -334,6 +362,7 @@
 
 			timers.push(setTimeout(async () => {
 				reels[index].landed = true;
+				sounds.land(reels[index].rarity);
 				// Good pulls light up the whole stage
 				if (reels[index].rarity !== "common") {
 					stageFlash = { key: stageFlash.key + 1, rarity: reels[index].rarity };
@@ -353,14 +382,19 @@
 		}
 	}
 
-	// Open the next booster of the stack, or buy one with coins when buy is set
-	async function openPack(buy = false) {
+	// Open the next booster of the stack, or buy one with coins when buy is set.
+	// cue plays the start sound, for openings the user clicked.
+	async function openPack(buy = false, cue = false) {
 		if (busy) {
 			return;
 		}
 
 		busy = true;
+		if (cue) {
+			sounds.start();
+		}
 		clearTimers();
+		paylineTicks = [];
 		// Clear the stage so the previous reels cannot flash back into view
 		reels = [];
 		failed = false;
@@ -429,11 +463,26 @@
 		}
 	}
 
+	// Open right away when the browser lets the sounds play. Otherwise they
+	// would miss the spin: the page shows, its button calling for the click.
+	async function openOnArrival(open, buy) {
+		if (open && (muted || (await soundsAllowed()))) {
+			openPack(buy);
+			return;
+		}
+		revealPage();
+		if (open) {
+			const button = buy ? buyButton : openButton;
+			button?.classList.add("is-ready");
+			button?.focus();
+		}
+	}
+
 	// Buy the next booster when the balance covers it, else offer coins
 	function buyOrTopUp() {
 		const price = Number(buyButton.dataset.price);
 		if (coins >= price) {
-			openPack(true);
+			openPack(true, true);
 			return;
 		}
 		openTopup(price - coins);
@@ -499,32 +548,26 @@
 
 		function handleSubmit(event) {
 			event.preventDefault();
-			openPack();
+			openPack(false, true);
 		}
 
 		form.addEventListener("submit", handleSubmit);
+		unlockSounds();
 		buyButton?.addEventListener("click", buyOrTopUp);
-
-		// Coming from the inventory's open button: no need to click again
-		if (autostart) {
-			openPack();
-		}
 
 		// Back from a top-up. The flag leaves the address first, so reloading
 		// the page never buys again.
+		let buy = false;
 		if (autoBuy && buyButton) {
 			const url = new URL(window.location.href);
 			url.searchParams.delete("buy");
 			history.replaceState(history.state, "", url);
-			if (coins >= Number(buyButton.dataset.price)) {
-				openPack(true);
-			}
+			buy = !autostart && coins >= Number(buyButton.dataset.price);
 		}
 
-		// Nothing opening: the page shows as is
-		if (!busy) {
-			revealPage();
-		}
+		// Coming from the inventory's open button, or a top-up: no need to
+		// click again
+		openOnArrival(autostart || buy, buy);
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);
@@ -570,6 +613,11 @@
 		</div>
 	{/if}
 
+	<button type="button" class="pack-sound" aria-pressed={!muted}
+		onclick={() => { muted = !muted; saveMuted(muted); }}>
+		{muted ? soundOffLabel : soundOnLabel}
+	</button>
+
 	<div class="pack-stage-actions">
 		{#if stageAction}
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
@@ -581,6 +629,28 @@
 </div>
 
 <style>
+	/* Sound switch, in a corner where it stays while the cards spin */
+	.pack-sound {
+		position: fixed;
+		right: 1rem;
+		bottom: 1rem;
+		z-index: 30;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.35rem 0.6rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--color-bg-2) 85%, transparent);
+		color: var(--color-text);
+		border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+		backdrop-filter: blur(6px);
+		font-size: 0.85rem;
+		cursor: pointer;
+	}
+
+	.pack-sound[aria-pressed="false"] {
+		opacity: 0.6;
+	}
 	.pack-reels {
 		--pack-scale: 0.5;
 		--pack-cell: calc(30ch * var(--pack-scale));
