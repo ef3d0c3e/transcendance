@@ -17,6 +17,7 @@ import (
 func TestRegisterOk(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice"},
+		"email":            {"alice@example.test"},
 		"password":         {"foo-bar-qux"},
 		"password_confirm": {"foo-bar-qux"},
 		"tos_agree":        {"on"},
@@ -52,6 +53,7 @@ func TestRegisterUsernameTaken(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"eve"},
+			"email":            {"eve@example.test"},
 			"password":         {"foo-bar-baz"},
 			"password_confirm": {"foo-bar-baz"},
 			"tos_agree":        {"on"},
@@ -74,6 +76,7 @@ func TestRegisterUsernameTaken(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"eve"},
+			"email":            {"eve-other@example.test"},
 			"password":         {"foo-bar-quz"},
 			"password_confirm": {"foo-bar-quz"},
 			"tos_agree":        {"on"},
@@ -98,6 +101,7 @@ func TestRegisterUsernameTaken(t *testing.T) {
 func TestRegisterUsernameTooShort(t *testing.T) {
 	form := url.Values{
 		"username":         {"al"},
+		"email":            {"al@example.test"},
 		"password":         {"foo-bar-qux"},
 		"password_confirm": {"foo-bar-qux"},
 		"tos_agree":        {"on"},
@@ -121,6 +125,7 @@ func TestRegisterUsernameTooShort(t *testing.T) {
 func TestRegisterUsernameTooLong(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice123456789abcdef"},
+		"email":            {"alice123456789abcdef@example.test"},
 		"password":         {"foo-bar-qux"},
 		"password_confirm": {"foo-bar-qux"},
 		"tos_agree":        {"on"},
@@ -144,6 +149,7 @@ func TestRegisterUsernameTooLong(t *testing.T) {
 func TestRegisterUsernameInvalid(t *testing.T) {
 	form := url.Values{
 		"username":         {"alice$"},
+		"email":            {"alice$@example.test"},
 		"password":         {"foo-bar-qux"},
 		"password_confirm": {"foo-bar-qux"},
 		"tos_agree":        {"on"},
@@ -167,6 +173,7 @@ func TestRegisterUsernameInvalid(t *testing.T) {
 func TestRegisterPasswordTooShort(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
+		"email":            {"bob@example.test"},
 		"password":         {"foo-bar"},
 		"password_confirm": {"foo-bar"},
 		"tos_agree":        {"on"},
@@ -190,6 +197,7 @@ func TestRegisterPasswordTooShort(t *testing.T) {
 func TestRegisterPasswordTooLong(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
+		"email":            {"bob@example.test"},
 		"password":         {"foo-bar-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
 		"password_confirm": {"foo-bar-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"},
 		"tos_agree":        {"on"},
@@ -213,6 +221,7 @@ func TestRegisterPasswordTooLong(t *testing.T) {
 func TestRegisterPasswordMismatch(t *testing.T) {
 	form := url.Values{
 		"username":         {"bob"},
+		"email":            {"bob@example.test"},
 		"password":         {"foo-bar-baz"},
 		"password_confirm": {"foo-bar-qux"},
 		"tos_agree":        {"on"},
@@ -237,6 +246,7 @@ func TestRegisterLoginOk(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"alice2"},
+			"email":            {"alice2@example.test"},
 			"password":         {"foo-bar-qux"},
 			"password_confirm": {"foo-bar-qux"},
 			"tos_agree":        {"on"},
@@ -258,8 +268,9 @@ func TestRegisterLoginOk(t *testing.T) {
 	}
 
 	form := url.Values{
-		"username": {"alice2"},
-		"password": {"foo-bar-qux"},
+		"email":      {"alice2@example.test"},
+		"login_type": {"email"},
+		"password":   {"foo-bar-qux"},
 	}
 
 	req := httptest.NewRequest(
@@ -281,6 +292,7 @@ func TestRegisterBadPassword(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"alice3"},
+			"email":            {"alice3@example.test"},
 			"password":         {"foo-bar-qux"},
 			"password_confirm": {"foo-bar-qux"},
 			"tos_agree":        {"on"},
@@ -325,6 +337,7 @@ func TestRegisterBadUsername(t *testing.T) {
 	{
 		form := url.Values{
 			"username":         {"alice4"},
+			"email":            {"alice4@example.test"},
 			"password":         {"foo-bar-qux"},
 			"password_confirm": {"foo-bar-qux"},
 			"tos_agree":        {"on"},

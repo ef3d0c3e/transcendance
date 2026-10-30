@@ -1,0 +1,2 @@
+title = Kanelbulle
+description = La kanelbulle ou brioche à la cannelle est une viennoiserie provenant de Suède mais également présente dans le reste de l'Europe du Nord, en Alsace-Moselle sous le nom de Schnäggekueche et connue en Amérique du Nord sous le nom de cinnamon rolls en anglais et brioche à la cannelle en français. Apparue en Suède dans les années 1920, elle s’y est popularisée dans les années 1950.

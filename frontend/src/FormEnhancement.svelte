@@ -3,13 +3,41 @@
 
 	let { formSelector, onSuccess } = $props();
 
+	function enhanceLoginType(form) {
+		const choices = form.querySelectorAll('input[name="login_type"]');
+		const fields = form.querySelectorAll('[data-login-field]');
+
+		function updateFields() {
+			const selected = form.querySelector('input[name="login_type"]:checked')?.value;
+			for (const field of fields) {
+				const active = field.dataset.loginField === selected;
+				const input = field.querySelector('input');
+				field.hidden = !active;
+				input.disabled = !active;
+				input.required = active;
+			}
+		}
+
+		updateFields();
+		for (const choice of choices) {
+			choice.addEventListener('change', updateFields);
+		}
+		return () => {
+			for (const choice of choices) {
+				choice.removeEventListener('change', updateFields);
+			}
+		};
+	}
+
 	onMount(() => {
 		const form = document.querySelector(formSelector);
-		const result = form.querySelector("#form-result");
+		const result = form?.querySelector("#form-result");
 
 		if (!form || !result) {
 			return;
 		}
+
+		const cleanupLoginType = form.id === "login-form" ? enhanceLoginType(form) : null;
 
 		async function handleSubmit(event) {
 			event.preventDefault();
@@ -56,6 +84,7 @@
 		form.addEventListener("submit", handleSubmit);
 
 		return () => {
+			cleanupLoginType?.();
 			form.removeEventListener("submit", handleSubmit);
 		};
 	});

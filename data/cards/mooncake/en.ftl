@@ -1,0 +1,2 @@
+title = Mooncake
+description = A mooncake is a Chinese baked item traditionally eaten during the Mid-Autumn Festival (中秋節). The festival is primarily about the harvest, while a legend connects it to moon watching, and mooncakes are regarded as a delicacy. Mooncakes are offered between friends or on family gatherings while celebrating the festival. The Mid-Autumn Festival is widely regarded as one of the four most important Chinese festivals.
