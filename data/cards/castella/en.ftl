@@ -1,0 +1,2 @@
+title = Castella
+description = Castella is a type of Japanese sponge cake and is known for its sweet, moist brioche-style flavour and texture. It is based on cakes introduced to Japan by Portuguese merchants in the 16th century. It was then popularized in the city of Nagasaki, where it is considered a specialty. Despite its foreign origins, it is considered a kind of wagashi, or traditional Japanese confectionery.

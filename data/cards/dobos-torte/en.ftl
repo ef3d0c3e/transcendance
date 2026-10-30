@@ -1,0 +1,2 @@
+title = Dobos torte
+description = Dobos torte, also known as Dobosh, is a Hungarian sponge cake layered with chocolate buttercream and topped with caramel. The layered pastry is named after its inventor, Hungarian chef József C. Dobos, a delicatessen owner in Budapest. In the late 19th century, he decided to create a cake that would last longer than other pastries in an age when cooling techniques were limited.

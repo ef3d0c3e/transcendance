@@ -1,0 +1,2 @@
+title = Éclair
+description = An éclair is a pastry made with choux dough filled with a cream and topped with a flavored icing. The dough, which is the same as that used for profiteroles, is typically piped into an oblong shape with a pastry bag and baked until it is crisp and hollow inside. Once cool, the pastry is filled with custard, whipped cream or chiboust cream, then iced with fondant icing.

@@ -1,0 +1,2 @@
+title = Guimauve
+description = La guimauve, ou pâte de guimauve, est une confiserie qui était originellement confectionnée avec le mucilage extrait de la racine de guimauve officinale mais qui, dans sa forme moderne, est faite de sucre, de gélatine et souvent de blanc d'œuf. Elle a une consistance spongieuse et généralement la forme de cubes ou de longs bâtons souples. Elle est naturellement d'un goût assez neutre et de couleur blanche.

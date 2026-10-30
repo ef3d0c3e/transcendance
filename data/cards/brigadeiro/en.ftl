@@ -1,0 +1,2 @@
+title = Brigadeiro
+description = Brigadeiro is a traditional Brazilian dessert. The dessert was created by a confectioner, Heloísa Nabuco de Oliveira, to promote the presidential candidacy of Eduardo Gomes. The ingredients are condensed milk, cocoa powder, butter and chocolate sprinkles, which coat the outside to prevent any sticking. It can be cooked in the stove or microwave to soft-ball stage caramel.

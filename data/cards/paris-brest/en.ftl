@@ -1,0 +1,2 @@
+title = Paris–Brest
+description = The Paris–Brest is a traditional French pâtisserie originally created to commemorate the Paris–Brest–Paris bicycle race. It typically consists of a ring of choux pastry, resembling a bicycle wheel, which is filled with a praline-flavored crème mousseline and covered with flaked almonds. Common variations take the forme of an éclair rather than a ring, or replace the filling with crème chiboust or a buttercream.

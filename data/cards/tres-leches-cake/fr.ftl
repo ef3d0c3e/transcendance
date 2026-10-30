@@ -1,0 +1,2 @@
+title = Gâteau aux trois laits
+description = Le gâteau aux trois laits est un gâteau qui tirerait ses origines de l'Europe médiévale. Il a été popularisé en Amérique Latine sous le nom de tres leches en espagnol, « trois laits » en français, vers le début du XXe siècle car la recette figurait sur le dos des paquets de lait condensé de Nestlé, qui a établi ses usines en Argentine, Chili, Colombie, Cuba, Mexique, Pérou et Venezuela.
