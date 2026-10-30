@@ -228,7 +228,25 @@ header>span {
 
 .header-title {
     padding: 0;
+    padding-inline-end: 0.75rem;
     margin: 0 auto 0 0;
+    border-inline-end: 1px solid var(--color-border-1);
+}
+
+.header-title a {
+    display: inline-block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 0.25rem;
+
+    &:hover {
+        color: var(--color-accent-secondary);
+    }
+
+    &:focus-visible {
+        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline-offset: 2px;
+    }
 }
 
 header nav {
@@ -400,6 +418,11 @@ header.js .header-title {
 }
 
 /* Compact layout */
+header.is-compact .header-title {
+    padding-inline-end: 0;
+    border-inline-end: 0;
+}
+
 header.is-compact .nav-toggle {
     display: block;
     position: absolute;
