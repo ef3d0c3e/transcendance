@@ -18,11 +18,15 @@
 			<form class="pack-form" id="pack-form" action="/opening" method="post">
 				<div id="form-result"></div>
 				<input type="hidden" name="booster" value="{{ with .Data.BoosterID }}{{ . }}{{ end }}">
-				<button type="submit" class="pack-open" {{ if not .Data.BoosterID }}hidden{{ end }}>{{ .T "pack-opening-open" }}</button>
+				<button type="submit" class="pack-open" {{ if not .Data.BoosterID }}hidden{{ end }}>
+					<span class="pack-open-shine" aria-hidden="true"></span>
+					<span class="pack-open-label">{{ .T "pack-opening-open" }}</span>
+				</button>
 				<!-- Out of boosters: buys one with coins, or offers coins when short -->
 				<button type="button" class="pack-open pack-buy" data-collection="{{ .Data.CollectionID }}"
 					data-price="{{ .Data.Price }}" aria-label="{{ .T "pack-opening-buy-label" "price" .Data.PriceLabel }}"
 					{{ if .Data.BoosterID }}hidden{{ end }}>
+					<span class="pack-open-shine" aria-hidden="true"></span>
 					{{ .T "pack-opening-buy" }}
 					<span class="pack-buy-price">{{ template "coin-icon" }} {{ .Data.Price }}</span>
 				</button>
