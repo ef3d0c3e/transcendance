@@ -71,11 +71,10 @@ user-status-last-seen = Last seen:
 
 friends-title = Friends list
 friends-add = Add Friend
+friends-cancel = Cancel
 friends-unfriend = Unfriend
 friends-block = Block user
 friends-unblock = Unblock
-friends-blocked = Blocked
-friends-pending = Pending invite
 friends-unknown-error = Something went wrong !
 friends-spam-error = You may only have one outgoing invite active
 friends-blocked-error = Can't add this user as a friend

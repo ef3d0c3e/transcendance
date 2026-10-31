@@ -79,7 +79,7 @@ func RegisterRoutes(
 	router.POST("/add_notification", controller.AddNotificationPost)
 
 	//friends
-	router.GET("/friendaction", controller.FriendsPost)
+	router.POST("/friendaction", controller.FriendsPost)
 	router.GET("/friends", controller.FriendsGet)
 	router.GET("/api/friends/*target", controller.ApiFriendsGet)
 

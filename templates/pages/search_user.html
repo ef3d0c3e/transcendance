@@ -70,7 +70,14 @@
 				</p>
 				<dl class="user-result-stats">
 					{{ if $.Data.User }}
-						<div class="friend-button" data-id="{{ .ID }}"></div>
+						<div class="friend-button" data-id="{{ .ID }}" data-block="false"
+							data-labeladd="{{ $.T "friends-add" }}"
+							data-labeldeny="{{ $.T "friends-deny" }}"
+							data-labelaccept="{{ $.T "friends-accept" }}"
+							data-labelblock="{{ $.T "friends-block" }}"
+							data-labelunblock="{{ $.T "friends-unblock" }}"
+							data-labelcancel="{{ $.T "friends-cancel" }}"
+							data-labelunfriend="{{ $.T "friends-unfriend" }}"></div>
 					{{ end}}
 					<div>
 						<dt>{{ $.T "search-user-joined" }}</dt>

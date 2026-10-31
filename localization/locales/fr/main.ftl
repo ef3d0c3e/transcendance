@@ -34,8 +34,9 @@ logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
 
 friends-title = Liste d'amis
-friends-add = Demander en ami
-friends-unfriend = Supprimer l'ami
+friends-add = Ajouter
+friends-cancel = Annuler
+friends-unfriend = Supprimer
 friends-block = Bloquer
 friends-unblock = Debloquer
 friends-blocked = Bloque

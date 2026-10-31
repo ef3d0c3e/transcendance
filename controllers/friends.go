@@ -73,6 +73,9 @@ func updateRelation(db *gorm.DB, user, target models.User, action string){
 		//fails silently if user is blocked
 		db.First(&relation).
 		Where("user_id = ? and target_id = ?", target.ID, user.ID)
+		if relation.Type == "blocked" {
+			return
+		}
 		fallthrough
 	default:
 		relation = models.Relation{
@@ -114,20 +117,22 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 	activeInvite := res.RowsAffected > 0
 	relationStr := GetRelation(target, c, fc.DB)
 	switch {
-	case relationStr == "" && action == "add":
+	case action == "add":
 		if activeInvite {
 			c.JSON(http.StatusOK, gin.H{
 				"response": fc.Renderer.T(c, "friends-spam-error"),
 			})
 			return
 		}
-		updateRelation(fc.DB, user, target, "pending")
-	case relationStr == "block" && action == "add":
+		if relationStr == "block" {
 			c.JSON(http.StatusOK, gin.H{
 				"response": fc.Renderer.T(c, "friends-blocked-error"),
 			})
 			return
-	case relationStr == "respond" && (action == "add" || action == "accept"):
+		}
+		updateRelation(fc.DB, user, target, "pending")
+	case relationStr == "block" && action == "add":
+	case relationStr == "respond" && action == "accept":
 		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "friends")
 		updateRelation(fc.DB, target, user, "friends")

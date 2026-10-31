@@ -162,8 +162,14 @@
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 		{{ if not .Data.Own }}
-		<div>
-			<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-block="true"></div>
+		<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-block=true
+			data-labeladd="{{ .T "friends-add" }}"
+			data-labeldeny="{{ .T "friends-deny" }}"
+			data-labelaccept="{{ .T "friends-accept" }}"
+			data-labelblock="{{ .T "friends-block" }}"
+			data-labelunblock="{{ .T "friends-unblock" }}"
+			data-labelcancel="{{ .T "friends-cancel" }}"
+			data-labelunfriend="{{ .T "friends-unfriend" }}">
 		</div>
 		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
 		{{ end }}
