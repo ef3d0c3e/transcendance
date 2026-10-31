@@ -58,6 +58,19 @@ func ConnectDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
+	// User emails were introduced after early accounts were registered: add the
+	// column and fill it with unique placeholders first, so the unique index on
+	// it can be built below (AutoMigrate would fail on the empty duplicates)
+	if db.Migrator().HasTable(&models.User{}) {
+		if !db.Migrator().HasColumn(&models.User{}, "Email") {
+			if err := db.Exec("ALTER TABLE users ADD COLUMN email varchar(254) NOT NULL").Error; err != nil {
+				return err
+			}
+		}
+		if err := db.Exec(`UPDATE users SET email = CONCAT('user_', id, '@example.invalid') WHERE email = ''`).Error; err != nil {
+			return err
+		}
+	}
 	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Notification{}, &models.Card{}, &models.Booster{}, &models.BoosterPile{}, &models.DailyStreak{}, &models.Trade{}); err != nil {
 		return err
 	}
