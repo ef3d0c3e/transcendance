@@ -155,6 +155,7 @@ profile-avatar-delete-title = Supprimer la photo de profil ?
 profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
 profile-avatar-cancel = Annuler
 profile-inventory = Voir l’inventaire
+profile-message = Envoyer un message
 
 profile-rank = Rôle
 profile-rank-user = Utilisateur
@@ -185,6 +186,11 @@ notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-private-message-title = { $count ->
+    [one] Nouveau message de { $username }
+   *[other] { $count } nouveaux messages de { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Catalogue de cartes
 catalog-collection-count = { $count ->
@@ -392,3 +398,42 @@ contact-team-title = L'équipe
 contact-team-text = Vous pouvez aussi contacter directement un membre de l'équipe via son profil GitHub :
 contact-privacy-title = Demandes relatives à vos données
 contact-privacy-text = Pour une demande concernant vos données personnelles, contactez un membre de l'équipe en privé plutôt que d'ouvrir une issue publique. Vous pouvez supprimer votre compte à tout moment depuis votre profil.
+
+shoutbox-title = Discussion
+shoutbox-unread = nouveaux messages
+shoutbox-close = Fermer
+shoutbox-connected = En direct
+shoutbox-connecting = Connexion...
+shoutbox-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-placeholder = Écrire un message
+shoutbox-send = Envoyer
+shoutbox-error-empty = Votre message est vide
+shoutbox-error-too-long = Votre message est trop long, 500 caractères maximum
+shoutbox-error-rate-limited = Vous envoyez des messages trop vite, patientez un instant
+shoutbox-error-internal = Votre message n'a pas pu être envoyé, réessayez
+shoutbox-closed-unauthorized = Votre session a expiré, reconnectez-vous pour discuter
+shoutbox-closed-too-many = La shoutbox est ouverte dans trop d'onglets, fermez-en et rechargez la page
+shoutbox-closed-error = Déconnecté de la shoutbox, rechargez la page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Écrire un message privé
+shoutbox-conversation-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-conversations-empty = Aucune conversation pour le moment
+shoutbox-start = Démarrer une conversation avec un utilisateur
+shoutbox-start-placeholder = Nom d'utilisateur
+shoutbox-start-button = Ouvrir
+shoutbox-back = Retour aux conversations
+shoutbox-you = Vous
+shoutbox-user-menu = Actions sur l'utilisateur
+shoutbox-message-user = Envoyer un message privé
+shoutbox-view-profile = Voir le profil
+shoutbox-ignore-hour = Ignorer pendant 1 heure
+shoutbox-ignore-day = Ignorer pendant 1 jour
+shoutbox-ignore-week = Ignorer pendant 1 semaine
+shoutbox-unignore = Ne plus ignorer
+shoutbox-ignored-title = Utilisateurs ignorés
+shoutbox-ignored-until = Jusqu'au
+shoutbox-ignoring-notice = Vous ignorez cet utilisateur : ses messages de la shoutbox sont masqués et il ne peut pas vous écrire.
+shoutbox-error-user-not-found = Cet utilisateur n'existe pas
+shoutbox-error-self = Vous ne pouvez pas vous écrire à vous-même
+shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le moment

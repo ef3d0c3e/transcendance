@@ -1589,6 +1589,26 @@ section {
     transform: translateY(1px);
 }
 
+.profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.profile-links .profile-inventory {
+    margin: 0;
+}
+
+.profile-message {
+    background: var(--color-accent-primary);
+}
+
+.profile-message:hover {
+    background: var(--color-accent-primary-dark);
+}
+
 .profile-detail {
     min-width: 0;
     padding-top: 1rem;
