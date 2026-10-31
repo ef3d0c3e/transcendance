@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 	"transcendance/models"
 	"transcendance/views"
@@ -304,7 +305,9 @@ func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*
 	origin := c.GetHeader("Origin")
 	if origin != "" {
 		u, err := url.Parse(origin)
-		if err != nil || u.Host != c.Request.Host || (u.Scheme != "http" && u.Scheme != "https") {
+		// Ports are not compared, the gateway forwards the host without the port
+		host := (&url.URL{Host: c.Request.Host}).Hostname()
+		if err != nil || !strings.EqualFold(u.Hostname(), host) || (u.Scheme != "http" && u.Scheme != "https") {
 			return nil, http.StatusForbidden
 		}
 	}
