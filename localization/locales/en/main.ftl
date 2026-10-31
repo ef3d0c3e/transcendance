@@ -311,6 +311,32 @@ shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
 
+index-title = Transcendance, collect trading cards
+index-heading = Collect, trade and show off your cards
+index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
+index-stat-cards = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+index-stat-collections = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+index-action-register = Create an account
+index-action-browse = Browse the cards
+index-action-inventory = Open your inventory
+index-action-shop = Visit the shop
+index-step-buy-title = Buy boosters
+index-step-buy-text = Spend your coins in the shop on boosters of the collection you like.
+index-step-open-title = Open packs
+index-step-open-text = Every booster holds a handful of cards, some of them rare, legendary or foil.
+index-step-trade-title = Trade cards
+index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
+index-cards-title = Rarest cards
+index-cards-all = See every card
+index-collections-title = Collections
+index-collections-all = See every collection
+
 footer-label = Site information
 footer-project = Transcendance, a student project
 

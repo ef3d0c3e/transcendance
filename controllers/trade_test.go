@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -537,7 +538,7 @@ func TestTradeVisibilityAndErasure(t *testing.T) {
 	require.NotContains(t, body, "trade20")
 
 	// Erasing a user erases their offers
-	rec = postForm(t, router, cookie20, "/api/account_delete", url.Values{})
+	rec = postForm(t, router, cookie20, fmt.Sprintf("/profiles/%d/delete", userID(t, "trade20")), url.Values{})
 	require.Equal(t, http.StatusNoContent, rec.Code)
 	require.Empty(t, tradesOf(t, "trade19"))
 }
