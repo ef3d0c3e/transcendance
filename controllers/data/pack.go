@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"transcendance/controllers"
@@ -346,6 +347,30 @@ func packCard(dc *DataController, c *gin.Context, collection *data.Collection, c
 	return html, true
 }
 
+// packSummary lists the drawn cards in a sentence, announced to screen
+// readers once the reels stopped, or writes the failure
+func packSummary(dc *DataController, c *gin.Context, pack []*data.Card, foils []string) (string, bool) {
+	loc := dc.Renderer.Localizer.GetLocale(c)
+
+	labels := make([]string, len(pack))
+	for i, card := range pack {
+		title, err := card.Translate(loc, "title")
+		if err != nil {
+			log.Printf("[WARN] Failed to translate card '%s': %s", card.Name, err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+			})
+			return "", false
+		}
+		key := "pack-opening-card"
+		if foils[i] != "" {
+			key = "pack-opening-card-foil"
+		}
+		labels[i] = dc.Renderer.T(c, key, "title", title, "rarity", dc.Renderer.T(c, "card-rarity-"+card.Rarity))
+	}
+	return dc.Renderer.T(c, "pack-opening-summary", "cards", strings.Join(labels, ", ")), true
+}
+
 // /opening POST: open one of the user's boosters, its cards are added to the inventory
 func (dc *DataController) OpeningPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
@@ -485,6 +510,10 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 	}
 
 	// The cards are in the inventory, what follows is only the animation
+	summary, ok := packSummary(dc, c, pack, foils)
+	if !ok {
+		return
+	}
 	pool := flattenByRarity(byRarity)
 	reels := make([][]gin.H, 0, len(pack))
 	for i, winner := range pack {
@@ -538,6 +567,7 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 		"remaining":      remaining,
 		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
 		"owned":          owned,
+		"summary":        summary,
 		"coins":          coins,
 		"coinsLabel":     dc.Renderer.T(c, "shop-price", "amount", coins),
 		"colors": gin.H{

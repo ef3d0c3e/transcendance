@@ -298,10 +298,6 @@ func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
 	if params := v.params(); len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   totalPages,
-		"Url":     paginatorUrl,
-	})
+	content.AddPaginator(v.Page, totalPages, paginatorUrl)
 	sc.Renderer.Render(c, &builder)
 }

@@ -69,6 +69,7 @@ user-status-last-seen = Last seen:
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
+navbar-skip = Skip to content
 navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
@@ -84,6 +85,7 @@ cards-error-not-found = Card not found
 cards-error-collection-not-found = Collection not found
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bottom of the list
 paginator-label-previous = Previous page
 paginator-label-next = Next page
 
@@ -141,6 +143,7 @@ profile-error-network = Unable to contact the server
 
 error-unexpected = An error occurred
 error-unauthorized = You must be logged in to access this resource
+error-not-found = This page does not exist
 
 error-title = Error
 
@@ -270,6 +273,11 @@ pack-opening-odds-foil = Foil
 pack-opening-odds-note = Each card of the booster is rolled on its own.
 pack-opening-progress-title = Collection progress
 pack-opening-progress-note = Different cards of this collection you own.
+pack-opening-summary = Cards drawn: { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, foil)
+pack-opening-spinning = Opening the pack…
+pack-opening-skip = Skip
 
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters

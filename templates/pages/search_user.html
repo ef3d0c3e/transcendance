@@ -2,7 +2,7 @@
 <div class="inventory user-search">
 	<div class="inventory-header">
 		<div class="inventory-heading">
-			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			<h1 class="inventory-title">{{ .Data.Title }}</h1>
 			{{ if ne (len .Data.Users) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
@@ -89,7 +89,7 @@
 		{{ end }}
 	</ul>
 	{{ if gt .Data.Pages 1 }}
-	{{ .Children.Paginator }}
+	{{ .Children.PaginatorBottom }}
 	{{ end }}
 	{{ end }}
 </div>

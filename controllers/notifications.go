@@ -97,11 +97,7 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 		"Redirect":      current,
 	})
 	if list.Pages > 1 {
-		content.Add("paginator", "Paginator", map[string]any{
-			"Current": page,
-			"Total":   int(list.Pages),
-			"Url":     "?filter=" + filter + "&p=",
-		})
+		content.AddPaginator(page, int(list.Pages), "?filter="+filter+"&p=")
 	}
 	nc.Renderer.Render(c, &builder)
 }

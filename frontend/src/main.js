@@ -300,6 +300,8 @@ import { openTopup } from './topup.js';
 				autostart: target.dataset.autostart === 'true',
 				soundOnLabel: target.dataset.soundOn,
 				soundOffLabel: target.dataset.soundOff,
+				skipLabel: target.dataset.skipLabel,
+				spinningLabel: target.dataset.spinningLabel,
 			},
 		});
 	}

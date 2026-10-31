@@ -2,7 +2,7 @@
 <div class="inventory">
 	<div class="inventory-header">
 		<div class="inventory-heading">
-			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			<h1 class="inventory-title">{{ .Data.Title }}</h1>
 			{{ if .Data.Count }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
@@ -125,7 +125,7 @@
 	</e-cluster>
 	{{ end }}
 	{{ if gt .Data.Pages 1 }}
-	{{ .Children.Paginator }}
+	{{ .Children.PaginatorBottom }}
 	{{ end }}
 	{{ if .Data.Topups }}
 	<div id="shop-buy-popup" data-coins="{{ .Data.Coins }}"
