@@ -72,7 +72,6 @@ navbar-label-main = Navigation principale
 navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
-navbar-shop = Boutique
 navbar-profile = Votre profil
 navbar-logout = Se déconnecter
 
@@ -188,9 +187,6 @@ notification-info-title = { $title }
 notification-info-desc = { $description }
 
 catalog-title = Catalogue de cartes
-catalog-tabs-label = Sections du catalogue
-catalog-tab-cards = Cartes
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -198,6 +194,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = Toutes les collections
 catalog-sort-number = Ordre de la collection
+catalog-filter-status = Possédées
+catalog-filter-status-all = Toutes les cartes
+catalog-filter-status-owned = Possédées
+catalog-filter-status-missing = Manquantes
+catalog-sort-missing = Manquantes d'abord
 
 inventory-title = Votre inventaire
 inventory-title-other = Inventaire de { $username }
@@ -231,10 +232,9 @@ inventory-sort-name-desc = Nom (Z-A)
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = Aucun booster pour l'instant
-inventory-booster-open-confirm = Ouvrir le booster { $name } ?
-inventory-booster-open-yes = Oui
-inventory-booster-open-no = Non
+inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -254,26 +254,30 @@ pack-opening-open-another = Ouvrir un autre booster
 pack-opening-error-collection = Collection introuvable
 pack-opening-error-empty = Ce booster ne contient aucune carte
 pack-opening-error-internal = Impossible d'ouvrir le booster
-pack-opening-obtained = Cartes obtenues
 pack-opening-back = Retour à l'inventaire
-pack-opening-return = Retour
-pack-opening-open-again = Ouvrir à nouveau
 pack-opening-remaining = { $count ->
     [0] Plus aucun booster
     [one] { $count } booster restant
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-buy = Ouvrir à nouveau
+pack-opening-buy-label = Ouvrir à nouveau pour { $price }
+pack-opening-sound-on = Son activé
+pack-opening-sound-off = Son coupé
+pack-opening-odds-title = Taux d'obtention
+pack-opening-odds-foil = Holographique
+pack-opening-odds-note = Chaque carte du booster est tirée séparément.
+pack-opening-progress-title = Progression de la collection
+pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
 
-shop-title = Boutique
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = Aucun booster n'est en vente pour le moment
 shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-error-unconfirmed = Impossible de confirmer l’ajout de pièces. Actualisez la page pour vérifier votre solde avant de réessayer.
 shop-topup-price = { $euros },{ $cents } €
 shop-topup-open = Acheter des pièces
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
@@ -283,11 +287,6 @@ shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
 shop-error-quantity = Saisissez une quantité entre 1 et { $max }
 shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
-shop-buy-success = { $count ->
-    [one] Un booster { $collection } a été ajouté à votre inventaire
-   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
-}
-shop-buy-view-inventory = Voir l'inventaire
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces

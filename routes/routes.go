@@ -86,6 +86,7 @@ func RegisterRoutes(
 
 	router.GET("/opening", dataController.OpeningGet)
 	router.POST("/opening", dataController.OpeningPost)
+	router.POST("/opening/buy", dataController.OpeningBuyPost)
 
 	// Debug: add a booster to the authenticated user's inventory
 	router.GET("/add_booster", dataController.AddBoosterGet)

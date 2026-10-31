@@ -77,7 +77,7 @@
 						<dt>{{ $.T "search-user-cards" }}</dt>
 						<dd>
 							{{ if $.Data.User }}
-							<a href="/inventory?u={{ .Username }}">{{ .CardCount }}</a>
+								<a href="/inventory?tab=cards&amp;u={{ .Username }}">{{ .CardCount }}</a>
 							{{ else }}
 							{{ .CardCount }}
 							{{ end }}

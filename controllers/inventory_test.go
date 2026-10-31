@@ -128,14 +128,14 @@ func TestInventorySearchPagination(t *testing.T) {
 	giveCards(t, "invsearch5", cardTungsten, 2)
 	cookie := login(t, router, "invsearch5", "foo-bar-baz-qux")
 
-	all := getInventory(t, router, cookie, "/inventory")
+	all := getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Len(t, cardTitles(all), 20)
-	require.Contains(t, all, `href="?p=2"`)
+	require.Contains(t, all, `href="?tab=cards&amp;p=2"`)
 	require.Contains(t, all, `<p class="inventory-count">37 cards</p>`)
 	// Multiple pages get a second paginator below the cards
 	require.Equal(t, 2, strings.Count(all, `<nav class="paginator"`))
 
-	second := getInventory(t, router, cookie, "/inventory?p=2")
+	second := getInventory(t, router, cookie, "/inventory?tab=cards&p=2")
 	require.Len(t, cardTitles(second), 15)
 
 	// Searches count matching copies
@@ -148,7 +148,7 @@ func TestInventorySearchPagination(t *testing.T) {
 	// Filters and sorts are kept in the paginator: 3 common cards × 7 looks
 	filtered := getInventory(t, router, cookie, "/inventory?rarity=common&sort=name")
 	require.Len(t, cardTitles(filtered), 20)
-	require.Contains(t, filtered, `href="?rarity=common&amp;sort=name&amp;p=2"`)
+	require.Contains(t, filtered, `href="?rarity=common&amp;sort=name&amp;tab=cards&amp;p=2"`)
 	require.Contains(t, filtered, `<p class="inventory-count">23 cards found</p>`)
 }
 
@@ -184,7 +184,7 @@ func TestInventoryCardAcquiredDate(t *testing.T) {
 	cookie := login(t, router, "invpopup1", "foo-bar-baz-qux")
 
 	// The card carries its acquisition date for the popup
-	body := getInventory(t, router, cookie, "/inventory")
+	body := getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Contains(t, body, `data-copies="1"`)
 	require.Contains(t, body, `data-acquired-first="2025-03-14T09:26:53`)
 	require.Contains(t, body, `data-acquired-last="2025-03-14T09:26:53`)
@@ -226,9 +226,9 @@ func TestInventoryBoosters(t *testing.T) {
 	giveBoosters(t, "invbooster2", collectionDev, 5, 7)
 	cookie := login(t, router, "invbooster1", "foo-bar-baz-qux")
 
-	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
-	// One stack per (collection, size)
-	require.Equal(t, 2, strings.Count(body, `<article class="collection"`))
+	body := getInventory(t, router, cookie, "/inventory")
+	// One stack per (collection, size), and the other collections to buy
+	require.Equal(t, len(tests.Data.Collections)+1, strings.Count(body, `<article class="collection"`))
 	require.Contains(t, body, `<span class="collection-stack">×3</span>`)
 	require.Contains(t, body, `<span class="collection-stack">×1</span>`)
 	require.Contains(t, body, "5 cards booster")
@@ -241,7 +241,7 @@ func TestInventoryBoosters(t *testing.T) {
 	require.Zero(t, countCard(body, "Tungsten"))
 
 	// The cards tab is unaffected
-	cards := getInventory(t, router, cookie, "/inventory")
+	cards := getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Equal(t, 1, countCard(cards, "Tungsten"))
 	require.NotContains(t, cards, `class="collection-stack"`)
 }
@@ -255,9 +255,14 @@ func TestInventoryBoostersOtherUser(t *testing.T) {
 
 	body := getInventory(t, router, cookie, "/inventory?u=invbooster4&tab=boosters")
 	require.Contains(t, body, `<span class="collection-stack">×2</span>`)
+	// Only the boosters owned, none is sold here
+	require.Equal(t, 1, strings.Count(body, `<article class="collection"`))
+	require.NotContains(t, body, "shop-booster")
+	require.NotContains(t, body, `id="shop-buy-popup"`)
+	require.NotContains(t, body, "data-booster-open")
 	// Tabs keep the viewed user
+	require.Contains(t, body, `href="/inventory?tab=cards&amp;u=invbooster4"`)
 	require.Contains(t, body, `href="/inventory?u=invbooster4"`)
-	require.Contains(t, body, `href="/inventory?tab=boosters&amp;u=invbooster4"`)
 }
 
 func TestInventoryBoostersEmpty(t *testing.T) {
@@ -265,9 +270,43 @@ func TestInventoryBoostersEmpty(t *testing.T) {
 	createAccount(t, router, "invbooster5", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "invbooster5", "foo-bar-baz-qux")
 
-	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
-	require.Contains(t, body, "No boosters yet")
-	require.NotContains(t, body, `<article class="collection"`)
+	// Every collection is listed grayed out, clicking one buys some
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<div class="inventory-booster is-empty shop-booster"`))
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<span class="collection-stack collection-stack-empty">×0</span>`))
+	require.Contains(t, body, `data-collection="1"`)
+	require.Contains(t, body, `data-price="250"`)
+	require.Contains(t, body, `id="shop-buy-popup" data-coins="0"`)
+	// With the balance and the coin top-up
+	require.Contains(t, body, "Balance: 0 coins")
+	require.Contains(t, body, `id="shop-topup-popup"`)
+	require.NotContains(t, body, "No boosters yet")
+
+	// Other users with no boosters have nothing to show
+	createAccount(t, router, "invbooster6", "foo-bar-baz-qux", 0)
+	other := getInventory(t, router, cookie, "/inventory?u=invbooster6")
+	require.Contains(t, other, "No boosters yet")
+	require.NotContains(t, other, `<article class="collection"`)
+}
+
+func TestInventoryDefaultTab(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invtab1", "foo-bar-baz-qux", 0)
+	giveCards(t, "invtab1", cardTungsten, 1)
+	cookie := login(t, router, "invtab1", "foo-bar-baz-qux")
+
+	// Boosters by default
+	body := getInventory(t, router, cookie, "/inventory")
+	require.Contains(t, body, `class="inventory-tab-boosters" href="/inventory" aria-current="page"`)
+	require.Zero(t, countCard(body, "Tungsten"))
+
+	// A search, filter or sort is about cards
+	for _, query := range []string{"q=tungsten", "rarity=common", "effect=none", "sort=name", "tab=cards"} {
+		body := getInventory(t, router, cookie, "/inventory?"+query)
+		require.Equal(t, 1, countCard(body, "Tungsten"), query)
+	}
+	// The search form stays on the cards, even emptied
+	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=cards"), `<input type="hidden" name="tab" value="cards">`)
 }
 
 func TestInventoryCardFoil(t *testing.T) {
@@ -283,7 +322,7 @@ func TestInventoryCardFoil(t *testing.T) {
 	cookie := login(t, router, "invfoil1", "foo-bar-baz-qux")
 
 	// Only the foil card has the foil effect, with its own pattern
-	body := getInventory(t, router, cookie, "/inventory")
+	body := getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Equal(t, 1, strings.Count(body, "card-effect card-foil"))
 	require.Contains(t, body, `data-mask="/cards/assets/foil3.png"`)
 	// Glare is the base look of every card, the watermark is reserved
@@ -303,7 +342,7 @@ func TestInventoryFoldsCopies(t *testing.T) {
 	giveCardAt(t, "invfold1", cardTungsten, "", first)
 	cookie := login(t, router, "invfold1", "foo-bar-baz-qux")
 
-	body := getInventory(t, router, cookie, "/inventory")
+	body := getInventory(t, router, cookie, "/inventory?tab=cards")
 	// Copies fold by card and foil
 	require.Equal(t, 2, countCard(body, "Ford Model T"))
 	require.Equal(t, 1, countCard(body, "Tungsten"))
@@ -350,7 +389,7 @@ func TestInventoryFilters(t *testing.T) {
 
 	empty := getInventory(t, router, cookie, "/inventory?rarity=rare&effect=foil")
 	require.Contains(t, empty, "No cards in this inventory match your search")
-	require.Contains(t, empty, `<a href="/inventory">Clear search</a>`)
+	require.Contains(t, empty, `<a href="/inventory?tab=cards">Clear search</a>`)
 
 	// Unknown values are ignored
 	unknown := getInventory(t, router, cookie, "/inventory?rarity=mythic&effect=sparkles")
@@ -392,11 +431,11 @@ func TestInventorySorts(t *testing.T) {
 		"?sort=unknown":   {"Tungsten", "Ford Model T", "McMurdo Station", "Pythagorean tiling"},
 	}
 	for query, titles := range cases {
-		body := getInventory(t, router, cookie, "/inventory"+query)
+		body := getInventory(t, router, cookie, "/inventory?tab=cards"+strings.Replace(query, "?", "&", 1))
 		require.Equal(t, titles, cardTitles(body), query)
 	}
 
-	body := getInventory(t, router, cookie, "/inventory")
+	body := getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Contains(t, body, `<option value="" selected>Last acquired</option>`)
 	require.NotContains(t, body, `value="relevance"`)
 

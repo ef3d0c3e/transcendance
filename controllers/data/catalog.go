@@ -2,6 +2,7 @@ package data
 
 import (
 	"cmp"
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -11,18 +12,26 @@ import (
 	"strings"
 	"transcendance/controllers"
 	"transcendance/data"
+	"transcendance/models"
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
-)
-
-const (
-	catalogTabCards       = "cards"
-	catalogTabCollections = "collections"
+	"gorm.io/gorm"
 )
 
 // Catalog card sort keeping the collection order, used when not searching
 const catalogSortNumber = "number"
+
+// In a collection, cards the user is missing first, then the collection order
+const catalogSortMissing = "missing"
+
+// In a collection, filter on the cards the user collected or is missing
+const (
+	catalogStatusOwned   = "owned"
+	catalogStatusMissing = "missing"
+)
+
+var catalogStatuses = []string{catalogStatusOwned, catalogStatusMissing}
 
 // Card sorts of the catalog, relevance is only available when searching
 var catalogSorts = []string{
@@ -43,21 +52,28 @@ func defaultCatalogSort(query string) string {
 
 // Everything needed to render the catalog page
 type catalogView struct {
-	// Displayed tab, cards or collections
-	Tab   string
 	Query string
 	// Card filters, "" or 0 when unfiltered
 	Rarity     string
 	Collection int
-	// Card sort, always set on the cards tab
+	// Collected or missing cards only, within a collection when logged in
+	Status string
+	// Card sort, always set
 	Sort string
 	// Error or empty state message
 	Message string
-	// Rendered cards or collections
+	// Rendered cards
 	Items []map[string]any
 	Page  int
-	// Number of matching cards or collections
+	// Number of matching cards
 	Count int
+	// Collection whose cards are listed, nil on the catalog
+	Scope *data.Collection
+	// Viewed inventory owner; Viewed is empty for the authenticated user.
+	OwnerID uint
+	Viewed  string
+	// Cards owned by that user within the collection, nil for public views.
+	Owned map[uint]bool
 }
 
 // Every collection, in ID order
@@ -74,6 +90,9 @@ func (dc *DataController) sortedCollections() []*data.Collection {
 
 func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	title := dc.Renderer.T(c, "catalog-title")
+	if v.Scope != nil {
+		title = dc.Renderer.T(c, "collection-title", "collection", dc.collectionTitle(c, v.Scope))
+	}
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": title,
 		"User":  controllers.GetAuthenticatedUser(c),
@@ -81,71 +100,90 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	if v.Items == nil {
 		v.Items = make([]map[string]any, 0)
 	}
-	searching := strings.TrimSpace(v.Query) != "" ||
-		(v.Tab == catalogTabCards && (v.Rarity != "" || v.Collection != 0))
+	searching := strings.TrimSpace(v.Query) != "" || v.Rarity != "" || v.Status != "" ||
+		(v.Collection != 0 && v.Scope == nil)
 	if v.Message == "" && len(v.Items) == 0 {
-		if v.Tab == catalogTabCollections {
-			v.Message = dc.Renderer.T(c, "collection-search-empty")
-		} else {
-			v.Message = dc.Renderer.T(c, "card-search-empty")
-		}
+		v.Message = dc.Renderer.T(c, "card-search-empty")
 	}
 	count := ""
 	if v.Count > 0 {
-		switch {
-		case v.Tab == catalogTabCollections:
-			count = dc.Renderer.T(c, "catalog-collection-count", "count", v.Count)
-		case searching:
+		if searching {
 			count = dc.Renderer.T(c, "inventory-search-count", "count", v.Count)
-		default:
+		} else {
 			count = dc.Renderer.T(c, "inventory-count", "count", v.Count)
 		}
 	}
-	tabBase := map[string]string{
-		catalogTabCards:       "/cards/search/",
-		catalogTabCollections: "/collections/search/",
-	}
-	// The search is kept when switching tabs
-	tabUrl := func(tab string) string {
-		if v.Query == "" {
-			return tabBase[tab]
-		}
-		return tabBase[tab] + "?" + url.Values{"q": {v.Query}}.Encode()
+	// The page lists every card, or a collection's
+	action := "/cards/search/"
+	if v.Scope != nil {
+		action = fmt.Sprint("/collections/", v.Scope.ID, "/")
 	}
 	totalPages := (v.Count + pageSize - 1) / pageSize
 	fields := map[string]any{
-		"Title":             title,
-		"Message":           v.Message,
-		"Count":             count,
-		"Tab":               v.Tab,
-		"Action":            tabBase[v.Tab],
-		"TabCardsUrl":       tabUrl(catalogTabCards),
-		"TabCollectionsUrl": tabUrl(catalogTabCollections),
-		"Items":             v.Items,
-		"Query":             v.Query,
-		"Filtered":          searching,
-		"ClearUrl":          tabBase[v.Tab],
-		"Pages":             totalPages,
+		"Title":    title,
+		"Message":  v.Message,
+		"Count":    count,
+		"Action":   action,
+		"Items":    v.Items,
+		"Query":    v.Query,
+		"Filtered": searching,
+		"ClearUrl": action,
+		"Pages":    totalPages,
+		"Scoped":   v.Scope != nil,
+		"Viewed":   v.Viewed,
 	}
-	if v.Tab == catalogTabCards {
+	if v.Viewed != "" {
+		fields["ViewedTitle"] = dc.Renderer.T(c, "inventory-title-other", "username", v.Viewed)
+		fields["ClearUrl"] = action + "?" + url.Values{"u": {v.Viewed}}.Encode()
+	}
+	// Keep the viewed inventory's tabs and counts over its collection cards.
+	if v.Scope != nil && v.OwnerID != 0 {
+		cards, boosters, err := dc.inventoryCounts(v.OwnerID)
+		if err != nil {
+			log.Printf("WARN failed to count the inventory of user %d: %s", v.OwnerID, err)
+		} else {
+			tabURL := func(tab string) string {
+				params := url.Values{}
+				if v.Viewed != "" {
+					params.Set("u", v.Viewed)
+				}
+				if tab != inventoryTabBoosters {
+					params.Set("tab", tab)
+				}
+				if len(params) == 0 {
+					return "/inventory"
+				}
+				return "/inventory?" + params.Encode()
+			}
+			fields["Tab"] = inventoryTabCollections
+			fields["TabCardsUrl"] = tabURL(inventoryTabCards)
+			fields["TabBoostersUrl"] = tabURL(inventoryTabBoosters)
+			fields["TabCollectionsUrl"] = tabURL(inventoryTabCollections)
+			fields["TotalCards"] = cards
+			fields["TotalBoosters"] = boosters
+			fields["TotalCollections"] = len(dc.Data.Collections)
+		}
+	}
+	if v.Scope != nil && v.Owned != nil && len(v.Scope.Cards) > 0 {
+		fields["Progress"] = map[string]any{
+			"Owned":   len(v.Owned),
+			"Total":   len(v.Scope.Cards),
+			"Percent": len(v.Owned) * 100 / len(v.Scope.Cards),
+		}
+	}
+	{
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
 			if value == "" {
 				return dc.Renderer.T(c, "inventory-filter-rarity-all")
 			}
 			return dc.Renderer.T(c, "card-rarity-"+value)
 		})
-		loc := dc.Renderer.Localizer.GetLocale(c)
 		collections := []string{""}
 		titles := map[string]string{"": dc.Renderer.T(c, "catalog-filter-collection-all")}
 		for _, collection := range dc.sortedCollections() {
 			id := strconv.Itoa(collection.ID)
-			title, err := collection.Translate(loc, "title")
-			if err != nil {
-				log.Printf("WARN collection %d has no title: %s", collection.ID, err)
-				title = collection.Name
-			}
 			collections = append(collections, id)
-			titles[id] = title
+			titles[id] = dc.collectionTitle(c, collection)
 		}
 		current := ""
 		if v.Collection != 0 {
@@ -154,14 +192,28 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 		fields["CollectionOptions"] = controllers.SelectOptions(collections, current, func(value string) string {
 			return titles[value]
 		})
+		if v.Owned != nil {
+			fields["StatusOptions"] = controllers.SelectOptions(append([]string{""}, catalogStatuses...), v.Status, func(value string) string {
+				if value == "" {
+					return dc.Renderer.T(c, "catalog-filter-status-all")
+				}
+				return dc.Renderer.T(c, "catalog-filter-status-"+value)
+			})
+		}
 		defaultSort := defaultCatalogSort(v.Query)
-		sorts := catalogSorts
+		sorts := slices.Clone(catalogSorts)
 		if defaultSort != inventorySortRelevance {
 			sorts = sorts[1:]
 		}
+		if v.Owned != nil {
+			sorts = append(sorts, catalogSortMissing)
+		}
 		sortOptions := controllers.SelectOptions(sorts, v.Sort, func(value string) string {
-			if value == catalogSortNumber {
+			switch value {
+			case catalogSortNumber:
 				return dc.Renderer.T(c, "catalog-sort-number")
+			case catalogSortMissing:
+				return dc.Renderer.T(c, "catalog-sort-missing")
 			}
 			return dc.Renderer.T(c, "inventory-sort-"+value)
 		})
@@ -175,16 +227,22 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	}
 	content := builder.Add("catalog", "Content", fields)
 	params := url.Values{}
+	if v.Viewed != "" {
+		params.Set("u", v.Viewed)
+	}
 	if v.Query != "" {
 		params.Set("q", v.Query)
 	}
 	if v.Rarity != "" {
 		params.Set("rarity", v.Rarity)
 	}
-	if v.Collection != 0 {
+	if v.Collection != 0 && v.Scope == nil {
 		params.Set("collection", strconv.Itoa(v.Collection))
 	}
-	if v.Tab == catalogTabCards && v.Sort != defaultCatalogSort(v.Query) {
+	if v.Status != "" {
+		params.Set("status", v.Status)
+	}
+	if v.Sort != defaultCatalogSort(v.Query) {
 		params.Set("sort", v.Sort)
 	}
 	paginatorUrl := "?p="
@@ -199,6 +257,34 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	dc.Renderer.Render(c, &builder)
 }
 
+// Global IDs of the cards of a collection owned by a user
+func (dc *DataController) ownedCards(userID uint, collection *data.Collection) (map[uint]bool, error) {
+	var ids []uint
+	if err := dc.DB.
+		Model(&models.Card{}).
+		Where("owner_id = ? AND card_id > ? AND card_id < ?", userID, collection.ID*1000, (collection.ID+1)*1000).
+		Distinct("card_id").
+		Pluck("card_id", &ids).
+		Error; err != nil {
+		return nil, err
+	}
+	owned := make(map[uint]bool, len(ids))
+	for _, id := range ids {
+		owned[id] = true
+	}
+	return owned, nil
+}
+
+// Translated title of a collection, its name when missing
+func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Collection) string {
+	title, err := collection.Translate(dc.Renderer.Localizer.GetLocale(c), "title")
+	if err != nil {
+		log.Printf("WARN collection %d has no title: %s", collection.ID, err)
+		return collection.Name
+	}
+	return title
+}
+
 // Page number from the query, 1 when missing or invalid
 func catalogPage(c *gin.Context) int {
 	page, err := strconv.Atoi(c.Query("p"))
@@ -210,19 +296,60 @@ func catalogPage(c *gin.Context) int {
 
 // cards/search: every card, or the ones matching the search and filters
 func (dc *DataController) catalogCards(c *gin.Context) {
+	dc.searchCards(c, nil)
+}
+
+// collections/:id: the collection's cards, with the catalog search and filters
+func (dc *DataController) collectionCards(c *gin.Context, collection *data.Collection) {
+	dc.searchCards(c, collection)
+}
+
+// Card search page, within scope when it isn't nil
+func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	v := &catalogView{
-		Tab:   catalogTabCards,
 		Query: c.Query("q"),
 		Page:  catalogPage(c),
+		Scope: scope,
 	}
 	if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
 		v.Rarity = rarity
 	}
-	if id, err := strconv.Atoi(c.Query("collection")); err == nil && dc.Data.GetCollection(id) != nil {
+	if scope != nil {
+		v.Collection = scope.ID
+		// Use the same inventory owner as the collection tile that was opened.
+		if user := controllers.GetAuthenticatedUser(c); user != nil {
+			v.OwnerID = user.ID
+			if viewed := c.Query("u"); viewed != "" && !strings.EqualFold(viewed, user.Username) {
+				var other models.User
+				if err := dc.DB.Select("id", "username").Where("username = ?", viewed).First(&other).Error; err != nil {
+					status := http.StatusInternalServerError
+					key := "card-search-error-internal"
+					if errors.Is(err, gorm.ErrRecordNotFound) {
+						status = http.StatusNotFound
+						key = "inventory-message-user-not-found"
+					}
+					dc.Renderer.RenderError(c, views.ErrorPage{User: user, StatusCode: status, Message: dc.Renderer.T(c, key)})
+					return
+				}
+				v.OwnerID = other.ID
+				v.Viewed = other.Username
+			}
+			owned, err := dc.ownedCards(v.OwnerID, scope)
+			if err != nil {
+				log.Printf("WARN failed to get the cards of collection %d owned by user %d: %s", scope.ID, v.OwnerID, err)
+			} else {
+				v.Owned = owned
+			}
+		}
+	} else if id, err := strconv.Atoi(c.Query("collection")); err == nil && dc.Data.GetCollection(id) != nil {
 		v.Collection = id
 	}
+	// What the user owns is only known inside a collection, logged in
+	if status := c.Query("status"); v.Owned != nil && slices.Contains(catalogStatuses, status) {
+		v.Status = status
+	}
 	v.Sort = defaultCatalogSort(v.Query)
-	if sort := c.Query("sort"); slices.Contains(catalogSorts, sort) &&
+	if sort := c.Query("sort"); (slices.Contains(catalogSorts, sort) || (sort == catalogSortMissing && v.Owned != nil)) &&
 		(sort != inventorySortRelevance || v.Sort == inventorySortRelevance) {
 		v.Sort = sort
 	}
@@ -274,11 +401,21 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 
 	stacks = slices.DeleteFunc(stacks, func(stack cardStack) bool {
 		return (v.Rarity != "" && stack.card.Rarity != v.Rarity) ||
-			(v.Collection != 0 && stack.collection.ID != v.Collection)
+			(v.Collection != 0 && stack.collection.ID != v.Collection) ||
+			(v.Status == catalogStatusOwned && !v.Owned[stack.CardID]) ||
+			(v.Status == catalogStatusMissing && v.Owned[stack.CardID])
 	})
 	v.Count = len(stacks)
 	// The collection order is the ID tie-break
-	sortCardStacks(stacks, v.Sort, loc, relevance)
+	if v.Sort == catalogSortMissing {
+		sortCardStacks(stacks, catalogSortNumber, loc, relevance)
+		slices.SortStableFunc(stacks, func(a, b cardStack) int {
+			// Missing (false) before owned
+			return cmp.Compare(boolRank(v.Owned[a.CardID]), boolRank(v.Owned[b.CardID]))
+		})
+	} else {
+		sortCardStacks(stacks, v.Sort, loc, relevance)
+	}
 
 	start := min((v.Page-1)*pageSize, len(stacks))
 	end := min(start+pageSize, len(stacks))
@@ -288,6 +425,9 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 		if err != nil {
 			return fmt.Errorf("card %d: %w", stack.CardID, err)
 		}
+		if v.Owned != nil {
+			data["CardMissing"] = !v.Owned[stack.CardID]
+		}
 		v.Items = append(v.Items, map[string]any{
 			"Data": data,
 		})
@@ -295,57 +435,10 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 	return nil
 }
 
-// collections/search: every collection, or the ones matching the search
-func (dc *DataController) catalogCollections(c *gin.Context) {
-	v := &catalogView{
-		Tab:   catalogTabCollections,
-		Query: c.Query("q"),
-		Page:  catalogPage(c),
+// 0 for false, 1 for true, to sort on a flag
+func boolRank(b bool) int {
+	if b {
+		return 1
 	}
-	loc := dc.Renderer.Localizer.GetLocale(c)
-
-	var collections []*data.Collection
-	if strings.TrimSpace(v.Query) != "" {
-		ss, err := dc.GetCollectionSearchSet(loc)
-		if err != nil {
-			log.Printf("WARN failed to get collection search set for locale '%s': %s", loc, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		results, total, err := ss.Search(v.Query, pageSize, (v.Page-1)*pageSize)
-		if err != nil {
-			log.Printf("WARN search failed for locale: '%s', term '%s': %s", loc, v.Query, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		collections = results
-		v.Count = int(total)
-	} else {
-		all := dc.sortedCollections()
-		v.Count = len(all)
-		start := min((v.Page-1)*pageSize, len(all))
-		collections = all[start:min(start+pageSize, len(all))]
-	}
-
-	v.Items = make([]map[string]any, 0, len(collections))
-	for _, collection := range collections {
-		data, err := getCollectionData(c, loc, dc.Renderer, collection)
-		if err != nil {
-			log.Printf("WARN failed to build data for collection '%s': %s", collection.Name, err)
-			c.JSON(http.StatusInternalServerError, gin.H{
-				"message": dc.Renderer.T(c, "collection-search-error-internal"),
-			})
-			return
-		}
-		v.Items = append(v.Items, map[string]any{
-			"Data": data,
-			// Lists the collection's cards
-			"Url": fmt.Sprint("/collections/", collection.ID, "/"),
-		})
-	}
-	dc.renderCatalog(c, v)
+	return 0
 }
