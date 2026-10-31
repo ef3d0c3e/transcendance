@@ -2226,6 +2226,22 @@ body:has(.pack-background) {
     margin: 0 auto;
 }
 
+/* The rays of the reels on the sides go past the screen: the body cuts
+    them there, or phones widen the page to show them. It clips rather than
+    hides, so the sound switch still sticks to the screen, and the root
+    clips too, so the body keeps its overflow instead of passing it to the
+    screen. */
+html:has(.pack-page),
+body:has(.pack-page) {
+    overflow-x: clip;
+}
+
+/* The opening's stage and sound switch lay out in the page: the switch
+    sticks to the bottom of the page, not of its mount point */
+#pack-opening {
+    display: contents;
+}
+
 /* Panel over the background */
 .pack-panel {
     padding: 1.25rem;
