@@ -17,6 +17,12 @@ func TestIndexPage(t *testing.T) {
 	body := getPage(t, router, "/")
 	require.Contains(t, body, "<h1>Collect, trade and show off your cards</h1>")
 	require.Contains(t, body, "<h2>Trade cards</h2>")
+	// Boosters are bought from the inventory, there is no shop to point to
+	require.NotContains(t, body, `class="index-action" href="/shop"`)
+	require.NotContains(t, body, "in the shop")
+	// Players learn how to add the site to their home screen
+	require.Contains(t, body, "<h2>Install the app</h2>")
+	require.Contains(t, body, "Add to Home Screen")
 	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%d cards · %d collections</p>`, len(tests.Data.Cards), len(tests.Data.Collections)))
 	// Visitors are invited to register
 	require.Contains(t, body, `<a class="index-action-primary" href="/register">Create an account</a>`)
@@ -33,6 +39,8 @@ func TestIndexPage(t *testing.T) {
 	body = getInventory(t, router, cookie, "/")
 	require.Contains(t, body, `<a class="index-action-primary" href="/inventory">Open your inventory</a>`)
 	require.NotContains(t, body, `href="/register">Create an account</a>`)
+	require.Contains(t, body, `<a class="index-action" href="/cards/search/">Browse the cards</a>`)
+	require.NotContains(t, body, `class="index-action" href="/shop"`)
 }
 
 func TestIndexPageFrench(t *testing.T) {
@@ -46,4 +54,5 @@ func TestIndexPageFrench(t *testing.T) {
 	require.Contains(t, rec.Body.String(), "<h1>Collectionnez, troquez et exposez vos cartes</h1>")
 	require.Contains(t, rec.Body.String(), "<h2>Troquez vos cartes</h2>")
 	require.Contains(t, rec.Body.String(), "Créer un compte</a>")
+	require.Contains(t, rec.Body.String(), "<h2>Installer l’application</h2>")
 }
