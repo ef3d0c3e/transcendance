@@ -23,7 +23,12 @@ func TestIndexPage(t *testing.T) {
 	// Players learn how to add the site to their home screen
 	require.Contains(t, body, "<h2>Install the app</h2>")
 	require.Contains(t, body, "Add to Home Screen")
-	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%d cards · %d collections</p>`, len(tests.Data.Cards), len(tests.Data.Collections)))
+	// Counts follow the card data, which grows with every new collection
+	cards := 0
+	for _, collection := range tests.Data.Collections {
+		cards += len(collection.Cards)
+	}
+	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%d cards · %d collections</p>`, cards, len(tests.Data.Collections)))
 	// Visitors are invited to register
 	require.Contains(t, body, `<a class="index-action-primary" href="/register">Create an account</a>`)
 	require.NotContains(t, body, `href="/inventory">Open your inventory</a>`)

@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -29,6 +30,11 @@ func run(data *data.Data, db *gorm.DB) (*gin.Engine, *metrics.Metrics) {
 	m := metrics.New(sqlDB)
 
 	router := gin.Default()
+	// Only the gateway names the client, in X-Real-IP, which it always overwrites
+	router.RemoteIPHeaders = []string{"X-Real-IP"}
+	if err := router.SetTrustedProxies(trustedProxies()); err != nil {
+		log.Fatal(err)
+	}
 	router.Use(m.Middleware())
 
 	l10n, err := localization.New()
@@ -45,6 +51,17 @@ func run(data *data.Data, db *gorm.DB) (*gin.Engine, *metrics.Metrics) {
 	routes.RegisterRoutes(router, data, db, renderer)
 
 	return router, m
+}
+
+// Addresses allowed to name the client, from TRUSTED_PROXIES. None when unset
+func trustedProxies() []string {
+	var proxies []string
+	for _, proxy := range strings.Split(os.Getenv("TRUSTED_PROXIES"), ",") {
+		if proxy = strings.TrimSpace(proxy); proxy != "" {
+			proxies = append(proxies, proxy)
+		}
+	}
+	return proxies
 }
 
 func main() {
