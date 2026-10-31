@@ -27,6 +27,11 @@ func (sc *Controller) searchFriends(c *gin.Context, v *userSearchView) error {
 
 // search: every user, or the ones matching the search and filters
 func (sc *Controller) FriendsGet(c *gin.Context) {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
 	v := &userSearchView{
 		Query: strings.TrimSpace(c.Query("q")),
 		Page:  1,
