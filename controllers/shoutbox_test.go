@@ -147,6 +147,40 @@ func TestShoutboxCrossOrigin(t *testing.T) {
 	require.Equal(t, http.StatusForbidden, res.StatusCode)
 }
 
+func TestShoutboxOriginBehindGateway(t *testing.T) {
+	router, server := newShoutboxServer(t)
+	createAccount(t, router, "shout_gateway", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "shout_gateway", "foo-bar-baz-qux")
+
+	// The gateway forwards the host without the port the browser used
+	dial := func(origin string) (*websocket.Conn, *http.Response, error) {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		header := http.Header{}
+		header.Add("Cookie", cookie.String())
+		header.Set("Origin", origin)
+		conn, res, err := websocket.Dial(ctx, "ws"+strings.TrimPrefix(server.URL, "http")+"/api/shoutbox", &websocket.DialOptions{
+			HTTPHeader: header,
+			Host:       "example.com",
+		})
+		if conn != nil {
+			t.Cleanup(func() { _ = conn.CloseNow() })
+		}
+		return conn, res, err
+	}
+
+	conn, _, err := dial("https://example.com:8443")
+	require.NoError(t, err)
+	require.Equal(t, "history", shoutboxRead(t, conn).Type)
+
+	_, res, err := dial("https://evil.example:8443")
+	require.Error(t, err)
+	require.Equal(t, http.StatusForbidden, res.StatusCode)
+	_, res, err = dial("https://example.com.evil.example:8443")
+	require.Error(t, err)
+	require.Equal(t, http.StatusForbidden, res.StatusCode)
+}
+
 func TestShoutboxBroadcast(t *testing.T) {
 	router, server := newShoutboxServer(t)
 	createAccount(t, router, "shout_a", "foo-bar-baz-qux", 0)

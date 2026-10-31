@@ -8,6 +8,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"sync"
 	"time"
 	"transcendance/models"
@@ -347,9 +348,14 @@ func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 	}
 	token, _ := c.Cookie("session_token")
 
-	// Checks the origin matches the host, so other sites can't connect with the user's cookie
-	conn, err := websocket.Accept(c.Writer, c.Request, nil)
+	// Checks the origin matches the host, so other sites can't connect with the user's cookie.
+	// Ports are not compared, the gateway forwards the host without the port
+	host := (&url.URL{Host: c.Request.Host}).Hostname()
+	conn, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{
+		OriginPatterns: []string{host + ":*"},
+	})
 	if err != nil {
+		log.Printf("Shoutbox: handshake rejected: %s", err)
 		return
 	}
 	defer func() { _ = conn.CloseNow() }()
