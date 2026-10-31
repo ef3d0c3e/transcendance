@@ -73,11 +73,14 @@
 	// Share of the viewport the reels may use
 	const REELS_MAX_WIDTH = 0.92;
 	// Share of the screen under the header for the won cards, the rest is for
-	// the cards peeking around them and the button under the reels
+	// the cards peeking around them. Short screens, like phones held
+	// sideways, give the won cards more of it.
 	const REELS_MAX_HEIGHT = 0.6;
-	// Room kept around the reels for the button under them and the stage's
-	// spacing, in px
-	const ACTIONS_HEIGHT = 190;
+	const REELS_MAX_HEIGHT_SHORT = 0.8;
+	const SHORT_SCREEN = 500;
+	// Room the page keeps around the active stage, in px: 5rem, as in the
+	// stage's min-height
+	const STAGE_MARGIN = 80;
 	// The peeking cards show at most this share of themselves
 	const PEEK_MAX = 0.6;
 	const REELS_MAX_SCALE = 1;
@@ -115,11 +118,18 @@
 		const gap = Number.parseFloat(getComputedStyle(row).columnGap) || 0;
 		const count = reels.length;
 
-		const width = Math.min(window.innerWidth * REELS_MAX_WIDTH, window.innerWidth - 32);
+		// The screen's width, not the viewport's: on phones, reels wider than
+		// the screen stretch the viewport along with them
+		const screen = document.documentElement.clientWidth;
+		const width = Math.min(screen * REELS_MAX_WIDTH, screen - 32);
 		const header = document.querySelector("body > header")?.offsetHeight ?? 0;
-		const height = window.innerHeight - header - ACTIONS_HEIGHT;
+		// Without the button under the reels and the space between them
+		const actions = stageElement.querySelector(".pack-stage-actions").offsetHeight;
+		const spacing = Number.parseFloat(getComputedStyle(stageElement).rowGap) || 0;
+		const height = window.innerHeight - header - STAGE_MARGIN - actions - spacing;
+		const share = window.innerHeight <= SHORT_SCREEN ? REELS_MAX_HEIGHT_SHORT : REELS_MAX_HEIGHT;
 		const byWidth = (width - (count - 1) * gap) / count / cardWidth;
-		const byHeight = (height * REELS_MAX_HEIGHT) / cardHeight;
+		const byHeight = (height * share) / cardHeight;
 
 		reelScale = Math.min(byWidth, byHeight, REELS_MAX_SCALE);
 		// The rest of the height shows the cards before and after the won one
@@ -627,11 +637,6 @@
 		</div>
 	{/if}
 
-	<button type="button" class="pack-sound" aria-pressed={!muted}
-		onclick={() => { muted = !muted; saveMuted(muted); }}>
-		{muted ? soundOffLabel : soundOnLabel}
-	</button>
-
 	<div class="pack-stage-actions">
 		{#if stageAction}
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
@@ -643,13 +648,20 @@
 	</div>
 </div>
 
+<!-- After the stage, at the end of the page, so it never covers the footer -->
+<button type="button" class="pack-sound" aria-pressed={!muted}
+	onclick={() => { muted = !muted; saveMuted(muted); }}>
+	{muted ? soundOffLabel : soundOnLabel}
+</button>
+
 <style>
-	/* Sound switch, in a corner where it stays while the cards spin */
+	/* Sound switch, in the corner of the screen while the cards spin. It
+		sticks to the bottom of the page, and stops above the footer. */
 	.pack-sound {
-		position: fixed;
-		right: 1rem;
-		bottom: 1rem;
+		position: sticky;
+		bottom: calc(1rem + env(safe-area-inset-bottom));
 		z-index: 30;
+		align-self: flex-end;
 		display: flex;
 		align-items: center;
 		gap: 0.5rem;
@@ -1142,7 +1154,25 @@
 
 	@media (width <= 560px) {
 		.pack-reels {
-			--pack-scale: 0.24;
+			--pack-scale: 0.18;
+		}
+	}
+
+	/* Phones held sideways: a smaller button leaves the height to the cards */
+	@media (height <= 500px) {
+		.pack-stage {
+			gap: 1rem;
+		}
+
+		.pack-stage-actions,
+		.pack-again {
+			min-height: 3rem;
+		}
+
+		.pack-again {
+			gap: 0.6rem;
+			padding: 0.5rem 2rem;
+			font-size: 1.15rem;
 		}
 	}
 
