@@ -8,6 +8,12 @@ map $http_upgrade $connection_upgrade {
 	''      close;
 }
 
+# The host as the browser sent it, port included, so it matches the Origin of its requests
+map $http_host $forwarded_host {
+	default $http_host;
+	''      $host;
+}
+
 server {
 	listen 80;
 
