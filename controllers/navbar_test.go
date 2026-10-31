@@ -14,11 +14,12 @@ import (
 func TestNavbarVisitor(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 
-	body := getPage(t, router, "/shop")
+	body := getPage(t, router, "/cards/search/")
 	require.Contains(t, body, `id="login-popup"`)
 	require.Contains(t, body, `id="register-popup"`)
-	require.Contains(t, body, `<li><a href="/cards/search/" >Cards</a></li>`)
-	require.Contains(t, body, `<li><a href="/shop" aria-current="page">Shop</a></li>`)
+	require.Contains(t, body, `<li><a href="/cards/search/" aria-current="page">Cards</a></li>`)
+	// Boosters are bought from the inventory, there is no shop page
+	require.NotContains(t, body, `href="/shop"`)
 	// Visitors have no inventory or account
 	require.NotContains(t, body, `href="/inventory"`)
 	require.NotContains(t, body, `class="nav-user"`)
@@ -56,6 +57,6 @@ func TestLogoutDeletesSession(t *testing.T) {
 	require.Zero(t, sessions)
 
 	// The old cookie no longer signs in
-	body := getInventory(t, router, cookie, "/shop")
+	body := getPage(t, router, "/cards/search/")
 	require.Contains(t, body, `id="login-popup"`)
 }

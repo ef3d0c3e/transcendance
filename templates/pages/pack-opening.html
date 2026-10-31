@@ -1,24 +1,81 @@
 {{ define "pack-opening" }}
-<h2>{{ .T "pack-opening-title" }}</h2>
+<div class="pack-page">
+	<div id="pack-background" class="pack-background" aria-hidden="true"
+		data-color-primary="{{ .Data.ColorPrimary }}"
+		data-color-secondary="{{ .Data.ColorSecondary }}"></div>
 
-<div class="pack-booster">
-	{{ template "collection" .Data.Booster }}
+	<div class="pack-hero">
+		<div class="pack-booster">
+			{{ template "collection" .Data.Booster }}
+		</div>
+
+		<div class="pack-panel">
+			<p class="pack-kicker">{{ .Data.CollectionTitle }}</p>
+			<h2>{{ .T "pack-opening-title" }}</h2>
+			<p class="pack-summary">{{ .Data.BoosterSize }} · <span id="pack-remaining">{{ .Data.Remaining }}</span></p>
+			<p class="pack-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="pack-coins">{{ .Data.CoinsLabel }}</span></p>
+
+			<form class="pack-form" id="pack-form" action="/opening" method="post">
+				<div id="form-result"></div>
+				<input type="hidden" name="booster" value="{{ with .Data.BoosterID }}{{ . }}{{ end }}">
+				<button type="submit" class="pack-open" {{ if not .Data.BoosterID }}hidden{{ end }}>
+					<span class="pack-open-shine" aria-hidden="true"></span>
+					<span class="pack-open-label">{{ .T "pack-opening-open" }}</span>
+				</button>
+				<!-- Out of boosters: buys one with coins, or offers coins when short -->
+				<button type="button" class="pack-open pack-buy" data-collection="{{ .Data.CollectionID }}"
+					data-price="{{ .Data.Price }}" aria-label="{{ .T "pack-opening-buy-label" "price" .Data.PriceLabel }}"
+					{{ if .Data.BoosterID }}hidden{{ end }}>
+					<span class="pack-open-shine" aria-hidden="true"></span>
+					{{ .T "pack-opening-buy" }}
+					<span class="pack-buy-price">{{ template "coin-icon" }} {{ .Data.Price }}</span>
+				</button>
+				<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
+			</form>
+
+			<div class="pack-info">
+				<div class="pack-info-block">
+					<h3>{{ .T "pack-opening-odds-title" }}</h3>
+					<ul class="pack-odds">
+						{{ range .Data.Rates }}
+						<li data-rarity="{{ .Rarity }}">
+							<span class="pack-odds-label">{{ .Label }}</span>
+							<span class="pack-odds-value">{{ .Percent }}%</span>
+						</li>
+						{{ end }}
+						<li data-rarity="foil">
+							<span class="pack-odds-label">{{ .T "pack-opening-odds-foil" }}</span>
+							<span class="pack-odds-value">{{ .Data.FoilChance }}%</span>
+						</li>
+					</ul>
+					<p class="pack-note">{{ .T "pack-opening-odds-note" }}</p>
+				</div>
+
+				<div class="pack-info-block">
+					<h3>{{ .T "pack-opening-progress-title" }}</h3>
+					<p class="pack-progress-count">
+						<strong id="pack-owned">{{ .Data.Owned }}</strong> / <span id="pack-total">{{ .Data.Total }}</span>
+					</p>
+					<div class="pack-progress" role="presentation">
+						<div class="pack-progress-bar" id="pack-progress-bar" style="width: {{ .Data.Progress }}%"></div>
+					</div>
+					<p class="pack-note">{{ .T "pack-opening-progress-note" }}</p>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="pack-opening"
+		data-open-label="{{ .T "pack-opening-open" }}"
+		data-retry-label="{{ .T "pack-opening-open-another" }}"
+		data-error-label="{{ .T "pack-opening-error-internal" }}"
+		data-again-label="{{ .T "pack-opening-buy" }}"
+		data-sound-on="{{ .T "pack-opening-sound-on" }}"
+		data-sound-off="{{ .T "pack-opening-sound-off" }}"
+		data-coins="{{ .Data.Coins }}"
+		data-autostart="{{ if .Data.BoosterID }}true{{ else }}false{{ end }}"></div>
+
+
+	{{ template "topup-popup" . }}
 </div>
-
-<form class="pack-form" id="pack-form" action="/opening" method="post">
-	<div id="form-result"></div>
-	<input type="hidden" name="booster" value="{{ .Data.BoosterID }}">
-	<button type="submit">{{ .T "pack-opening-open" }}</button>
-	<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
-</form>
-
-<div id="pack-opening"
-	data-open-label="{{ .T "pack-opening-open" }}"
-	data-retry-label="{{ .T "pack-opening-open-another" }}"
-	data-error-label="{{ .T "pack-opening-error-internal" }}"
-	data-obtained-label="{{ .T "pack-opening-obtained" }}"
-	data-return-label="{{ .T "pack-opening-return" }}"
-	data-open-again-label="{{ .T "pack-opening-open-again" }}"
-	data-return-url="/inventory?tab=boosters"
-	data-autostart="true"></div>
 {{ end }}

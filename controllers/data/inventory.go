@@ -4,6 +4,7 @@ import (
 	"cmp"
 	"fmt"
 	"log"
+	"maps"
 	"net/http"
 	"net/url"
 	"slices"
@@ -58,6 +59,8 @@ func (dc *DataController) InventoryAddGet(c *gin.Context) {
 const (
 	inventoryTabCards    = "cards"
 	inventoryTabBoosters = "boosters"
+	// Every collection, with how much of it the user collected
+	inventoryTabCollections = "collections"
 )
 
 // Effect filter values, "" shows every card
@@ -122,8 +125,9 @@ type inventoryView struct {
 	// Count shown next to the title (cards, or boosters)
 	Count int64
 	// Count shown in each tab
-	TotalCards    int64
-	TotalBoosters int64
+	TotalCards       int64
+	TotalBoosters    int64
+	TotalCollections int64
 }
 
 func (dc *DataController) renderInventory(c *gin.Context, user *controllers.AuthenticatedUser, v *inventoryView) {
@@ -159,6 +163,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			count = dc.Renderer.T(c, "inventory-search-count", "count", int(v.Count))
 		case v.Tab == inventoryTabBoosters:
 			count = dc.Renderer.T(c, "inventory-booster-count", "count", int(v.Count))
+		case v.Tab == inventoryTabCollections:
+			count = dc.Renderer.T(c, "catalog-collection-count", "count", int(v.Count))
 		default:
 			count = dc.Renderer.T(c, "inventory-count", "count", int(v.Count))
 		}
@@ -173,7 +179,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		if viewed != "" {
 			params.Set("u", viewed)
 		}
-		if tab != inventoryTabCards {
+		if tab != inventoryTabBoosters {
 			params.Set("tab", tab)
 		}
 		if len(params) == 0 {
@@ -194,12 +200,24 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
 		"TotalCards":     v.TotalCards,
 		"TotalBoosters":  v.TotalBoosters,
-		"Items":          v.Items,
-		"Query":          v.Query,
-		"Filtered":       searching,
-		"Viewed":         viewed,
-		"Pages":          int(totalPages),
-		"Locale":         dc.Renderer.Localizer.GetLocale(c),
+		// Collections are part of the catalog: the same for every user
+		"TabCollectionsUrl": tabUrl(inventoryTabCollections),
+		"TotalCollections":  v.TotalCollections,
+		"Items":             v.Items,
+		"Query":             v.Query,
+		"Filtered":          searching,
+		"Viewed":            viewed,
+		"Pages":             int(totalPages),
+		"Locale":            dc.Renderer.Localizer.GetLocale(c),
+		// Outcome of buying boosters or coins, which land here
+		"Notice": controllers.GetShopNotice(c, dc.Renderer, dc.Data),
+	}
+	// Boosters and coins are bought from the user's own boosters tab
+	if v.Tab == inventoryTabBoosters && viewed == "" {
+		fields["Coins"] = user.Coins
+		fields["CoinsLabel"] = dc.Renderer.T(c, "shop-price", "amount", user.Coins)
+		fields["MaxQuantity"] = controllers.MaxBuyQuantity
+		fields["Topups"] = controllers.TopupChoices(c, dc.Renderer)
 	}
 	if v.Tab == inventoryTabCards {
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
@@ -235,7 +253,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if viewed != "" {
 		params.Set("u", viewed)
 	}
-	if v.Tab != inventoryTabCards {
+	if v.Tab != inventoryTabBoosters {
 		params.Set("tab", v.Tab)
 	}
 	if v.Query != "" {
@@ -276,16 +294,23 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	v := &inventoryView{
-		Tab:      inventoryTabCards,
+		Tab:      inventoryTabBoosters,
 		Username: c.Query("u"),
-		Query:    c.Query("q"),
 		Page:     page,
 	}
-	if c.Query("tab") == inventoryTabBoosters {
-		v.Tab = inventoryTabBoosters
-		// Boosters can't be searched
-		v.Query = ""
-	} else {
+	// Boosters are shown unless the cards are asked for, or their search,
+	// filters or sort are
+	cardsAsked := c.Query("tab") == inventoryTabCards
+	if c.Query("tab") == "" {
+		for _, param := range []string{"q", "rarity", "effect", "sort"} {
+			cardsAsked = cardsAsked || c.Query(param) != ""
+		}
+	}
+	if c.Query("tab") == inventoryTabCollections {
+		v.Tab = inventoryTabCollections
+	} else if cardsAsked {
+		v.Tab = inventoryTabCards
+		v.Query = c.Query("q")
 		if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
 			v.Rarity = rarity
 		}
@@ -323,17 +348,19 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	// Tab counts
-	if err := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&v.TotalCards).Error; err != nil {
-		fail("cards count", err)
+	if v.TotalCards, v.TotalBoosters, err = dc.inventoryCounts(userID); err != nil {
+		fail("counts", err)
 		return
 	}
-	if err := dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&v.TotalBoosters).Error; err != nil {
-		fail("boosters count", err)
-		return
-	}
+	v.TotalCollections = int64(len(dc.Data.Collections))
 
-	if v.Tab == inventoryTabBoosters {
-		if err := dc.inventoryBoosters(c, userID, v); err != nil {
+	if v.Tab == inventoryTabCollections {
+		if err := dc.inventoryCollections(c, userID, v); err != nil {
+			fail("collections", err)
+			return
+		}
+	} else if v.Tab == inventoryTabBoosters {
+		if err := dc.inventoryBoosters(c, userID, userID == user.ID, v); err != nil {
 			fail("boosters", err)
 			return
 		}
@@ -488,52 +515,137 @@ type boosterStack struct {
 	BoosterID uint
 }
 
-// Fill the view with the user's boosters, stacked by collection and size
-func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, v *inventoryView) error {
-	stacksQuery := dc.DB.
+// Fill the view with the user's boosters, stacked by collection and size.
+// On the user's own inventory, collections without boosters are listed too,
+// to buy some.
+func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own bool, v *inventoryView) error {
+	var stacks []boosterStack
+	if err := dc.DB.
 		Model(&models.Booster{}).
 		Select("collection_id, size, COUNT(*) AS count, MIN(id) AS booster_id").
 		Where("owner_id = ?", userID).
-		Group("collection_id, size")
-
-	if err := dc.DB.
-		Table("(?) AS stacks", stacksQuery).
-		Count(&v.PageItems).
+		Group("collection_id, size").
+		Order("collection_id, size").
+		Scan(&stacks).
 		Error; err != nil {
 		return err
 	}
 	v.Count = v.TotalBoosters
 
-	var stacks []boosterStack
-	if err := stacksQuery.
-		Order("collection_id, size").
-		Offset((v.Page - 1) * inventoryPageSize).
-		Limit(inventoryPageSize).
-		Scan(&stacks).
-		Error; err != nil {
-		return err
+	byCollection := make(map[uint][]boosterStack)
+	for _, stack := range stacks {
+		if dc.Data.GetCollection(int(stack.CollectionID)) == nil {
+			log.Printf("WARN user %d owns boosters of unknown collection %d", userID, stack.CollectionID)
+			continue
+		}
+		byCollection[stack.CollectionID] = append(byCollection[stack.CollectionID], stack)
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
-	v.Items = make([]map[string]any, 0, len(stacks))
-	for _, stack := range stacks {
-		collection := dc.Data.GetCollection(int(stack.CollectionID))
-		if collection == nil {
-			log.Printf("WARN user %d owns boosters of unknown collection %d", userID, stack.CollectionID)
+	items := make([]map[string]any, 0, len(stacks))
+	for _, collection := range dc.sortedCollections() {
+		collectionStacks := byCollection[uint(collection.ID)]
+		if len(collectionStacks) == 0 && !own {
 			continue
 		}
 		data, err := getCollectionData(c, loc, dc.Renderer, collection)
 		if err != nil {
 			return fmt.Errorf("collection %d: %w", collection.ID, err)
 		}
-		// The booster keeps the size it was acquired with
-		data["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(stack.Size))
-		data["CollectionStack"] = stack.Count
+
+		// None left: a grayed tile selling the shop's booster
+		if len(collectionStacks) == 0 {
+			data["CollectionEmpty"] = true
+			price := controllers.BoosterPrice(collection.ID)
+			items = append(items, map[string]any{
+				"Data":         data,
+				"Empty":        true,
+				"CollectionID": collection.ID,
+				"Title":        data["CollectionTitle"],
+				"Price":        price,
+				"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", price),
+			})
+			continue
+		}
+
+		for _, stack := range collectionStacks {
+			stackData := maps.Clone(data)
+			// The booster keeps the size it was acquired with
+			stackData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(stack.Size))
+			stackData["CollectionStack"] = stack.Count
+			items = append(items, map[string]any{
+				"Data":      stackData,
+				"BoosterID": stack.BoosterID,
+				"Label":     dc.Renderer.T(c, "inventory-booster-open", "name", data["CollectionTitle"]),
+			})
+		}
+	}
+
+	v.PageItems = int64(len(items))
+	start := min((v.Page-1)*inventoryPageSize, len(items))
+	v.Items = items[start:min(start+inventoryPageSize, len(items))]
+	return nil
+}
+
+// Number of cards and boosters a user owns, shown in the inventory tabs
+func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters int64, err error) {
+	if err = dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&cards).Error; err != nil {
+		return
+	}
+	err = dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&boosters).Error
+	return
+}
+
+// Fill the view with every collection, and how many of its cards the user owns
+func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *inventoryView) error {
+	// Distinct cards owned, by collection
+	var rows []struct {
+		CollectionID int
+		Owned        int
+	}
+	if err := dc.DB.
+		Model(&models.Card{}).
+		Select("FLOOR(card_id / 1000) AS collection_id, COUNT(DISTINCT card_id) AS owned").
+		Where("owner_id = ?", userID).
+		Group("FLOOR(card_id / 1000)").
+		Scan(&rows).
+		Error; err != nil {
+		return err
+	}
+	owned := make(map[int]int, len(rows))
+	for _, row := range rows {
+		owned[row.CollectionID] = row.Owned
+	}
+
+	loc := dc.Renderer.Localizer.GetLocale(c)
+	collections := dc.sortedCollections()
+	v.Count = int64(len(collections))
+	v.PageItems = v.Count
+	start := min((v.Page-1)*inventoryPageSize, len(collections))
+	collections = collections[start:min(start+inventoryPageSize, len(collections))]
+
+	v.Items = make([]map[string]any, 0, len(collections))
+	for _, collection := range collections {
+		data, err := getCollectionData(c, loc, dc.Renderer, collection)
+		if err != nil {
+			return fmt.Errorf("collection %d: %w", collection.ID, err)
+		}
+		total := len(collection.Cards)
+		percent := 0
+		if total > 0 {
+			percent = owned[collection.ID] * 100 / total
+		}
+		collectionURL := fmt.Sprint("/collections/", collection.ID, "/")
+		if userID != controllers.GetAuthenticatedUser(c).ID {
+			collectionURL += "?" + url.Values{"u": {v.Username}}.Encode()
+		}
 		v.Items = append(v.Items, map[string]any{
-			"Data":      data,
-			"BoosterID": stack.BoosterID,
-			// Asked before opening the stack's oldest booster
-			"BoosterConfirm": dc.Renderer.T(c, "inventory-booster-open-confirm", "name", data["CollectionTitle"]),
+			"Data": data,
+			// Lists the collection's cards for the viewed user
+			"Url":     collectionURL,
+			"Owned":   owned[collection.ID],
+			"Total":   total,
+			"Percent": percent,
 		})
 	}
 	return nil

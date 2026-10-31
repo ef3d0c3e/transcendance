@@ -3,33 +3,34 @@
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			{{ with .Data.ViewedTitle }}<p class="inventory-count">{{ . }}</p>{{ end }}
 			{{ if ne (len .Data.Items) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
 		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Action }}" method="get">
-			{{ if eq .Data.Tab "cards" }}
+			{{ with .Data.Viewed }}<input type="hidden" name="u" value="{{ . }}">{{ end }}
 			<input type="text" id="q" name="q" placeholder="{{ .T "card-search-placeholder" }}"
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "card-search-submit" }}></button>
-			{{ else }}
-			<input type="text" id="q" name="q" placeholder="{{ .T "collection-search-placeholder" }}"
-				value="{{ .Data.Query }}">
-			<button type="submit" aria-label={{ .T "collection-search-submit" }}></button>
-			{{ end }}
 		</form>
 	</div>
 
-	<nav class="inventory-tabs" aria-label="{{ .T "catalog-tabs-label" }}">
-		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
-			{{ .T "catalog-tab-cards" }}
-		</a>
-		<a class="inventory-tab-boosters" href="{{ .Data.TabCollectionsUrl }}" {{ if eq .Data.Tab "collections" }}aria-current="page"{{ end }}>
-			{{ .T "catalog-tab-collections" }}
-		</a>
-	</nav>
+	{{ if .Data.Tab }}
+	{{ template "inventory-tabs" . }}
+	{{ end }}
 
-	{{ if eq .Data.Tab "cards" }}
+	{{ with .Data.Progress }}
+	<div class="collection-progress">
+		<span class="collection-progress-label">{{ $.T "pack-opening-progress-title" }}</span>
+		<p class="pack-progress-count"><strong>{{ .Owned }}</strong> / {{ .Total }}</p>
+		<div class="pack-progress is-static" role="progressbar" aria-valuemin="0" aria-valuemax="{{ .Total }}"
+			aria-valuenow="{{ .Owned }}" aria-label="{{ $.T "pack-opening-progress-title" }}">
+			<div class="pack-progress-bar" style="width: {{ .Percent }}%"></div>
+		</div>
+	</div>
+	{{ end }}
+
 	<div class="inventory-filters">
 		<label>
 			<span>{{ .T "inventory-filter-rarity" }}</span>
@@ -39,6 +40,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ if not .Data.Scoped }}
 		<label>
 			<span>{{ .T "catalog-filter-collection" }}</span>
 			<select name="collection" form="search-form" data-autosubmit>
@@ -47,6 +49,17 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ end }}
+		{{ if .Data.StatusOptions }}
+		<label>
+			<span>{{ .T "catalog-filter-status" }}</span>
+			<select name="status" form="search-form" data-autosubmit>
+				{{ range .Data.StatusOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
 			<select name="sort" form="search-form" data-autosubmit>
@@ -56,7 +69,6 @@
 			</select>
 		</label>
 	</div>
-	{{ end }}
 
 	{{ if .Data.Message }}
 	<div class="inventory-message">
@@ -69,21 +81,11 @@
 
 	{{ if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
-	{{ if eq .Data.Tab "collections" }}
-	<e-cluster class="inventory-boosters" justify="center">
-		{{ range $val := .Data.Items }}
-		<a class="catalog-collection" href="{{ $val.Url }}">
-			{{ template "collection" $val }}
-		</a>
-		{{ end }}
-	</e-cluster>
-	{{ else }}
 	<e-cluster class="inventory-cards" justify="center">
 		{{ range $val := .Data.Items }}
 		{{ template "card" $val }}
 		{{ end }}
 	</e-cluster>
-	{{ end }}
 	{{ if gt .Data.Pages 1 }}
 	{{ .Children.Paginator }}
 	{{ end }}

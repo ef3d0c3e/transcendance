@@ -3,12 +3,13 @@
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h2 class="inventory-title">{{ .Data.Title }}</h2>
-			{{ if ne (len .Data.Items) 0 }}
+			{{ if .Data.Count }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
 		{{ if eq .Data.Tab "cards" }}
 		<form class="search-form inventory-search" id="search-form" action="/inventory" method="get">
+			<input type="hidden" name="tab" value="cards">
 			{{ if ne (len .Data.Viewed) 0 }}
 			<input type="hidden" name="u" value="{{ .Data.Viewed }}">
 			{{ end }}
@@ -19,14 +20,20 @@
 		{{ end }}
 	</div>
 
-	<nav class="inventory-tabs" aria-label="{{ .T "inventory-tabs-label" }}">
-		<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
-			{{ .T "inventory-tab-cards" }} <span class="inventory-tab-count">{{ .Data.TotalCards }}</span>
-		</a>
-		<a class="inventory-tab-boosters" href="{{ .Data.TabBoostersUrl }}" {{ if eq .Data.Tab "boosters" }}aria-current="page"{{ end }}>
-			{{ .T "inventory-tab-boosters" }} <span class="inventory-tab-count">{{ .Data.TotalBoosters }}</span>
-		</a>
-	</nav>
+	{{ template "inventory-tabs" . }}
+
+	{{ if .Data.Notice.Message }}
+	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}">
+		{{ .Data.Notice.Message }}
+	</p>
+	{{ end }}
+
+	{{ if .Data.Topups }}
+	<div class="inventory-wallet">
+		<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: {{ .Data.CoinsLabel }}</p>
+		<button type="button" class="shop-topup-open" aria-haspopup="dialog" aria-controls="shop-topup-popup">{{ .T "shop-topup-open" }}</button>
+	</div>
+	{{ end }}
 
 	{{ if eq .Data.Tab "cards" }}
 	<div class="inventory-filters">
@@ -71,9 +78,18 @@
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
 		{{ range $val := .Data.Items }}
-		{{ if eq (len $.Data.Viewed) 0 }}
+		{{ if $val.Empty }}
+		<!-- None left: clicking buys some -->
+		<div class="inventory-booster is-empty shop-booster" data-collection="{{ $val.CollectionID }}"
+			data-title="{{ $val.Title }}" data-price="{{ $val.Price }}">
+			<div class="shop-booster-display">
+				{{ template "collection" $val }}
+				<span class="shop-price-pill">{{ template "coin-icon" }} {{ $val.PriceLabel }}</span>
+			</div>
+		</div>
+		{{ else if eq (len $.Data.Viewed) 0 }}
 		<div class="inventory-booster" data-booster-open="/opening?booster={{ $val.BoosterID }}"
-			data-booster-confirm="{{ $val.BoosterConfirm }}">
+			data-booster-label="{{ $val.Label }}">
 			{{ template "collection" $val }}
 		</div>
 		{{ else }}
@@ -81,6 +97,24 @@
 			{{ template "collection" $val }}
 		</div>
 		{{ end }}
+		{{ end }}
+	</e-cluster>
+	{{ else if eq .Data.Tab "collections" }}
+	<e-cluster class="inventory-boosters" justify="center">
+		{{ range $val := .Data.Items }}
+		<div class="inventory-collection">
+			<a class="catalog-collection" href="{{ $val.Url }}">
+				{{ template "collection" $val }}
+			</a>
+			<div class="inventory-collection-progress">
+				<p class="pack-progress-count"><strong>{{ $val.Owned }}</strong> / {{ $val.Total }}</p>
+				<div class="pack-progress is-static" role="progressbar" aria-valuemin="0"
+					aria-valuemax="{{ $val.Total }}" aria-valuenow="{{ $val.Owned }}"
+					aria-label="{{ $.T "pack-opening-progress-title" }}">
+					<div class="pack-progress-bar" style="width: {{ $val.Percent }}%"></div>
+				</div>
+			</div>
+		</div>
 		{{ end }}
 	</e-cluster>
 	{{ else }}
@@ -93,9 +127,19 @@
 	{{ if gt .Data.Pages 1 }}
 	{{ .Children.Paginator }}
 	{{ end }}
-	{{ if and (eq .Data.Tab "boosters") (eq (len .Data.Viewed) 0) }}
-	<div id="inventory-booster-popup" data-label-yes="{{ .T "inventory-booster-open-yes" }}"
-		data-label-no="{{ .T "inventory-booster-open-no" }}"></div>
+	{{ if .Data.Topups }}
+	<div id="shop-buy-popup" data-coins="{{ .Data.Coins }}"
+		data-max-quantity="{{ .Data.MaxQuantity }}"
+		data-label-buy="{{ .T "shop-booster-buy" }}"
+		data-label-balance="{{ .T "shop-balance" }}"
+		data-label-funds="{{ .T "shop-error-funds" }}"
+		data-label-login="{{ .T "login-submit" }}"
+		data-label-login-hint="{{ .T "shop-login-hint" }}"
+		data-label-close="{{ .T "shop-buy-close" }}"
+		data-label-quantity="{{ .T "shop-buy-quantity" }}"
+		data-label-total="{{ .T "shop-buy-total" }}"
+		data-label-coins="{{ .T "shop-coins" }}"></div>
+	{{ template "topup-popup" . }}
 	{{ end }}
 	{{ if eq .Data.Tab "cards" }}
 	<div id="inventory-card-popup" data-locale="{{ .Data.Locale }}"
