@@ -1,0 +1,2 @@
+title = Bichon maltais
+description = Le bichon maltais est une race de chiens méditerranéenne dont il est impossible de reconstituer l'origine, du fait de sa grande ancienneté : il était déjà connu dans la Rome antique. En France, il fait partie de la famille des bichons (5 variétés) et, en dehors de France, c'est une race à part entière. Suivant les pays, le maltais est appelé : maltese, malteser, maltezer, etc.
