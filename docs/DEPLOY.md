@@ -29,6 +29,7 @@ Run `./init-env.sh` from `docker/`. It creates `.env` from `.env.example` and ge
 | `DOMAIN`              | Host name for the TLS certificate                                             |
 | `HTTP_PORT`, `HTTPS_PORT`, `AUTH_SSH_PORT` | Published ports                                          |
 | `TLS_EXTRA_SANS`      | Other names in the certificate, e.g `IP:192.168.1.10,DNS:transcendance.local` |
+| `TRUSTED_PROXIES`     | Reverse proxies in front of the gateway, see [below](#behind-another-reverse-proxy) |
 | `AUTH_SESSION_TTL`    | How long an admin stays signed in, e.g `12h`                                  |
 | `LOG_RETENTION_DAYS`  | Days logs are kept, `730` (2 years) by default                                |
 | `LOG_COMPRESS_AFTER_DAYS` | Days before logs are compressed, `14` by default                          |
@@ -76,13 +77,27 @@ docker compose exec auth auth remove-key foo@bar
 When an existing web server already holds the domain, forward it to the gateway's HTTPS port. With nginx:
 
 ```nginx
+# In the http block
+map $http_upgrade $connection_upgrade {
+    default upgrade;
+    ''      close;
+}
+
 location / {
     proxy_pass https://127.0.0.1:8443;
     proxy_ssl_verify off;
-    proxy_set_header Host $host;
+    # The chat is a WebSocket, it needs HTTP/1.1 and the upgrade headers
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection $connection_upgrade;
+    proxy_set_header Host $http_host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 }
 ```
+
+Without the upgrade headers the chat never connects, the browser shows `426 Upgrade Required`. Forward to the gateway, not to the site's container: the gateway adds the security headers and guards the admin tools.
+
+Set `TRUSTED_PROXIES` to the address the proxy reaches the gateway from, so the gateway reads the client's address from `X-Forwarded-For` instead of using the proxy's. Through the published port, it is the gateway of the stack's Docker network, e.g. `172.19.0.1`: `docker compose logs gateway` shows it at the start of each request line. Several addresses or ranges are separated by commas.
 
 The SSH port cannot go through an HTTP proxy, it must be reachable directly.
 
