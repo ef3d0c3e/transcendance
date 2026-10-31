@@ -4,7 +4,7 @@ RUN apk add --no-cache openssl \
  && rm /etc/nginx/conf.d/default.conf
 
 # Runs before the templates are rendered
-COPY 05-certificate.sh 10-kibana-auth.envsh /docker-entrypoint.d/
+COPY 05-certificate.sh 10-kibana-auth.envsh 15-real-ip.sh /docker-entrypoint.d/
 COPY templates/ /etc/nginx/templates/
 COPY snippets/ /etc/nginx/snippets/
 
