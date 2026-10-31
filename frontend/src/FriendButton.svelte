@@ -1,14 +1,15 @@
 <script lang="ts">
 	import { onMount } from "svelte";
 
-	let { id, block = false } = $props()
+	let { dataset } = $props()
 	let relation = $state([])
 	let popup = $state([])
 	let action = $state("")
+	let text = $state("")
 	let error = $state("")
 
 	async function loadRelation() {
-		let target = "/api/friends/" + id
+		let target = "/api/friends/" + dataset.id
 		try {
 			const response = await fetch(target, {
 				method: "GET",
@@ -18,18 +19,23 @@
 			switch (relation.toString()) {
 				case "pending":
 					action  = "cancel"
+					text	= dataset.labelcancel
 					break
 				case "friends":
 					action  = "unfriend"
+					text	= dataset.labelunfriend
 					break
 				case "blocked":
 					action =  "unblock"
+					text	= dataset.labelunblock
 					break
 				case "respond":
 					action =  "accept"
+					text	= dataset.labelaccept
 					break
 				default:
 					action = "add"
+					text	= dataset.labeladd
 			}
 		}
 		catch (err)
@@ -43,8 +49,8 @@
 	});
 
 	async function relationAction(act) {
-		const r = await fetch(`/friendaction?target=${id}&action=${act}`, {
-			method: "GET",
+		const r = await fetch(`/friendaction?target=${dataset.id}&action=${act}`, {
+			method: "POST",
 		})
 		const d = await r.json()
 		popup = d.response
@@ -65,11 +71,11 @@
 {/if}
 {#if relation.toString() != "you"}
 	{#if relation.toString() == "respond"}
-		<button class="deny" onclick={()=>relationAction("deny")}>deny</button>
+		<button class="deny" onclick={()=>relationAction("deny")}>{ dataset.labeldeny }</button>
 	{/if}
-	<button class={action} onclick={()=>relationAction(action)}>{ action }</button>
-	{#if block && action.toString() != "unblock"}
-		<button class="deny" onclick={()=>relationAction("block")}>block</button>
+	<button class={action} onclick={()=>relationAction(action)}>{ text }</button>
+	{#if dataset.block && action == "add"}
+		<button class="deny" onclick={()=>relationAction("block")}>{ dataset.labelblock }</button>
 	{/if}
 {/if}
 

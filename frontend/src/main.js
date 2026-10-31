@@ -200,8 +200,6 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 			mount(FriendButton, {
 				target: targets[i],
 				props: {
-					id: targets[i].getAttribute('data-id'),
-					block: targets[i].getAttribute('data-block'),
 					dataset: targets[i].dataset,
 				}
 			});
