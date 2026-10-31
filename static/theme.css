@@ -806,6 +806,40 @@ main {
     }
 }
 
+.index-install {
+    padding: 1rem 1.25rem;
+
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 1rem;
+
+    h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.1rem;
+    }
+
+    p {
+        margin: 0 0 0.5rem;
+        color: var(--color-text-muted);
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 1.25rem;
+
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+
+/* Already opened from the home screen, nothing left to install */
+@media (display-mode: standalone) {
+    .index-install {
+        display: none;
+    }
+}
+
 .index-showcase-header {
     margin-bottom: 1rem;
 
