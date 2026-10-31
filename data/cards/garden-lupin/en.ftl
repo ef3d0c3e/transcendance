@@ -1,0 +1,2 @@
+title = Garden Lupin
+description = Lupinus polyphyllus, the large-leaved lupine, big-leaved lupine, many-leaved lupine, blue-pod lupine, or, primarily in cultivation, garden lupin, is a species of lupine (lupin) native to western North America from southern Alaska and British Columbia and western Wyoming, and south to Utah and California.
