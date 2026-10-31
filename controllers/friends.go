@@ -26,7 +26,7 @@ func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
 		}
 		switch relation.Type {
 		case "blocked":
-			return ""
+			return "block"
 		case "pending":
 			return "respond"
 		default:
@@ -73,9 +73,6 @@ func updateRelation(db *gorm.DB, user, target models.User, action string){
 		//fails silently if user is blocked
 		db.First(&relation).
 		Where("user_id = ? and target_id = ?", target.ID, user.ID)
-		if relation.Type == "blocked" {
-			return
-		}
 		fallthrough
 	default:
 		relation = models.Relation{
@@ -125,6 +122,11 @@ func (fc *Controller) FriendsPost(c *gin.Context) {
 			return
 		}
 		updateRelation(fc.DB, user, target, "pending")
+	case relationStr == "block" && action == "add":
+			c.JSON(http.StatusOK, gin.H{
+				"response": fc.Renderer.T(c, "friends-blocked-error"),
+			})
+			return
 	case relationStr == "respond" && (action == "add" || action == "accept"):
 		updateRelation(fc.DB, target, user, "delete")
 		updateRelation(fc.DB, user, target, "friends")
