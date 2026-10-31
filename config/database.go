@@ -58,7 +58,7 @@ func ConnectDatabase() (*gorm.DB, error) {
 }
 
 func MigrateDatabase(db *gorm.DB) error {
-	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Notification{}, &models.Card{}, &models.Booster{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Notification{}, &models.ShoutboxMessage{}, &models.PrivateMessage{}, &models.UserIgnore{}, &models.Card{}, &models.Booster{}); err != nil {
 		return err
 	}
 	// Erasing users that were soft deleted before account deletion became permanent

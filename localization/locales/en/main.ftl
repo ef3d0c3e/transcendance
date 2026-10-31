@@ -156,6 +156,7 @@ profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
 profile-inventory = View inventory
+profile-message = Send a message
 
 profile-rank = Rank
 profile-rank-user = User
@@ -186,6 +187,11 @@ notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-private-message-title = { $count ->
+    [one] New message from { $username }
+   *[other] { $count } new messages from { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
 catalog-tabs-label = Catalog sections
@@ -393,3 +399,42 @@ contact-team-title = The team
 contact-team-text = You can also reach a team member directly through their GitHub profile:
 contact-privacy-title = Personal data requests
 contact-privacy-text = For a request about your personal data, contact a team member privately rather than opening a public issue. You can delete your account at any time from your profile.
+
+shoutbox-title = Chat
+shoutbox-unread = new messages
+shoutbox-close = Close
+shoutbox-connected = Live
+shoutbox-connecting = Connecting...
+shoutbox-empty = No messages yet, say hi!
+shoutbox-placeholder = Write a message
+shoutbox-send = Send
+shoutbox-error-empty = Your message is empty
+shoutbox-error-too-long = Your message is too long, 500 characters at most
+shoutbox-error-rate-limited = You're sending messages too fast, wait a moment
+shoutbox-error-internal = Your message could not be sent, try again
+shoutbox-closed-unauthorized = Your session expired, log in again to chat
+shoutbox-closed-too-many = The shoutbox is open in too many tabs, close some and reload the page
+shoutbox-closed-error = Disconnected from the shoutbox, reload the page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Write a private message
+shoutbox-conversation-empty = No messages yet, say hi!
+shoutbox-conversations-empty = No conversations yet
+shoutbox-start = Start a conversation with a user
+shoutbox-start-placeholder = Username
+shoutbox-start-button = Open
+shoutbox-back = Back to conversations
+shoutbox-you = You
+shoutbox-user-menu = User actions
+shoutbox-message-user = Send a private message
+shoutbox-view-profile = View profile
+shoutbox-ignore-hour = Ignore for 1 hour
+shoutbox-ignore-day = Ignore for 1 day
+shoutbox-ignore-week = Ignore for 1 week
+shoutbox-unignore = Stop ignoring
+shoutbox-ignored-title = Ignored users
+shoutbox-ignored-until = Until
+shoutbox-ignoring-notice = You are ignoring this user: their shoutbox messages are hidden and they can't message you.
+shoutbox-error-user-not-found = This user doesn't exist
+shoutbox-error-self = You can't message yourself
+shoutbox-error-blocked = This user isn't accepting your messages right now

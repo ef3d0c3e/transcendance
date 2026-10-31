@@ -71,6 +71,10 @@ func RegisterRoutes(
 	router.GET("/add_notification", controller.AddNotificationGet)
 	router.POST("/add_notification", controller.AddNotificationPost)
 
+	// shoutbox.go
+	shoutboxController := controllers.NewShoutboxController(db, renderer)
+	router.GET("/api/shoutbox", shoutboxController.ApiShoutboxGet)
+
 	// Data
 	dataController := ctrldata.DataController{
 		DB:       db,
