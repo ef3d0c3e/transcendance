@@ -11,7 +11,7 @@
 
 		<div class="pack-panel">
 			<p class="pack-kicker">{{ .Data.CollectionTitle }}</p>
-			<h2>{{ .T "pack-opening-title" }}</h2>
+			<h1>{{ .T "pack-opening-title" }}</h1>
 			<p class="pack-summary">{{ .Data.BoosterSize }} · <span id="pack-remaining">{{ .Data.Remaining }}</span></p>
 			<p class="pack-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="pack-coins">{{ .Data.CoinsLabel }}</span></p>
 
@@ -35,7 +35,7 @@
 
 			<div class="pack-info">
 				<div class="pack-info-block">
-					<h3>{{ .T "pack-opening-odds-title" }}</h3>
+					<h2>{{ .T "pack-opening-odds-title" }}</h2>
 					<ul class="pack-odds">
 						{{ range .Data.Rates }}
 						<li data-rarity="{{ .Rarity }}">
@@ -52,7 +52,7 @@
 				</div>
 
 				<div class="pack-info-block">
-					<h3>{{ .T "pack-opening-progress-title" }}</h3>
+					<h2>{{ .T "pack-opening-progress-title" }}</h2>
 					<p class="pack-progress-count">
 						<strong id="pack-owned">{{ .Data.Owned }}</strong> / <span id="pack-total">{{ .Data.Total }}</span>
 					</p>
@@ -72,6 +72,8 @@
 		data-again-label="{{ .T "pack-opening-buy" }}"
 		data-sound-on="{{ .T "pack-opening-sound-on" }}"
 		data-sound-off="{{ .T "pack-opening-sound-off" }}"
+		data-skip-label="{{ .T "pack-opening-skip" }}"
+		data-spinning-label="{{ .T "pack-opening-spinning" }}"
 		data-coins="{{ .Data.Coins }}"
 		data-autostart="{{ if .Data.BoosterID }}true{{ else }}false{{ end }}"></div>
 

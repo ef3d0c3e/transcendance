@@ -272,11 +272,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   int(totalPages),
-		"Url":     paginatorUrl,
-	})
+	content.AddPaginator(v.Page, int(totalPages), paginatorUrl)
 	dc.Renderer.Render(c, &builder)
 }
 
