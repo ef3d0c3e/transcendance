@@ -69,6 +69,7 @@ user-status-last-seen = Dernière activité :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
+navbar-skip = Aller au contenu
 navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
@@ -84,6 +85,7 @@ cards-error-not-found = Carte non trouvée
 cards-error-collection-not-found = Collection non trouvée
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bas de la liste
 paginator-label-previous = Page précédente
 paginator-label-next = Page suivante
 
@@ -141,6 +143,7 @@ profile-error-network = Impossible de contacter le serveur
 
 error-unexpected = Une erreur est survenue
 error-unauthorized = Vous devez être connecté pour accéder à cette ressource
+error-not-found = Cette page n'existe pas
 
 error-title = Erreur
 
@@ -276,6 +279,11 @@ pack-opening-odds-foil = Holographique
 pack-opening-odds-note = Chaque carte du booster est tirée séparément.
 pack-opening-progress-title = Progression de la collection
 pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
+pack-opening-summary = Cartes tirées : { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, holographique)
+pack-opening-spinning = Ouverture du paquet…
+pack-opening-skip = Passer
 
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters

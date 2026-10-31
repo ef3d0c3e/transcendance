@@ -30,6 +30,7 @@ type openingResponse struct {
 	Remaining      int             `json:"remaining"`
 	RemainingLabel string          `json:"remainingLabel"`
 	Owned          int             `json:"owned"`
+	Summary        string          `json:"summary"`
 	Message        string          `json:"message"`
 }
 
@@ -128,6 +129,20 @@ func TestOpenBoosterAwardsCards(t *testing.T) {
 	cards := ownedCards(t, "packopen1")
 	require.Len(t, cards, 5)
 	require.Equal(t, winnerTitles(t, resp), ownedTitles(t, cards))
+
+	// Screen readers hear the drawn cards, with the foil ones told apart
+	summary := strings.NewReplacer("\u2068", "", "\u2069", "").Replace(resp.Summary)
+	require.True(t, strings.HasPrefix(summary, "Cards drawn: "), summary)
+	for _, title := range winnerTitles(t, resp) {
+		require.Contains(t, summary, title+" (")
+	}
+	foils := 0
+	for _, card := range cards {
+		if card.Foil != "" {
+			foils++
+		}
+	}
+	require.Equal(t, foils, strings.Count(summary, ", foil)"))
 
 	// Cards are stored in reel order, each winner shows the foil its card was obtained with
 	slices.SortFunc(cards, func(a, b models.Card) int { return int(a.ID) - int(b.ID) })
@@ -425,6 +440,6 @@ func TestAddBoosterPageNotLocalized(t *testing.T) {
 	cookie := login(t, router, "packadd2", "foo-bar-baz-qux")
 
 	body := getInventory(t, router, cookie, "/add_booster?lang=fr")
-	require.Contains(t, body, "<h2>Add a booster (debug)</h2>")
+	require.Contains(t, body, "<h1>Add a booster (debug)</h1>")
 	require.Contains(t, body, `<button type="submit">Add booster</button>`)
 }

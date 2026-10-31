@@ -2,7 +2,7 @@
 <div class="inventory catalog">
 	<div class="inventory-header">
 		<div class="inventory-heading">
-			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			<h1 class="inventory-title">{{ .Data.Title }}</h1>
 			{{ with .Data.ViewedTitle }}<p class="inventory-count">{{ . }}</p>{{ end }}
 			{{ if ne (len .Data.Items) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
@@ -87,7 +87,7 @@
 		{{ end }}
 	</e-cluster>
 	{{ if gt .Data.Pages 1 }}
-	{{ .Children.Paginator }}
+	{{ .Children.PaginatorBottom }}
 	{{ end }}
 	{{ end }}
 </div>

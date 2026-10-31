@@ -30,6 +30,9 @@ func RegisterRoutes(
 	// health.go
 	router.GET("/healthz", controller.HealthzGet)
 
+	// errors.go
+	router.NoRoute(controller.NotFound)
+
 	// auth.go
 	router.GET("/register", controller.RegisterGet)
 	router.POST("/register", controller.RegisterPost)

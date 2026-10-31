@@ -1,8 +1,9 @@
 {{ define "base" }}
 <!DOCTYPE html>
-<html theme="{{ .Theme }}">
+<html lang="{{ .Lang }}" theme="{{ .Theme }}">
 
 <head>
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="/static/vendor/e-layout.min.js"></script>
 	<link rel="stylesheet" href="/static/base.css">
@@ -28,10 +29,12 @@
 </head>
 
 <body>
+	<a class="skip-link" href="#main">{{ .T "navbar-skip" }}</a>
 	<header>
-		<h1 class="header-title">
+		<!-- Not a heading: each page has its own title as its h1 -->
+		<p class="header-title">
 			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
-		</h1>
+		</p>
 
 		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
 		<label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
@@ -41,7 +44,7 @@
 			</svg>
 		</label>
 
-		<nav id="header-nav">
+		<nav id="header-nav" aria-label="{{ .T "navbar-label-main" }}">
 			<label for="nav-toggle" class="nav-close" aria-hidden="true">
 				<svg width="24" height="24" viewBox="0 0 24 24">
 					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -49,7 +52,7 @@
 				</svg>
 			</label>
 
-			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
+			<ul class="nav-links">
 				<li><a href="/cards/search/" {{ if hasPrefix .Path "/cards" }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
@@ -129,7 +132,7 @@
 			</div>
 		</nav>
 	</header>
-	<main>
+	<main id="main" tabindex="-1">
 		{{ .Children.Content }}
 	</main>
 	<footer class="site-footer">
