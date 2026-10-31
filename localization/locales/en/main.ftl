@@ -76,9 +76,9 @@ friends-block = Block user
 friends-unblock = Unblock
 friends-blocked = Blocked
 friends-pending = Pending invite
-friends-respond-message = This user has sent you a friend invite
 friends-unknown-error = Something went wrong !
 friends-spam-error = You may only have one outgoing invite active
+friends-blocked-error = Can't add this user as a friend
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation

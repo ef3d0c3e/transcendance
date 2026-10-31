@@ -202,6 +202,7 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				props: {
 					id: targets[i].getAttribute('data-id'),
 					block: targets[i].getAttribute('data-block'),
+					dataset: targets[i].dataset,
 				}
 			});
 		}

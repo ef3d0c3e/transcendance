@@ -3,7 +3,7 @@
 
 	let { id, block = false } = $props()
 	let relation = $state([])
-	let response = $state([])
+	let popup = $state([])
 	let action = $state("")
 	let error = $state("")
 
@@ -47,11 +47,19 @@
 			method: "GET",
 		})
 		const d = await r.json()
-		response = d.response
+		popup = d.response
 		loadRelation()
 	}
+	
+	$effect(() => {
+		setInterval(() => {
+			popup = "";
+		}, 3000);
+	});
+
 </script>
 
+<div>
 {#if error != ""}
 	<span>error: {{error}}</span>
 {/if}
@@ -65,11 +73,21 @@
 	{/if}
 {/if}
 
-{#if response && response.toString() != "ok"}
-	<div id="friend-response-popup">{response}</div>
-{/if}
+{#key popup}
+	{#if popup && popup.toString() != "ok"}
+		<div id="friend-response-popup">{popup}</div>
+	{/if}
+{/key}
+</div>
 
 <style>
+div {
+	display: flex;
+	justify-content: center;
+}
+button {
+	margin: 10px;
+}
 .block {
 	background-color: darkred;
 }
@@ -82,7 +100,7 @@
 	align-self: center;
 	text-align: center;
 	background-color: darkred;
-	border-radius: 10px;
+	border-radius: 2px;
 }
 .add {
 	background-color: darkgreen;
