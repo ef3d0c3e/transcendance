@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -16,7 +17,7 @@ func TestIndexPage(t *testing.T) {
 	body := getPage(t, router, "/")
 	require.Contains(t, body, "<h1>Collect, trade and show off your cards</h1>")
 	require.Contains(t, body, "<h2>Trade cards</h2>")
-	require.Contains(t, body, `<p class="index-stats">156 cards · 2 collections</p>`)
+	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%d cards · %d collections</p>`, len(tests.Data.Cards), len(tests.Data.Collections)))
 	// Visitors are invited to register
 	require.Contains(t, body, `<a class="index-action-primary" href="/register">Create an account</a>`)
 	require.NotContains(t, body, `href="/inventory">Open your inventory</a>`)
