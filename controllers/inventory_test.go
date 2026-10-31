@@ -227,8 +227,8 @@ func TestInventoryBoosters(t *testing.T) {
 	cookie := login(t, router, "invbooster1", "foo-bar-baz-qux")
 
 	body := getInventory(t, router, cookie, "/inventory")
-	// One stack per (collection, size), and the warships to buy
-	require.Equal(t, 3, strings.Count(body, `<article class="collection"`))
+	// One stack per (collection, size), and the other collections to buy
+	require.Equal(t, len(tests.Data.Collections)+1, strings.Count(body, `<article class="collection"`))
 	require.Contains(t, body, `<span class="collection-stack">×3</span>`)
 	require.Contains(t, body, `<span class="collection-stack">×1</span>`)
 	require.Contains(t, body, "5 cards booster")
@@ -272,8 +272,8 @@ func TestInventoryBoostersEmpty(t *testing.T) {
 
 	// Every collection is listed grayed out, clicking one buys some
 	body := getInventory(t, router, cookie, "/inventory")
-	require.Equal(t, 2, strings.Count(body, `<div class="inventory-booster is-empty shop-booster"`))
-	require.Equal(t, 2, strings.Count(body, `<span class="collection-stack collection-stack-empty">×0</span>`))
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<div class="inventory-booster is-empty shop-booster"`))
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<span class="collection-stack collection-stack-empty">×0</span>`))
 	require.Contains(t, body, `data-collection="1"`)
 	require.Contains(t, body, `data-price="250"`)
 	require.Contains(t, body, `id="shop-buy-popup" data-coins="0"`)
