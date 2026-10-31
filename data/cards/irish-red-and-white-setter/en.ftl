@@ -1,0 +1,2 @@
+title = Irish Red and White Setter
+description = The Irish Red and White Setter (Irish: An Sotar Rua agus Bán) is a breed of dog. As with all setters, it is classified as a gundog in the UK and is included in the sporting group in America and Canada. It is virtually identical in use and temperament to the related Irish Setter, as well as the Gordon and English setters, but is more often found as a working gun dog.

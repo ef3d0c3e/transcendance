@@ -1,0 +1,2 @@
+title = Bulldog anglais
+description = Le bouledogue ou bulldog anglais est une race de chien du type molosse. Le bulldog anglais (littéralement, en anglais, « chien-taureau ») est un chien trouvant naturellement son origine en Grande-Bretagne. Son apparition a été favorisée par le développement d'un sport apparu au XIIIe siècle : le combat entre chien et taureau désigné en anglais comme bullbaiting.

@@ -1,0 +1,2 @@
+title = Jack Russell terrier
+description = Le Jack Russell Terrier (JRT), ou Jack Russell, est une race de chiens de petite taille appartenant au groupe des terriers et destinée à l'origine à la chasse. Il doit son nom au pasteur John Russell, surnommé Jack, qui s'est fait connaître comme éleveur d'une lignée de fox-terrier renommée du Devonshire, en Angleterre, lors de la deuxième moitié ' du XIXe siècle.

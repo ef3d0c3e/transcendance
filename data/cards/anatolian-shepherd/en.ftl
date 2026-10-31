@@ -1,0 +1,2 @@
+title = Kangal Shepherd Dog
+description = The Kangal Shepherd Dog or Turkish Kangal (Turkish: Kangal Çoban Köpeği) is a traditional Turkish breed of large livestock guardian dog. The breed name derives from that of the town and district of Kangal in Sivas Province, the easternmost province of the Central Anatolia Region in central Turkey. The coat colour varies from pale fawn to wolf grey, always with a black mask.
