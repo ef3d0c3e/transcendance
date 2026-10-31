@@ -2,6 +2,7 @@ package controllers_test
 
 import (
 	"net/http"
+	"net/http/httptest"
 	"net/url"
 	"strings"
 	"testing"
@@ -130,4 +131,25 @@ func TestProfileInventoryButton(t *testing.T) {
 	admin := login(t, router, "profbtnadm", "foo-bar-baz-qux")
 	require.Contains(t, getInventory(t, router, admin, "/profile/profbtn2"), button)
 	require.NotContains(t, getInventory(t, router, admin, "/profile"), "View inventory")
+}
+
+func TestProfileOriginBehindGateway(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "proforigin", "foo-bar-baz-qux", 0)
+	cookie := login(t, router, "proforigin", "foo-bar-baz-qux")
+
+	post := func(origin string) int {
+		req := httptest.NewRequest(http.MethodPost, "/profile", strings.NewReader(url.Values{"bio": {"hello"}}.Encode()))
+		req.Host = "example.com"
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.Header.Set("Origin", origin)
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	// The gateway forwards the host without the port the browser used
+	require.Equal(t, http.StatusOK, post("https://example.com:8443"))
+	require.Equal(t, http.StatusForbidden, post("https://evil.example:8443"))
 }
