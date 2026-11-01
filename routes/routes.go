@@ -74,6 +74,10 @@ func RegisterRoutes(
 	router.GET("/add_notification", controller.AddNotificationGet)
 	router.POST("/add_notification", controller.AddNotificationPost)
 
+	//friends
+	router.POST("/friendaction", controller.FriendsPost)
+	router.GET("/friends", controller.FriendsGet)
+
 	// Data
 	dataController := ctrldata.DataController{
 		DB:       db,

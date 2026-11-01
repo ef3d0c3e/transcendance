@@ -867,6 +867,40 @@ main {
     }
 }
 
+.index-install {
+    padding: 1rem 1.25rem;
+
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 1rem;
+
+    h2 {
+        margin: 0 0 0.35rem;
+        font-size: 1.1rem;
+    }
+
+    p {
+        margin: 0 0 0.5rem;
+        color: var(--color-text-muted);
+    }
+
+    ul {
+        margin: 0;
+        padding-left: 1.25rem;
+
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+}
+
+/* Already opened from the home screen, nothing left to install */
+@media (display-mode: standalone) {
+    .index-install {
+        display: none;
+    }
+}
+
 .index-showcase-header {
     margin-bottom: 1rem;
 
@@ -1619,6 +1653,14 @@ section {
 }
 
 /* Link to the inventory of the profile owner, shaped like a button */
+.profile-readonly .friend-button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin-top: 0.75rem;
+}
+
 .profile-inventory {
     display: block;
     width: fit-content;
@@ -2006,6 +2048,48 @@ section {
     margin: 0;
 }
 
+/* Owned or all cards toggle, a segmented control */
+.inventory-show {
+    display: inline-flex;
+    padding: 0.2rem;
+
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.55rem;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+
+        min-height: 1.85rem;
+        padding: 0.2rem 0.75rem;
+
+        color: var(--color-text);
+        border-radius: 0.4rem;
+
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+
+        transition: background-color 120ms ease;
+
+        &:hover {
+            color: var(--color-text);
+            background: color-mix(in srgb, var(--color-bg-4), black 10%);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+
+        &[aria-current="page"] {
+            color: var(--color-text-alt);
+            background: var(--color-accent-secondary);
+        }
+    }
+}
+
 /* Card filters and sort, part of the search form */
 .inventory-filters {
     display: flex;
@@ -2167,6 +2251,10 @@ section {
     &:hover {
         text-decoration: underline;
     }
+}
+
+.user-result .friend-button {
+    margin-top: 0.5rem;
 }
 
 .user-result-stats {
@@ -2806,6 +2894,7 @@ body:has(.pack-page.is-opening) > .site-footer {
 :root {
     --icon-notification: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z'/%3E%3Cpath d='M10 20.5a2 2 0 0 0 4 0'/%3E%3C/svg%3E");
     --icon-friend-request: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M3 19.5c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5'/%3E%3Cpath d='M19 8v6M16 11h6'/%3E%3C/svg%3E");
+    --icon-friend-accepted: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='9' cy='8' r='3.5'/%3E%3Cpath d='M3 19.5c0-3 2.7-5.5 6-5.5s6 2.5 6 5.5'/%3E%3Cpath d='M15.5 11l2 2 4-4.5'/%3E%3C/svg%3E");
     --icon-info: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='12' cy='12' r='9'/%3E%3Cpath d='M12 11v5.5M12 7.5v.01'/%3E%3C/svg%3E");
     --icon-check: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12.5l4.5 4.5L19 7.5'/%3E%3C/svg%3E");
     --icon-unread: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2'%3E%3Ccircle cx='12' cy='12' r='8'/%3E%3Ccircle cx='12' cy='12' r='3.5' fill='black' stroke='none'/%3E%3C/svg%3E");
@@ -3007,6 +3096,11 @@ form .notification-text-button {
     &[data-type="friend-request"] {
         --icon: var(--icon-friend-request);
         --tint: var(--color-accent-secondary);
+    }
+
+    &[data-type="friend-accepted"] {
+        --icon: var(--icon-friend-accepted);
+        --tint: var(--color-success-3);
     }
 
     &[data-type="info"] {

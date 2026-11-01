@@ -10,6 +10,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"time"
 	"transcendance/controllers"
 	"transcendance/data"
 	"transcendance/models"
@@ -74,6 +75,8 @@ type catalogView struct {
 	Viewed  string
 	// Cards owned by that user within the collection, nil for public views.
 	Owned map[uint]bool
+	// Copies of each owned card, shown in the inventory card popup when set
+	Copies map[uint]cardStack
 }
 
 // Every collection, in ID order
@@ -423,6 +426,11 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 		}
 		if v.Owned != nil {
 			data["CardMissing"] = !v.Owned[stack.CardID]
+		}
+		if copies, ok := v.Copies[stack.CardID]; ok {
+			data["CardCopies"] = copies.Count
+			data["CardAcquiredFirst"] = copies.FirstAcquired.Format(time.RFC3339)
+			data["CardAcquiredLast"] = copies.LastAcquired.Format(time.RFC3339)
 		}
 		v.Items = append(v.Items, map[string]any{
 			"Data": data,
