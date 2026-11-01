@@ -133,7 +133,6 @@ func TestCollectionMissingCards(t *testing.T) {
 	require.Contains(t, body, `<a class="inventory-tab-boosters" href="/inventory" >`)
 	require.Contains(t, body, `Cards <span class="inventory-tab-count">2</span>`)
 	require.Contains(t, body, `<li><a href="/inventory" aria-current="page">Inventory</a></li>`)
-	require.Contains(t, body, `<li><a href="/cards/search/" >Cards</a></li>`)
 
 	// Visitors don't own anything: no such filter or sort, and they're ignored
 	visitor := getPage(t, router, "/collections/1/?status=missing&sort=missing")

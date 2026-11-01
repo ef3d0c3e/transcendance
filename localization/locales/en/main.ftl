@@ -69,7 +69,6 @@ user-status-last-seen = Last seen:
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
-navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
 navbar-profile = Your profile
@@ -217,6 +216,9 @@ inventory-card-acquired-last = Last acquired on
 inventory-card-copies = Copies
 inventory-filter-rarity = Rarity
 inventory-filter-rarity-all = All rarities
+inventory-show = Show
+inventory-show-owned = Owned cards
+inventory-show-all = All cards
 inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
