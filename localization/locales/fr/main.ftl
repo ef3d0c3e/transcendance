@@ -31,6 +31,27 @@ logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
 
+friends-title = Liste d'amis
+friends-add = Ajouter
+friends-cancel = Annuler
+friends-accept = Accepter
+friends-deny = Ignorer
+friends-unfriend = Supprimer
+friends-block = Bloquer
+friends-unblock = Débloquer
+friends-unknown-error = Une erreur est survenue
+friends-blocked-error = Vous ne pouvez pas ajouter cet utilisateur.
+friends-unblock-error = Débloquez d'abord cet utilisateur.
+friends-not-found-error = Cet utilisateur n'existe pas.
+friends-yourself-error = Vous ne pouvez pas vous ajouter en ami.
+friends-list = Afficher
+friends-list-friends = Amis
+friends-list-sent = Demandes envoyées
+friends-list-received = Demandes reçues
+friends-empty-friends = Vous n'avez pas encore d'amis
+friends-empty-sent = Vous n'avez envoyé aucune demande d'ami
+friends-empty-received = Vous n'avez reçu aucune demande d'ami
+
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-title = Supprimer le compte
 account-email = Adresse e-mail
@@ -69,11 +90,10 @@ user-status-last-seen = Dernière activité :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
-navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
-navbar-shop = Boutique
 navbar-profile = Votre profil
+navbar-friends = Amis
 navbar-logout = Se déconnecter
 
 theme-switcher-light = Theme clair
@@ -185,6 +205,8 @@ notification-empty-unread = Aucune notification non lue
 
 notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-friend-accepted-title = Demande d'ami acceptée
+notification-friend-accepted-desc = { $username } a accepté votre demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
 notification-private-message-title = { $count ->
@@ -194,9 +216,6 @@ notification-private-message-title = { $count ->
 notification-private-message-desc = { $preview }
 
 catalog-title = Catalogue de cartes
-catalog-tabs-label = Sections du catalogue
-catalog-tab-cards = Cartes
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -204,6 +223,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = Toutes les collections
 catalog-sort-number = Ordre de la collection
+catalog-filter-status = Possédées
+catalog-filter-status-all = Toutes les cartes
+catalog-filter-status-owned = Possédées
+catalog-filter-status-missing = Manquantes
+catalog-sort-missing = Manquantes d'abord
 
 inventory-title = Votre inventaire
 inventory-title-other = Inventaire de { $username }
@@ -222,6 +246,9 @@ inventory-card-acquired-last = Dernière obtenue le
 inventory-card-copies = Exemplaires
 inventory-filter-rarity = Rareté
 inventory-filter-rarity-all = Toutes les raretés
+inventory-show = Afficher
+inventory-show-owned = Cartes possédées
+inventory-show-all = Toutes les cartes
 inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
@@ -237,10 +264,9 @@ inventory-sort-name-desc = Nom (Z-A)
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = Aucun booster pour l'instant
-inventory-booster-open-confirm = Ouvrir le booster { $name } ?
-inventory-booster-open-yes = Oui
-inventory-booster-open-no = Non
+inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -260,26 +286,30 @@ pack-opening-open-another = Ouvrir un autre booster
 pack-opening-error-collection = Collection introuvable
 pack-opening-error-empty = Ce booster ne contient aucune carte
 pack-opening-error-internal = Impossible d'ouvrir le booster
-pack-opening-obtained = Cartes obtenues
 pack-opening-back = Retour à l'inventaire
-pack-opening-return = Retour
-pack-opening-open-again = Ouvrir à nouveau
 pack-opening-remaining = { $count ->
     [0] Plus aucun booster
     [one] { $count } booster restant
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-buy = Ouvrir à nouveau
+pack-opening-buy-label = Ouvrir à nouveau pour { $price }
+pack-opening-sound-on = Son activé
+pack-opening-sound-off = Son coupé
+pack-opening-odds-title = Taux d'obtention
+pack-opening-odds-foil = Holographique
+pack-opening-odds-note = Chaque carte du booster est tirée séparément.
+pack-opening-progress-title = Progression de la collection
+pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
 
-shop-title = Boutique
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = Aucun booster n'est en vente pour le moment
 shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-error-unconfirmed = Impossible de confirmer l’ajout de pièces. Actualisez la page pour vérifier votre solde avant de réessayer.
 shop-topup-price = { $euros },{ $cents } €
 shop-topup-open = Acheter des pièces
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
@@ -289,14 +319,42 @@ shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
 shop-error-quantity = Saisissez une quantité entre 1 et { $max }
 shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
-shop-buy-success = { $count ->
-    [one] Un booster { $collection } a été ajouté à votre inventaire
-   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
-}
-shop-buy-view-inventory = Voir l'inventaire
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
+
+index-title = Transcendance, collectionnez des cartes
+index-heading = Collectionnez, troquez et exposez vos cartes
+index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
+index-stat-cards = { $count ->
+    [one] { $count } carte
+    *[other] { $count } cartes
+}
+index-stat-collections = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+index-action-register = Créer un compte
+index-action-browse = Parcourir les cartes
+index-action-inventory = Ouvrir votre inventaire
+index-step-buy-title = Achetez des boosters
+index-step-buy-text = Dépensez vos pièces en boosters de la collection de votre choix, directement depuis votre inventaire.
+index-step-open-title = Ouvrez des paquets
+index-step-open-text = Chaque booster contient quelques cartes, dont certaines rares, légendaires ou holographiques.
+index-step-trade-title = Troquez vos cartes
+index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
+index-install-title = Installer l’application
+index-install-text = Ajoutez Transcendance à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
+index-install-ios-title = iPhone et iPad :
+index-install-ios-text = dans Safari, touchez Partager, puis Sur l’écran d’accueil.
+index-install-android-title = Android :
+index-install-android-text = dans Chrome, ouvrez le menu ⋮, puis touchez Ajouter à l’écran d’accueil ou Installer l’application.
+index-install-desktop-title = Ordinateur :
+index-install-desktop-text = dans Chrome ou Edge, cliquez sur l’icône d’installation au bout de la barre d’adresse.
+index-cards-title = Cartes les plus rares
+index-cards-all = Voir toutes les cartes
+index-collections-title = Collections
+index-collections-all = Voir toutes les collections
 
 footer-label = Informations sur le site
 footer-project = Transcendance, un projet étudiant

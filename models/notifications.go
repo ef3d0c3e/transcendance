@@ -8,10 +8,9 @@ import (
 
 // Notification types, each one has `notification-<type>-title` and `notification-<type>-desc` translations
 const (
-	NotificationFriendRequest = "friend-request"
-	NotificationInfo          = "info"
-	// Unread private messages from one user, a single notification is kept per sender
-	NotificationPrivateMessage = "private-message"
+	NotificationFriendRequest  = "friend-request"
+	NotificationFriendAccepted = "friend-accepted"
+	NotificationInfo           = "info"
 )
 
 type Notification struct {
