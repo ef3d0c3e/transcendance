@@ -338,6 +338,10 @@ func TestBoosterPileCountedInTotals(t *testing.T) {
 	require.Contains(t, body, `<p class="inventory-count">5 boosters</p>`)
 	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
 	require.Equal(t, 1, strings.Count(body, `<article class="collection"`))
+
+	// The tab count is the same from the cards tab
+	body = getInventory(t, router, cookie, "/inventory")
+	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
 }
 
 func TestBoosterPileOfOtherUser(t *testing.T) {

@@ -902,3 +902,49 @@ func TestTradeInventoryMarksLocked(t *testing.T) {
 	body = getInventory(t, router, cookie36, "/inventory?u=trade35")
 	require.NotContains(t, body, "in trades")
 }
+
+// Accepting cannot give away what the receiver put up in their own offers
+func TestTradeAcceptRespectsReceiverLocks(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "trade37", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade38", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade39", "foo-bar-baz-qux", 0)
+	giveCards(t, "trade37", cardFordT, 1)
+	giveCards(t, "trade38", cardTungsten, 1)
+	giveCards(t, "trade39", cardMcMurdo, 2)
+	setCoins(t, "trade37", 100)
+
+	cookie37 := login(t, router, "trade37", "foo-bar-baz-qux")
+	cookie39 := login(t, router, "trade39", "foo-bar-baz-qux")
+
+	// The Ford Model T and 80 coins go up in an offer to trade38
+	rec := postJSON(t, router, cookie37, "/trades", tradeBody(t, "trade38",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 80,
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	// trade39 asks for that Ford Model T, then for those coins
+	rec = postJSON(t, router, cookie39, "/trades", tradeBody(t, "trade37",
+		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+	rec = postJSON(t, router, cookie39, "/trades", tradeBodyWantCoins(t, "trade37",
+		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
+		nil, 50, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	trades := tradesOf(t, "trade39")
+	require.Len(t, trades, 2)
+	for _, trade := range trades {
+		target := tradeAction(t, router, cookie37, trade.ID, "accept")
+		require.Equal(t, "/trades?error=settle", target)
+	}
+
+	// Nothing moved, and every offer is still pending
+	require.Equal(t, int64(1), ownedCardCount(t, "trade37", cardFordT, ""))
+	require.Equal(t, int64(2), ownedCardCount(t, "trade39", cardMcMurdo, ""))
+	require.Equal(t, uint(100), shopBalance(t, "trade37"))
+	for _, trade := range tradesOf(t, "trade37") {
+		require.Equal(t, models.TradePending, trade.State)
+	}
+}
