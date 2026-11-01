@@ -41,15 +41,10 @@ friends-deny = Ignorer
 friends-unfriend = Supprimer
 friends-block = Bloquer
 friends-unblock = Debloquer
-friends-blocked = Bloque
-friends-pending = En attente
-friends-respond-message = Cet utilisateur vous a demande en ami
 friends-unknown-error = Une erreur est survenue
 friends-spam-error = Vous ne pouvez envoyer qu'une invitation a la fois.
 friends-blocked-error = Vous ne pouvez pas ajouter cet utilisateur.
 
-account-delete-success = Le compte de { $username } a été supprimé
-account-delete-success-self = Votre compte a été supprimé
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-title = Supprimer le compte
 account-email = Adresse e-mail
