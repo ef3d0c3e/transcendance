@@ -10,10 +10,11 @@
 		{{ if eq .Data.Tab "cards" }}
 		<form class="search-form inventory-search" id="search-form" action="/inventory" method="get">
 			<input type="hidden" name="tab" value="cards">
+			{{ if .Data.All }}<input type="hidden" name="show" value="all">{{ end }}
 			{{ if ne (len .Data.Viewed) 0 }}
 			<input type="hidden" name="u" value="{{ .Data.Viewed }}">
 			{{ end }}
-			<input type="text" id="q" name="q" placeholder="{{ .T "inventory-search-placeholder" }}"
+			<input type="text" id="q" name="q" placeholder="{{ if .Data.All }}{{ .T "card-search-placeholder" }}{{ else }}{{ .T "inventory-search-placeholder" }}{{ end }}"
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "inventory-search-submit" }}></button>
 		</form>
@@ -30,13 +31,17 @@
 
 	{{ if .Data.Topups }}
 	<div class="inventory-wallet">
-		<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: {{ .Data.CoinsLabel }}</p>
+		<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="shop-coins">{{ .Data.CoinsLabel }}</span></p>
 		<button type="button" class="shop-topup-open" aria-haspopup="dialog" aria-controls="shop-topup-popup">{{ .T "shop-topup-open" }}</button>
 	</div>
 	{{ end }}
 
 	{{ if eq .Data.Tab "cards" }}
 	<div class="inventory-filters">
+		<div class="inventory-show" role="group" aria-label="{{ .T "inventory-show" }}">
+			<a href="{{ .Data.ShowOwnedUrl }}" {{ if not .Data.All }}aria-current="page"{{ end }}>{{ .T "inventory-show-owned" }}</a>
+			<a href="{{ .Data.ShowAllUrl }}" {{ if .Data.All }}aria-current="page"{{ end }}>{{ .T "inventory-show-all" }}</a>
+		</div>
 		<label>
 			<span>{{ .T "inventory-filter-rarity" }}</span>
 			<select name="rarity" form="search-form" data-autosubmit>
@@ -45,6 +50,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ if not .Data.All }}
 		<label>
 			<span>{{ .T "inventory-filter-effect" }}</span>
 			<select name="effect" form="search-form" data-autosubmit>
@@ -53,6 +59,7 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
 			<select name="sort" form="search-form" data-autosubmit>
@@ -68,7 +75,7 @@
 	<div class="inventory-message">
 		<p>{{ .Data.Message }}</p>
 		{{ if .Data.Filtered }}
-		<a href="{{ .Data.TabCardsUrl }}">{{ .T "inventory-search-clear" }}</a>
+		<a href="{{ .Data.ClearUrl }}">{{ .T "inventory-search-clear" }}</a>
 		{{ end }}
 	</div>
 	{{ end }}
