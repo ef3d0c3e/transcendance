@@ -10,6 +10,7 @@
 
 <script>
 	import { onMount } from "svelte";
+	import { openTopup } from "./topup.js";
 
 	let { target } = $props();
 
@@ -62,6 +63,13 @@
 
 	function close() {
 		dialog.close();
+	}
+
+	// Short on coins: offer the packs that bring the balance up to the total
+	function topUp() {
+		const missing = total - Number(coins);
+		close();
+		openTopup(missing);
 	}
 
 	function onDialogClose() {
@@ -169,7 +177,7 @@
 						<button type="submit">{labelBuy}</button>
 					</form>
 				{:else}
-					<button type="button" disabled>{labelBuy}</button>
+					<button type="button" onclick={topUp}>{labelBuy}</button>
 				{/if}
 				<button type="button" onclick={close}>{labelClose}</button>
 			</div>

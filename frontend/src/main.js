@@ -4,8 +4,8 @@ import FormEnhancement from './FormEnhancement.svelte';
 import FriendButton from './FriendButton.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
-import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
+import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
@@ -14,6 +14,7 @@ import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
+import { openTopup } from './topup.js';
 
 // Navbar
 {
@@ -265,12 +266,36 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 	}
 }
 
-// Inventory booster popup
+// Inventory boosters open on click, dragging to tilt them doesn't count
 {
-	const target = document.querySelector('#inventory-booster-popup');
+	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
+	// Pointer travel (px) after which a press counts as a tilt drag
+	const dragThreshold = 6;
+	let press;
 
-	if (target) {
-		mount(InventoryBoosterPopup, { target, props: { target } });
+	for (const tile of tiles) {
+		const booster = tile.closest('.inventory-booster');
+		const open = () => location.assign(booster.dataset.boosterOpen);
+
+		tile.tabIndex = 0;
+		tile.setAttribute('role', 'link');
+		tile.setAttribute('aria-label', booster.dataset.boosterLabel ?? '');
+		tile.addEventListener('pointerdown', (event) => {
+			press = { x: event.clientX, y: event.clientY };
+		}, { passive: true });
+		tile.addEventListener('click', (event) => {
+			if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > dragThreshold) {
+				return;
+			}
+			open();
+		});
+		tile.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter') {
+				return;
+			}
+			event.preventDefault();
+			open();
+		});
 	}
 }
 
@@ -286,13 +311,22 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 				openLabel: target.dataset.openLabel,
 				retryLabel: target.dataset.retryLabel,
 				errorLabel: target.dataset.errorLabel,
-				obtainedLabel: target.dataset.obtainedLabel,
-				returnLabel: target.dataset.returnLabel,
-				returnUrl: target.dataset.returnUrl,
-				openAgainLabel: target.dataset.openAgainLabel,
+				againLabel: target.dataset.againLabel,
+				coins: Number(target.dataset.coins) || 0,
 				autostart: target.dataset.autostart === 'true',
+				soundOnLabel: target.dataset.soundOn,
+				soundOffLabel: target.dataset.soundOff,
 			},
 		});
+	}
+}
+
+// Pack opening animated background
+{
+	const target = document.querySelector('#pack-background');
+
+	if (target) {
+		mount(PackBackground, { target, props: { target } });
 	}
 }
 
@@ -320,7 +354,7 @@ import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.j
 		for (const button of document.querySelectorAll('.shop-topup-open')) {
 			button.addEventListener('click', () => {
 				returnFocus = button;
-				dialog.showModal();
+				openTopup();
 			});
 		}
 		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {

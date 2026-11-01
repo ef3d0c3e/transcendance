@@ -1,0 +1,2 @@
+title = Foxhound anglais
+description = Le foxhound anglais est une race de chien originaire du Royaume-Uni. C'est un chien courant de grande taille, puissant et bien proportionné, créé pour la chasse au renard (comme son nom l'indique fox signifiant « renard » et hound, « chien courant »). Le livre des origines des maîtres d’équipage de l'association anglaise du foxhound Masters of Foxhounds date du XVIIIe siècle.

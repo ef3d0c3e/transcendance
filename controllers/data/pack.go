@@ -24,7 +24,7 @@ import (
 // settle against.
 const (
 	reelAbove = 2
-	reelBelow = 24
+	reelBelow = 12
 )
 
 // Rarity tiers ordered from highest to lowest. Used to fall back to a lower
@@ -153,6 +153,51 @@ func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*dat
 	return pack
 }
 
+// Chance in percent for each card of a booster to be of a rarity, after the
+// fallback of the tiers the collection lacks. Tiers that can't drop are left out.
+func boosterOdds(byRarity map[string][]*data.Card) map[string]int {
+	available := make(map[string]bool, len(rarityTiers))
+	for _, tier := range rarityTiers {
+		available[tier] = len(byRarity[tier]) > 0
+	}
+	weights := map[string]int{
+		"common":    weightCommon,
+		"rare":      weightRare,
+		"legendary": weightLegendary,
+	}
+	total := weightCommon + weightRare + weightLegendary
+	odds := make(map[string]int, len(rarityTiers))
+	for _, rolled := range rarityTiers {
+		if tier := pickTier(rolled, available); tier != "" {
+			odds[tier] += weights[rolled] * 100 / total
+		}
+	}
+	return odds
+}
+
+// Number of boosters left in a stack (same collection and size) of a user
+func (dc *DataController) countBoosters(ownerID uint, collectionID uint, size uint) (int64, error) {
+	var count int64
+	err := dc.DB.
+		Model(&models.Booster{}).
+		Where("owner_id = ? AND collection_id = ? AND size = ?", ownerID, collectionID, size).
+		Count(&count).
+		Error
+	return count, err
+}
+
+// Number of distinct cards of a collection owned by a user
+func (dc *DataController) countOwnedCards(ownerID uint, collection *data.Collection) (int64, error) {
+	var count int64
+	err := dc.DB.
+		Model(&models.Card{}).
+		Where("owner_id = ? AND card_id > ? AND card_id < ?", ownerID, collection.ID*1000, (collection.ID+1)*1000).
+		Distinct("card_id").
+		Count(&count).
+		Error
+	return count, err
+}
+
 // Oldest booster of a stack (same collection and size) owned by a user, nil when none is left
 func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint) (*models.Booster, error) {
 	var booster models.Booster
@@ -170,7 +215,8 @@ func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint
 	return &booster, nil
 }
 
-// /opening GET: open one of the user's boosters (?booster=ID)
+// /opening GET: open one of the user's boosters (?booster=ID), or boosters
+// of a collection bought with coins (?collection=ID)
 func (dc *DataController) OpeningGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
@@ -180,14 +226,21 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 
 	// Unknown, already opened or someone else's booster: back to the inventory
 	var booster models.Booster
-	if err := dc.DB.
+	var collection *data.Collection
+	var size uint
+	if id, err := strconv.Atoi(c.Query("collection")); err == nil && c.Query("booster") == "" {
+		// Shop boosters: the size the shop sells
+		collection = dc.Data.GetCollection(id)
+		if collection != nil {
+			size = uint(collection.BoosterSize)
+		}
+	} else if err := dc.DB.
 		Where("id = ? AND owner_id = ?", c.Query("booster"), user.ID).
 		First(&booster).
-		Error; err != nil {
-		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
-		return
+		Error; err == nil {
+		collection = dc.Data.GetCollection(int(booster.CollectionID))
+		size = booster.Size
 	}
-	collection := dc.Data.GetCollection(int(booster.CollectionID))
 	if collection == nil {
 		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
 		return
@@ -200,15 +253,67 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
 		return
 	}
-	boosterData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(booster.Size))
+	boosterData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(size))
+	collectionTitle, err := collection.Translate(loc, "title")
+	if err != nil {
+		log.Printf("[WARN] Failed to translate collection '%s': %s", collection.Name, err)
+		collectionTitle = collection.Name
+	}
+
+	// Side information, the page still works without it
+	remaining, err := dc.countBoosters(user.ID, uint(collection.ID), size)
+	if err != nil {
+		log.Printf("[WARN] Failed to count boosters for user '%s': %s", user.Username, err)
+	}
+	owned, err := dc.countOwnedCards(user.ID, collection)
+	if err != nil {
+		log.Printf("[WARN] Failed to count cards for user '%s': %s", user.Username, err)
+	}
+	total := len(collection.Cards)
+	progress := 0
+	if total > 0 {
+		progress = int(owned) * 100 / total
+	}
+
+	byRarity := groupByRarity(dc.Data.Cards, collection)
+	odds := boosterOdds(byRarity)
+	rates := make([]map[string]any, 0, len(rarityTiers))
+	for i := len(rarityTiers) - 1; i >= 0; i-- {
+		tier := rarityTiers[i]
+		if odds[tier] == 0 {
+			continue
+		}
+		rates = append(rates, map[string]any{
+			"Rarity":  tier,
+			"Label":   dc.Renderer.T(c, "card-rarity-"+tier),
+			"Percent": odds[tier],
+		})
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": dc.Renderer.T(c, "pack-opening-title"),
 		"User":  user,
 	})
 	builder.Add("pack-opening", "Content", map[string]any{
-		"BoosterID": booster.ID,
-		"Booster":   map[string]any{"Data": boosterData},
+		"BoosterID":       booster.ID,
+		"Booster":         map[string]any{"Data": boosterData},
+		"CollectionTitle": collectionTitle,
+		"ColorPrimary":    collection.ColorPrimary,
+		"ColorSecondary":  collection.ColorSecondary,
+		"BoosterSize":     dc.Renderer.T(c, "collection-booster", "count", int(size)),
+		"Remaining":       dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
+		"Owned":           owned,
+		"Total":           total,
+		"Progress":        progress,
+		"Rates":           rates,
+		"FoilChance":      foilChance,
+		// Once out of boosters, more are bought with coins
+		"CollectionID": collection.ID,
+		"Coins":        user.Coins,
+		"CoinsLabel":   dc.Renderer.T(c, "shop-price", "amount", user.Coins),
+		"Price":        controllers.BoosterPrice(collection.ID),
+		"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", controllers.BoosterPrice(collection.ID)),
+		"Topups":       controllers.TopupChoices(c, dc.Renderer),
 	})
 	dc.Renderer.Render(c, &builder)
 }
@@ -270,13 +375,67 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		return
 	}
 
-	// Draw before touching the inventory, an empty collection keeps the booster
+	// Deleting with the owner check first means a booster can only be
+	// opened once, even when the request is sent twice
+	dc.openPack(c, user, collection, booster.Size, func(tx *gorm.DB) error {
+		deleted := tx.Where("id = ? AND owner_id = ?", booster.ID, user.ID).Delete(&models.Booster{})
+		if deleted.Error != nil {
+			return deleted.Error
+		}
+		if deleted.RowsAffected != 1 {
+			return errBoosterOpened
+		}
+		return nil
+	})
+}
+
+// /opening/buy POST: buy a booster of a collection with coins and open it at once
+func (dc *DataController) OpeningBuyPost(c *gin.Context) {
+	user := controllers.GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusForbidden, gin.H{
+			"message": dc.Renderer.T(c, "inventory-unauthenticated"),
+		})
+		return
+	}
+
+	id, err := strconv.Atoi(c.PostForm("collection"))
+	collection := dc.Data.GetCollection(id)
+	if err != nil || collection == nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-collection"),
+		})
+		return
+	}
+
+	// Debit only when the balance covers the price, so concurrent
+	// purchases cannot overdraw
+	price := controllers.BoosterPrice(collection.ID)
+	dc.openPack(c, user, collection, uint(collection.BoosterSize), func(tx *gorm.DB) error {
+		result := tx.Model(&models.User{}).
+			Where("id = ? AND coins >= ?", user.ID, price).
+			Update("coins", gorm.Expr("coins - ?", price))
+		if result.Error != nil {
+			return result.Error
+		}
+		if result.RowsAffected == 0 {
+			return errNotEnoughCoins
+		}
+		return nil
+	})
+}
+
+// openPack draws a pack of a collection and adds its cards to the user's
+// inventory, in the same transaction as pay, which takes what the pack costs.
+// Replies with the reels to animate.
+func (dc *DataController) openPack(c *gin.Context, user *controllers.AuthenticatedUser, collection *data.Collection, size uint, pay func(tx *gorm.DB) error) {
+	// Draw before paying, an empty collection costs nothing
 	rnd := rand.New(rand.NewPCG(
 		uint64(time.Now().UnixNano()),
 		uint64(time.Now().UnixNano()),
 	))
 	byRarity := groupByRarity(dc.Data.Cards, collection)
-	pack := drawPack(rnd, byRarity, int(booster.Size))
+	pack := drawPack(rnd, byRarity, int(size))
 	if pack == nil {
 		c.JSON(http.StatusUnprocessableEntity, gin.H{
 			"message": dc.Renderer.T(c, "pack-opening-error-empty"),
@@ -288,17 +447,11 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		foils[i] = rollFoil(rnd)
 	}
 
-	// Consume the booster and award its cards at once. Deleting with the
-	// owner check first means a booster can only be opened once, even when
-	// the request is sent twice.
+	// Pay and award the cards at once
 	now := time.Now()
 	err := dc.DB.Transaction(func(tx *gorm.DB) error {
-		deleted := tx.Where("id = ? AND owner_id = ?", booster.ID, user.ID).Delete(&models.Booster{})
-		if deleted.Error != nil {
-			return deleted.Error
-		}
-		if deleted.RowsAffected != 1 {
-			return errBoosterOpened
+		if err := pay(tx); err != nil {
+			return err
 		}
 
 		cards := make([]models.Card, len(pack))
@@ -312,14 +465,19 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		}
 		return tx.Create(&cards).Error
 	})
-	if errors.Is(err, errBoosterOpened) {
+	switch {
+	case errors.Is(err, errBoosterOpened):
 		c.JSON(http.StatusConflict, gin.H{
 			"message": dc.Renderer.T(c, "pack-opening-error-booster"),
 		})
 		return
-	}
-	if err != nil {
-		log.Printf("[WARN] Failed to open booster %d for user '%s': %s", booster.ID, user.Username, err)
+	case errors.Is(err, errNotEnoughCoins):
+		c.JSON(http.StatusPaymentRequired, gin.H{
+			"message": dc.Renderer.T(c, "shop-error-funds"),
+		})
+		return
+	case err != nil:
+		log.Printf("[WARN] Failed to open a booster of collection %d for user '%s': %s", collection.ID, user.Username, err)
 		c.JSON(http.StatusInternalServerError, gin.H{
 			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
 		})
@@ -354,18 +512,24 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 
 	// Let the page chain into the next booster of the same stack
 	next := uint(0)
-	if nextBooster, err := dc.nextBooster(user.ID, booster.CollectionID, booster.Size); err != nil {
+	if nextBooster, err := dc.nextBooster(user.ID, uint(collection.ID), size); err != nil {
 		log.Printf("[WARN] Failed to find next booster for user '%s': %s", user.Username, err)
 	} else if nextBooster != nil {
 		next = nextBooster.ID
 	}
-	var remaining int64
-	if err := dc.DB.
-		Model(&models.Booster{}).
-		Where("owner_id = ? AND collection_id = ? AND size = ?", user.ID, booster.CollectionID, booster.Size).
-		Count(&remaining).
-		Error; err != nil {
+	remaining, err := dc.countBoosters(user.ID, uint(collection.ID), size)
+	if err != nil {
 		log.Printf("[WARN] Failed to count boosters for user '%s': %s", user.Username, err)
+	}
+	// Refreshes the collection progress of the page
+	owned, err := dc.countOwnedCards(user.ID, collection)
+	if err != nil {
+		log.Printf("[WARN] Failed to count cards for user '%s': %s", user.Username, err)
+	}
+	// Tells the page whether the next booster can be bought
+	coins := user.Coins
+	if err := dc.DB.Model(&models.User{}).Where("id = ?", user.ID).Select("coins").Scan(&coins).Error; err != nil {
+		log.Printf("[WARN] Failed to read the balance of user '%s': %s", user.Username, err)
 	}
 
 	c.JSON(http.StatusOK, gin.H{
@@ -373,6 +537,9 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		"next":           next,
 		"remaining":      remaining,
 		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
+		"owned":          owned,
+		"coins":          coins,
+		"coinsLabel":     dc.Renderer.T(c, "shop-price", "amount", coins),
 		"colors": gin.H{
 			"primary":   collection.ColorPrimary,
 			"secondary": collection.ColorSecondary,
@@ -380,7 +547,10 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 	})
 }
 
-var errBoosterOpened = errors.New("booster already opened")
+var (
+	errBoosterOpened  = errors.New("booster already opened")
+	errNotEnoughCoins = errors.New("not enough coins")
+)
 
 // Collections sorted by ID, with their translated title
 func (dc *DataController) collectionChoices(c *gin.Context) []map[string]any {
