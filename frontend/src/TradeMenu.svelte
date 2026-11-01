@@ -4,8 +4,8 @@
 
     The mount point must provide `data-target`, `data-stacks-url` and
     `data-submit-url`, optionally `data-counter-id`, `data-prefill-give` and
-    `data-prefill-want` (JSON lists of card stacks), and the `data-label-*`
-    strings
+    `data-prefill-want` (JSON lists of card stacks), `data-prefill-give-coins`
+    and `data-prefill-want-coins`, and the `data-label-*` strings
 -->
 
 <script>
@@ -33,11 +33,14 @@
 
 	let mine = $state([]);
 	let theirs = $state([]);
+	// Coins free to be put up or asked for, on each side
 	let balance = $state(0);
+	let theirBalance = $state(0);
 	// Copies put up per stack, by `card_id:foil`
 	let give = $state({});
 	let want = $state({});
 	let coins = $state(0);
+	let wantCoins = $state(0);
 	let loading = $state(true);
 	let sending = $state(false);
 	let message = $state("");
@@ -77,7 +80,7 @@
 		const sel = side === "give" ? give : want;
 		if (sel[key(stack)]) {
 			delete sel[key(stack)];
-		} else {
+		} else if (stack.count > 0) {
 			sel[key(stack)] = 1;
 		}
 	}
@@ -104,21 +107,33 @@
 		sel[key(stack)] = Math.min(next, stack.count);
 	}
 
-	// The balance is the most that can be put up: cap the amount as it is typed.
-	// An empty field is left alone so it can be retyped into.
-	function capCoins(e) {
+	// The free balance is the most that can be put up or asked for: cap the
+	// amount as it is typed. An empty field is left alone so it can be
+	// retyped into.
+	function capCoins(e, side) {
 		const input = e.currentTarget;
 		if (input.value === "") {
 			return;
 		}
-		const amount = Math.min(Math.max(0, Number(input.value) || 0), balance);
-		coins = amount;
+		const limit = side === "give" ? balance : theirBalance;
+		const amount = Math.min(Math.max(0, Number(input.value) || 0), limit);
+		if (side === "give") {
+			coins = amount;
+		} else {
+			wantCoins = amount;
+		}
 		if (String(amount) !== input.value) {
 			input.value = String(amount);
 		}
 	}
 
-	// Start a side from the stacks of a counter, capped to the stacks owned
+	// A prefilled coin amount, capped to the free balance of its side
+	function prefillCoins(encoded, limit) {
+		return Math.min(Math.max(0, Number(encoded) || 0), limit);
+	}
+
+	// Start a side from the stacks of a counter, capped to the stacks free to
+	// put up on that side
 	function prefill(sel, stacks, encoded) {
 		let items;
 		try {
@@ -128,8 +143,8 @@
 		}
 		for (const item of items) {
 			const stack = stacks.find((s) => s.card_id === item.card_id && s.foil === item.foil);
-			if (stack) {
-				sel[key(stack)] = Math.max(1, Math.min(item.count, stack.count));
+			if (stack && stack.count > 0) {
+				sel[key(stack)] = Math.min(item.count, stack.count);
 			}
 		}
 	}
@@ -157,6 +172,7 @@
 					give: items(give, mine),
 					coins: Math.max(0, coins || 0),
 					want: items(want, theirs),
+					want_coins: Math.max(0, wantCoins || 0),
 					counter_of: counterId,
 				}),
 			});
@@ -184,8 +200,11 @@
 			mine = body.mine ?? [];
 			theirs = body.theirs ?? [];
 			balance = Number(body.coins) || 0;
+			theirBalance = Number(body.their_coins) || 0;
 			prefill(give, mine, target.dataset.prefillGive);
 			prefill(want, theirs, target.dataset.prefillWant);
+			coins = prefillCoins(target.dataset.prefillGiveCoins, balance);
+			wantCoins = prefillCoins(target.dataset.prefillWantCoins, theirBalance);
 		} catch {
 			message = labelError;
 		} finally {
@@ -207,7 +226,8 @@
 					<h2>{labelGive}</h2>
 					<label class="trade-menu-coins">
 						<span>{labelCoins}</span>
-						<input type="number" min="0" max={balance} bind:value={coins} oninput={capCoins} />
+						<input type="number" min="0" max={balance} bind:value={coins}
+							oninput={(e) => capCoins(e, "give")} />
 					</label>
 				</div>
 				<div class="trade-menu-deal">
@@ -226,8 +246,9 @@
 				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
 					style="--trade-card-scale: {cardScale}">
 					{#each mine as stack (key(stack))}
-						<div class="trade-menu-tile" class:is-picked={give[key(stack)]} role="button" tabindex="0"
-							aria-label={title(stack)} onclick={(e) => pick(e, "give", stack)}
+						<div class="trade-menu-tile" class:is-picked={give[key(stack)]} class:is-locked={!stack.count}
+							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
+							onclick={(e) => pick(e, "give", stack)}
 							onkeydown={(e) => pickKey(e, "give", stack)}>
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
@@ -240,6 +261,11 @@
 			<section class="trade-menu-side">
 				<div class="trade-menu-side-head">
 					<h2>{labelGet}</h2>
+					<label class="trade-menu-coins">
+						<span>{labelCoins}</span>
+						<input type="number" min="0" max={theirBalance} bind:value={wantCoins}
+							oninput={(e) => capCoins(e, "want")} />
+					</label>
 				</div>
 				<div class="trade-menu-deal">
 					{#each wantPicked as stack (key(stack))}
@@ -257,8 +283,9 @@
 				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
 					style="--trade-card-scale: {cardScale}">
 					{#each theirs as stack (key(stack))}
-						<div class="trade-menu-tile" class:is-picked={want[key(stack)]} role="button" tabindex="0"
-							aria-label={title(stack)} onclick={(e) => pick(e, "want", stack)}
+						<div class="trade-menu-tile" class:is-picked={want[key(stack)]} class:is-locked={!stack.count}
+							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
+							onclick={(e) => pick(e, "want", stack)}
 							onkeydown={(e) => pickKey(e, "want", stack)}>
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
@@ -518,6 +545,16 @@
 	.trade-menu-tile:focus-visible {
 		border-radius: calc(var(--card-border-radius) * var(--trade-card-scale));
 		outline: 2px solid var(--color-accent-primary);
+	}
+
+	/* A stack fully up in other trades cannot be picked */
+	.trade-menu-tile.is-locked {
+		opacity: 0.45;
+		cursor: default;
+	}
+
+	.trade-menu-tile.is-locked:hover {
+		transform: none;
 	}
 
 	/* The card markup is a fixed 30ch x 30em box; scale it down to the tile */

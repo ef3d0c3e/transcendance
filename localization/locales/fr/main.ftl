@@ -252,6 +252,7 @@ inventory-search-count = { $count ->
     [one] { $count } carte trouvée
     *[other] { $count } cartes trouvées
 }
+inventory-locked-badge = { $count } dans des échanges
 
 booster-pile-title = Booster par défaut
 booster-pile-desc = { $count } cartes aléatoires de toutes les collections
@@ -310,6 +311,7 @@ shop-buy-view-inventory = Voir l'inventaire
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
+shop-coins-locked = { $amount } dans des échanges
 
 index-title = Transcendance, collectionnez des cartes
 index-heading = Collectionnez, troquez et exposez vos cartes
@@ -450,12 +452,15 @@ trade-error-not-found = Offre d’échange introuvable
 trade-error-user = Utilisateur introuvable
 trade-error-self = Vous ne pouvez pas échanger avec vous-même
 trade-error-empty-give = Proposez au moins une carte ou des pièces
-trade-error-empty-want = Demandez au moins une carte
+trade-error-empty-want = Demandez au moins une carte ou des pièces
 trade-error-count = Nombre de cartes invalide
 trade-error-items = Trop de piles de cartes dans l’offre
 trade-error-card = Carte inconnue
 trade-error-duplicate = La même pile de cartes apparaît deux fois
 trade-error-owned = Pas assez d’exemplaires d’une carte
+trade-error-locked = Certains exemplaires d’une carte sont dans un autre échange
 trade-error-coins = Pas assez de pièces
+trade-error-locked-coins = Certaines pièces sont dans un autre échange
+trade-error-want-coins = L’autre utilisateur n’a pas autant de pièces
 trade-error-state = Cette offre d’échange n’est plus en attente
 trade-error-forbidden = Cette offre d’échange ne vous appartient pas

@@ -1923,6 +1923,28 @@ section {
     pointer-events: none;
 }
 
+/* Copies of a card up in pending trades, under the copy count */
+.card-locked {
+    position: absolute;
+    top: 1.55rem;
+    right: -0.6rem;
+    z-index: 20;
+
+    padding: 0.2rem 0.6rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-size: 0.8rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+}
+
 /* Number of available boosters in a pile */
 .booster-pile-count {
     position: absolute;
