@@ -19,6 +19,10 @@
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
+	<!-- Added to the home screen, the site opens as an app, without the browser's bars -->
+	<link rel="manifest" href="/static/manifest.json">
+	<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
 	<script type="module" src="/frontend/main.js"></script>
 </head>
