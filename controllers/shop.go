@@ -301,6 +301,10 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	}
 
 	err = sc.DB.Transaction(func(tx *gorm.DB) error {
+		// Locked, so no offer can commit coins between the check and the debit
+		if err := lockUsers(tx, user.ID); err != nil {
+			return err
+		}
 		// Coins up in pending trades leave with those trades, so they cannot
 		// pay for a booster here
 		committed, err := TradeCommitmentsOf(tx, user.ID, 0)

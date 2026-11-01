@@ -87,7 +87,8 @@ func (dc *DataController) tradeStacks(c *gin.Context, loc string, userID uint, c
 // /api/trade/stacks GET: the card stacks of the user and of the trade partner
 //
 // Query: `u` is the trade partner, `counter` is the offer being countered if
-// any, whose contents are left unlocked on both sides since it will be replaced
+// any, whose contents are left unlocked on the partner's side since it will be
+// replaced
 func (dc *DataController) TradeStacksGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
@@ -125,8 +126,9 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 	}
 
 	// What each side put up in other pending offers is locked there: the
-	// stacks only show the copies free to be put up again
-	mine, err := controllers.TradeCommitmentsOf(dc.DB, user.ID, skipTradeID)
+	// stacks only show the copies free to be put up again. The countered
+	// offer is the partner's, so only their side skips it
+	mine, err := controllers.TradeCommitmentsOf(dc.DB, user.ID, 0)
 	if err != nil {
 		c.String(http.StatusInternalServerError, err.Error())
 		return

@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 
 	"transcendance/models"
 )
@@ -74,13 +75,19 @@ func AccrueBoosterPile(db *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 	if err != nil {
 		return pile, err
 	}
-	if !accrueBoosterPile(&pile, now) {
-		return pile, nil
-	}
-	if err := db.Save(&pile).Error; err != nil {
-		return pile, err
-	}
-	return pile, nil
+	// The pile is read again locked, so the count saved back cannot overwrite
+	// a booster taken out by a concurrent opening
+	err = db.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Clauses(clause.Locking{Strength: "UPDATE"}).
+			Where("owner_id = ?", ownerID).First(&pile).Error; err != nil {
+			return err
+		}
+		if !accrueBoosterPile(&pile, now) {
+			return nil
+		}
+		return tx.Save(&pile).Error
+	})
+	return pile, err
 }
 
 // ConsumePileBooster takes one default booster out of a user's pile inside a

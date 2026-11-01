@@ -351,17 +351,22 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Streak = dc.streakTileData(c, &state)
 	}
 
+	// The pile of default boosters tops itself up over time, and only belongs
+	// to one's own inventory. It counts in the boosters tab from every tab
+	var pile *models.BoosterPile
+	if v.Username == user.Username {
+		accrued, err := controllers.AccrueBoosterPile(dc.DB, userID)
+		if err != nil {
+			fail("booster pile", err)
+			return
+		}
+		pile = &accrued
+		v.TotalBoosters += int64(pile.Count)
+	}
+
 	if v.Tab == inventoryTabBoosters {
-		// The pile of default boosters tops itself up over time, and only
-		// shows on one's own inventory
-		if v.Username == user.Username {
-			pile, err := controllers.AccrueBoosterPile(dc.DB, userID)
-			if err != nil {
-				fail("booster pile", err)
-				return
-			}
-			v.Pile = dc.pileTileData(c, &pile)
-			v.TotalBoosters += int64(pile.Count)
+		if pile != nil {
+			v.Pile = dc.pileTileData(c, pile)
 		}
 		if err := dc.inventoryBoosters(c, userID, v); err != nil {
 			fail("boosters", err)
