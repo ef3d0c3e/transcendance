@@ -162,15 +162,8 @@
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 		{{ if not .Data.Own }}
-		<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-block=true
-			data-labeladd="{{ .T "friends-add" }}"
-			data-labeldeny="{{ .T "friends-deny" }}"
-			data-labelaccept="{{ .T "friends-accept" }}"
-			data-labelblock="{{ .T "friends-block" }}"
-			data-labelunblock="{{ .T "friends-unblock" }}"
-			data-labelcancel="{{ .T "friends-cancel" }}"
-			data-labelunfriend="{{ .T "friends-unfriend" }}">
-		</div>
+		<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-relation="{{ .Data.Relation }}" data-block
+			{{ template "friend-labels" . }}></div>
 		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
 		{{ end }}
 		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
