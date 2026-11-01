@@ -14,6 +14,9 @@
 		// Labels of the sound switch, while the sound is on and off
 		soundOnLabel = "Sound on",
 		soundOffLabel = "Sound off",
+		// Button cutting the spin short, and what screen readers hear meanwhile
+		skipLabel = "Skip",
+		spinningLabel = "Opening the pack…",
 	} = $props();
 
 	let muted = $state(loadMuted());
@@ -45,6 +48,11 @@
 	let priceHtml = $state("");
 	// Rare and legendary landings flash the whole stage
 	let stageFlash = $state({ key: 0, rarity: "" });
+	// Read by screen readers: the opening started, then the cards it gave
+	let announcement = $state("");
+	let skipButton = $state();
+	// Ends the wait for the reels at once, set while they turn
+	let skipWait = null;
 	// The page's form, with its open button for boosters left in the stack,
 	// and its buy button once they are all opened
 	let pageForm;
@@ -102,6 +110,15 @@
 	// Period of the reels' sway, picked per reel so they never move in sync
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
+	// Spin length when the user asked for less motion: the reels barely turn
+	const REDUCED_SPIN_MIN_MS = 500;
+	const REDUCED_SPIN_MAX_MS = 700;
+	// Landing order of rarities, the best one plays when the spin is skipped
+	const RARITY_RANK = { common: 0, rare: 1, legendary: 2 };
+
+	function reducedMotion() {
+		return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
 
 	// Scale the cards so the reels fill the viewport width, while a whole
 	// card stays visible in height
@@ -277,10 +294,53 @@
 		fadeCells();
 	}
 
-	function delay(ms) {
+	// Wait for the reels to stop, or for the spin to be skipped
+	function waitForReels(ms) {
 		return new Promise((resolve) => {
-			setTimeout(resolve, ms);
+			skipWait = resolve;
+			timers.push(setTimeout(resolve, ms));
 		});
+	}
+
+	// Every reel locks onto its card at once, the best landing plays alone
+	function skipSpin() {
+		if (!spinning || !skipWait) {
+			return;
+		}
+		const resolve = skipWait;
+		skipWait = null;
+		clearTimers();
+
+		const elements = stageElement.querySelectorAll(".pack-strip");
+		let best = null;
+		reels.forEach((reel, index) => {
+			const element = elements[index];
+			const winnerIndex = Math.max(0, reel.slots.findIndex((cell) => cell.win));
+			element.style.transition = "none";
+			element.style.transform = `translateY(${restOffset(element, winnerIndex)}px)`;
+			if (!reel.landed) {
+				reel.landed = true;
+				if (best === null || RARITY_RANK[reel.rarity] > RARITY_RANK[best]) {
+					best = reel.rarity;
+				}
+			}
+		});
+		// Where the cards now rest
+		fadeCells();
+		if (best !== null) {
+			sounds.land(best);
+			if (best !== "common") {
+				stageFlash = { key: stageFlash.key + 1, rarity: best };
+			}
+		}
+		resolve();
+	}
+
+	// Escape skips the spin too
+	function handleKeydown(event) {
+		if (event.key === "Escape" && spinning) {
+			skipSpin();
+		}
 	}
 
 	// Opens the booster of the form, or buys one of the collection with coins
@@ -311,6 +371,7 @@
 			owned,
 			coins: data.coins,
 			coinsLabel: data.coinsLabel ?? "",
+			summary: data.summary ?? "",
 		};
 	}
 
@@ -375,8 +436,12 @@
 	function spinReels(stacks) {
 		const elements = stageElement.querySelectorAll(".pack-strip");
 
+		const [min, max] = reducedMotion()
+			? [REDUCED_SPIN_MIN_MS, REDUCED_SPIN_MAX_MS]
+			: [SPIN_MIN_MS, SPIN_MAX_MS];
+
 		return stacks.map((slots, index) => {
-			const duration = SPIN_MIN_MS + Math.random() * (SPIN_MAX_MS - SPIN_MIN_MS);
+			const duration = min + Math.random() * (max - min);
 			const winnerIndex = Math.max(0, slots.findIndex((cell) => cell.win));
 			const element = elements[index];
 
@@ -427,6 +492,7 @@
 		failed = false;
 		message = "";
 		stageAction = null;
+		announcement = spinningLabel;
 		hidePage();
 		setButtonsDisabled(true);
 		openButton?.classList.remove("is-ready");
@@ -462,11 +528,16 @@
 			spinning = true;
 			const durations = spinReels(result.reels);
 			startFading();
+			// Focus on the skip button: the keyboard can cut the spin short
+			await tick();
+			skipButton?.focus();
 
-			await delay(Math.max(...durations) + BOUNCE_MS + 80);
+			await waitForReels(Math.max(...durations) + BOUNCE_MS + 80);
+			skipWait = null;
 			timers.push(setTimeout(stopFading, FADE_SETTLE_MS));
 			spinning = false;
 			settled = true;
+			announcement = result.summary;
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			revealPage();
@@ -485,6 +556,7 @@
 			againButton?.focus();
 		} catch (error) {
 			showFailure(error instanceof PackError ? error.message : errorLabel);
+			announcement = "";
 		} finally {
 			busy = false;
 			setButtonsDisabled(false);
@@ -601,7 +673,12 @@
 	});
 </script>
 
-<div class="pack-stage" class:is-active={busy || reels.length > 0} aria-label={againLabel} bind:this={stageElement}>
+<svelte:window onkeydown={handleKeydown} />
+
+<!-- What the reels show, for screen readers: the decoy cards are hidden from them -->
+<p class="sr-only" role="status">{announcement}</p>
+
+<div class="pack-stage" class:is-active={busy || reels.length > 0} bind:this={stageElement}>
 	{#key stageFlash.key}
 		{#if stageFlash.rarity}
 			<div class="pack-stage-flash" data-rarity={stageFlash.rarity} aria-hidden="true"></div>
@@ -609,7 +686,7 @@
 	{/key}
 
 	{#if message}
-		<section class={failed ? "section-error" : "section-success"}>{message}</section>
+		<section class={failed ? "section-error" : "section-success"} role={failed ? "alert" : "status"}>{message}</section>
 	{/if}
 
 	{#if reels.length > 0}
@@ -621,7 +698,9 @@
 					<div class="pack-window">
 						<div class="pack-strip">
 							{#each reel.slots as cell}
-								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}>
+								<!-- Only the won card, once landed, is reachable: the rest are decoys -->
+								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}
+									inert={!(cell.win && reel.landed)} aria-hidden={cell.win && reel.landed ? undefined : "true"}>
 									<div class="pack-cell-inner">
 										{@html cell.html}
 									</div>
@@ -638,7 +717,11 @@
 	{/if}
 
 	<div class="pack-stage-actions">
-		{#if stageAction}
+		{#if spinning}
+			<button type="button" class="pack-skip" bind:this={skipButton} onclick={skipSpin}>
+				{skipLabel}
+			</button>
+		{:else if stageAction}
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
 				<span class="pack-again-shine" aria-hidden="true"></span>
 				{againLabel}
@@ -675,8 +758,27 @@
 		cursor: pointer;
 	}
 
+	/* Dimmed with a muted color, not opacity, so its label stays readable */
 	.pack-sound[aria-pressed="false"] {
-		opacity: 0.6;
+		color: var(--color-text-muted);
+	}
+
+	/* Discreet beside the reels, only for whoever wants the cards now */
+	.pack-skip {
+		align-self: center;
+		padding: 0.5rem 1.4rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--color-bg-2) 85%, transparent);
+		color: var(--color-text);
+		border: 1px solid color-mix(in srgb, var(--color-text) 25%, transparent);
+		backdrop-filter: blur(6px);
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--color-bg-2);
+		}
 	}
 	.pack-reels {
 		--pack-scale: 0.5;

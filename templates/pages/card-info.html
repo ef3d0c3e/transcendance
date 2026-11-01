@@ -4,7 +4,7 @@
 	<li><strong>Name:</strong> {{ .Data.Card.Name }}</li>
 	<li><strong>Collection:</strong> {{ .Data.Collection.Name }}</li>
 	<li><strong>Collection ID:</strong> {{ .Data.Collection.ID }}</li>
-	<li><strong>Artwork</strong><img src="/cards/{{ .Data.ID }}/artwork"></li>
-	<li><strong>Thumbnail</strong><img src="/cards/{{ .Data.ID }}/thumbnail"></li>
+	<li><strong>Artwork</strong><img src="/cards/{{ .Data.ID }}/artwork" alt="Artwork"></li>
+	<li><strong>Thumbnail</strong><img src="/cards/{{ .Data.ID }}/thumbnail" alt="Thumbnail"></li>
 <ul>
 {{ end }}
