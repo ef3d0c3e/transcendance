@@ -195,14 +195,14 @@ import { openTopup } from './topup.js';
 
 // Friend Button
 {
-	if (document.querySelector('.friend-button') !== undefined) {
+	if (document.querySelector('.friend-button') !== null) {
 		const targets = document.querySelectorAll('.friend-button');
 		for (const target of targets) {
 			mount(FriendButton, {
-				target: target,
+				target,
 				props: {
 					dataset: target.dataset,
-				}
+				},
 			});
 		}
 	}
