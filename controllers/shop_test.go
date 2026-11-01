@@ -1,6 +1,8 @@
 package controllers_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -69,6 +71,7 @@ func shopBoosters(t *testing.T, username string) []models.Booster {
 	var boosters []models.Booster
 	require.NoError(t, tests.DB.
 		Where("owner_id = ?", user.ID).
+		Order("id").
 		Find(&boosters).
 		Error)
 	return boosters
@@ -87,8 +90,11 @@ func shopBody(rec *httptest.ResponseRecorder) string {
 
 func TestShopGetListsBoosters(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "shoplist", "foo-bar-qux", 0)
+	cookie := login(t, router, "shoplist", "foo-bar-qux")
 
-	rec := shopRequest(t, router, http.MethodGet, "/shop", nil, nil)
+	// Boosters are sold from the inventory
+	rec := shopRequest(t, router, http.MethodGet, "/inventory", nil, cookie)
 
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
@@ -110,29 +116,30 @@ func TestShopGetListsBoosters(t *testing.T) {
 	require.Contains(t, body, `data-label-quantity="Quantity"`)
 }
 
-func TestShopGetAnonymousHidesCheckout(t *testing.T) {
+func TestShopGetRedirectsToInventory(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 
 	rec := shopRequest(t, router, http.MethodGet, "/shop", nil, nil)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/inventory", rec.Header().Get("Location"))
 
-	require.Equal(t, http.StatusOK, rec.Code)
-	body := shopBody(rec)
-	require.Contains(t, body, "Log in to get coins and buy boosters")
-	require.NotContains(t, body, "/shop/topup")
-	require.NotContains(t, body, `id="shop-topup-popup"`)
-	require.NotContains(t, body, "Balance:")
-	// The buy popup must not advertise a balance to guests
-	require.NotContains(t, body, "data-coins")
+	// Purchase notices follow
+	rec = shopRequest(t, router, http.MethodGet, "/shop?topup=medium", nil, nil)
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 }
 
 func TestShopGetFollowsLocale(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 
-	rec := shopRequest(t, router, http.MethodGet, "/shop?lang=fr", nil, nil)
+	createAccount(t, router, "shoplocale", "foo-bar-qux", 0)
+	cookie := login(t, router, "shoplocale", "foo-bar-qux")
+
+	rec := shopRequest(t, router, http.MethodGet, "/inventory?lang=fr", nil, cookie)
 
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
-	require.Contains(t, body, "Boutique")
+	require.Contains(t, body, "Solde")
 	require.Contains(t, body, "Développement")
 	require.Contains(t, body, "250 pièces")
 }
@@ -145,7 +152,7 @@ func TestShopTopupRequiresLogin(t *testing.T) {
 	}, nil)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=auth", rec.Header().Get("Location"))
+	require.Equal(t, "/login", rec.Header().Get("Location"))
 }
 
 func TestShopTopupUnknownPack(t *testing.T) {
@@ -158,8 +165,43 @@ func TestShopTopupUnknownPack(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=pack", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?error=pack", rec.Header().Get("Location"))
 	require.Equal(t, uint(0), shopBalance(t, "shopcarol"))
+}
+
+func TestShopTopupJSON(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "shopjson", "foo-bar-qux", 0)
+	cookie := login(t, router, "shopjson", "foo-bar-qux")
+
+	topup := func(pack string) *httptest.ResponseRecorder {
+		req := httptest.NewRequest(http.MethodPost, "/shop/topup", strings.NewReader(url.Values{
+			"pack": {pack},
+		}.Encode()))
+		req.Header.Set("Accept-Language", "en")
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		req.AddCookie(cookie)
+		rec := httptest.NewRecorder()
+		router.ServeHTTP(rec, req)
+		return rec
+	}
+
+	// The opening page tops up without leaving: the new balance, no redirect
+	rec := topup("medium")
+	require.Equal(t, http.StatusOK, rec.Code)
+	var result struct {
+		Coins      uint   `json:"coins"`
+		CoinsLabel string `json:"coinsLabel"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &result))
+	require.Equal(t, uint(500), result.Coins)
+	require.Equal(t, "500 coins", stripIsolation(result.CoinsLabel))
+	require.Equal(t, uint(500), shopBalance(t, "shopjson"))
+
+	rec = topup("unknown")
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Equal(t, uint(500), shopBalance(t, "shopjson"))
 }
 
 func TestShopTopupCreditsCoins(t *testing.T) {
@@ -172,11 +214,11 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?topup=medium", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 	require.Equal(t, uint(500), shopBalance(t, "shopdave"))
 
 	// The shop shows the new balance and confirms the checkout
-	rec = shopRequest(t, router, http.MethodGet, "/shop?topup=medium", nil, cookie)
+	rec = shopRequest(t, router, http.MethodGet, "/inventory?topup=medium", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
 	require.Contains(t, body, "Balance: 500 coins")
@@ -186,6 +228,11 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	require.Contains(t, body, `id="shop-topup-popup"`)
 	require.Contains(t, body, "Buy more coins")
 	require.Contains(t, body, "€4.49")
+	// The biggest packs
+	require.Contains(t, body, "5,000 coins")
+	require.Contains(t, body, "€29.99")
+	require.Contains(t, body, "10,000 coins")
+	require.Contains(t, body, "€49.99")
 
 	// A second pack stacks on top of the first
 	rec = shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
@@ -197,8 +244,10 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 
 func TestShopGetShowsCollectionTile(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "shoptile", "foo-bar-qux", 0)
+	cookie := login(t, router, "shoptile", "foo-bar-qux")
 
-	rec := shopRequest(t, router, http.MethodGet, "/shop", nil, nil)
+	rec := shopRequest(t, router, http.MethodGet, "/inventory", nil, cookie)
 
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
@@ -220,7 +269,7 @@ func TestShopGetLoggedInShowsCoins(t *testing.T) {
 	}, cookie)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 
-	rec = shopRequest(t, router, http.MethodGet, "/shop", nil, cookie)
+	rec = shopRequest(t, router, http.MethodGet, "/inventory", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
 	require.Contains(t, body, "Balance: 1,000 coins")
@@ -261,7 +310,7 @@ func TestShopBuyRequiresLogin(t *testing.T) {
 	}, nil)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=auth", rec.Header().Get("Location"))
+	require.Equal(t, "/login", rec.Header().Get("Location"))
 }
 
 func TestShopBuyUnknownCollection(t *testing.T) {
@@ -274,7 +323,7 @@ func TestShopBuyUnknownCollection(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=collection", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?error=collection", rec.Header().Get("Location"))
 	require.Equal(t, uint(0), shopBalance(t, "shopbuy"))
 	require.Empty(t, shopBoosters(t, "shopbuy"))
 }
@@ -295,7 +344,7 @@ func TestShopBuyInsufficientFunds(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=funds", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
 	require.Equal(t, uint(100), shopBalance(t, "shopfiona"))
 	require.Empty(t, shopBoosters(t, "shopfiona"))
 }
@@ -315,22 +364,15 @@ func TestShopBuyAddsBoosterToInventory(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?bought=1", rec.Header().Get("Location"))
 	// 500 credited, one 250 coin booster bought
 	require.Equal(t, uint(250), shopBalance(t, "shopgail"))
 
-	// The booster lands in the inventory, ready for /opening
+	// The booster lands in the inventory, and the buyer on its opening
 	boosters := shopBoosters(t, "shopgail")
 	require.Len(t, boosters, 1)
 	require.Equal(t, uint(1), boosters[0].CollectionID)
 	require.Equal(t, uint(5), boosters[0].Size)
-
-	// The shop confirms the purchase and links to the inventory
-	rec = shopRequest(t, router, http.MethodGet, "/shop?bought=1", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	body := shopBody(rec)
-	require.Contains(t, body, "A Development booster has been added to your inventory")
-	require.Contains(t, body, "/inventory?tab=boosters")
+	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
 }
 
 func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
@@ -349,8 +391,6 @@ func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	// The redirect carries the quantity so the banner can count the boosters
-	require.Equal(t, "/shop?bought=1&qty=3", rec.Header().Get("Location"))
 	// 1000 credited, three 250 coin boosters bought
 	require.Equal(t, uint(250), shopBalance(t, "shophank"))
 
@@ -361,16 +401,8 @@ func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
 		require.Equal(t, uint(5), booster.Size)
 	}
 
-	rec = shopRequest(t, router, http.MethodGet, "/shop?bought=1&qty=3", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	body := shopBody(rec)
-	require.Contains(t, body, "3 Development boosters have been added to your inventory")
-	require.Contains(t, body, "/inventory?tab=boosters")
-
-	// The banner plural follows the locale too
-	rec = shopRequest(t, router, http.MethodGet, "/shop?bought=1&qty=3&lang=fr", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, shopBody(rec), "3 boosters Développement ont été ajoutés à votre inventaire")
+	// The first one opens, the page chains into the others
+	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
 }
 
 func TestShopBuyRejectsInvalidQuantity(t *testing.T) {
@@ -391,7 +423,7 @@ func TestShopBuyRejectsInvalidQuantity(t *testing.T) {
 		}, cookie)
 
 		require.Equal(t, http.StatusSeeOther, rec.Code)
-		require.Equal(t, "/shop?error=quantity", rec.Header().Get("Location"), "quantity %q", quantity)
+		require.Equal(t, "/inventory?error=quantity", rec.Header().Get("Location"), "quantity %q", quantity)
 	}
 
 	// Nothing was sold and the balance is untouched
@@ -399,7 +431,7 @@ func TestShopBuyRejectsInvalidQuantity(t *testing.T) {
 	require.Empty(t, shopBoosters(t, "shopiris"))
 
 	// The shop explains the range it accepts
-	rec = shopRequest(t, router, http.MethodGet, "/shop?error=quantity", nil, cookie)
+	rec = shopRequest(t, router, http.MethodGet, "/inventory?error=quantity", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	require.Contains(t, shopBody(rec), "Enter a quantity between 1 and 10")
 }
@@ -421,7 +453,7 @@ func TestShopBuyInsufficientFundsForBulk(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=funds", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
 	// The whole order is refused, not just the boosters that do not fit
 	require.Equal(t, uint(500), shopBalance(t, "shopjude"))
 	require.Empty(t, shopBoosters(t, "shopjude"))

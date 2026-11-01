@@ -1,0 +1,2 @@
+title = French Bulldog
+description = The French Bulldog (French: Bouledogue Français) is a French breed of companion dog or toy dog. It appeared in Paris in the mid-nineteenth century, apparently the result of cross-breeding of Toy Bulldogs imported from England and local Parisian ratters.

@@ -3,6 +3,7 @@
 <html theme="{{ .Theme }}">
 
 <head>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="/static/vendor/e-layout.min.js"></script>
 	<link rel="stylesheet" href="/static/base.css">
 
@@ -24,7 +25,9 @@
 
 <body>
 	<header>
-		<h1 class="header-title">Transcendance</h1>
+		<h1 class="header-title">
+			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
+		</h1>
 
 		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
 		<label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
@@ -43,12 +46,11 @@
 			</label>
 
 			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
-				<li><a href="/cards/search/" {{ if or (hasPrefix .Path "/cards") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
+				<li><a href="/cards/search/" {{ if hasPrefix .Path "/cards" }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
-				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
+				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
 				{{ end }}
-				<li><a href="/shop" {{ if hasPrefix .Path "/shop" }}aria-current="page"{{ end }}>{{ .T "navbar-shop" }}</a></li>
 			</ul>
 
 			<div class="nav-end">

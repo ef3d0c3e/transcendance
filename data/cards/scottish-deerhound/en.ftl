@@ -1,0 +1,2 @@
+title = Scottish Deerhound
+description = The Scottish Deerhound, or simply the Deerhound, is a breed of large sighthound, once bred to hunt the red deer by coursing. In outward appearance it is similar to the Greyhound, but larger and more heavily boned, with a rough coat.
