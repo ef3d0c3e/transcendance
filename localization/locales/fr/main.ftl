@@ -91,7 +91,6 @@ user-status-last-seen = Dernière activité :
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
 navbar-skip = Aller au contenu
-navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-profile = Votre profil

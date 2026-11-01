@@ -91,7 +91,6 @@ friends-empty-received = You have no friend request
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
 navbar-skip = Skip to content
-navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
 navbar-friends = Friends
