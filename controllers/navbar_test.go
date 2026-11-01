@@ -17,7 +17,8 @@ func TestNavbarVisitor(t *testing.T) {
 	body := getPage(t, router, "/cards/search/")
 	require.Contains(t, body, `id="login-popup"`)
 	require.Contains(t, body, `id="register-popup"`)
-	require.Contains(t, body, `<li><a href="/cards/search/" aria-current="page">Cards</a></li>`)
+	// Cards are browsed from the inventory
+	require.NotContains(t, body, `>Cards</a></li>`)
 	// Boosters are bought from the inventory, there is no shop page
 	require.NotContains(t, body, `href="/shop"`)
 	// Visitors have no inventory or account
@@ -36,7 +37,7 @@ func TestNavbarAuthenticated(t *testing.T) {
 	require.Contains(t, body, `<span>navbar1</span>`)
 	require.Contains(t, body, `data-logout="/api/logout"`)
 	require.Contains(t, body, `<li><a href="/inventory" >Inventory</a></li>`)
-	require.Contains(t, body, `<li><a href="/cards/search/" aria-current="page">Cards</a></li>`)
+	require.NotContains(t, body, `>Cards</a></li>`)
 	require.NotContains(t, body, `id="login-popup"`)
 	require.NotContains(t, body, `id="register-popup"`)
 }
