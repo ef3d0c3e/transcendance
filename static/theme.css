@@ -1989,6 +1989,48 @@ section {
     margin: 0;
 }
 
+/* Owned or all cards toggle, a segmented control */
+.inventory-show {
+    display: inline-flex;
+    padding: 0.2rem;
+
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.55rem;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+
+        min-height: 1.85rem;
+        padding: 0.2rem 0.75rem;
+
+        color: var(--color-text);
+        border-radius: 0.4rem;
+
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-decoration: none;
+
+        transition: background-color 120ms ease;
+
+        &:hover {
+            color: var(--color-text);
+            background: color-mix(in srgb, var(--color-bg-4), black 10%);
+        }
+
+        &:focus-visible {
+            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline-offset: 2px;
+        }
+
+        &[aria-current="page"] {
+            color: var(--color-text-alt);
+            background: var(--color-accent-secondary);
+        }
+    }
+}
+
 /* Card filters and sort, part of the search form */
 .inventory-filters {
     display: flex;

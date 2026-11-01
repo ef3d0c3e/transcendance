@@ -90,6 +90,40 @@ func TestInventorySearchOwnedOnly(t *testing.T) {
 	require.Contains(t, body, `<p class="inventory-count">2 cards found</p>`)
 }
 
+func TestInventoryAllCards(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "invall1", "foo-bar-baz-qux", 0)
+	giveCards(t, "invall1", cardFordT, 2)
+	giveCards(t, "invall1", cardTungsten, 1)
+	cookie := login(t, router, "invall1", "foo-bar-baz-qux")
+
+	// The toggle defaults to the owned cards
+	owned := getInventory(t, router, cookie, "/inventory?tab=cards")
+	require.Contains(t, owned, `<a href="/inventory?tab=cards" aria-current="page">Owned cards</a>`)
+	require.Contains(t, owned, `<a href="/inventory?show=all&amp;tab=cards" >All cards</a>`)
+	require.Len(t, cardTitles(owned), 2)
+
+	// Every card of the catalog, the missing ones grayed out, in collection order
+	all := getInventory(t, router, cookie, "/inventory?show=all")
+	require.Contains(t, all, `<a href="/inventory?show=all&amp;tab=cards" aria-current="page">All cards</a>`)
+	require.Equal(t, cardTitles(getPage(t, router, "/cards/search/")), cardTitles(all))
+	require.Equal(t, 1, countCard(all, "Ford Model T"))
+	require.Equal(t, len(cardTitles(all))-2, strings.Count(all, `class="card-container is-missing"`))
+	// Owned cards keep their popup details, effects only apply to owned copies
+	require.Contains(t, all, `data-copies="2"`)
+	require.NotContains(t, all, `name="effect"`)
+	require.Contains(t, all, `<option value="missing" >Missing first</option>`)
+	require.Contains(t, all, `<input type="hidden" name="show" value="all">`)
+	require.Contains(t, all, `href="?show=all&amp;tab=cards&amp;p=2"`)
+
+	// Searching and filtering keep the toggle
+	search := getInventory(t, router, cookie, "/inventory?show=all&q=vehicle")
+	require.Contains(t, cardTitles(search), "Flying Scotsman")
+	require.Contains(t, cardTitles(search), "Ford Model T")
+	missing := getInventory(t, router, cookie, "/inventory?show=all&rarity=rare&q=tungsten")
+	require.Contains(t, missing, `<a href="/inventory?show=all&amp;tab=cards">Clear search</a>`)
+}
+
 func TestInventorySearchNoMatch(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "invsearch3", "foo-bar-baz-qux", 0)
@@ -278,7 +312,7 @@ func TestInventoryBoostersEmpty(t *testing.T) {
 	require.Contains(t, body, `data-price="250"`)
 	require.Contains(t, body, `id="shop-buy-popup" data-coins="0"`)
 	// With the balance and the coin top-up
-	require.Contains(t, body, "Balance: 0 coins")
+	require.Contains(t, body, `Balance: <span id="shop-coins">0 coins</span>`)
 	require.Contains(t, body, `id="shop-topup-popup"`)
 	require.NotContains(t, body, "No boosters yet")
 

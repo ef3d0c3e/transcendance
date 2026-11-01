@@ -221,7 +221,7 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	rec = shopRequest(t, router, http.MethodGet, "/inventory?topup=medium", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
-	require.Contains(t, body, "Balance: 500 coins")
+	require.Contains(t, body, `Balance: <span id="shop-coins">500 coins</span>`)
 	require.Contains(t, body, "500 coins have been added to your balance")
 	require.Contains(t, body, "/shop/topup")
 	// Packs are sold from a popup, each with a display price in euros
@@ -272,7 +272,7 @@ func TestShopGetLoggedInShowsCoins(t *testing.T) {
 	rec = shopRequest(t, router, http.MethodGet, "/inventory", nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
-	require.Contains(t, body, "Balance: 1,000 coins")
+	require.Contains(t, body, `Balance: <span id="shop-coins">1,000 coins</span>`)
 	require.Contains(t, body, `data-coins="1000"`)
 }
 

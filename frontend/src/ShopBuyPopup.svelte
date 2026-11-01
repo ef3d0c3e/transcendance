@@ -40,8 +40,8 @@
 	const labelCoins = $derived(target.dataset.labelCoins ?? "");
 	// Cap of one checkout, advertised by the shop page (maxBuyQuantity in Go)
 	const maxQuantity = $derived(Number(target.dataset.maxQuantity ?? 10));
-	// Coin balance is only advertised when logged in
-	const coins = $derived(target.dataset.coins);
+	// Coin balance is only advertised when logged in, updated by top-ups
+	let coins = $derived(target.dataset.coins);
 	const total = $derived(price * quantity);
 	const canAfford = $derived(
 		coins !== undefined && Number(coins) >= total,
@@ -65,11 +65,22 @@
 		dialog.close();
 	}
 
-	// Short on coins: offer the packs that bring the balance up to the total
+	// Short on coins: offer the packs that bring the balance up to the total,
+	// then come back to the same booster and quantity with the new balance
 	function topUp() {
 		const missing = total - Number(coins);
+		const booster = returnFocus;
+		const wanted = quantity;
 		close();
-		openTopup(missing);
+		openTopup(missing, (result) => {
+			coins = result.coins;
+			const balance = document.querySelector("#shop-coins");
+			if (balance && result.coinsLabel) {
+				balance.textContent = result.coinsLabel;
+			}
+			show(booster);
+			quantity = wanted;
+		});
 	}
 
 	function onDialogClose() {
