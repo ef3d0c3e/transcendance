@@ -20,6 +20,10 @@
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
+	<!-- Added to the home screen, the site opens as an app, without the browser's bars -->
+	<link rel="manifest" href="/static/manifest.json">
+	<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
 	<script type="module" src="/frontend/main.js"></script>
 </head>
@@ -48,11 +52,12 @@
 				</svg>
 			</label>
 
-			<ul class="nav-links">
+			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
 				<li><a href="/cards/search/" {{ if hasPrefix .Path "/cards" }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
 				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
+				<li><a href="/friends" {{ if hasPrefix .Path "/friends" }}aria-current="page"{{ end }}>{{ .T "navbar-friends" }}</a></li>
 				{{ end }}
 			</ul>
 

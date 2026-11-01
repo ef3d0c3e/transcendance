@@ -71,6 +71,9 @@ const (
 
 var inventoryEffects = []string{inventoryEffectNone, inventoryEffectFoil}
 
+// Cards tab toggle value listing every card of the catalog, "" lists the owned cards
+const inventoryShowAll = "all"
+
 // Card sorts, relevance is only available when searching
 const (
 	inventorySortRelevance = "relevance"
@@ -103,6 +106,22 @@ func defaultInventorySort(query string) string {
 	return inventorySortRecent
 }
 
+// Sorts offered on the cards tab, the catalog's ones when listing every card
+func (v *inventoryView) sorts() []string {
+	if v.All {
+		return append(slices.Clone(catalogSorts), catalogSortMissing)
+	}
+	return inventorySorts
+}
+
+// Sort used when none is picked on the cards tab
+func (v *inventoryView) defaultSort() string {
+	if v.All {
+		return defaultCatalogSort(v.Query)
+	}
+	return defaultInventorySort(v.Query)
+}
+
 // Everything needed to render the inventory page
 type inventoryView struct {
 	// Displayed tab, cards or boosters
@@ -110,6 +129,8 @@ type inventoryView struct {
 	// Viewed user
 	Username string
 	Query    string
+	// Every card of the catalog instead of the owned ones
+	All bool
 	// Card filters, "" when unfiltered
 	Rarity string
 	Effect string
@@ -147,6 +168,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	searching := v.Tab == inventoryTabCards && (strings.TrimSpace(v.Query) != "" || v.Rarity != "" || v.Effect != "")
 	if v.Message == "" && len(v.Items) == 0 {
 		switch {
+		case searching && v.All:
+			v.Message = dc.Renderer.T(c, "card-search-empty")
 		case searching:
 			v.Message = dc.Renderer.T(c, "inventory-message-no-match")
 		case v.Tab == inventoryTabBoosters:
@@ -187,6 +210,17 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		return "/inventory?" + params.Encode()
 	}
+	// The cards tab, listing the owned cards or all of them
+	cardsUrl := func(all bool) string {
+		params := url.Values{"tab": {inventoryTabCards}}
+		if viewed != "" {
+			params.Set("u", viewed)
+		}
+		if all {
+			params.Set("show", inventoryShowAll)
+		}
+		return "/inventory?" + params.Encode()
+	}
 	totalPages := v.PageItems / int64(inventoryPageSize)
 	if v.PageItems%int64(inventoryPageSize) != 0 {
 		totalPages = totalPages + 1
@@ -206,6 +240,11 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"Items":             v.Items,
 		"Query":             v.Query,
 		"Filtered":          searching,
+		"All":               v.All,
+		"ShowOwnedUrl":      cardsUrl(false),
+		"ShowAllUrl":        cardsUrl(true),
+		// Clears the search and filters, keeping the toggle
+		"ClearUrl": cardsUrl(v.All),
 		"Viewed":            viewed,
 		"Pages":             int(totalPages),
 		"Locale":            dc.Renderer.Localizer.GetLocale(c),
@@ -232,12 +271,18 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			}
 			return dc.Renderer.T(c, "inventory-filter-effect-"+value)
 		})
-		defaultSort := defaultInventorySort(v.Query)
-		sorts := inventorySorts
+		defaultSort := v.defaultSort()
+		sorts := v.sorts()
 		if defaultSort != inventorySortRelevance {
 			sorts = sorts[1:]
 		}
 		sortOptions := controllers.SelectOptions(sorts, v.Sort, func(value string) string {
+			switch value {
+			case catalogSortNumber:
+				return dc.Renderer.T(c, "catalog-sort-number")
+			case catalogSortMissing:
+				return dc.Renderer.T(c, "catalog-sort-missing")
+			}
 			return dc.Renderer.T(c, "inventory-sort-"+value)
 		})
 		// The default sort isn't submitted, so a new search ranks by relevance
@@ -256,6 +301,9 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.Tab != inventoryTabBoosters {
 		params.Set("tab", v.Tab)
 	}
+	if v.All {
+		params.Set("show", inventoryShowAll)
+	}
 	if v.Query != "" {
 		params.Set("q", v.Query)
 	}
@@ -265,7 +313,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.Effect != "" {
 		params.Set("effect", v.Effect)
 	}
-	if v.Tab == inventoryTabCards && v.Sort != defaultInventorySort(v.Query) {
+	if v.Tab == inventoryTabCards && v.Sort != v.defaultSort() {
 		params.Set("sort", v.Sort)
 	}
 	paginatorUrl := "?p="
@@ -298,7 +346,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	// filters or sort are
 	cardsAsked := c.Query("tab") == inventoryTabCards
 	if c.Query("tab") == "" {
-		for _, param := range []string{"q", "rarity", "effect", "sort"} {
+		for _, param := range []string{"show", "q", "rarity", "effect", "sort"} {
 			cardsAsked = cardsAsked || c.Query(param) != ""
 		}
 	}
@@ -306,15 +354,17 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Tab = inventoryTabCollections
 	} else if cardsAsked {
 		v.Tab = inventoryTabCards
+		v.All = c.Query("show") == inventoryShowAll
 		v.Query = c.Query("q")
 		if rarity := c.Query("rarity"); slices.Contains(inventoryRarities, rarity) {
 			v.Rarity = rarity
 		}
-		if effect := c.Query("effect"); slices.Contains(inventoryEffects, effect) {
+		// Effects are those of owned copies
+		if effect := c.Query("effect"); !v.All && slices.Contains(inventoryEffects, effect) {
 			v.Effect = effect
 		}
-		v.Sort = defaultInventorySort(v.Query)
-		if sort := c.Query("sort"); slices.Contains(inventorySorts, sort) &&
+		v.Sort = v.defaultSort()
+		if sort := c.Query("sort"); slices.Contains(v.sorts(), sort) &&
 			(sort != inventorySortRelevance || v.Sort == inventorySortRelevance) {
 			v.Sort = sort
 		}
@@ -338,7 +388,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 
 	fail := func(what string, err error) {
 		log.Printf("WARN failed to get %s for user '%s': %s", what, v.Username, err)
-		*v = inventoryView{Tab: v.Tab, Username: v.Username, Query: v.Query, Rarity: v.Rarity, Effect: v.Effect, Sort: v.Sort, Page: 1}
+		*v = inventoryView{Tab: v.Tab, Username: v.Username, All: v.All, Query: v.Query, Rarity: v.Rarity, Effect: v.Effect, Sort: v.Sort, Page: 1}
 		v.Message = dc.Renderer.T(c, "inventory-message-fetch-fail")
 		dc.renderInventory(c, user, v)
 	}
@@ -358,6 +408,11 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	} else if v.Tab == inventoryTabBoosters {
 		if err := dc.inventoryBoosters(c, userID, userID == user.ID, v); err != nil {
 			fail("boosters", err)
+			return
+		}
+	} else if v.All {
+		if err := dc.inventoryAllCards(c, userID, v); err != nil {
+			fail("cards", err)
 			return
 		}
 	} else if err := dc.inventoryCards(c, userID, v); err != nil {
@@ -499,6 +554,39 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 			"Data": data,
 		})
 	}
+	return nil
+}
+
+// Fill the view with every card of the catalog, graying out the ones the user is missing
+func (dc *DataController) inventoryAllCards(c *gin.Context, userID uint, v *inventoryView) error {
+	var owned []cardStack
+	if err := dc.DB.
+		Model(&models.Card{}).
+		Select("card_id, COUNT(*) AS count, MIN(acquired) AS first_acquired, MAX(acquired) AS last_acquired").
+		Where("owner_id = ?", userID).
+		Group("card_id").
+		Scan(&owned).
+		Error; err != nil {
+		return err
+	}
+	catalog := &catalogView{
+		Query:  v.Query,
+		Rarity: v.Rarity,
+		Sort:   v.Sort,
+		Page:   v.Page,
+		Owned:  make(map[uint]bool, len(owned)),
+		Copies: make(map[uint]cardStack, len(owned)),
+	}
+	for _, stack := range owned {
+		catalog.Owned[stack.CardID] = true
+		catalog.Copies[stack.CardID] = stack
+	}
+	if err := dc.catalogCardItems(c, catalog); err != nil {
+		return err
+	}
+	v.Items = catalog.Items
+	v.Count = int64(catalog.Count)
+	v.PageItems = v.Count
 	return nil
 }
 
@@ -647,15 +735,22 @@ func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *i
 	return nil
 }
 
-// Get the global IDs of cards owned by a user that match a search
-func (dc *DataController) searchInventory(c *gin.Context, userID uint, query string) ([]uint, error) {
+// Global IDs of the cards a user owns, once each
+func (dc *DataController) ownedCardIDs(userID uint) ([]uint, error) {
 	var owned []uint
-	if err := dc.DB.
+	err := dc.DB.
 		Model(&models.Card{}).
 		Where("owner_id = ?", userID).
 		Distinct("card_id").
 		Pluck("card_id", &owned).
-		Error; err != nil {
+		Error
+	return owned, err
+}
+
+// Get the global IDs of cards owned by a user that match a search
+func (dc *DataController) searchInventory(c *gin.Context, userID uint, query string) ([]uint, error) {
+	owned, err := dc.ownedCardIDs(userID)
+	if err != nil {
 		return nil, err
 	}
 
