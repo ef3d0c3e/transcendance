@@ -49,6 +49,12 @@
 		height: 1.2em;
 	}
 
+	/* What is up in pending trades, said next to the spendable balance */
+	.shop-balance-locked {
+		font-weight: 450;
+		color: var(--color-text-muted);
+	}
+
 	.shop-login-hint {
 		margin: 0;
 
@@ -278,7 +284,8 @@
 	<div class="shop-header">
 		<div class="shop-wallet">
 			{{ if .Data.User }}
-			<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: {{ .Data.CoinsLabel }}</p>
+			<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: {{ .Data.CoinsLabel }}
+				{{- with .Data.CoinsLockedLabel }} <span class="shop-balance-locked">{{ . }}</span>{{ end }}</p>
 			<button type="button" class="shop-topup-open" aria-haspopup="dialog" aria-controls="shop-topup-popup">{{ .T "shop-topup-open" }}</button>
 			{{ else }}
 			<p class="shop-login-hint">{{ .T "shop-login-hint" }}</p>

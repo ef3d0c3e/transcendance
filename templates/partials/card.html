@@ -23,5 +23,8 @@
 	{{ with .Data.CardCopies }}{{ if gt . 1 }}
 	<span class="card-stack">×{{ . }}</span>
 	{{ end }}{{ end }}
+	{{ with .Data.CardLocked }}
+	<span class="card-locked">{{ . }}</span>
+	{{ end }}
 </div>
 {{ end }}

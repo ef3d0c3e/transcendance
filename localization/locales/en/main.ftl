@@ -252,6 +252,7 @@ inventory-search-count = { $count ->
     [one] { $count } card found
     *[other] { $count } cards found
 }
+inventory-locked-badge = { $count } in trades
 
 booster-pile-title = Default booster
 booster-pile-desc = { $count } random cards from all collections
@@ -310,6 +311,7 @@ shop-buy-view-inventory = View inventory
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
+shop-coins-locked = { $amount } up in trades
 
 index-title = Transcendance, collect trading cards
 index-heading = Collect, trade and show off your cards
@@ -450,12 +452,15 @@ trade-error-not-found = Trade offer not found
 trade-error-user = User not found
 trade-error-self = You cannot trade with yourself
 trade-error-empty-give = Offer at least one card or coins
-trade-error-empty-want = Request at least one card
+trade-error-empty-want = Request at least one card or coins
 trade-error-count = Invalid card count
 trade-error-items = Too many card stacks in the offer
 trade-error-card = Unknown card
 trade-error-duplicate = The same card stack appears twice
 trade-error-owned = Not enough copies of a card
+trade-error-locked = Some copies of a card are up in another trade
 trade-error-coins = Not enough coins
+trade-error-locked-coins = Some coins are up in another trade
+trade-error-want-coins = The other user does not have that many coins
 trade-error-state = This trade offer is not pending anymore
 trade-error-forbidden = This trade offer is not yours

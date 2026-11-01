@@ -367,9 +367,20 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			fail("boosters", err)
 			return
 		}
-	} else if err := dc.inventoryCards(c, userID, v); err != nil {
-		fail("cards", err)
-		return
+	} else {
+		// Copies up in pending trades are marked on one's own cards only
+		var committed *controllers.TradeCommitments
+		if v.Username == user.Username {
+			committed, err = controllers.TradeCommitmentsOf(dc.DB, userID, 0)
+			if err != nil {
+				fail("trade commitments", err)
+				return
+			}
+		}
+		if err := dc.inventoryCards(c, userID, v, committed); err != nil {
+			fail("cards", err)
+			return
+		}
 	}
 
 	dc.renderInventory(c, user, v)
@@ -435,8 +446,10 @@ func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[u
 	})
 }
 
-// Fill the view with the user's cards folded by card and foil, restricted to the search and filters if any
-func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *inventoryView) error {
+// Fill the view with the user's cards folded by card and foil, restricted to
+// the search and filters if any. The committed stacks mark the copies up in
+// pending trades, they are shown on one's own cards only
+func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *inventoryView, committed *controllers.TradeCommitments) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
 	cardsQuery := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID)
@@ -501,6 +514,11 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 		data["CardCopies"] = stack.Count
 		data["CardAcquiredFirst"] = stack.FirstAcquired.Format(time.RFC3339)
 		data["CardAcquiredLast"] = stack.LastAcquired.Format(time.RFC3339)
+		if committed != nil {
+			if locked := committed.Copies(stack.CardID, stack.Foil); locked > 0 {
+				data["CardLocked"] = dc.Renderer.T(c, "inventory-locked-badge", "count", int(locked))
+			}
+		}
 		setCardFoil(data, stack.Foil)
 		v.Items = append(v.Items, map[string]any{
 			"Data": data,

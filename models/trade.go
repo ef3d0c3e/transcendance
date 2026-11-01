@@ -41,6 +41,8 @@ type Trade struct {
 	Coins uint `gorm:"not null;default:0"`
 	// Cards requested from the receiver, JSON list of TradeItem
 	Want datatypes.JSON `gorm:"not null"`
+	// Coins requested from the receiver
+	WantCoins uint `gorm:"not null;default:0"`
 
 	// One of the trade states, e.g pending
 	State string `gorm:"not null;index"`

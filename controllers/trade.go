@@ -35,7 +35,60 @@ type tradeOffer struct {
 	Give      []models.TradeItem `json:"give"`
 	Coins     uint               `json:"coins"`
 	Want      []models.TradeItem `json:"want"`
+	WantCoins uint               `json:"want_coins"`
 	CounterID uint               `json:"counter_of"`
+}
+
+// tradeStackKey identifies a stack of identical copies in an inventory
+type tradeStackKey struct {
+	CardID uint
+	Foil   string
+}
+
+// TradeCommitments are the assets a user has put up in the give side of
+// their pending offers
+type TradeCommitments struct {
+	stacks map[tradeStackKey]uint
+	Coins  uint
+}
+
+// Copies of a stack put up in the pending offers
+func (tc *TradeCommitments) Copies(cardID uint, foil string) uint {
+	return tc.stacks[tradeStackKey{CardID: cardID, Foil: foil}]
+}
+
+// Free part of a balance: what the pending offers do not hold
+func (tc *TradeCommitments) Free(balance uint) uint {
+	if balance < tc.Coins {
+		return 0
+	}
+	return balance - tc.Coins
+}
+
+// TradeCommitmentsOf sums what a user put up in their pending offers,
+// skipping the given trade if any: a counter replaces its contents, freeing
+// what its previous version held
+func TradeCommitmentsOf(db *gorm.DB, userID uint, skipTradeID uint) (*TradeCommitments, error) {
+	query := db.Where("from_id = ? AND state = ?", userID, models.TradePending)
+	if skipTradeID != 0 {
+		query = query.Where("id <> ?", skipTradeID)
+	}
+	var trades []models.Trade
+	if err := query.Find(&trades).Error; err != nil {
+		return nil, err
+	}
+	commitments := TradeCommitments{stacks: make(map[tradeStackKey]uint)}
+	for i := range trades {
+		give, err := trades[i].GiveItems()
+		if err != nil {
+			return nil, err
+		}
+		for _, item := range give {
+			commitments.stacks[tradeStackKey{CardID: item.CardID, Foil: item.Foil}] += item.Count
+		}
+		commitments.Coins += trades[i].Coins
+	}
+	return &commitments, nil
 }
 
 // One offer row of the trades page
@@ -105,8 +158,10 @@ func (tc *Controller) checkTradeItems(c *gin.Context, items []models.TradeItem) 
 	return ""
 }
 
-// Check that a user owns enough copies of every stack, returns the message and status when not
-func (tc *Controller) checkTradeOwned(c *gin.Context, userID uint, items []models.TradeItem) (string, int) {
+// Check that a user owns enough copies of every stack, and when the stacks
+// are put up, that enough copies are not committed to another trade already,
+// returns the message and status when not
+func (tc *Controller) checkTradeOwned(c *gin.Context, userID uint, items []models.TradeItem, committed *TradeCommitments) (string, int) {
 	for _, item := range items {
 		var count int64
 		if err := tc.DB.Model(&models.Card{}).
@@ -118,13 +173,19 @@ func (tc *Controller) checkTradeOwned(c *gin.Context, userID uint, items []model
 		if count < int64(item.Count) {
 			return tc.Renderer.T(c, "trade-error-owned"), http.StatusBadRequest
 		}
+		if committed != nil {
+			free := count - int64(committed.Copies(item.CardID, item.Foil))
+			if free < int64(item.Count) {
+				return tc.Renderer.T(c, "trade-error-locked"), http.StatusBadRequest
+			}
+		}
 	}
 	return "", 0
 }
 
 // Check that an offer is well formed and that both sides own what they promise
-func (tc *Controller) validateOffer(c *gin.Context, fromID uint, toID uint, offer *tradeOffer) (string, int) {
-	if len(offer.Want) == 0 {
+func (tc *Controller) validateOffer(c *gin.Context, fromID uint, toID uint, offer *tradeOffer, counterID uint) (string, int) {
+	if len(offer.Want) == 0 && offer.WantCoins == 0 {
 		return tc.Renderer.T(c, "trade-error-empty-want"), http.StatusBadRequest
 	}
 	if len(offer.Give) == 0 && offer.Coins == 0 {
@@ -136,13 +197,23 @@ func (tc *Controller) validateOffer(c *gin.Context, fromID uint, toID uint, offe
 	if msg := tc.checkTradeItems(c, offer.Want); msg != "" {
 		return msg, http.StatusBadRequest
 	}
-	// Both sides own the cards they put up, the sender the coins too
-	if msg, status := tc.checkTradeOwned(c, fromID, offer.Give); msg != "" {
+	// What a side puts up must still be theirs to give: cards and coins up in
+	// another pending offer are locked there. A counter replaces the contents
+	// of its offer, so its previous version is not counted
+	committed, err := TradeCommitmentsOf(tc.DB, fromID, counterID)
+	if err != nil {
+		log.Printf("WARN failed to get commitments of user %d: %s", fromID, err)
+		return tc.Renderer.T(c, "trade-error-internal"), http.StatusInternalServerError
+	}
+	// The wanted cards are only requested, so they stay uncommitted
+	if msg, status := tc.checkTradeOwned(c, fromID, offer.Give, committed); msg != "" {
 		return msg, status
 	}
-	if msg, status := tc.checkTradeOwned(c, toID, offer.Want); msg != "" {
+	if msg, status := tc.checkTradeOwned(c, toID, offer.Want, nil); msg != "" {
 		return msg, status
 	}
+	// The coins are checked the same way, the offered ones against the free
+	// balance and the requested ones against the plain balance
 	if offer.Coins > 0 {
 		var from models.User
 		if err := tc.DB.Select("coins").First(&from, fromID).Error; err != nil {
@@ -151,6 +222,19 @@ func (tc *Controller) validateOffer(c *gin.Context, fromID uint, toID uint, offe
 		}
 		if offer.Coins > from.Coins {
 			return tc.Renderer.T(c, "trade-error-coins"), http.StatusBadRequest
+		}
+		if int64(offer.Coins) > int64(from.Coins)-int64(committed.Coins) {
+			return tc.Renderer.T(c, "trade-error-locked-coins"), http.StatusBadRequest
+		}
+	}
+	if offer.WantCoins > 0 {
+		var to models.User
+		if err := tc.DB.Select("coins").First(&to, toID).Error; err != nil {
+			log.Printf("WARN failed to get balance of user %d: %s", toID, err)
+			return tc.Renderer.T(c, "trade-error-internal"), http.StatusInternalServerError
+		}
+		if offer.WantCoins > to.Coins {
+			return tc.Renderer.T(c, "trade-error-want-coins"), http.StatusBadRequest
 		}
 	}
 	return "", 0
@@ -202,7 +286,7 @@ func (tc *Controller) TradePost(c *gin.Context) {
 		trade.ToID = target.ID
 	}
 
-	if msg, status := tc.validateOffer(c, trade.FromID, trade.ToID, &offer); msg != "" {
+	if msg, status := tc.validateOffer(c, trade.FromID, trade.ToID, &offer, offer.CounterID); msg != "" {
 		c.JSON(status, gin.H{"message": msg})
 		return
 	}
@@ -220,6 +304,7 @@ func (tc *Controller) TradePost(c *gin.Context) {
 	trade.Give = give
 	trade.Coins = offer.Coins
 	trade.Want = want
+	trade.WantCoins = offer.WantCoins
 	trade.State = models.TradePending
 
 	if offer.CounterID != 0 {
@@ -227,11 +312,12 @@ func (tc *Controller) TradePost(c *gin.Context) {
 		result := tc.DB.Model(&models.Trade{}).
 			Where("id = ? AND state = ?", trade.ID, models.TradePending).
 			Updates(map[string]any{
-				"from_id": trade.FromID,
-				"to_id":   trade.ToID,
-				"give":    trade.Give,
-				"coins":   trade.Coins,
-				"want":    trade.Want,
+				"from_id":    trade.FromID,
+				"to_id":      trade.ToID,
+				"give":       trade.Give,
+				"coins":      trade.Coins,
+				"want":       trade.Want,
+				"want_coins": trade.WantCoins,
 			})
 		if result.Error != nil {
 			log.Printf("WARN failed to counter trade %d: %s", trade.ID, result.Error)
@@ -295,6 +381,24 @@ func moveCards(tx *gorm.DB, fromID uint, toID uint, items []models.TradeItem) er
 	return nil
 }
 
+// Move coins between two owners, keeping them from going negative
+func moveCoins(tx *gorm.DB, fromID uint, toID uint, amount uint) error {
+	if amount == 0 {
+		return nil
+	}
+	result := tx.Model(&models.User{}).
+		Where("id = ? AND coins >= ?", fromID, amount).
+		Update("coins", gorm.Expr("coins - ?", amount))
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected != 1 {
+		return fmt.Errorf("only %d coins left", amount)
+	}
+	return tx.Model(&models.User{}).Where("id = ?", toID).
+		Update("coins", gorm.Expr("coins + ?", amount)).Error
+}
+
 // Settle an accepted offer: move the cards and coins between its two sides,
 // in the transaction that claimed the offer
 func settleTrade(tx *gorm.DB, trade *models.Trade) error {
@@ -311,24 +415,15 @@ func settleTrade(tx *gorm.DB, trade *models.Trade) error {
 	if err := moveCards(tx, trade.FromID, trade.ToID, give); err != nil {
 		return err
 	}
-	if trade.Coins > 0 {
-		result := tx.Model(&models.User{}).
-			Where("id = ? AND coins >= ?", trade.FromID, trade.Coins).
-			Update("coins", gorm.Expr("coins - ?", trade.Coins))
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected != 1 {
-			return fmt.Errorf("only %d coins left", trade.Coins)
-		}
-		if err := tx.Model(&models.User{}).Where("id = ?", trade.ToID).
-			Update("coins", gorm.Expr("coins + ?", trade.Coins)).Error; err != nil {
-			return err
-		}
+	if err := moveCoins(tx, trade.FromID, trade.ToID, trade.Coins); err != nil {
+		return err
 	}
 
-	// The requested cards leave the receiver
-	return moveCards(tx, trade.ToID, trade.FromID, want)
+	// The requested cards and coins leave the receiver
+	if err := moveCards(tx, trade.ToID, trade.FromID, want); err != nil {
+		return err
+	}
+	return moveCoins(tx, trade.ToID, trade.FromID, trade.WantCoins)
 }
 
 // /trades/:ID/accept POST: settle a pending offer made to the user
@@ -432,14 +527,16 @@ func (tc *Controller) tradeRows(c *gin.Context, user *AuthenticatedUser, trades 
 		give, _ := trade.GiveItems()
 		want, _ := trade.WantItems()
 
-		// Coins belong to the side of the sender, the cards are read from
-		// the point of view of the viewer
+		// The cards are read from the point of view of the viewer, and the
+		// coins follow them: each side with the coins it put up or asks for
 		var giveCoins, wantCoins uint
 		partnerID := trade.ToID
 		if trade.FromID == user.ID {
 			giveCoins = trade.Coins
+			wantCoins = trade.WantCoins
 		} else {
 			give, want = want, give
+			giveCoins = trade.WantCoins
 			wantCoins = trade.Coins
 			partnerID = trade.FromID
 		}
@@ -558,6 +655,8 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 	counterID := 0
 	give := "[]"
 	want := "[]"
+	giveCoins := 0
+	wantCoins := 0
 
 	if counter := c.Query("counter"); counter != "" {
 		id, err := strconv.Atoi(counter)
@@ -597,12 +696,14 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 		}
 		targetName = other.Username
 		counterID = int(old.ID)
-		// The counter starts mirrored: the cards the sender offered become
-		// what the user wants, and the cards they asked for what the user gives
+		// The counter starts mirrored: the cards and coins the sender offered
+		// become what the user wants, and what they asked for what the user gives
 		giveItems, _ := old.WantItems()
 		wantItems, _ := old.GiveItems()
 		give = marshalTradeItems(giveItems)
 		want = marshalTradeItems(wantItems)
+		giveCoins = int(old.WantCoins)
+		wantCoins = int(old.Coins)
 	}
 
 	if strings.EqualFold(targetName, user.Username) {
@@ -623,17 +724,26 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 		return
 	}
 
+	// A counter asks the stacks of the other side without the offer it
+	// replaces, so its cards show as free to mirror
+	stacksUrl := "/api/trade/stacks?u=" + url.QueryEscape(target.Username)
+	if counterID != 0 {
+		stacksUrl += "&counter=" + strconv.Itoa(counterID)
+	}
+
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": tc.Renderer.T(c, "trade-menu-title", "username", target.Username),
 		"User":  user,
 	})
 	builder.Add("trade-menu", "Content", map[string]any{
-		"Target":      target.Username,
-		"StacksUrl":   "/api/trade/stacks?u=" + url.QueryEscape(target.Username),
-		"SubmitUrl":   "/trades",
-		"CounterID":   counterID,
-		"GivePrefill": give,
-		"WantPrefill": want,
+		"Target":           target.Username,
+		"StacksUrl":        stacksUrl,
+		"SubmitUrl":        "/trades",
+		"CounterID":        counterID,
+		"GivePrefill":      give,
+		"WantPrefill":      want,
+		"GiveCoinsPrefill": giveCoins,
+		"WantCoinsPrefill": wantCoins,
 	})
 	tc.Renderer.Render(c, &builder)
 }

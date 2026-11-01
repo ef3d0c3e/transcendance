@@ -221,8 +221,20 @@ func (sc *Controller) ShopGet(c *gin.Context) {
 	notice := sc.notice(c)
 
 	var coins uint
+	var coinsLocked string
 	if user != nil {
 		coins = user.Coins
+		committed, err := TradeCommitmentsOf(sc.DB, user.ID, 0)
+		if err != nil {
+			log.Printf("WARN failed to get commitments of user %d: %s", user.ID, err)
+		} else {
+			// The balance shows what is free to spend: coins up in pending
+			// trades are left out and said apart
+			coins = committed.Free(user.Coins)
+			if locked := user.Coins - coins; locked > 0 {
+				coinsLocked = sc.Renderer.T(c, "shop-coins-locked", "amount", int(locked))
+			}
+		}
 	}
 
 	builder := views.PageBuilder("base", map[string]any{
@@ -230,13 +242,14 @@ func (sc *Controller) ShopGet(c *gin.Context) {
 		"User":  user,
 	})
 	builder.Add("shop", "Content", map[string]any{
-		"User":        user,
-		"Notice":      notice,
-		"Boosters":    boosters,
-		"Topups":      topups,
-		"Coins":       coins,
-		"CoinsLabel":  sc.Renderer.T(c, "shop-price", "amount", coins),
-		"MaxQuantity": maxBuyQuantity,
+		"User":             user,
+		"Notice":           notice,
+		"Boosters":         boosters,
+		"Topups":           topups,
+		"Coins":            coins,
+		"CoinsLabel":       sc.Renderer.T(c, "shop-price", "amount", coins),
+		"CoinsLockedLabel": coinsLocked,
+		"MaxQuantity":      maxBuyQuantity,
 	})
 	sc.Renderer.Render(c, &builder)
 }
@@ -288,10 +301,16 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	}
 
 	err = sc.DB.Transaction(func(tx *gorm.DB) error {
-		// Debit only when the balance covers the total, so concurrent
+		// Coins up in pending trades leave with those trades, so they cannot
+		// pay for a booster here
+		committed, err := TradeCommitmentsOf(tx, user.ID, 0)
+		if err != nil {
+			return err
+		}
+		// Debit only when the free balance covers the total, so concurrent
 		// purchases cannot overdraw.
 		result := tx.Model(&models.User{}).
-			Where("id = ? AND coins >= ?", user.ID, total).
+			Where("id = ? AND coins >= ?", user.ID, total+committed.Coins).
 			Update("coins", gorm.Expr("coins - ?", total))
 		if result.Error != nil {
 			return result.Error
