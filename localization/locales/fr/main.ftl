@@ -90,6 +90,7 @@ navbar-cards = Cartes
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-profile = Votre profil
+navbar-friends = Amis
 navbar-logout = Se déconnecter
 
 theme-switcher-light = Theme clair
