@@ -84,6 +84,7 @@ navbar-label-main = Main navigation
 navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
+navbar-friends = Friends
 navbar-profile = Your profile
 navbar-logout = Log out
 
