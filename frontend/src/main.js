@@ -1,6 +1,7 @@
 import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
+import FriendButton from './FriendButton.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import PackOpening from './PackOpening.svelte';
@@ -187,6 +188,18 @@ import { openTopup } from './topup.js';
 			props: {
 				formSelector: '#register-form',
 				onSuccess: () => {},
+			},
+		});
+	}
+}
+
+// Friend buttons
+{
+	for (const target of document.querySelectorAll('.friend-button')) {
+		mount(FriendButton, {
+			target,
+			props: {
+				dataset: target.dataset,
 			},
 		});
 	}

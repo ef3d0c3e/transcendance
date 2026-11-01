@@ -7,7 +7,7 @@
 			<p class="inventory-count">{{ .Data.Count }}</p>
 			{{ end }}
 		</div>
-		<form class="search-form inventory-search" id="search-form" action="/search" method="get">
+		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Path }}" method="get">
 			<input type="text" id="q" name="q" placeholder="{{ .T "search-user-form-placeholder" }}"
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "search-user-submit" }}></button>
@@ -15,6 +15,16 @@
 	</div>
 
 	<div class="inventory-filters">
+		{{ if .Data.ListOptions }}
+		<label>
+			<span>{{ .T "friends-list" }}</span>
+			<select name="list" form="search-form" data-autosubmit>
+				{{ range .Data.ListOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		{{ end }}
 		<label>
 			<span>{{ .T "search-user-filter-joined" }}</span>
 			<select name="joined" form="search-form" data-autosubmit>
@@ -45,7 +55,7 @@
 	<div class="inventory-message">
 		<p>{{ .Data.Message }}</p>
 		{{ if .Data.Filtered }}
-		<a href="/search">{{ .T "inventory-search-clear" }}</a>
+		<a href="{{ .Data.Path }}">{{ .T "inventory-search-clear" }}</a>
 		{{ end }}
 	</div>
 	{{ end }}
@@ -84,6 +94,9 @@
 						</dd>
 					</div>
 				</dl>
+				{{ if and $.Data.User (ne .ID $.Data.User.ID) }}
+				<div class="friend-button" data-id="{{ .ID }}" data-relation="{{ .Relation }}" {{ template "friend-labels" $ }}></div>
+				{{ end }}
 			</div>
 		</li>
 		{{ end }}
