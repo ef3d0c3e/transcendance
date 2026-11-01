@@ -51,6 +51,19 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 
 	editMode := c.Param("username") == "" || (user.Rank == 2 && userProfile.UserID != user.ID)
 
+	relation := ""
+	if userProfile.UserID != user.ID {
+		var err error
+		if relation, err = relationOf(pc.DB, user.ID, userProfile.UserID); err != nil {
+			pc.Renderer.RenderError(c, views.ErrorPage{
+				User:       user,
+				StatusCode: http.StatusInternalServerError,
+				Message:    pc.Renderer.T(c, "error-unexpected"),
+			})
+			return
+		}
+	}
+
 	builder := views.PageBuilder("base", gin.H{
 		"Title": pc.Renderer.T(c, "profile-title"),
 		"User":  user,
@@ -71,6 +84,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"CanSeeEmail":       canSeeEmail,
 		"Own":               userProfile.UserID == user.ID,
 		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
+		"Relation":          relation,
 		"Locale":            pc.Renderer.Localizer.GetLocale(c),
 		"FormAction":        formAction,
 		"AvatarAction":      avatarAction,

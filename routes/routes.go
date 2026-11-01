@@ -74,7 +74,6 @@ func RegisterRoutes(
 	//friends
 	router.POST("/friendaction", controller.FriendsPost)
 	router.GET("/friends", controller.FriendsGet)
-	router.GET("/api/friends/*target", controller.ApiFriendsGet)
 
 	// Data
 	dataController := ctrldata.DataController{

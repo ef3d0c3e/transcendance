@@ -193,18 +193,15 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Friend Button
+// Friend buttons
 {
-	if (document.querySelector('.friend-button') !== null) {
-		const targets = document.querySelectorAll('.friend-button');
-		for (const target of targets) {
-			mount(FriendButton, {
-				target,
-				props: {
-					dataset: target.dataset,
-				},
-			});
-		}
+	for (const target of document.querySelectorAll('.friend-button')) {
+		mount(FriendButton, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
 	}
 }
 

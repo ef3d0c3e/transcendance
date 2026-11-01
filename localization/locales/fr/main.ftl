@@ -1,5 +1,3 @@
-cancel = Annuler
-
 register-title = Créer un compte
 register-username = Nom d'utilisateur
 register-password = Mot de passe
@@ -40,10 +38,19 @@ friends-accept = Accepter
 friends-deny = Ignorer
 friends-unfriend = Supprimer
 friends-block = Bloquer
-friends-unblock = Debloquer
+friends-unblock = Débloquer
 friends-unknown-error = Une erreur est survenue
-friends-spam-error = Vous ne pouvez envoyer qu'une invitation a la fois.
 friends-blocked-error = Vous ne pouvez pas ajouter cet utilisateur.
+friends-unblock-error = Débloquez d'abord cet utilisateur.
+friends-not-found-error = Cet utilisateur n'existe pas.
+friends-yourself-error = Vous ne pouvez pas vous ajouter en ami.
+friends-list = Afficher
+friends-list-friends = Amis
+friends-list-sent = Demandes envoyées
+friends-list-received = Demandes reçues
+friends-empty-friends = Vous n'avez pas encore d'amis
+friends-empty-sent = Vous n'avez envoyé aucune demande d'ami
+friends-empty-received = Vous n'avez reçu aucune demande d'ami
 
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-title = Supprimer le compte
@@ -198,6 +205,8 @@ notification-empty-unread = Aucune notification non lue
 
 notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-friend-accepted-title = Demande d'ami acceptée
+notification-friend-accepted-desc = { $username } a accepté votre demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
 

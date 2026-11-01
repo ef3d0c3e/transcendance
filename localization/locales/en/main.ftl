@@ -1,5 +1,3 @@
-cancel = Cancel
-
 register-title = Create account
 register-username = Username
 register-password = Password
@@ -77,9 +75,18 @@ friends-deny = Ignore
 friends-unfriend = Unfriend
 friends-block = Block user
 friends-unblock = Unblock
-friends-unknown-error = Something went wrong !
-friends-spam-error = You may only have one outgoing invite active
+friends-unknown-error = Something went wrong
 friends-blocked-error = Can't add this user as a friend
+friends-unblock-error = Unblock this user first
+friends-not-found-error = This user doesn't exist
+friends-yourself-error = You can't add yourself as a friend
+friends-list = Show
+friends-list-friends = Friends
+friends-list-sent = Sent requests
+friends-list-received = Received requests
+friends-empty-friends = You have no friends yet
+friends-empty-sent = You haven't sent any friend request
+friends-empty-received = You have no friend request
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
@@ -198,6 +205,8 @@ notification-empty-unread = No unread notifications
 
 notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-accepted-title = Friend request accepted
+notification-friend-accepted-desc = { $username } accepted your friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
 
