@@ -1,0 +1,2 @@
+title = Manchester terrier
+description = Le Manchester terrier est une race de chiens originaire de Manchester en Angleterre. Développée au cours du XIXe siècle pour les concours de chiens ratiers très à la mode à Manchester, le Manchester terrier est à présent une race considérée comme rare, même au Royaume-Uni. Le Manchester terrier est chien de terrier de taille moyenne, d'aspect compact, élégant et robuste.

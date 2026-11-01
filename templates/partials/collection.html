@@ -21,8 +21,10 @@
 
 		</div>
 	</article>
-	{{ with .Data.CollectionStack }}
+	{{ if .Data.CollectionEmpty }}
+	<span class="collection-stack collection-stack-empty">×0</span>
+	{{ else }}{{ with .Data.CollectionStack }}
 	<span class="collection-stack">×{{ . }}</span>
-	{{ end }}
+	{{ end }}{{ end }}
 </div>
 {{ end }}

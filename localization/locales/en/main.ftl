@@ -67,12 +67,32 @@ user-status-online = Online
 user-status-offline = Offline
 user-status-last-seen = Last seen:
 
+friends-title = Friends list
+friends-add = Add Friend
+friends-cancel = Cancel
+friends-accept = Accept
+friends-deny = Ignore
+friends-unfriend = Unfriend
+friends-block = Block user
+friends-unblock = Unblock
+friends-unknown-error = Something went wrong
+friends-blocked-error = Can't add this user as a friend
+friends-unblock-error = Unblock this user first
+friends-not-found-error = This user doesn't exist
+friends-yourself-error = You can't add yourself as a friend
+friends-list = Show
+friends-list-friends = Friends
+friends-list-sent = Sent requests
+friends-list-received = Received requests
+friends-empty-friends = You have no friends yet
+friends-empty-sent = You haven't sent any friend request
+friends-empty-received = You have no friend request
+
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
-navbar-cards = Cards
 navbar-users = Users
 navbar-inventory = Inventory
-navbar-shop = Shop
+navbar-friends = Friends
 navbar-profile = Your profile
 navbar-logout = Log out
 
@@ -185,6 +205,8 @@ notification-empty-unread = No unread notifications
 
 notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-accepted-title = Friend request accepted
+notification-friend-accepted-desc = { $username } accepted your friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
 notification-private-message-title = { $count ->
@@ -194,9 +216,6 @@ notification-private-message-title = { $count ->
 notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
-catalog-tabs-label = Catalog sections
-catalog-tab-cards = Cards
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -204,6 +223,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = All collections
 catalog-sort-number = Collection order
+catalog-filter-status = Collected
+catalog-filter-status-all = All cards
+catalog-filter-status-owned = Collected
+catalog-filter-status-missing = Missing
+catalog-sort-missing = Missing first
 
 inventory-title = Your inventory
 inventory-title-other = { $username }'s inventory
@@ -222,6 +246,9 @@ inventory-card-acquired-last = Last acquired on
 inventory-card-copies = Copies
 inventory-filter-rarity = Rarity
 inventory-filter-rarity-all = All rarities
+inventory-show = Show
+inventory-show-owned = Owned cards
+inventory-show-all = All cards
 inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
@@ -237,10 +264,9 @@ inventory-sort-name-desc = Name (Z-A)
 inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = No boosters yet
-inventory-booster-open-confirm = Open booster { $name }?
-inventory-booster-open-yes = Yes
-inventory-booster-open-no = No
+inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -260,26 +286,30 @@ pack-opening-open-another = Open another pack
 pack-opening-error-collection = Collection not found
 pack-opening-error-empty = This booster has no cards
 pack-opening-error-internal = Failed to open the pack
-pack-opening-obtained = Cards obtained
 pack-opening-back = Back to inventory
-pack-opening-return = Return
-pack-opening-open-again = Open again
 pack-opening-remaining = { $count ->
     [0] No boosters left
     [one] { $count } booster left
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+pack-opening-buy = Open again
+pack-opening-buy-label = Open again for { $price }
+pack-opening-sound-on = Sound on
+pack-opening-sound-off = Sound off
+pack-opening-odds-title = Drop rates
+pack-opening-odds-foil = Foil
+pack-opening-odds-note = Each card of the booster is rolled on its own.
+pack-opening-progress-title = Collection progress
+pack-opening-progress-note = Different cards of this collection you own.
 
-shop-title = Shop
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = No boosters are on sale right now
 shop-booster-buy = Buy
 shop-price = { $amount } coins
 shop-topup-title = Get coins
 shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-error-unconfirmed = Unable to confirm the top-up. Refresh the page to check your balance before trying again.
 shop-topup-price = €{ $euros }.{ $cents }
 shop-topup-open = Buy more coins
 shop-topup-success = { $amount } coins have been added to your balance
@@ -289,14 +319,42 @@ shop-error-funds = You do not have enough coins for this purchase
 shop-error-quantity = Enter a quantity between 1 and { $max }
 shop-error-internal = Failed to update your balance
 shop-buy-close = Close
-shop-buy-success = { $count ->
-    [one] A { $collection } booster has been added to your inventory
-   *[other] { $count } { $collection } boosters have been added to your inventory
-}
-shop-buy-view-inventory = View inventory
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
+
+index-title = Transcendance, collect trading cards
+index-heading = Collect, trade and show off your cards
+index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
+index-stat-cards = { $count ->
+    [one] { $count } card
+    *[other] { $count } cards
+}
+index-stat-collections = { $count ->
+    [one] { $count } collection
+    *[other] { $count } collections
+}
+index-action-register = Create an account
+index-action-browse = Browse the cards
+index-action-inventory = Open your inventory
+index-step-buy-title = Buy boosters
+index-step-buy-text = Spend your coins on boosters of the collection you like, right from your inventory.
+index-step-open-title = Open packs
+index-step-open-text = Every booster holds a handful of cards, some of them rare, legendary or foil.
+index-step-trade-title = Trade cards
+index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
+index-install-title = Install the app
+index-install-text = Add Transcendance to your home screen to open it like an app, without the browser's bars.
+index-install-ios-title = iPhone and iPad:
+index-install-ios-text = in Safari, tap Share, then Add to Home Screen.
+index-install-android-title = Android:
+index-install-android-text = in Chrome, open the ⋮ menu, then tap Add to Home screen or Install app.
+index-install-desktop-title = Computer:
+index-install-desktop-text = in Chrome or Edge, click the install icon at the end of the address bar.
+index-cards-title = Rarest cards
+index-cards-all = See every card
+index-collections-title = Collections
+index-collections-all = See every collection
 
 footer-label = Site information
 footer-project = Transcendance, a student project
