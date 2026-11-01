@@ -268,3 +268,27 @@ func TestChatNotifications(t *testing.T) {
 	require.Equal(t, "New message from notif_a", notifications[0].Title)
 	require.Equal(t, "five", notifications[0].Desc)
 }
+
+func TestChatReadClearsNotification(t *testing.T) {
+	router, server := newShoutboxServer(t)
+	cookies, conns := chatUsers(t, router, server, "notifread_a", "notifread_b")
+	sender, recipient := conns[0], conns[1]
+
+	chatSendPrivate(t, sender, "notifread_b", "hello")
+	chatReadUntil(t, sender, "ack")
+	require.Len(t, chatNotifications(t, router, cookies[1]), 1)
+
+	// Read on every tab of the recipient
+	other, _ := shoutboxConnect(t, server, cookies[1])
+	chatRequest(t, recipient, map[string]string{"type": "view", "with": "notifread_a"})
+	chatReadUntil(t, recipient, "conversation")
+	require.Empty(t, chatNotifications(t, router, cookies[1]))
+	require.Equal(t, "notifread_a", chatReadUntil(t, other, "read").With)
+
+	// Sent while open: read on the other tab too, without a notification
+	chatSendPrivate(t, sender, "notifread_b", "again")
+	chatReadUntil(t, sender, "ack")
+	require.Equal(t, "again", chatReadUntil(t, other, "private").Private.Body)
+	require.Equal(t, "notifread_a", chatReadUntil(t, other, "read").With)
+	require.Empty(t, chatNotifications(t, router, cookies[1]))
+}

@@ -147,6 +147,11 @@
 		}
 	}
 
+	// Private messages add and read notifications, the bell reloads them
+	function notificationsChanged() {
+		globalThis.dispatchEvent(new Event('notifications-changed'));
+	}
+
 	function markRead(username) {
 		conversations = conversations.map((conversation) =>
 			conversation.username === username ? { ...conversation, unread: 0 } : conversation,
@@ -222,6 +227,9 @@
 			}
 			case 'private': {
 				addPrivate(event.private);
+				if (event.private.from !== me && viewed !== event.private.from) {
+					notificationsChanged();
+				}
 				break;
 			}
 			case 'conversation': {
@@ -232,6 +240,9 @@
 				break;
 			}
 			case 'read': {
+				if (conversations.some((conversation) => conversation.username === event.with && conversation.unread > 0)) {
+					notificationsChanged();
+				}
 				markRead(event.with);
 				break;
 			}

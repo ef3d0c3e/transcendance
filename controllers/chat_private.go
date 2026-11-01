@@ -197,10 +197,17 @@ func (sc *ShoutboxController) sendPrivate(ctx context.Context, client *shoutboxC
 		log.Printf("Shoutbox: failed to encode private message: %s", err)
 		return
 	}
-	sc.hub.deliver(payload, client.userID, recipient.ID)
+	// Notified first, so the recipient's tabs find the notification when the message arrives
 	if msg.ReadAt == nil {
 		if err := sc.notifyPrivate(ctx, recipient.ID, client.userID, username, msg.Body); err != nil {
 			log.Printf("Shoutbox: failed to notify private message: %s", err)
+		}
+	}
+	sc.hub.deliver(payload, client.userID, recipient.ID)
+	// The recipient's other tabs would count it as unread
+	if msg.ReadAt != nil {
+		if payload, err := json.Marshal(shoutboxEvent{Type: "read", With: username}); err == nil {
+			sc.hub.deliver(payload, recipient.ID)
 		}
 	}
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
@@ -269,10 +276,12 @@ func (sc *ShoutboxController) view(ctx context.Context, client *shoutboxClient, 
 		sc.hub.setViewing(client, 0)
 		return
 	}
-	// Before marking read, so messages sent meanwhile are read too
+	// Messages are sent under the same lock, so they are either saved read or marked read here, never notified
+	// once read
+	sc.postMu.Lock()
 	sc.hub.setViewing(client, partner.ID)
-
 	marked, err := sc.markRead(ctx, client.userID, partner.ID)
+	sc.postMu.Unlock()
 	if err != nil {
 		log.Printf("Shoutbox: failed to mark conversation read: %s", err)
 	}
