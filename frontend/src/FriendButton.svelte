@@ -92,7 +92,10 @@ div {
 	justify-content: center;
 }
 button {
-	margin: 10px;
+	margin: 2%;
+	width: 100px;
+	padding-left: 0;
+	padding-right: 0;
 }
 .block {
 	background-color: darkred;
