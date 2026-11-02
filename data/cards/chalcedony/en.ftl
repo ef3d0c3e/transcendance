@@ -1,0 +1,2 @@
+title = Chalcedony
+description = Chalcedony is an aggregate of cryptocrystalline or microcrystalline silica, or in simpler terms, a mass of individual silica crystals that are too small to be seen without magnification. It is composed primarily of quartz, with minor amounts of intergrown moganite. These are both silica minerals with a chemical composition of SiO2, but they differ in that quartz has a more symmetrical crystal structure (trigonal) than moganite (monoclinic).

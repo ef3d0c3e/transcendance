@@ -1,0 +1,2 @@
+title = Baryte
+description = La barytine (ou baryte, voir les synonymes) est une espèce minérale composée de sulfate de baryum de formule BaSO4 avec des traces de Sr, Ca et Pb. Ce minéral, d'origine hydrothermale, présente de nombreuses variétés. Sa densité et le baryum qu'il contient sont les causes principales de ses utilisations industrielles et plusieurs millions de tonnes de barytine sont extraits et produits chaque année.

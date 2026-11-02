@@ -1,0 +1,2 @@
+title = Prehnite
+description = Prehnite is an inosilicate of calcium and aluminium with the formula: Ca2Al(AlSi3O10)(OH)2 with limited Fe3+ substitutes for aluminium in the structure. Prehnite crystallizes in the orthorhombic crystal system, and most often forms as stalactitic, botryoidal, reniform or globular aggregates, with only just the crests of small crystals showing any faces, which are almost always curved or composite.

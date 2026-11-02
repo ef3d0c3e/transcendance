@@ -1,0 +1,2 @@
+title = Onyx
+description = L’onyx est une variété d’agate, qui est elle-même une variété de calcédoine, elle est généralement teintée et chauffée artificiellement pour obtenir des bandes noires contrastant avec des bandes blanches afin d'obtenir une matière idéale pour la production de camées et coupes réalisées en intaglio, mais aussi de cabochons pour la bijouterie et ce depuis des temps reculés. Il est composé de SiO2 (dioxyde de silicium).

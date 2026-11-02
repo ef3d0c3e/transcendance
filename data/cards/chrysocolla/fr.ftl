@@ -1,0 +1,2 @@
+title = Chrysocolle
+description = La chrysocolle est un ancien terme désignant divers matériaux servant à la préparation de l'or mais qui s'affina jusqu'à ne plus désigner aujourd'hui qu'un seul minéral, un silicate d'hydroxyde de cuivre. Cependant, il existe un débat quant à sa nature de minéral ou de minéraloïde, son mode de création s'approchant de celui du groupe des serpentines ou des allophanes.

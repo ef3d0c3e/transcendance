@@ -1,0 +1,2 @@
+title = Benitoite
+description = Benitoite is a rare, blue, barium titanium cyclosilicate mineral, found in hydrothermally altered serpentinite. It forms in low-temperature, high-pressure environments typical of subduction zones at convergent plate boundaries. Benitoite fluoresces under short-wave ultraviolet light, appearing bright blue to bluish white in color. The more rarely seen clear to white benitoite crystals fluoresce red under long-wave UV light.

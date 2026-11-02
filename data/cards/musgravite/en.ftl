@@ -1,0 +1,2 @@
+title = Musgravite
+description = Musgravite or magnesiotaaffeite-6N’3S is a rare oxide mineral used as a gemstone. Its type locality is the Ernabella Mission, Musgrave Ranges, South Australia, for which it was named following its discovery in 1967. It is a member of the taaffeite family of minerals, and its chemical formula is Be(Mg, Fe, Zn)2Al6O12. Its hardness is 8 to 8.5 on the Mohs scale. Due to its rarity, the mineral can sell for roughly USD35,000 per carat.

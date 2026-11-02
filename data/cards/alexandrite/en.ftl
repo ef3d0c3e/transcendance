@@ -1,0 +1,2 @@
+title = Alexandrite
+description = Alexandrite is a colour-changing variety of the mineral chrysoberyl, coloured by traces of chromium. It appears emerald green in daylight and raspberry red under incandescent light, a phenomenon called the alexandrite effect. First found in the Ural Mountains of Russia in the 1830s and named after the future Tsar Alexander II, fine stones are among the most valuable gems in the world.
