@@ -25,9 +25,6 @@ const defaultBoosterPrice = 250
 // boosterPrices overrides defaultBoosterPrice per collection ID.
 var boosterPrices = map[int]uint{}
 
-// maxBuyQuantity caps the boosters of one checkout, and the stepper of the buy popup.
-const maxBuyQuantity = 10
-
 // boosterPileCap is how many default boosters a pile holds at most.
 const boosterPileCap = 5
 
