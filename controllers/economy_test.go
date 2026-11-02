@@ -403,6 +403,7 @@ type defaultOpeningResponse struct {
 	Next           string          `json:"next"`
 	Remaining      int             `json:"remaining"`
 	RemainingLabel string          `json:"remainingLabel"`
+	Summary        string          `json:"summary"`
 	Message        string          `json:"message"`
 }
 
@@ -438,6 +439,9 @@ func TestOpenDefaultBooster(t *testing.T) {
 		drawn, _ := tests.Data.GetCard(int(card.CardID))
 		require.NotNil(t, drawn)
 	}
+
+	// A fresh account: every card of the pile is new to it
+	require.NotZero(t, requireNewFlags(t, resp.Reels, resp.Summary, map[uint]bool{}))
 
 	// The last booster of the pile stops the chain
 	code, resp = openDefaultBooster(t, router, cookie)
