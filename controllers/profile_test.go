@@ -69,20 +69,21 @@ func TestProfileBirthDate(t *testing.T) {
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
-func TestProfileLengthsInBytes(t *testing.T) {
+// Limits count characters like the browser's maxlength does, not UTF-8 bytes
+func TestProfileLengthsInCharacters(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "proflength", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "proflength", "foo-bar-baz-qux")
 
-	// 122 two-byte characters, 244 bytes
-	bio := strings.Repeat("é", 122)
-	rec := postForm(t, router, cookie, "/profile", url.Values{"bio": {bio}, "contact": {strings.Repeat("ü", 128)}})
+	// 244 two-byte characters, 488 bytes
+	bio := strings.Repeat("é", 244)
+	rec := postForm(t, router, cookie, "/profile", url.Values{"bio": {bio}, "contact": {strings.Repeat("ü", 256)}})
 	require.Equal(t, http.StatusOK, rec.Code, rec.Body.String())
 	require.Equal(t, bio, userProfile(t, "proflength").Bio)
 
 	rec = postForm(t, router, cookie, "/profile", url.Values{"bio": {bio + "é"}})
 	require.Equal(t, http.StatusBadRequest, rec.Code)
-	rec = postForm(t, router, cookie, "/profile", url.Values{"contact": {strings.Repeat("ü", 129)}})
+	rec = postForm(t, router, cookie, "/profile", url.Values{"contact": {strings.Repeat("ü", 257)}})
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
@@ -103,7 +104,7 @@ func TestProfilePasswordRevokesOtherSessions(t *testing.T) {
 	require.NoError(t, tests.DB.Model(&models.UserSession{}).
 		Where("user_id = ?", userID(t, "profpass")).
 		Pluck("token", &tokens).Error)
-	require.Equal(t, []string{current.Value}, tokens)
+	require.Equal(t, []string{models.HashSessionToken(current.Value)}, tokens)
 	require.NotEqual(t, current.Value, other.Value)
 }
 

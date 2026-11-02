@@ -25,6 +25,9 @@ const (
 	tradeMaxCount = 999
 	// Trades shown in the history of the trades page
 	tradeHistoryLimit = 20
+	// Pending offers a user can have made to one other user, and to everyone: each one notifies its receiver
+	tradeMaxPendingPerPair = 5
+	tradeMaxPendingPerUser = 50
 )
 
 // Redirection target of an action that cannot run on its offer anymore
@@ -122,24 +125,33 @@ func (tc *TradeCommitments) Free(balance uint) uint {
 // skipping the given trade if any: a counter replaces its contents, freeing
 // what its previous version held
 func TradeCommitmentsOf(db *gorm.DB, userID uint, skipTradeID uint) (*TradeCommitments, error) {
-	query := db.Where("from_id = ? AND state = ?", userID, models.TradePending)
-	if skipTradeID != 0 {
-		query = query.Where("id <> ?", skipTradeID)
+	pending := func(query *gorm.DB) *gorm.DB {
+		query = query.Where("trades.from_id = ? AND trades.state = ?", userID, models.TradePending)
+		if skipTradeID != 0 {
+			query = query.Where("trades.id <> ?", skipTradeID)
+		}
+		return query
 	}
-	var trades []models.Trade
-	if err := query.Find(&trades).Error; err != nil {
+	var stacks []struct {
+		CardID uint
+		Foil   string
+		Count  uint
+	}
+	if err := pending(db.Table("trade_items").
+		Select("trade_items.card_id, trade_items.foil, SUM(trade_items.count) AS count").
+		Joins("JOIN trades ON trades.id = trade_items.trade_id").
+		Where("trade_items.side = ?", models.TradeSideGive)).
+		Group("trade_items.card_id, trade_items.foil").
+		Scan(&stacks).Error; err != nil {
 		return nil, err
 	}
-	commitments := TradeCommitments{stacks: make(map[tradeStackKey]uint)}
-	for i := range trades {
-		give, err := trades[i].GiveItems()
-		if err != nil {
-			return nil, err
-		}
-		for _, item := range give {
-			commitments.stacks[tradeStackKey{CardID: item.CardID, Foil: item.Foil}] += item.Count
-		}
-		commitments.Coins += trades[i].Coins
+	commitments := TradeCommitments{stacks: make(map[tradeStackKey]uint, len(stacks))}
+	for _, stack := range stacks {
+		commitments.stacks[tradeStackKey{CardID: stack.CardID, Foil: stack.Foil}] = stack.Count
+	}
+	if err := pending(db.Model(&models.Trade{}).Select("COALESCE(SUM(trades.coins), 0)")).
+		Scan(&commitments.Coins).Error; err != nil {
+		return nil, err
 	}
 	return &commitments, nil
 }
@@ -201,7 +213,7 @@ func (tc *Controller) checkTradeItems(c *gin.Context, items []models.TradeItem) 
 		if item.Count == 0 || item.Count > tradeMaxCount {
 			return tc.Renderer.T(c, "trade-error-count")
 		}
-		if card, _ := tc.Data.GetCard(int(item.CardID)); card == nil {
+		if card, _ := tc.Data.GetCard(int(item.CardID)); card == nil || !models.ValidFoil(item.Foil) {
 			return tc.Renderer.T(c, "trade-error-card")
 		}
 		key := tradeStackKey{CardID: item.CardID, Foil: item.Foil}
@@ -349,35 +361,24 @@ func (tc *Controller) TradePost(c *gin.Context) {
 		trade.ID = old.ID
 		trade.ToID = old.FromID
 	} else {
-		if strings.EqualFold(offer.Target, user.Username) {
-			c.JSON(http.StatusBadRequest, gin.H{"message": tc.Renderer.T(c, "trade-error-self")})
-			return
-		}
 		var target models.User
 		if err := tc.DB.Omit("avatar").Where("username = ?", offer.Target).First(&target).Error; err != nil {
 			c.JSON(http.StatusNotFound, gin.H{"message": tc.Renderer.T(c, "trade-error-user")})
 			return
 		}
+		// Compared by ID: usernames compare ignoring case and trailing spaces in the database
+		if target.ID == user.ID {
+			c.JSON(http.StatusBadRequest, gin.H{"message": tc.Renderer.T(c, "trade-error-self")})
+			return
+		}
 		trade.ToID = target.ID
 	}
 
-	give, err := json.Marshal(offer.Give)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": tc.Renderer.T(c, "trade-error-internal")})
-		return
-	}
-	want, err := json.Marshal(offer.Want)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": tc.Renderer.T(c, "trade-error-internal")})
-		return
-	}
-	trade.Give = give
 	trade.Coins = offer.Coins
-	trade.Want = want
 	trade.WantCoins = offer.WantCoins
 	trade.State = models.TradePending
 
-	err = tc.DB.Transaction(func(tx *gorm.DB) error {
+	err := tc.DB.Transaction(func(tx *gorm.DB) error {
 		// Both sides stay locked until the offer is saved, so no concurrent
 		// offer, trade or purchase can take what it checks
 		if err := LockUsers(tx, trade.FromID, trade.ToID); err != nil {
@@ -408,7 +409,23 @@ func (tc *Controller) TradePost(c *gin.Context) {
 		}
 
 		if offer.CounterID == 0 {
-			return tx.Create(&trade).Error
+			// Each offer notifies its receiver, there is a limit to how many can wait for an answer
+			var toTarget, toAnyone int64
+			if err := tx.Model(&models.Trade{}).Where("from_id = ? AND to_id = ? AND state = ?",
+				trade.FromID, trade.ToID, models.TradePending).Count(&toTarget).Error; err != nil {
+				return err
+			}
+			if err := tx.Model(&models.Trade{}).Where("from_id = ? AND state = ?",
+				trade.FromID, models.TradePending).Count(&toAnyone).Error; err != nil {
+				return err
+			}
+			if toTarget >= tradeMaxPendingPerPair || toAnyone >= tradeMaxPendingPerUser {
+				return &tradeRejection{tc.Renderer.T(c, "trade-error-too-many"), http.StatusConflict}
+			}
+			if err := tx.Create(&trade).Error; err != nil {
+				return err
+			}
+			return models.SaveTradeItems(tx, trade.ID, offer.Give, offer.Want)
 		}
 		// Only the pending offer the user received can be overwritten by its counter
 		result := tx.Model(&models.Trade{}).
@@ -417,9 +434,7 @@ func (tc *Controller) TradePost(c *gin.Context) {
 			Updates(map[string]any{
 				"from_id":    trade.FromID,
 				"to_id":      trade.ToID,
-				"give":       trade.Give,
 				"coins":      trade.Coins,
-				"want":       trade.Want,
 				"want_coins": trade.WantCoins,
 			})
 		if result.Error != nil {
@@ -428,7 +443,7 @@ func (tc *Controller) TradePost(c *gin.Context) {
 		if result.RowsAffected != 1 {
 			return &tradeRejection{tc.Renderer.T(c, "trade-error-state"), http.StatusBadRequest}
 		}
-		return nil
+		return models.SaveTradeItems(tx, trade.ID, offer.Give, offer.Want)
 	})
 	var rejection *tradeRejection
 	if errors.As(err, &rejection) {
@@ -512,14 +527,11 @@ func moveCoins(tx *gorm.DB, fromID uint, toID uint, amount uint) error {
 // Settle an accepted offer: move the cards and coins between its two sides,
 // in the transaction that claimed the offer
 func settleTrade(tx *gorm.DB, trade *models.Trade) error {
-	give, err := trade.GiveItems()
+	items, err := trade.Items(tx)
 	if err != nil {
 		return err
 	}
-	want, err := trade.WantItems()
-	if err != nil {
-		return err
-	}
+	give, want := items.Give, items.Want
 
 	// The offered cards and coins leave the sender
 	if err := moveCards(tx, trade.FromID, trade.ToID, give); err != nil {
@@ -573,11 +585,11 @@ func (tc *Controller) TradeAcceptPost(c *gin.Context) {
 		if err != nil {
 			return err
 		}
-		want, err := current.WantItems()
+		items, err := current.Items(tx)
 		if err != nil {
 			return err
 		}
-		if msg, _ := tc.checkTradeOwned(c, tx, user.ID, want, committed); msg != "" {
+		if msg, _ := tc.checkTradeOwned(c, tx, user.ID, items.Want, committed); msg != "" {
 			return errors.New(msg)
 		}
 		if current.WantCoins > 0 {
@@ -669,12 +681,19 @@ func (tc *Controller) tradeLines(c *gin.Context, items []models.TradeItem, coins
 }
 
 // Build the rows of a list of offers, as seen by the viewer
-func (tc *Controller) tradeRows(c *gin.Context, user *AuthenticatedUser, trades []models.Trade, names map[uint]string) []tradeRow {
+func (tc *Controller) tradeRows(c *gin.Context, user *AuthenticatedUser, trades []models.Trade, names map[uint]string) ([]tradeRow, error) {
+	ids := make([]uint, len(trades))
+	for i := range trades {
+		ids[i] = trades[i].ID
+	}
+	items, err := models.LoadTradeItems(tc.DB, ids...)
+	if err != nil {
+		return nil, err
+	}
 	rows := make([]tradeRow, 0, len(trades))
 	for i := range trades {
 		trade := &trades[i]
-		give, _ := trade.GiveItems()
-		want, _ := trade.WantItems()
+		give, want := items[trade.ID].Give, items[trade.ID].Want
 
 		// The cards are read from the point of view of the viewer, and the
 		// coins follow them: each side with the coins it put up or asks for
@@ -710,7 +729,7 @@ func (tc *Controller) tradeRows(c *gin.Context, user *AuthenticatedUser, trades 
 		}
 		rows = append(rows, row)
 	}
-	return rows
+	return rows, nil
 }
 
 // Usernames of the other sides of the given offers
@@ -748,17 +767,17 @@ func (tc *Controller) TradesGet(c *gin.Context) {
 	var incoming, outgoing, history []models.Trade
 	if err := tc.DB.Where("to_id = ? AND state = ?", user.ID, models.TradePending).
 		Order("updated_at DESC").Find(&incoming).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 	if err := tc.DB.Where("from_id = ? AND state = ?", user.ID, models.TradePending).
 		Order("updated_at DESC").Find(&outgoing).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 	if err := tc.DB.Where("(from_id = ? OR to_id = ?) AND state != ?", user.ID, user.ID, models.TradePending).
 		Order("updated_at DESC").Limit(tradeHistoryLimit).Find(&history).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 
@@ -766,10 +785,14 @@ func (tc *Controller) TradesGet(c *gin.Context) {
 	all := make([]models.Trade, 0, len(incoming)+len(outgoing)+len(history))
 	all = append(append(append(all, incoming...), outgoing...), history...)
 	names := mustPartners(tc, all, user.ID)
-	fields := map[string]any{
-		"Incoming": tc.tradeRows(c, user, incoming, names),
-		"Outgoing": tc.tradeRows(c, user, outgoing, names),
-		"History":  tc.tradeRows(c, user, history, names),
+	fields := map[string]any{}
+	for key, trades := range map[string][]models.Trade{"Incoming": incoming, "Outgoing": outgoing, "History": history} {
+		rows, err := tc.tradeRows(c, user, trades, names)
+		if err != nil {
+			InternalError(c, tc.Renderer, err)
+			return
+		}
+		fields[key] = rows
 	}
 	// An action that could not run points the message out on the page
 	if c.Query("error") == "settle" {
@@ -851,10 +874,13 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 		counterID = int(old.ID)
 		// The counter starts mirrored: the cards and coins the sender offered
 		// become what the user wants, and what they asked for what the user gives
-		giveItems, _ := old.WantItems()
-		wantItems, _ := old.GiveItems()
-		give = marshalTradeItems(giveItems)
-		want = marshalTradeItems(wantItems)
+		items, err := old.Items(tc.DB)
+		if err != nil {
+			InternalError(c, tc.Renderer, err)
+			return
+		}
+		give = marshalTradeItems(items.Want)
+		want = marshalTradeItems(items.Give)
 		giveCoins = int(old.WantCoins)
 		wantCoins = int(old.Coins)
 	}
@@ -873,6 +899,15 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 			User:       user,
 			StatusCode: http.StatusNotFound,
 			Message:    tc.Renderer.T(c, "trade-error-user"),
+		})
+		return
+	}
+	// Compared by ID too: usernames compare ignoring case and trailing spaces in the database
+	if target.ID == user.ID {
+		tc.Renderer.RenderError(c, views.ErrorPage{
+			User:       user,
+			StatusCode: http.StatusBadRequest,
+			Message:    tc.Renderer.T(c, "trade-error-self"),
 		})
 		return
 	}

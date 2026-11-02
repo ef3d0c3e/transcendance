@@ -46,8 +46,8 @@ var (
 
 // Redirect back to the cards of the inventory with what a sale did
 func soldRedirect(c *gin.Context, count uint, coins uint) {
-	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&sold="+strconv.FormatUint(uint64(count), 10)+
-		"&coins="+strconv.FormatUint(uint64(coins), 10))
+	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&"+signedNotice(c, "sold="+strconv.FormatUint(uint64(count), 10)+
+		"&coins="+strconv.FormatUint(uint64(coins), 10)))
 }
 
 // Redirect back to the cards of the inventory with why a sale failed
@@ -102,9 +102,10 @@ func (sc *Controller) ShopSellPost(c *gin.Context) {
 		sellFailed(c, "card")
 		return
 	}
+	// Exactly a known foil: the database compares " " like "", which would sell plain cards at the foil price
 	foil := c.PostForm("foil")
 	card, _ := sc.Data.GetCard(id)
-	if card == nil || SellPrice(card.Rarity, foil) == 0 {
+	if card == nil || !models.ValidFoil(foil) || SellPrice(card.Rarity, foil) == 0 {
 		sellFailed(c, "card")
 		return
 	}

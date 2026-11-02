@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	fluent "github.com/hakastein/gofluent"
@@ -228,7 +229,9 @@ func LoadCards() (*Data, error) {
 				if err != nil {
 					return err
 				}
-				card.Tags = config.GetArray("tags").([]string)
+				if card.Tags, err = tomlStrings(config, path, "tags"); err != nil {
+					return err
+				}
 				// Verify tags have a locale key
 				for localeName, locale := range tags {
 					for _, tag := range card.Tags {
@@ -239,16 +242,32 @@ func LoadCards() (*Data, error) {
 					}
 				}
 
-				card.ID = int(config.Get("id").(int64))
-				card.Rarity = config.Get("rarity").(string)
+				id, err := tomlValue[int64](config, path, "id")
+				if err != nil {
+					return err
+				}
+				// Global IDs are the collection's ID times 1000 plus the card's
+				if id < 1 || id > 999 {
+					return fmt.Errorf("%s: `id` must be between 1 and 999", path)
+				}
+				card.ID = int(id)
+				if card.Rarity, err = tomlValue[string](config, path, "rarity"); err != nil {
+					return err
+				}
+				if !slices.Contains(Rarities, card.Rarity) {
+					return fmt.Errorf("%s: unknown rarity %q, expected one of %v", path, card.Rarity, Rarities)
+				}
 
 				if config.Has("color-primary") {
-					card.ColorPrimary = config.Get("color-primary").(string)
+					if card.ColorPrimary, err = tomlValue[string](config, path, "color-primary"); err != nil {
+						return err
+					}
 				}
 				if config.Has("color-secondary") {
-					card.ColorSecondary = config.Get("color-secondary").(string)
+					if card.ColorSecondary, err = tomlValue[string](config, path, "color-secondary"); err != nil {
+						return err
+					}
 				}
-				// TODO: Verify rarity value here
 			} else if strings.HasPrefix(name, "artwork.") {
 				card.ArtworkPath = path
 			}
@@ -308,7 +327,9 @@ func LoadCards() (*Data, error) {
 				if err != nil {
 					return err
 				}
-				collection.Tags = config.GetArray("tags").([]string)
+				if collection.Tags, err = tomlStrings(config, path, "tags"); err != nil {
+					return err
+				}
 				// Verify tags have a locale key
 				for localeName, locale := range tags {
 					for _, tag := range collection.Tags {
@@ -319,16 +340,18 @@ func LoadCards() (*Data, error) {
 					}
 				}
 
-				collection.ID = int(config.Get("id").(int64))
+				id, err := tomlValue[int64](config, path, "id")
+				if err != nil {
+					return err
+				}
+				collection.ID = int(id)
 
-				if !config.Has("color-primary") {
-					return fmt.Errorf("Collection %s is missing 'color-primary'", collection.Name)
+				if collection.ColorPrimary, err = tomlValue[string](config, path, "color-primary"); err != nil {
+					return err
 				}
-				collection.ColorPrimary = config.Get("color-primary").(string)
-				if !config.Has("color-secondary") {
-					return fmt.Errorf("Collection %s is missing 'color-secondary'", collection.Name)
+				if collection.ColorSecondary, err = tomlValue[string](config, path, "color-secondary"); err != nil {
+					return err
 				}
-				collection.ColorSecondary = config.Get("color-secondary").(string)
 
 				if config.Has("booster-size") {
 					size, ok := config.Get("booster-size").(int64)
@@ -338,12 +361,16 @@ func LoadCards() (*Data, error) {
 					collection.BoosterSize = int(size)
 				}
 
-				cardList := config.Get("cards").([]*toml.Tree)
+				cardList, err := tomlValue[[]*toml.Tree](config, path, "cards")
+				if err != nil {
+					return err
+				}
 				for _, entry := range cardList {
-					card := CollectionCard{
-						Name: entry.Get("name").(string),
+					name, err := tomlValue[string](entry, path, "cards.name")
+					if err != nil {
+						return err
 					}
-					collection.Cards = append(collection.Cards, card)
+					collection.Cards = append(collection.Cards, CollectionCard{Name: name})
 				}
 			}
 			collections[collectionName] = collection
@@ -444,4 +471,27 @@ func (dc *Data) GetCard(id int) (*Card, *Collection) {
 
 func (dc *Data) GetCollection(id int) *Collection {
 	return dc.collectionsById[id]
+}
+
+// Rarities a card can have, from the most to the least common
+var Rarities = []string{"common", "rare", "legendary"}
+
+// tomlValue reads a required key of a TOML file with its type, `key` names it in the error
+func tomlValue[T any](config *toml.Tree, path string, key string) (T, error) {
+	name := key[strings.LastIndex(key, ".")+1:]
+	value, ok := config.Get(name).(T)
+	if !ok {
+		var zero T
+		return zero, fmt.Errorf("%s: `%s` is missing or is not a %T", path, key, zero)
+	}
+	return value, nil
+}
+
+// tomlStrings reads a required array of strings of a TOML file
+func tomlStrings(config *toml.Tree, path string, key string) ([]string, error) {
+	value, ok := config.GetArray(key).([]string)
+	if !ok {
+		return nil, fmt.Errorf("%s: `%s` is missing or is not an array of strings", path, key)
+	}
+	return value, nil
 }

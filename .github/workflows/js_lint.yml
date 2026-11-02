@@ -20,8 +20,12 @@ jobs:
             package-lock.json
             frontend/package-lock.json
 
+      # The root eslint.config.js resolves its plugins (Svelte included) from
+      # ./node_modules: reuse the frontend's install, pinned by its lockfile
       - name: Install ESLint deps
-        run: npm install eslint @eslint/js eslint-plugin-unicorn eslint-plugin-sonarjs eslint-plugin-import-x vite svelte @sveltejs/vite-plugin-svelte
+        run: |
+          npm ci --prefix frontend
+          ln -s frontend/node_modules node_modules
 
       - name: Run ESLint
         run: npx eslint .
