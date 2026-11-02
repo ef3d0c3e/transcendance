@@ -6,7 +6,6 @@ import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
 import PackOpening from './PackOpening.svelte';
 import PackBackground from './PackBackground.svelte';
-import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
 import TradeUpPicker from './TradeUpPicker.svelte';
 import TradeUpResult from './TradeUpResult.svelte';
@@ -358,7 +357,6 @@ import { apiFetch } from './api.js';
 				errorLabel: target.dataset.errorLabel,
 				againLabel: target.dataset.againLabel,
 				coins: Number(target.dataset.coins) || 0,
-				autostart: target.dataset.autostart === 'true',
 				soundLabel: target.dataset.soundLabel,
 				motionLabel: target.dataset.motionLabel,
 				skipLabel: target.dataset.skipLabel,
@@ -374,20 +372,6 @@ import { apiFetch } from './api.js';
 
 	if (target) {
 		mount(PackBackground, { target, props: { target } });
-	}
-}
-
-// Shop booster buy popup
-{
-	const target = document.querySelector('#shop-buy-popup');
-
-	if (target) {
-		mount(ShopBuyPopup, {
-			target,
-			props: {
-				target,
-			},
-		});
 	}
 }
 

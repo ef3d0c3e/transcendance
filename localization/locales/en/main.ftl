@@ -349,6 +349,7 @@ inventory-tab-collections = Collections
 inventory-tab-tradeup = Trade up
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open = Open booster { $name }
+inventory-booster-buy = Buy booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -408,8 +409,6 @@ pack-opening-spinning = Opening the pack…
 pack-opening-skip = Skip
 
 shop-balance = Balance
-shop-login-hint = Log in to get coins and buy boosters
-shop-booster-buy = Buy
 shop-price = { $amount } coins
 shop-topup-title = Get coins
 shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
@@ -421,11 +420,8 @@ shop-topup-success = { $amount } coins have been added to your balance
 shop-error-unauthenticated = You must be logged in to get coins
 shop-error-pack = Unknown coin pack
 shop-error-funds = You do not have enough coins for this purchase
-shop-error-quantity = Enter a quantity between 1 and { $max }
 shop-error-internal = Failed to update your balance
 shop-buy-close = Close
-shop-buy-quantity = Quantity
-shop-buy-total = Total
 shop-coins = coins
 shop-coins-locked = { $amount } up in trades
 

@@ -297,27 +297,26 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TradeupCollections": v.Collections,
 		// The tradeup and foil grids are paged in the page, keeping the selection
 		"PickerPageSize": inventoryPageSize,
-		"TabFoilUrl":         foilUrl,
-		"FoilResult":         v.Result,
-		"FoilResultLost":     v.ResultLost,
-		"Tradable":           v.Tradable,
-		"IncomingTrades":     v.IncomingTrades,
-		"Pages":              int(totalPages),
-		"Locale":             dc.Renderer.Localizer.GetLocale(c),
+		"TabFoilUrl":     foilUrl,
+		"FoilResult":     v.Result,
+		"FoilResultLost": v.ResultLost,
+		"Tradable":       v.Tradable,
+		"IncomingTrades": v.IncomingTrades,
+		"Pages":          int(totalPages),
+		"Locale":         dc.Renderer.Localizer.GetLocale(c),
 		// Outcome of buying boosters or coins, which land here
 		"Notice": controllers.GetShopNotice(c, dc.Renderer, dc.Data),
 	}
-	// Boosters and coins are bought from the user's own boosters tab
+	// Coins buy boosters from the pack opening page, linked from the user's
+	// own boosters tab
 	if v.Tab == inventoryTabBoosters && viewed == "" {
 		// The balance shows what is free to spend: coins up in pending trades
 		// are left out and said apart
 		coins := user.FreeCoins()
-		fields["Coins"] = coins
 		fields["CoinsLabel"] = dc.Renderer.T(c, "shop-price", "amount", coins)
 		if locked := user.Coins - coins; locked > 0 {
 			fields["CoinsLockedLabel"] = dc.Renderer.T(c, "shop-coins-locked", "amount", int(locked))
 		}
-		fields["MaxQuantity"] = controllers.MaxBuyQuantity
 		fields["Topups"] = controllers.TopupChoices(c, dc.Renderer)
 	}
 	if v.Tab == inventoryTabFoil {
@@ -758,7 +757,7 @@ type boosterStack struct {
 
 // Fill the view with the user's boosters, stacked by collection and size.
 // On the user's own inventory, collections without boosters are listed too,
-// to buy some.
+// their tile leading to the pack opening page where some are bought.
 func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own bool, v *inventoryView) error {
 	var stacks []boosterStack
 	if err := dc.DB.
@@ -782,6 +781,12 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 		byCollection[stack.CollectionID] = append(byCollection[stack.CollectionID], stack)
 	}
 
+	// The collection's progress shown under each tile
+	collected, err := dc.collectedCards(userID)
+	if err != nil {
+		return err
+	}
+
 	loc := dc.Renderer.Localizer.GetLocale(c)
 	items := make([]map[string]any, 0, len(stacks))
 	for _, collection := range dc.sortedCollections() {
@@ -793,18 +798,21 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 		if err != nil {
 			return fmt.Errorf("collection %d: %w", collection.ID, err)
 		}
-
-		// None left: a grayed tile selling the shop's booster
+		total := len(collection.Cards)
+		percent := 0
+		if total > 0 {
+			percent = collected[collection.ID] * 100 / total
+		}
+		// None left: the tile leads to the pack opening page, where some
+		// are bought
 		if len(collectionStacks) == 0 {
-			data["CollectionEmpty"] = true
-			price := controllers.BoosterPrice(collection.ID)
 			items = append(items, map[string]any{
-				"Data":         data,
-				"Empty":        true,
-				"CollectionID": collection.ID,
-				"Title":        data["CollectionTitle"],
-				"Price":        price,
-				"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", price),
+				"Data":    data,
+				"Open":    fmt.Sprintf("/opening?collection=%d", collection.ID),
+				"Label":   dc.Renderer.T(c, "inventory-booster-buy", "name", data["CollectionTitle"]),
+				"Owned":   collected[collection.ID],
+				"Total":   total,
+				"Percent": percent,
 			})
 			continue
 		}
@@ -813,11 +821,15 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 			stackData := maps.Clone(data)
 			// The booster keeps the size it was acquired with
 			stackData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(stack.Size))
+			// Said in the tile's accessible name, no longer displayed
 			stackData["CollectionStack"] = stack.Count
 			items = append(items, map[string]any{
-				"Data":      stackData,
-				"BoosterID": stack.BoosterID,
-				"Label":     dc.Renderer.T(c, "inventory-booster-open", "name", data["CollectionTitle"]),
+				"Data":    stackData,
+				"Open":    fmt.Sprintf("/opening?booster=%d", stack.BoosterID),
+				"Label":   dc.Renderer.T(c, "inventory-booster-open", "name", data["CollectionTitle"]),
+				"Owned":   collected[collection.ID],
+				"Total":   total,
+				"Percent": percent,
 			})
 		}
 	}
@@ -839,23 +851,9 @@ func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters in
 
 // Fill the view with every collection, and how many of its cards the user owns
 func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *inventoryView) error {
-	// Distinct cards owned, by collection
-	var rows []struct {
-		CollectionID int
-		Owned        int
-	}
-	if err := dc.DB.
-		Model(&models.Card{}).
-		Select("FLOOR(card_id / 1000) AS collection_id, COUNT(DISTINCT card_id) AS owned").
-		Where("owner_id = ?", userID).
-		Group("FLOOR(card_id / 1000)").
-		Scan(&rows).
-		Error; err != nil {
+	owned, err := dc.collectedCards(userID)
+	if err != nil {
 		return err
-	}
-	owned := make(map[int]int, len(rows))
-	for _, row := range rows {
-		owned[row.CollectionID] = row.Owned
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
@@ -890,6 +888,28 @@ func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *i
 		})
 	}
 	return nil
+}
+
+// Distinct cards owned, by collection id
+func (dc *DataController) collectedCards(userID uint) (map[int]int, error) {
+	var rows []struct {
+		CollectionID int
+		Owned        int
+	}
+	if err := dc.DB.
+		Model(&models.Card{}).
+		Select("FLOOR(card_id / 1000) AS collection_id, COUNT(DISTINCT card_id) AS owned").
+		Where("owner_id = ?", userID).
+		Group("FLOOR(card_id / 1000)").
+		Scan(&rows).
+		Error; err != nil {
+		return nil, err
+	}
+	collected := make(map[int]int, len(rows))
+	for _, row := range rows {
+		collected[row.CollectionID] = row.Owned
+	}
+	return collected, nil
 }
 
 // Global IDs of the cards a user owns, once each

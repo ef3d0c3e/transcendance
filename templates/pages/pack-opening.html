@@ -84,8 +84,7 @@
 		data-motion-label="{{ .T "pack-opening-motion" }}"
 		data-skip-label="{{ .T "pack-opening-skip" }}"
 		data-spinning-label="{{ .T "pack-opening-spinning" }}"
-		data-coins="{{ .Data.Coins }}"
-		data-autostart="{{ if .Data.BoosterID }}true{{ else }}false{{ end }}"></div>
+		data-coins="{{ .Data.Coins }}"></div>
 
 
 	{{ template "topup-popup" . }}
