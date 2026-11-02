@@ -19,6 +19,10 @@ import (
 	"transcendance/views"
 )
 
+// PasswordHashCost is the bcrypt cost of new password hashes. The tests
+// lower it, hashing at the default cost is slow under the race detector
+var PasswordHashCost = bcrypt.DefaultCost
+
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
@@ -26,6 +30,13 @@ type AuthenticatedUser struct {
 	Rank uint
 	// In-shop currency balance
 	Coins uint
+	// Coins of the balance up in pending trades, which cannot be spent
+	LockedCoins uint
+}
+
+// FreeCoins is the balance the user can spend
+func (u *AuthenticatedUser) FreeCoins() uint {
+	return FreeCoins(u.Coins, u.LockedCoins)
 }
 
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
@@ -71,11 +82,17 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			}
 		}
 
+		locked, err := TradeCommittedCoins(db, user.ID)
+		if err != nil {
+			log.Printf("WARN failed to get the coins user %d put up in trades: %s", user.ID, err)
+		}
+
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID:       session.UserID,
-			Username: user.Username,
-			Rank:     user.Rank,
-			Coins:    user.Coins,
+			ID:          session.UserID,
+			Username:    user.Username,
+			Rank:        user.Rank,
+			Coins:       user.Coins,
+			LockedCoins: locked,
 		})
 
 		c.Next()
@@ -156,7 +173,7 @@ func (ac *Controller) RegisterPost(c *gin.Context) {
 
 	passwordHash, err := bcrypt.GenerateFromPassword(
 		[]byte(password),
-		bcrypt.DefaultCost,
+		PasswordHashCost,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -200,9 +217,14 @@ func (ac *Controller) RegisterPost(c *gin.Context) {
 		if err := tx.Create(&user).Error; err != nil {
 			return err
 		}
-		return tx.Create(&models.UserProfile{
+		if err := tx.Create(&models.UserProfile{
 			UserID: user.ID,
-		}).Error
+		}).Error; err != nil {
+			return err
+		}
+		// The account comes with its pile of default boosters
+		_, err := ensureBoosterPile(tx, user.ID, now)
+		return err
 	})
 	if err != nil {
 		key := ""

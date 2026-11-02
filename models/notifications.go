@@ -12,6 +12,8 @@ const (
 	NotificationFriendAccepted = "friend-accepted"
 	NotificationInfo           = "info"
 	NotificationPrivateMessage = "private-message"
+	NotificationTrade          = "trade"
+	NotificationTradeCounter   = "trade-counter"
 )
 
 type Notification struct {

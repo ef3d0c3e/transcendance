@@ -7,6 +7,9 @@ import InventoryCardPopup from './InventoryCardPopup.svelte';
 import PackOpening from './PackOpening.svelte';
 import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
+import TradeMenu from './TradeMenu.svelte';
+import TradeUpPicker from './TradeUpPicker.svelte';
+import TradeUpResult from './TradeUpResult.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -15,6 +18,7 @@ import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
 import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
+import { enhanceCountdowns } from './countdown.js';
 import { openTopup } from './topup.js';
 
 // Navbar
@@ -85,6 +89,11 @@ import { openTopup } from './topup.js';
 	for (const list of document.querySelectorAll('[data-relative-times]')) {
 		enhanceRelativeTimes(list);
 	}
+}
+
+// Countdown pills, e.g the time left before the next booster
+{
+	enhanceCountdowns();
 }
 
 // Log out, then land on a page visitors can see
@@ -311,6 +320,24 @@ import { openTopup } from './topup.js';
 	}
 }
 
+// Tradeup contract picker
+{
+	const target = document.querySelector('#tradeup-picker');
+
+	if (target) {
+		mount(TradeUpPicker, { target, props: { target } });
+	}
+}
+
+// Tradeup result popup
+{
+	const target = document.querySelector('#tradeup-result');
+
+	if (target) {
+		mount(TradeUpResult, { target, props: { target } });
+	}
+}
+
 // Pack opening
 {
 	const target = document.querySelector('#pack-opening');
@@ -355,6 +382,43 @@ import { openTopup } from './topup.js';
 				target,
 			},
 		});
+	}
+}
+
+// Trade menu
+{
+	const target = document.querySelector('#trade-menu');
+
+	if (target) {
+		mount(TradeMenu, {
+			target,
+			props: {
+				target,
+			},
+		});
+	}
+}
+
+// Confirmation popups opened by a button, e.g selling the duplicate cards
+{
+	for (const button of document.querySelectorAll('[data-dialog-open]')) {
+		const dialog = document.querySelector(`#${CSS.escape(button.dataset.dialogOpen)}`);
+		if (!dialog) {
+			continue;
+		}
+		button.setAttribute('aria-controls', dialog.id);
+		button.addEventListener('click', () => dialog.showModal());
+		for (const close of dialog.querySelectorAll('[data-dialog-close]')) {
+			close.addEventListener('click', () => dialog.close());
+		}
+		// Clicking the backdrop targets the dialog itself
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+		// Focus comes back to the button, as it opened the popup
+		dialog.addEventListener('close', () => button.focus());
 	}
 }
 

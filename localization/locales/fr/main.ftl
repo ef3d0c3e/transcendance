@@ -96,6 +96,7 @@ navbar-inventory = Inventaire
 navbar-profile = Votre profil
 navbar-friends = Amis
 navbar-logout = Se déconnecter
+header-balance = Solde : { $amount }
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
@@ -115,6 +116,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
 
 card-search-placeholder = Rechercher des cartes
+card-filter-placeholder = Filtrer par nom de carte ou de collection
+card-filter-no-match = Aucune carte ne correspond à ce filtre
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echec de la recherche
@@ -212,6 +215,10 @@ notification-friend-accepted-title = Demande d'ami acceptée
 notification-friend-accepted-desc = { $username } a accepté votre demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-trade-title = Offre d’échange
+notification-trade-desc = { $username } vous a envoyé une offre d’échange
+notification-trade-counter-title = Offre d’échange contre-proposée
+notification-trade-counter-desc = { $username } a contre-proposé votre offre d’échange
 notification-private-message-title = { $count ->
     [one] Nouveau message de { $username }
    *[other] { $count } nouveaux messages de { $username }
@@ -244,6 +251,30 @@ inventory-search-submit = Rechercher
 inventory-search-clear = Effacer la recherche
 inventory-card-acquired = Obtenue le
 inventory-card-close = Fermer
+inventory-card-value = Valeur
+inventory-card-sell = Vendre
+inventory-sell-quantity = Quantité
+inventory-sell-total = Total
+inventory-sell-confirm = Confirmer la vente
+inventory-sold = { $count ->
+    [one] Vous avez vendu { $count } carte pour { $amount } pièces
+   *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
+}
+inventory-sell-error-card = Cette carte ne peut pas être vendue
+inventory-sell-error-quantity = Choisissez une quantité d’au moins 1
+inventory-sell-error-missing = Vous n’avez pas autant d’exemplaires à vendre
+inventory-sell-error-locked = Certains de ces exemplaires sont dans des échanges
+inventory-sell-error-none = Vous n’avez aucune carte en double à vendre
+inventory-sell-error-internal = Échec de la vente de vos cartes
+inventory-sell-duplicates = Vendre les doublons
+inventory-sell-duplicates-title = Vendre les cartes en double
+inventory-sell-duplicates-text = { $count ->
+    [one] Vendre { $count } carte en double pour { $amount } pièces ?
+   *[other] Vendre { $count } cartes en double pour { $amount } pièces ?
+}
+inventory-sell-duplicates-note = Un exemplaire de chaque carte est conservé, pour chaque version foil. Les exemplaires dans des échanges ne sont ni vendus ni comptés comme l’exemplaire conservé.
+inventory-sell-duplicates-confirm = Vendre pour { $amount } pièces
+inventory-sell-cancel = Annuler
 inventory-card-acquired-first = Première obtenue le
 inventory-card-acquired-last = Dernière obtenue le
 inventory-card-copies = Exemplaires
@@ -256,6 +287,8 @@ inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
 inventory-filter-effect-foil = Holographique
+inventory-filter-collection = Collection
+inventory-filter-collection-all = Toutes les collections
 inventory-sort = Trier par
 inventory-sort-relevance = Pertinence
 inventory-sort-recent = Dernière obtention
@@ -268,6 +301,7 @@ inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Améliorer
 inventory-message-no-boosters = Aucun booster pour l'instant
 inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
@@ -282,6 +316,19 @@ inventory-search-count = { $count ->
     [one] { $count } carte trouvée
     *[other] { $count } cartes trouvées
 }
+inventory-locked-badge = { $count } dans des échanges
+
+booster-pile-title = Booster par défaut
+booster-pile-desc = { $count } cartes aléatoires de toutes les collections
+daily-streak-title = Série quotidienne
+daily-streak-meter = { $tier } · { $amount }
+daily-streak-count = Série { $days }
+daily-streak-best = Record : { $best }
+daily-streak-best-current = en cours
+daily-streak-none = —
+daily-streak-claim = Réclamer { $amount } pièces
+daily-streak-claimed = Disponible dans
+daily-streak-claimed-notice = { $amount } pièces ont été ajoutées à votre solde
 
 pack-opening-title = Ouverture de booster
 pack-opening-open = Ouvrir le booster
@@ -296,6 +343,7 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-error-pile = Aucun booster par défaut disponible
 pack-opening-buy = Ouvrir à nouveau
 pack-opening-buy-label = Ouvrir à nouveau pour { $price }
 pack-opening-sound-on = Son activé
@@ -330,6 +378,7 @@ shop-buy-close = Fermer
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
+shop-coins-locked = { $amount } dans des échanges
 
 index-title = Transcendance, collectionnez des cartes
 index-heading = Collectionnez, troquez et exposez vos cartes
@@ -440,6 +489,61 @@ contact-team-text = Vous pouvez aussi contacter directement un membre de l'équi
 contact-privacy-title = Demandes relatives à vos données
 contact-privacy-text = Pour une demande concernant vos données personnelles, contactez un membre de l'équipe en privé plutôt que d'ouvrir une issue publique. Vous pouvez supprimer votre compte à tout moment depuis votre profil.
 
+inventory-trade = Proposer un échange
+inventory-trades = Vos échanges
+inventory-trades-incoming = { $count ->
+    [one] { $count } offre attend votre réponse
+   *[other] { $count } offres attendent votre réponse
+}
+
+trades-title = Échanges
+trade-menu-title = Échanger avec { $username }
+trade-you-give = Vous donnez
+trade-you-get = Vous recevez
+trade-coins = Pièces
+trade-send = Envoyer l’offre
+trade-counter-send = Envoyer la contre-offre
+trade-back = Retour aux échanges
+trade-accept = Accepter
+trade-decline = Refuser
+trade-counter = Contre-proposer
+trade-cancel = Annuler
+trade-incoming = Offres reçues
+trade-outgoing = Offres envoyées
+trade-history = Échanges passés
+trade-state-accepted = Accepté
+trade-state-declined = Refusé
+trade-state-cancelled = Annulé
+trade-none-incoming = Aucune offre reçue
+trade-none-outgoing = Aucune offre en attente
+trade-none-history = Aucun échange passé
+trade-stack = { $count }× { $title }
+trade-menu-empty = Rien à échanger ici
+trade-menu-loading = Chargement…
+trade-menu-increase = Ajouter un exemplaire
+trade-menu-decrease = Retirer un exemplaire
+trade-menu-error-network = Impossible de contacter le serveur
+trade-menu-noscript = Le menu d’échange nécessite JavaScript
+trade-error-settle = Cette offre d’échange ne peut plus être complétée
+trade-error-invalid = Offre d’échange invalide
+trade-error-internal = Échec de l’enregistrement de l’offre
+trade-error-not-found = Offre d’échange introuvable
+trade-error-user = Utilisateur introuvable
+trade-error-self = Vous ne pouvez pas échanger avec vous-même
+trade-error-empty-give = Proposez au moins une carte ou des pièces
+trade-error-empty-want = Demandez au moins une carte ou des pièces
+trade-error-count = Nombre de cartes invalide
+trade-error-items = Trop de piles de cartes dans l’offre
+trade-error-card = Carte inconnue
+trade-error-duplicate = La même pile de cartes apparaît deux fois
+trade-error-owned = Pas assez d’exemplaires d’une carte
+trade-error-locked = Certains exemplaires d’une carte sont dans un autre échange
+trade-error-coins = Pas assez de pièces
+trade-error-locked-coins = Certaines pièces sont dans un autre échange
+trade-error-want-coins = L’autre utilisateur n’a pas autant de pièces
+trade-error-state = Cette offre d’échange n’est plus en attente
+trade-error-forbidden = Cette offre d’échange ne vous appartient pas
+trade-error-blocked = Vous ne pouvez pas échanger avec cet utilisateur
 shoutbox-title = Discussion
 shoutbox-unread = nouveaux messages
 shoutbox-close = Fermer
@@ -478,3 +582,20 @@ shoutbox-ignoring-notice = Vous ignorez cet utilisateur : ses messages de la sho
 shoutbox-error-user-not-found = Cet utilisateur n'existe pas
 shoutbox-error-self = Vous ne pouvez pas vous écrire à vous-même
 shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le moment
+
+tradeup-rules = Combinez { $count } cartes de la même rareté pour obtenir une carte aléatoire de la rareté supérieure. Les chances de chaque collection suivent le nombre de cartes qui en viennent.
+tradeup-empty = Aucune carte ici ne peut être améliorée
+tradeup-slots = Emplacements de l’amélioration
+tradeup-remove = Retirer
+tradeup-slot-empty = Emplacement vide
+tradeup-clear = Réinitialiser
+tradeup-submit = Améliorer
+tradeup-result = Vous avez obtenu
+tradeup-result-close = Fermer
+tradeup-error-count = Une amélioration nécessite exactement { $count } cartes
+tradeup-error-rarity = Toutes les cartes d’une amélioration doivent avoir la même rareté
+tradeup-error-tier = Ces cartes ne peuvent pas être améliorées
+tradeup-error-missing = Vous ne possédez pas assez de ces cartes
+tradeup-error-locked = Certaines de ces cartes sont dans des échanges
+tradeup-error-empty = Aucune de ces collections ne contient de carte de la rareté supérieure
+tradeup-error-internal = Échec de l’amélioration

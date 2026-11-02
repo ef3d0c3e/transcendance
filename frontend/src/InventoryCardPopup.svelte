@@ -1,7 +1,9 @@
 <!--
     Popup with stack details (copies, acquisition dates) when clicking an inventory card
 
-    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates)
+    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates).
+    On their owner's inventory they also provide `data-sell-id`, `data-sell-foil`, `data-sell-price`
+    and `data-sell-owned`, the copies free to sell, and the popup offers to sell some to the shop.
 -->
 
 <script>
@@ -20,11 +22,30 @@
 	let dates = $state([]);
 	let returnFocus = null;
 
+	let sellId = $state("");
+	let sellFoil = $state("");
+	let sellPrice = $state(0);
+	let sellOwned = $state(0);
+	let selling = $state(false);
+	let quantity = $state(1);
+
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
 	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
 	const labelAcquiredLast = $derived(target.dataset.labelAcquiredLast ?? "");
 	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
+	const labelValue = $derived(target.dataset.labelValue ?? "");
+	const labelSell = $derived(target.dataset.labelSell ?? "");
+	const labelQuantity = $derived(target.dataset.labelQuantity ?? "");
+	const labelTotal = $derived(target.dataset.labelTotal ?? "");
+	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
+	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	const sellAction = $derived(target.dataset.sellAction ?? "");
+	// The popup offers to sell only where the card carries a price and the
+	// owner has copies of it that are not up in trades
+	const sellable = $derived(sellAction !== "" && sellId !== "" && sellOwned > 0);
+	const total = $derived(sellPrice * quantity);
+	const numberFormat = $derived(new Intl.NumberFormat(target.dataset.locale || undefined));
 	const dateFormat = $derived(
 		new Intl.DateTimeFormat(target.dataset.locale || undefined, {
 			dateStyle: "long",
@@ -43,6 +64,12 @@
 						date(labelAcquiredLast, card.dataset.acquiredLast),
 					]
 				: [date(labelAcquired, card.dataset.acquiredFirst)];
+		sellId = card.dataset.sellId ?? "";
+		sellFoil = card.dataset.sellFoil ?? "";
+		sellPrice = Number(card.dataset.sellPrice ?? 0);
+		sellOwned = Number(card.dataset.sellOwned ?? 0);
+		selling = false;
+		quantity = 1;
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -135,8 +162,39 @@
 					<dd><time datetime={iso}>{text}</time></dd>
 				</div>
 			{/each}
+			{#if sellable}
+				<div>
+					<dt>{labelValue}</dt>
+					<dd>{numberFormat.format(sellPrice)} {labelCoins}</dd>
+				</div>
+			{/if}
 		</dl>
-		<button type="button" onclick={close}>{labelClose}</button>
+		{#if sellable && selling}
+			<form class="inventory-sell-form" method="post" action={sellAction}>
+				<input type="hidden" name="card" value={sellId} />
+				<input type="hidden" name="foil" value={sellFoil} />
+				<input type="hidden" name="quantity" value={quantity} />
+				{#if sellOwned > 1}
+					<label class="inventory-sell-quantity">
+						<span>{labelQuantity}</span>
+						<input type="range" min="1" max={sellOwned} bind:value={quantity} />
+						<output>{quantity} / {sellOwned}</output>
+					</label>
+				{/if}
+				<p class="inventory-sell-total">{labelTotal}: {numberFormat.format(total)} {labelCoins}</p>
+				<div class="inventory-popup-actions">
+					<button type="button" class="inventory-popup-neutral" onclick={close}>{labelClose}</button>
+					<button type="submit">{labelConfirm}</button>
+				</div>
+			</form>
+		{:else}
+			<div class="inventory-popup-actions">
+				{#if sellable}
+					<button type="button" onclick={() => (selling = true)}>{labelSell}</button>
+				{/if}
+				<button type="button" class:inventory-popup-neutral={sellable} onclick={close}>{labelClose}</button>
+			</div>
+		{/if}
 	</div>
 </dialog>
 
@@ -198,8 +256,52 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	button {
-		align-self: flex-end;
+	.inventory-popup-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+
+	/* Closing is the neutral action next to selling */
+	.inventory-popup-neutral {
+		color: var(--color-text);
+		background: var(--color-bg-4);
+	}
+
+	.inventory-popup-neutral:hover {
+		background: color-mix(in srgb, var(--color-bg-4), black 10%);
+	}
+
+	.inventory-sell-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.inventory-sell-quantity {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.inventory-sell-quantity input {
+		flex: 1;
+	}
+
+	.inventory-sell-quantity output {
+		color: var(--color-text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.inventory-sell-total {
+		margin: 0;
+
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
 	}
 
 	@keyframes popup-in {
@@ -224,8 +326,8 @@
 			padding-bottom: max(1rem, env(safe-area-inset-bottom));
 		}
 
-		button {
-			align-self: stretch;
+		.inventory-popup-actions button {
+			flex: 1;
 		}
 	}
 
