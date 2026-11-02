@@ -41,10 +41,13 @@ The database passwords are only read when the database volume is first created. 
 
 ## First start
 
+From the repository root, a single command creates `docker/.env` when it is missing (generating every secret), then builds and starts the stack and waits until it is healthy:
+
 ```sh
-docker compose up -d --build
-docker compose ps
+make
 ```
+
+`make down` stops it and `make logs` follows the logs. The other commands below run from `docker/`.
 
 Open `https://<host>:8443/`. The certificate is self-signed, so the browser shows a warning the first time; accept it to continue.
 
