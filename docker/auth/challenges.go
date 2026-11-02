@@ -136,7 +136,6 @@ func (cs *challengeStore) create(ip string, agent string) (challenge, error) {
 	return *c, nil
 }
 
-// The challenge waiting for approval under a code
 func (cs *challengeStore) pending(code string) (challenge, bool) {
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
