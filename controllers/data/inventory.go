@@ -341,6 +341,27 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		fields["SortOptions"] = sortOptions
 	}
+	if v.Tab == inventoryTabTradeup {
+		// The filter offers the rarities a tradeup can hold, lowest first
+		rarities := make([]string, 0, len(inventoryRarities))
+		for _, rarity := range inventoryRarities {
+			if tierAbove(rarity) != "" {
+				rarities = append(rarities, rarity)
+			}
+		}
+		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, rarities...), "", func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-filter-rarity-all")
+			}
+			return dc.Renderer.T(c, "card-rarity-"+value)
+		})
+		fields["SortOptions"] = controllers.SelectOptions([]string{"", tradeupSortGrouped}, "", func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-sort-count")
+			}
+			return dc.Renderer.T(c, "tradeup-sort-grouped")
+		})
+	}
 	content := builder.Add("inventory", "Content", fields)
 	params := url.Values{}
 	if viewed != "" {

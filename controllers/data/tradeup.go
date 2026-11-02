@@ -24,6 +24,10 @@ import (
 // Number of cards a tradeup consumes
 const tradeupCost = 10
 
+// Tradeup grid sorts. The default "" lists the biggest stacks to spend first,
+// "grouped" stands the cards by collection, then rarity, then count
+const tradeupSortGrouped = "grouped"
+
 var (
 	// A tradeup is refused whole when its cards can't be taken
 	errTradeupMissing = errors.New("tradeup cards are missing")
@@ -344,6 +348,18 @@ func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inven
 	// Grouped by collection, then rarity, then how many copies to spend
 	sortTradeupStacks(stacks, loc)
 
+	// The grid lists the biggest stacks first. Each tile keeps its place in
+	// the grouped order above (`data-tradeup-order`), which breaks the ties of
+	// every sort the grid offers: the client can restore the grouped order and
+	// come back to this one exactly.
+	orders := make(map[tradeupTake]int, len(stacks))
+	for i, stack := range stacks {
+		orders[tradeupTake{CardID: stack.CardID, Foil: stack.Foil}] = i
+	}
+	slices.SortStableFunc(stacks, func(a, b cardStack) int {
+		return cmp.Compare(b.Count, a.Count)
+	})
+
 	// Every eligible stack is listed at once: a contract is built across
 	// stacks, and paging away would drop the selection
 	v.PageItems = int64(len(stacks))
@@ -366,6 +382,7 @@ func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inven
 			"Foil":   stack.Foil,
 			"Count":  stack.Count,
 			"Rarity": stack.card.Rarity,
+			"Order":  orders[tradeupTake{CardID: stack.CardID, Foil: stack.Foil}],
 		})
 
 		if collections[stack.collection.ID] {

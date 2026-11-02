@@ -585,6 +585,7 @@ shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le mome
 
 tradeup-rules = Combinez { $count } cartes de la même rareté pour obtenir une carte aléatoire de la rareté supérieure. Les chances de chaque collection suivent le nombre de cartes qui en viennent.
 tradeup-empty = Aucune carte ici ne peut être améliorée
+tradeup-sort-grouped = Collection et rareté
 tradeup-slots = Emplacements de l’amélioration
 tradeup-remove = Retirer
 tradeup-slot-empty = Emplacement vide
