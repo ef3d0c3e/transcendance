@@ -72,12 +72,12 @@ func TestTradeupConsumesCardsAndAwardsOneTierUp(t *testing.T) {
 
 	// McMurdo Station is the only rare in the dev collection
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 	require.Zero(t, ownedCopies(t, "tradeup1", cardPythagorean))
 	require.Equal(t, 1, ownedCopies(t, "tradeup1", cardMcMurdo))
 
 	// The page names what came out of it, in a popup the client opens
-	body := getInventory(t, router, cookie, "/inventory?tab=tradeup&result=1003")
+	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
 	require.Contains(t, body, `id="tradeup-result"`)
 	require.Contains(t, body, "You obtained")
 	require.Contains(t, body, `<h2 class="card-title">McMurdo Station</h2>`)
@@ -93,7 +93,7 @@ func TestTradeupAwardsOneTierUpFromRareCards(t *testing.T) {
 
 	// Ford Model T is the only legendary in the dev collection
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1004", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1004", rec.Header().Get("Location"))
 	require.Zero(t, ownedCopies(t, "tradeup2", cardMcMurdo))
 	require.Equal(t, 1, ownedCopies(t, "tradeup2", cardFordT))
 }
@@ -114,7 +114,7 @@ func TestTradeupMixesCollectionsOfOneRarity(t *testing.T) {
 	rec := tradeup(t, router, cookie, form)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 	// The 10 cards are gone, only the reward is left
 	require.Equal(t, 1, len(ownedCards(t, "tradeup3")))
 	require.Equal(t, 1, ownedCopies(t, "tradeup3", cardMcMurdo))
@@ -211,7 +211,7 @@ func TestTradeupConsumesOnlyTheSelectedFoil(t *testing.T) {
 	rec := tradeup(t, router, cookie, contract(copies(cardPythagorean, "", 10)...))
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 
 	foils, plain := 0, 0
 	for _, owned := range ownedCards(t, "tradeup9") {

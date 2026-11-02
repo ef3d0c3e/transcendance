@@ -194,7 +194,8 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": dc.Renderer.T(c, "trade-error-invalid")})
 			return
 		}
-		page = parsed
+		// Bounded, huge pages would overflow the offsets
+		page = controllers.PageParam(raw)
 	}
 
 	other := c.Query("u")

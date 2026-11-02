@@ -240,11 +240,13 @@ func TestTradePendingOffersLimit(t *testing.T) {
 func TestHugePageNumbers(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "hugepage1", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "hugepage2", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "hugepage1", "foo-bar-baz-qux")
 
 	huge := "461168601842738792"
 	for _, target := range []string{"/inventory?tab=cards&p=" + huge, "/inventory?tab=boosters&p=" + huge,
-		"/cards/search/?p=" + huge, "/search?p=" + huge, "/notifications?p=" + huge} {
+		"/cards/search/?p=" + huge, "/search?p=" + huge, "/notifications?p=" + huge,
+		"/api/trade/stacks?u=hugepage2&page=" + huge} {
 		req := httptest.NewRequest(http.MethodGet, target, nil)
 		req.AddCookie(cookie)
 		rec := httptest.NewRecorder()
