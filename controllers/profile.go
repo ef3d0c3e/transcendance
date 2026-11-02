@@ -11,6 +11,7 @@ import (
 	"time"
 	"transcendance/models"
 	"transcendance/views"
+	"unicode/utf8"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
@@ -50,7 +51,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		userProfile.User.Email = ""
 	}
 
-	editMode := c.Param("username") == "" || (user.Rank == 2 && userProfile.UserID != user.ID)
+	editMode := c.Param("username") == "" || (user.IsAdmin() && userProfile.UserID != user.ID)
 
 	relation := ""
 	if userProfile.UserID != user.ID {
@@ -80,15 +81,16 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"Profile":           userProfile,
 		"Edit":              editMode,
 		"CanChangePassword": userProfile.UserID == user.ID,
-		"Admin":             user.Rank == 2,
-		"DeleteAction":      fmt.Sprintf("/profiles/%d/delete", userProfile.UserID),
-		"CanSeeEmail":       canSeeEmail,
-		"Own":               userProfile.UserID == user.ID,
-		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
-		"Relation":          relation,
-		"Locale":            pc.Renderer.Localizer.GetLocale(c),
-		"FormAction":        formAction,
-		"AvatarAction":      avatarAction,
+		// Admins change the rank of others, never their own: there must always be an admin left
+		"Admin":        user.IsAdmin() && userProfile.UserID != user.ID,
+		"DeleteAction": fmt.Sprintf("/profiles/%d/delete", userProfile.UserID),
+		"CanSeeEmail":  canSeeEmail,
+		"Own":          userProfile.UserID == user.ID,
+		"Online":       models.IsOnline(userProfile.User.LastSeenAt),
+		"Relation":     relation,
+		"Locale":       pc.Renderer.Localizer.GetLocale(c),
+		"FormAction":   formAction,
+		"AvatarAction": avatarAction,
 	})
 	pc.Renderer.Render(c, &builder)
 }
@@ -108,7 +110,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 	email, processEmail := c.GetPostForm("email")
 	rank, processRank := c.GetPostForm("rank")
-	if processRank && authUser.Rank != 2 {
+	if processRank && !authUser.IsAdmin() {
 		c.JSON(http.StatusForbidden, gin.H{"message": pc.Renderer.T(c, "error-unauthorized")})
 		return
 	}
@@ -142,7 +144,8 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 	validRequest := true
 	if processEmail {
-		if email == "" || len(email) > 254 {
+		email = strings.TrimSpace(email)
+		if !validEmail(email) {
 			errorMessages["email"] = pc.Renderer.T(c, "account-error-email")
 			validRequest = false
 		} else {
@@ -160,8 +163,11 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 	if processRank {
 		value, err := strconv.ParseUint(rank, 10, 8)
-		if err != nil || value > 2 {
+		if err != nil || uint(value) > models.RankAdmin {
 			errorMessages["rank"] = pc.Renderer.T(c, "profile-error-rank")
+			validRequest = false
+		} else if target.ID == authUser.ID && uint(value) != authUser.Rank {
+			errorMessages["rank"] = pc.Renderer.T(c, "profile-error-rank-self")
 			validRequest = false
 		} else {
 			updates["user"]["rank"] = uint(value)
@@ -169,7 +175,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processUsername && username != target.Username {
-		if len(username) < 3 || len(username) > 16 || !is_alphanumeric.MatchString(username) {
+		if len(username) < 3 || len(username) > 16 || !isAlphanumeric.MatchString(username) {
 			errorMessages["username"] = pc.Renderer.T(c, "profile-error-username")
 			validRequest = false
 		} else if err := pc.DB.Select("id").Where("username = ? AND id <> ?", username, target.ID).First(&models.User{}).Error; err == nil {
@@ -185,7 +191,9 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processBio {
-		if len(bio) > 244 {
+		// Counted in characters like the browser's maxlength, which also counts line breaks once
+		bio = strings.ReplaceAll(bio, "\r\n", "\n")
+		if utf8.RuneCountInString(bio) > 244 {
 			errorMessages["bio"] = pc.Renderer.T(c, "profile-error-bio")
 			validRequest = false
 		}
@@ -206,7 +214,8 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	}
 
 	if processContactInfo {
-		if len(contactInfo) > 256 {
+		contactInfo = strings.ReplaceAll(contactInfo, "\r\n", "\n")
+		if utf8.RuneCountInString(contactInfo) > 256 {
 			errorMessages["contact"] = pc.Renderer.T(c, "profile-error-contactinfo")
 			validRequest = false
 		}
@@ -275,7 +284,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 			if _, changed := updates["user"]["password_hash"]; changed {
 				// Log out everywhere else, the current session stays valid
 				token, _ := c.Cookie("session_token")
-				if err := tx.Where("user_id = ? AND token <> ?", target.ID, token).
+				if err := tx.Where("user_id = ? AND token <> ?", target.ID, models.HashSessionToken(token)).
 					Delete(&models.UserSession{}).Error; err != nil {
 					return err
 				}
@@ -341,7 +350,7 @@ func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*
 	if uint(id) == actor.ID {
 		return target, 0
 	}
-	if actor.Rank != 2 {
+	if !actor.IsAdmin() {
 		return nil, http.StatusForbidden
 	}
 	target = &models.User{}
@@ -367,6 +376,20 @@ func (pc *Controller) ProfileDeletePost(c *gin.Context) {
 		return
 	}
 
+	// The last admin cannot leave, nobody could manage accounts anymore
+	if target.ID == user.ID && user.IsAdmin() {
+		var admins int64
+		if err := pc.DB.Model(&models.User{}).Where("`rank` >= ? AND id <> ?", models.RankAdmin, user.ID).
+			Count(&admins).Error; err != nil {
+			InternalError(c, pc.Renderer, err)
+			return
+		}
+		if admins == 0 {
+			c.JSON(http.StatusConflict, gin.H{"message": pc.Renderer.T(c, "account-delete-error-last-admin")})
+			return
+		}
+	}
+
 	// Permanently erase the user, related rows are removed by their ON DELETE CASCADE constraint
 	result := pc.DB.WithContext(c.Request.Context()).Unscoped().Delete(&models.User{}, target.ID)
 	if result.Error != nil || result.RowsAffected != 1 {
@@ -378,7 +401,7 @@ func (pc *Controller) ProfileDeletePost(c *gin.Context) {
 	}
 	log.Printf("Deleted user `%s'", target.Username)
 	if target.ID == user.ID {
-		c.SetCookie("session_token", "", -1, "/", "", false, true)
+		setSessionCookie(c, "", -1)
 	}
 	c.Status(http.StatusNoContent)
 }

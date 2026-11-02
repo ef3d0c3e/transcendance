@@ -748,17 +748,17 @@ func (tc *Controller) TradesGet(c *gin.Context) {
 	var incoming, outgoing, history []models.Trade
 	if err := tc.DB.Where("to_id = ? AND state = ?", user.ID, models.TradePending).
 		Order("updated_at DESC").Find(&incoming).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 	if err := tc.DB.Where("from_id = ? AND state = ?", user.ID, models.TradePending).
 		Order("updated_at DESC").Find(&outgoing).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 	if err := tc.DB.Where("(from_id = ? OR to_id = ?) AND state != ?", user.ID, user.ID, models.TradePending).
 		Order("updated_at DESC").Limit(tradeHistoryLimit).Find(&history).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, tc.Renderer, err)
 		return
 	}
 

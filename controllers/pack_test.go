@@ -395,10 +395,16 @@ func TestOpenBoosterUnauthenticated(t *testing.T) {
 
 func TestAddBooster(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "packadd1", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "packadd1", "foo-bar-baz-qux", 2)
+	createAccount(t, router, "packadd3", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "packadd1", "foo-bar-baz-qux")
 
-	rec := postForm(t, router, cookie, "/add_booster", url.Values{"collection": {"1"}})
+	// A debug tool, not a way for players to get free boosters
+	rec := postForm(t, router, login(t, router, "packadd3", "foo-bar-baz-qux"), "/add_booster", url.Values{"collection": {"1"}})
+	require.Equal(t, http.StatusForbidden, rec.Code)
+	require.Empty(t, ownedBoosters(t, "packadd3"))
+
+	rec = postForm(t, router, cookie, "/add_booster", url.Values{"collection": {"1"}})
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	require.Equal(t, "/inventory?tab=boosters", rec.Header().Get("Location"))
 
@@ -436,7 +442,7 @@ func TestInventoryBoosterOpens(t *testing.T) {
 
 func TestAddBoosterPageNotLocalized(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "packadd2", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "packadd2", "foo-bar-baz-qux", 2)
 	cookie := login(t, router, "packadd2", "foo-bar-baz-qux")
 
 	body := getInventory(t, router, cookie, "/add_booster?lang=fr")

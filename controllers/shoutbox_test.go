@@ -305,7 +305,7 @@ func TestShoutboxLoggedOut(t *testing.T) {
 
 	conn, _ := shoutboxConnect(t, server, cookie)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/logout", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/logout", nil)
 	req.AddCookie(cookie)
 	router.ServeHTTP(httptest.NewRecorder(), req)
 

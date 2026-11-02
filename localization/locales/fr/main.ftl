@@ -25,6 +25,10 @@ login-error-username = Nom d'utilisateur invalide
 login-error-password = Mot de passe invalide
 login-error-invalid = Identifiants de connexion invalides
 login-error-internal = Échec de la connexion
+login-error-rate-limited = Trop de tentatives échouées, réessayez dans { $seconds ->
+    [one] { $seconds } seconde
+    *[other] { $seconds } secondes
+}.
 login-success = Bienvenu, { $username }
 
 logout-unauthenticated = Vous n'êtes pas connecté
@@ -53,9 +57,10 @@ friends-empty-sent = Vous n'avez envoyé aucune demande d'ami
 friends-empty-received = Vous n'avez reçu aucune demande d'ami
 
 account-delete-error-generic = Echec de la suppression du compte
+account-delete-error-last-admin = Vous êtes le seul administrateur : nommez un autre administrateur avant de supprimer votre compte.
 account-delete-title = Supprimer le compte
 account-email = Adresse e-mail
-account-error-email = Une adresse e-mail est requise (254 octets maximum)
+account-error-email = Une adresse e-mail valide est requise, par exemple nom@example.org (254 caractères maximum)
 account-error-email-taken = Adresse e-mail déjà utilisée
 
 search-user-title = Rechercher des utilisateurs
@@ -189,6 +194,7 @@ profile-rank-user = Utilisateur
 profile-rank-moderator = Modérateur
 profile-rank-admin = Administrateur
 profile-error-rank = Le rôle doit être 0, 1 ou 2.
+profile-error-rank-self = Vous ne pouvez pas changer votre propre rôle.
 account-delete-profile-text = Supprimer définitivement { $username } et toutes les données associées. Cette action est irréversible.
 account-delete-profile-confirm = Supprimer définitivement { $username } et toutes les données associées ?
 account-delete-profile-submit = Supprimer le compte

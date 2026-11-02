@@ -25,6 +25,10 @@ login-error-username = Invalid username
 login-error-password = Invalid password
 login-error-invalid = Invalid login credentials
 login-error-internal = Login failed
+login-error-rate-limited = Too many failed attempts, try again in { $seconds ->
+    [one] { $seconds } second
+    *[other] { $seconds } seconds
+}.
 login-success = Welcome back, { $username }
 
 logout-unauthenticated = You are not logged in
@@ -32,9 +36,10 @@ logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
 account-delete-error-generic = Failed to delete account
+account-delete-error-last-admin = You are the only administrator: make someone else an administrator before deleting your account.
 account-delete-title = Delete account
 account-email = Email
-account-error-email = An email is required (254 bytes maximum)
+account-error-email = A valid email address is required, e.g. name@example.org (254 characters maximum)
 account-error-email-taken = Email already in use
 
 search-user-title = Search for users
@@ -189,6 +194,7 @@ profile-rank-user = User
 profile-rank-moderator = Moderator
 profile-rank-admin = Administrator
 profile-error-rank = Rank must be 0, 1 or 2.
+profile-error-rank-self = You cannot change your own rank.
 account-delete-profile-text = Permanently delete { $username } and all associated data. This cannot be undone.
 account-delete-profile-confirm = Permanently delete { $username } and all associated data?
 account-delete-profile-submit = Delete account
