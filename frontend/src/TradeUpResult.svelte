@@ -20,14 +20,18 @@
 	const cardHtml = $derived(target.querySelector("template")?.innerHTML ?? "");
 
 	let dialog;
+	let closeButton;
 
 	// Clicking the backdrop targets the dialog itself
 	function onDialogClick(e) {
 		if (e.target === dialog) dialog.close();
 	}
 
+	// The popup would focus the card's collection link, its first control:
+	// the close button gets the focus instead, so Enter dismisses it
 	onMount(() => {
 		dialog.showModal();
+		closeButton.focus();
 	});
 </script>
 
@@ -50,7 +54,7 @@
 			</div>
 		</div>
 		{#if labelText}<p class="tradeup-result-text" id="tradeup-result-text">{labelText}</p>{/if}
-		<button type="button" class="tradeup-result-close" onclick={() => dialog.close()}>
+		<button type="button" class="tradeup-result-close" bind:this={closeButton} onclick={() => dialog.close()}>
 			{labelClose}
 		</button>
 	</div>
@@ -122,10 +126,11 @@
 		text-align: center;
 	}
 
-	/* A destroyed card fades away instead of landing */
+	/* A destroyed card fades away instead of landing, its text still
+	   readable (4.5:1) */
 	.is-lost .tradeup-result-card {
 		filter: grayscale(1);
-		opacity: 0.45;
+		opacity: 0.75;
 
 		animation: tradeup-destroy 0.9s ease-out both;
 	}
@@ -151,7 +156,7 @@
 
 		100% {
 			filter: grayscale(1);
-			opacity: 0.45;
+			opacity: 0.75;
 			transform: scale(0.94);
 		}
 	}
