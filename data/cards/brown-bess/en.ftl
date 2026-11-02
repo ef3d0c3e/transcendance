@@ -1,0 +1,2 @@
+title = Brown Bess
+description = "Brown Bess" is a nickname of uncertain origin for the British Army's muzzle-loading smoothbore flintlock Land Pattern Musket and its derivatives. The musket design remained in use for over a hundred years with many incremental changes in its design. These versions include the Long Land Pattern, the Short Land Pattern, the India Pattern, the New Land Pattern Musket, and the Sea Service Musket.

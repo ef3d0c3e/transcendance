@@ -1,0 +1,2 @@
+title = Sharps Rifle
+description = Sharps rifles are a series of large-bore, single-shot, falling-block, breech-loading rifles, beginning with a design by Christian Sharps in 1848 and ceasing production in 1881. They were renowned for long-range accuracy. By 1874, the rifle was available in a variety of calibers, and it was one of the few designs to be successfully adapted to metallic cartridge use.

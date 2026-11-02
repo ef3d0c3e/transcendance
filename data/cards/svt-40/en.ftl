@@ -1,0 +1,2 @@
+title = SVT-40
+description = The SVT-40 is a semi-automatic battle rifle developed in the Soviet Union that saw widespread service during and after World War II. It was intended to be the new service rifle of the Soviet Red Army. However, its production was disrupted by the Axis invasion in 1941, resulting in a change back to the Mosin–Nagant rifle for the duration of the war, although both rifles served concurrently.
