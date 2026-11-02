@@ -65,6 +65,8 @@ const (
 	inventoryTabCollections = "collections"
 	// One's own cards, to trade some up for a card of the next rarity
 	inventoryTabTradeup = "tradeup"
+	// One's own cards, to roll one for a foil, sacrificing others for the odds
+	inventoryTabFoil = "foil"
 )
 
 // Effect filter values, "" shows every card
@@ -166,8 +168,10 @@ type inventoryView struct {
 	Duplicates *controllers.DuplicateSale
 	// Collections the tradeup grid holds, for its filter
 	Collections []controllers.SelectOption
-	// Card the last tradeup awarded, nil until one completes
+	// Card the last tradeup awarded or foil roll was for, nil until one completes
 	Result map[string]any
+	// Whether the last foil roll was lost, destroying the card
+	ResultLost bool
 }
 
 func (dc *DataController) renderInventory(c *gin.Context, user *controllers.AuthenticatedUser, v *inventoryView) {
@@ -198,6 +202,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			}
 		case v.Tab == inventoryTabTradeup:
 			v.Message = dc.Renderer.T(c, "tradeup-empty")
+		case v.Tab == inventoryTabFoil:
+			v.Message = dc.Renderer.T(c, "foil-empty")
 		default:
 			v.Message = dc.Renderer.T(c, "inventory-message-empty")
 		}
@@ -254,9 +260,10 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		sellAction = "/shop/sell"
 	}
 	// Trading up spends the cards, only one's own
-	tradeupUrl := ""
+	tradeupUrl, foilUrl := "", ""
 	if viewed == "" {
 		tradeupUrl = tabUrl(inventoryTabTradeup)
+		foilUrl = tabUrl(inventoryTabFoil)
 	}
 	fields := map[string]any{
 		"Title":          title,
@@ -288,6 +295,11 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TradeupCost":        tradeupCost,
 		"TradeupResult":      v.Result,
 		"TradeupCollections": v.Collections,
+		// The tradeup and foil grids are paged in the page, keeping the selection
+		"PickerPageSize": inventoryPageSize,
+		"TabFoilUrl":         foilUrl,
+		"FoilResult":         v.Result,
+		"FoilResultLost":     v.ResultLost,
 		"Tradable":           v.Tradable,
 		"IncomingTrades":     v.IncomingTrades,
 		"Pages":              int(totalPages),
@@ -307,6 +319,9 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		fields["MaxQuantity"] = controllers.MaxBuyQuantity
 		fields["Topups"] = controllers.TopupChoices(c, dc.Renderer)
+	}
+	if v.Tab == inventoryTabFoil {
+		dc.foilFields(c, v, fields)
 	}
 	if v.Tab == inventoryTabCards {
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
@@ -402,6 +417,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Tab = inventoryTabCollections
 	} else if c.Query("tab") == inventoryTabTradeup {
 		v.Tab = inventoryTabTradeup
+	} else if c.Query("tab") == inventoryTabFoil {
+		v.Tab = inventoryTabFoil
 	} else if cardsAsked {
 		v.Tab = inventoryTabCards
 		v.All = c.Query("show") == inventoryShowAll
@@ -434,8 +451,9 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			return
 		}
 		userID = otherUser.ID
-		// Trading up spends the cards, so it only opens on one's own inventory
-		if v.Tab == inventoryTabTradeup {
+		// Trading up and rolling for foils spend the cards, so they only open
+		// on one's own inventory
+		if v.Tab == inventoryTabTradeup || v.Tab == inventoryTabFoil {
 			v.Tab = inventoryTabBoosters
 		}
 		blocked, err := controllers.TradeBlocked(dc.DB, user.ID, userID)
@@ -499,6 +517,11 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	} else if v.Tab == inventoryTabTradeup {
 		if err := dc.inventoryTradeup(c, userID, v); err != nil {
 			fail("tradeup", err)
+			return
+		}
+	} else if v.Tab == inventoryTabFoil {
+		if err := dc.inventoryFoil(c, userID, v); err != nil {
+			fail("foil", err)
 			return
 		}
 	} else if v.Tab == inventoryTabBoosters {
