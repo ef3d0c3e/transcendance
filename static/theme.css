@@ -1983,7 +1983,7 @@ section {
     justify-content: space-between;
     gap: 0.75rem 2rem;
 
-    padding: 0.75rem 1rem;
+    padding: 0.75rem clamp(0.75rem, 3vw, 1rem);
     margin-bottom: 1.5rem;
 
     background: var(--color-bg-2);
@@ -2009,7 +2009,7 @@ section {
    bonus of the day standing out and the others grayed out */
 .daily-streak-meter {
     display: flex;
-    flex-wrap: wrap;
+    max-width: 100%;
     overflow: hidden;
 
     background: var(--color-bg-4);
@@ -2019,11 +2019,16 @@ section {
 }
 
 .daily-streak-tier {
-    padding: 0.25rem 0.7rem;
+    /* The tiers share the room on narrow screens: wrapping would break the
+       bar's pill shape */
+    flex: 1 1 auto;
+    padding: 0.25rem clamp(0.25rem, 1.6vw, 0.7rem);
+    white-space: nowrap;
+    text-align: center;
 
     color: var(--color-text-muted);
 
-    font-size: 0.85rem;
+    font-size: clamp(0.75rem, 3.4vw, 0.85rem);
     font-weight: 600;
 
     /* Fused cells, split by a hairline */
@@ -2213,6 +2218,35 @@ section {
     /* Four-point sparkle */
     .inventory-tab-foil {
         --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .5c.5 3.6 1.9 5 5.5 5.5-3.6.5-5 1.9-5.5 5.5-.5-3.6-1.9-5-5.5-5.5C6.1 5.5 7.5 4.1 8 .5Z'/%3E%3Cpath d='M13 10.5c.25 1.6.9 2.25 2.5 2.5-1.6.25-2.25.9-2.5 2.5-.25-1.6-.9-2.25-2.5-2.5 1.6-.25 2.25-.9 2.5-2.5Z'/%3E%3C/svg%3E");
+    }
+}
+
+/* On phones, wrapping stacks the tabs one per row and pushes the page's
+   content off screen: they stay on one row that scrolls sideways instead
+   (frontend/src/main.js scrolls the current tab into view) */
+@media (max-width: 40rem) {
+    .inventory-tabs {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
+        scroll-padding-inline: 1rem;
+        scrollbar-width: none;
+
+        /* Room for the focus outline, which the scroller would clip */
+        padding: 5px;
+        margin-inline: -5px;
+        padding-bottom: calc(1rem + 5px);
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+        a {
+            flex: none;
+            white-space: nowrap;
+            scroll-snap-align: start;
+        }
     }
 }
 
