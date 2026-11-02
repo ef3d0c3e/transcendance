@@ -1,0 +1,2 @@
+title = Remington Model 700
+description = The Remington Model 700 is part of a series of bolt-action centerfire rifles manufactured by Remington Arms since 1962. It is a progressive variant of the Remington Model 721 and Model 722 rifles series, which was introduced in 1948. The M24 and M40 military sniper rifles, which are both based on the Model 700 design, are in use by the United States Army and United States Marine Corps, respectively.

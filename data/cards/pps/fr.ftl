@@ -1,0 +1,2 @@
+title = PPS-43
+description = Le pistolet-mitrailleur Soudaïev PPS soviétique est un pistolet-mitrailleur conçu sous forme d'un modèle par Alekseï Soudaïev pendant le siège de Léningrad en 1942. Il était destiné originellement aux tankistes et aux éclaireurs. En supprimant les plaquettes en bois du PPS-42, et en simplifiant la fabrication, Soudaïev crée le PPS-43 qui sera produit jusqu'en 1945 en Union soviétique.

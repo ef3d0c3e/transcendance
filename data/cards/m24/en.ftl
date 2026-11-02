@@ -1,0 +1,2 @@
+title = M24 Sniper Weapon System
+description = The M24 Sniper Weapon System (SWS) or M24 is the military and police version of the Remington Model 700 rifle, M24 being the model name assigned by the United States Army after adoption as their standard sniper rifle in 1988. The M24 is referred to as a "weapon system" because it consists of not only a rifle, but also a detachable telescopic sight and other accessories.

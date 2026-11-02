@@ -1,0 +1,2 @@
+title = Ithaca 37
+description = The Ithaca 37, also known as the Ithaca Model 37, is a pump-action shotgun made in large numbers for the civilian, law enforcement and military markets. Based on a 1915 patent by firearms designer John Browning for a shotgun, initially marketed as the Remington Model 17, it utilizes a novel combination ejection/loading port on the bottom of the gun which leaves the sides closed to the elements.
