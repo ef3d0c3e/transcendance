@@ -2210,6 +2210,11 @@ section {
     .inventory-tab-tradeup {
         --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5 12 6H9.5v5.5h-3V6H4l4-4.5Z'/%3E%3Cpath d='M2.5 13h11v1.5h-11V13Z'/%3E%3C/svg%3E");
     }
+
+    /* Four-point sparkle */
+    .inventory-tab-foil {
+        --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 .5c.5 3.6 1.9 5 5.5 5.5-3.6.5-5 1.9-5.5 5.5-.5-3.6-1.9-5-5.5-5.5C6.1 5.5 7.5 4.1 8 .5Z'/%3E%3Cpath d='M13 10.5c.25 1.6.9 2.25 2.5 2.5-1.6.25-2.25.9-2.5 2.5-.25-1.6-.9-2.25-2.5-2.5 1.6-.25 2.25-.9 2.5-2.5Z'/%3E%3C/svg%3E");
+    }
 }
 
 /* A collection of the inventory, with how much of it is collected */
@@ -2582,28 +2587,30 @@ section {
         font-size: 0.875rem;
         font-weight: 600;
     }
+}
 
-    select {
-        min-height: 2.25rem;
-        padding: 0.3rem 0.65rem;
+/* Filter and sort dropdowns: over the card grids, and in the tradeup and foil
+   roulette sidebars */
+:is(.inventory-filters, .tradeup-filter) select {
+    min-height: 2.25rem;
+    padding: 0.3rem 0.65rem;
 
-        color: var(--color-text);
-        background: var(--color-bg-4);
-        border: 1px solid var(--color-border-control);
-        border-radius: 0.55rem;
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-control);
+    border-radius: 0.55rem;
 
-        font-size: 0.95rem;
-        font-weight: 500;
-        cursor: pointer;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
 
-        &:hover {
-            background: color-mix(in srgb, var(--color-bg-4), black 10%);
-        }
+    &:hover {
+        background: color-mix(in srgb, var(--color-bg-4), black 10%);
+    }
 
-        &:focus-visible {
-            outline: 3px solid var(--color-accent-secondary);
-            outline-offset: 2px;
-        }
+    &:focus-visible {
+        outline: 3px solid var(--color-accent-secondary);
+        outline-offset: 2px;
     }
 }
 
@@ -4141,6 +4148,37 @@ form .notification-action {
     }
 }
 
+/* Chance a card gives a foil roll: its base when rolled, its bonus when sacrificed */
+.foil-bonus {
+    position: absolute;
+    bottom: -0.6rem;
+    left: 50%;
+    z-index: 20;
+
+    padding: 0.15rem 0.6rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    white-space: nowrap;
+
+    transform: translateX(-50%);
+    pointer-events: none;
+}
+
+/* Card picked for a foil roll */
+.foil-card-rolled .card-container {
+    outline: 3px solid var(--color-accent-secondary);
+    outline-offset: 4px;
+    border-radius: 1rem;
+}
+
 .tradeup-rules {
     max-width: 36rem;
     margin: 0 auto 1.25rem;
@@ -4158,7 +4196,21 @@ form .notification-action {
     align-items: start;
 }
 
-/* Stays in view while the card grid scrolls */
+/* The card grid with its page links above and below */
+.tradeup-main {
+    min-width: 0;
+}
+
+.card-pager .paginator {
+    margin: 0 0 1.25rem;
+}
+
+.card-pager:last-child .paginator {
+    margin: 1.25rem 0 0;
+}
+
+/* Stays in view while the card grid scrolls. Never taller than the screen:
+   it scrolls on its own, its pinned action bar always in sight */
 .tradeup-side {
     position: sticky;
     top: 1rem;
@@ -4166,16 +4218,29 @@ form .notification-action {
     display: flex;
     flex-direction: column;
     gap: 1rem;
+
+    max-height: calc(100dvh - 2rem);
+    /* Room for the focus rings, which the scroll box would clip */
+    margin: -4px;
+    padding: 4px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
 }
 
-/* Collection filter of the tradeup sidebar, its select takes what the label leaves */
+/* Search and filters of the tradeup and foil roulette sidebars. The labels
+   share a column, so the dropdowns line up and take what the labels leave */
 .tradeup-filter {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.75rem 0.5rem;
 
     input[type="search"] {
+        grid-column: 1 / -1;
+
         width: 100%;
+        text-overflow: ellipsis;
         min-height: 2.25rem;
         padding: 0.3rem 0.65rem;
 
@@ -4185,9 +4250,10 @@ form .notification-action {
 }
 
 .tradeup-filter label {
-    display: flex;
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: subgrid;
     align-items: center;
-    gap: 0.5rem;
 
     color: var(--color-text-muted);
     font-size: 0.875rem;
@@ -4195,15 +4261,7 @@ form .notification-action {
 }
 
 .tradeup-filter select {
-    flex: 1;
     min-width: 0;
-    min-height: 2.25rem;
-    padding: 0.3rem 0.65rem;
-
-    color: var(--color-text);
-    background: var(--color-bg-4);
-    border: 1px solid var(--color-border-control);
-    border-radius: 0.55rem;
 }
 
 @media (max-width: 900px) {
@@ -4213,6 +4271,14 @@ form .notification-action {
 
     .tradeup-side {
         position: static;
+
+        max-height: none;
+        overflow: visible;
+    }
+
+    /* Room for the action bar, fixed to the bottom of the screen */
+    .tradeup-layout {
+        padding-bottom: 6rem;
     }
 }
 
