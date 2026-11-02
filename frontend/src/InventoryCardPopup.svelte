@@ -111,10 +111,9 @@
 		pressedBackdrop = false;
 	}
 
-	// Sell the copies picked without reloading, then close on the sale: the
-	// page behind the popup gets the coins, the copies and the message. The
-	// confirm button is only marked busy meanwhile: disabled, it would drop
-	// the focus, which stays on it when the sale fails.
+	// Closes on the sale: the page behind gets the coins, the copies and the
+	// message. The confirm button is only marked busy meanwhile: disabled, it
+	// would drop the focus, which stays on it when the sale fails.
 	async function onSellSubmit(e) {
 		e.preventDefault();
 		if (pending) return;
@@ -132,8 +131,7 @@
 		// The copies sold are those of a card the page lists
 		applySale(result, { sold: Number(quantity), inView: true });
 		close();
-		// Selling the last copy takes the card out of the page, and the focus
-		// with it: the sale's message gets the focus instead
+		// Selling the last copy took the card, and the focus, out of the page
 		if (tile && !document.contains(tile)) {
 			focusNotice();
 		}
@@ -171,7 +169,6 @@
 			show(card);
 		}
 
-		// Cards open a dialog, make them reachable and announced as buttons
 		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
 			makeCardButton(card, { foil: labelFoil, copies: labelCopies });
 			card.setAttribute("aria-haspopup", "dialog");

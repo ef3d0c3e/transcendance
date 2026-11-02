@@ -1,7 +1,6 @@
 // Theme of a first visit, picked before the page is painted: the server
-// renders the theme of the `theme` cookie, set here from the system's.
-// Loaded synchronously from <head>, as a file rather than an inline script
-// so the Content-Security-Policy can forbid those (script-src 'self').
+// renders the `theme` cookie's, set here from the system's. A file, not an
+// inline script, so the Content-Security-Policy can forbid those.
 if (!document.cookie.includes('theme=')) {
 	const theme = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 	// Read by the server on the next requests, the Cookie Store API is async

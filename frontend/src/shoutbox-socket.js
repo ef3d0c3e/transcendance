@@ -22,8 +22,7 @@ function retryDelay(attempt) {
 	return (delay / 2) + (random * delay / 2);
 }
 
-// Connection to the shoutbox and private messages that reconnects until closed
-//
+// Connection to the shoutbox and private messages, reconnecting until closed.
 // `onEvent` receives every server event, `onStatus` the connection status: `connecting`, `open`, then
 // `closed` with a reason (`unauthorized`, `too-many` or `error`) when it won't reconnect
 export class ShoutboxConnection {
@@ -88,7 +87,7 @@ export class ShoutboxConnection {
 		return true;
 	}
 
-	// Post to the shoutbox, or privately to a user. `to` is left out of the request when undefined.
+	// To the shoutbox, or privately to `to`: left out of the request when undefined
 	send(body, to) {
 		return this.#request({ type: 'send', body, to });
 	}
@@ -107,7 +106,7 @@ export class ShoutboxConnection {
 		return this.#request({ type: 'unignore', username });
 	}
 
-	// Moderators: delete a shoutbox message for everyone
+	// Moderators only: deletes it for everyone
 	deleteMessage(id) {
 		return this.#request({ type: 'delete', id });
 	}

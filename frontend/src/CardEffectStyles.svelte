@@ -49,7 +49,6 @@
 			mask-repeat: repeat;
 		}
 
-		/* Effect: glare */
 		.card-glare {
 			background: radial-gradient(
 					circle at var(--fx-ix) var(--fx-iy),
@@ -68,7 +67,6 @@
 			transition: opacity 0.3s ease;
 		}
 
-		/* Effect: Watermark */
 		.card-watermark {
 			--card-effect-opacity: 0.2;
 			--card-effect-transform: matrix(1, 0, 0, 1, 0, 0);
@@ -84,7 +82,6 @@
 			mix-blend-mode: overlay;
 		}
 
-		/* Effect: Foil */
 		.card-foil {
 			--card-effect-opacity: 0.5;
 
@@ -124,7 +121,6 @@
 				hue-rotate(var(--card-effect-hue));
 		}
 
-		/* Effect: Rainbow */
 		.card-rainbow {
 			--card-effect-opacity: 0.45;
 			--card-effect-band: 0.3;
@@ -159,7 +155,6 @@
 				hue-rotate(var(--card-effect-hue));
 		}
 
-		/* Effect: Point sparkle */
 		.card-sparkle {
 			--card-effect-opacity: 0.7;
 			--card-effect-rest: 1; /* always on, no hover dependency */

@@ -1,10 +1,6 @@
 <!--
-    Global styles for the card layout
-
-    Backend still needs to provide per cards:
-     * --c1 (Primary color)
-     * --c2 (Secondary color)
-     * --badge-color (Badge color)
+    Global styles of the cards. Each card sets --c1 and --c2, its primary and
+    secondary colors, and --badge-color (templates/partials/card.html).
 -->
 
 <style>
@@ -77,7 +73,6 @@
 		box-sizing: border-box;
 		overflow: hidden;
 
-		/* For styles */
 		isolation: isolate;
 
 		border-radius: var(--card-border-radius);
@@ -106,8 +101,6 @@
 			),
 			var(--color-bg-1);
 	}
-
-	/* Card components */
 
 	/* The rarity's color darkened: opaque, so the white text reaches at
 		least 5:1 whatever the card and the theme (legendary yellow is the

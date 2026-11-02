@@ -1,10 +1,7 @@
-// Server-rendered cards (templates/partials/card.html) made into buttons.
-//
-// The content of a button is presentational, read through its name only:
-// the name says what the card shows, its title, rarity and foil, and what
-// the pills on it tell, how many copies and how many are up in trades.
+// Server-rendered cards (templates/partials/card.html) made into buttons. A
+// button's content is presentational, so its name tells all the card shows:
+// title, rarity, foil, copies and how many are up in trades.
 
-// Text of an element of the card, empty when it has none
 function textOf(container, selector) {
 	return container.querySelector(selector)?.textContent.trim() ?? '';
 }
@@ -20,9 +17,8 @@ function copiesOf(container, labels) {
 	return copies > 1 && labels.copies ? `${labels.copies}: ${copies}` : '';
 }
 
-// Accessible name of a card. `labels` are the page's translations: `foil`,
-// and `copies` for a stack of more than one card (`count` copies when the
-// card doesn't tell).
+// `labels`: the page's translations of `foil` and `copies`, and `count`, the
+// copies when the card doesn't give them
 export function cardName(container, labels = {}) {
 	const isFoil = container.querySelector('.card-foil') !== null;
 	return [
@@ -35,14 +31,13 @@ export function cardName(container, labels = {}) {
 	].filter(Boolean).join(', ');
 }
 
-// Names a card button again once what it shows changed, e.g its copies
-// after a sale
+// Once what the card shows changed, e.g its copies after a sale
 export function refreshCardName(container, labels = {}) {
 	container.setAttribute('aria-label', cardName(container, labels));
 }
 
-// Makes a card a button: reachable, named, and with its collection link out
-// of the tab order, as a link inside a button can't be reached reliably
+// The collection link inside leaves the tab order: a link inside a button
+// can't be reached reliably
 export function makeCardButton(container, labels = {}) {
 	container.tabIndex = 0;
 	container.setAttribute('role', 'button');

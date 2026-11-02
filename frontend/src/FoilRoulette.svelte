@@ -1,15 +1,15 @@
 <!--
-    Builds a foil roll: the first card clicked in the inventory is the one
-    rolled, every card clicked after it is sacrificed to raise the odds.
-    Clicking the rolled card or a sacrifice in the sidebar takes it back out.
-    The roll is submitted as a `target` field and one `card` field per
-    sacrifice, after a confirmation: a lost roll destroys the card.
+    Builds a foil roll: the first inventory card clicked is rolled, every one
+    clicked after it is sacrificed to raise the odds; clicking one in the
+    sidebar takes it back out. The roll is submitted as a `target` field and
+    one `card` field per sacrifice, after a confirmation: a lost roll
+    destroys the card.
 
     Cards must provide `data-foil-id`, `data-foil-foil` (the pattern, "" for a
     plain copy), `data-foil-count` (copies owned), `data-foil-rarity`,
     `data-foil-title`, `data-foil-collection-id` and `data-foil-collection`.
-    Only plain copies can be rolled; any copy can be sacrificed. Each eligible
-    tile wears a `.foil-bonus` badge with the chance it gives, and stacks with
+    Only plain copies can be rolled; any copy can be sacrificed. Eligible
+    tiles wear a `.foil-bonus` badge with the chance they give, stacks with
     sacrificed copies a `.tradeup-taken` pill.
 
     The mount target provides the odds (`data-odds`, rarity to `{base, bonus}`
@@ -19,10 +19,8 @@
     and `data-label-copies` naming the cards as the inventory does.
     `{title}` and `{chance}` in labels are replaced here.
 
-    Filtering, sorting and paging are left to card-filter.js, on
-    `#foil-search`, `#foil-collection-filter`, `#foil-rarity-filter`,
-    `#foil-sort`, `#foil-no-match`, `#foil-filter-status` and the
-    `.foil-pager` elements.
+    Filtering, sorting and paging: card-filter.js, on the `#foil-*` controls
+    and the `.foil-pager` elements.
 -->
 
 <script>
@@ -227,9 +225,7 @@
 			add(e.target.closest(CARD_SELECTOR));
 		}
 
-		// Cards are picked by clicking, make them reachable and announced as
-		// buttons, out of the tab order of their links. The effect below
-		// names them.
+		// Named by the effect below
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
 			makeCardButton(tile, cardLabels);
 		}
