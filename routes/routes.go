@@ -92,18 +92,33 @@ func RegisterRoutes(
 	router.GET("/collections/:FIRST/*SECOND", dataController.CollectionsGet)
 
 	router.GET("/inventory", dataController.InventoryGet)
+	router.POST("/inventory/claim", dataController.InventoryClaimPost)
 	router.GET("/add", dataController.InventoryAddGet)
 
 	router.GET("/opening", dataController.OpeningGet)
 	router.POST("/opening", dataController.OpeningPost)
 	router.POST("/opening/buy", dataController.OpeningBuyPost)
 
+	// tradeup.go
+	router.POST("/tradeup", dataController.TradeupPost)
+
 	// Debug: add a booster to the authenticated user's inventory
 	router.GET("/add_booster", dataController.AddBoosterGet)
 	router.POST("/add_booster", dataController.AddBoosterPost)
+
+	// trade.go
+	router.GET("/trades", controller.TradesGet)
+	router.GET("/trades/new", controller.TradeMenuGet)
+	router.POST("/trades", controller.TradePost)
+	router.POST("/trades/:ID/accept", controller.TradeAcceptPost)
+	router.POST("/trades/:ID/decline", controller.TradeDeclinePost)
+	router.POST("/trades/:ID/cancel", controller.TradeCancelPost)
+	router.GET("/api/trade/stacks", dataController.TradeStacksGet)
 
 	// shop.go
 	router.GET("/shop", controller.ShopGet)
 	router.POST("/shop/topup", controller.ShopTopupPost)
 	router.POST("/shop/buy", controller.ShopBuyPost)
+	router.POST("/shop/sell", controller.ShopSellPost)
+	router.POST("/shop/sell-duplicates", controller.ShopSellDuplicatesPost)
 }

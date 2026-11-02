@@ -62,6 +62,7 @@
 
 			<div class="nav-end">
 				{{ if .User }}
+					<span class="nav-balance">{{ template "coin-icon" }} <span class="nav-balance-amount">{{ .T "header-balance" "amount" .User.FreeCoins }}</span></span>
 					<span id="notification" data-label-title="{{ .T "notification-title" }}"
 						data-label-unread="{{ .T "notification-unread" }}"
 						data-label-loading="{{ .T "notification-loading" }}"

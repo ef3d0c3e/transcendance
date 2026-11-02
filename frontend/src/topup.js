@@ -7,6 +7,14 @@ const popup = {
 	isListening: false,
 };
 
+// Show a new balance in the navbar, e.g after a purchase without reloading
+export function updateNavBalance(label) {
+	const amount = document.querySelector('.nav-balance-amount');
+	if (amount && label) {
+		amount.textContent = label;
+	}
+}
+
 // Post a top-up form in the background: the new balance if it went through,
 // an empty result otherwise
 async function postTopup(form) {
@@ -43,6 +51,7 @@ async function creditInPlace(event) {
 		return;
 	}
 	dialog.close();
+	updateNavBalance(result.navBalance);
 	callback(result);
 }
 

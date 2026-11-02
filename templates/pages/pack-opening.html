@@ -6,7 +6,11 @@
 
 	<div class="pack-hero">
 		<div class="pack-booster">
+			{{ if .Data.Pile }}
+			{{ template "booster-pile" .Data.Pile }}
+			{{ else }}
 			{{ template "collection" .Data.Booster }}
+			{{ end }}
 		</div>
 
 		<div class="pack-panel">
@@ -22,6 +26,7 @@
 					<span class="pack-open-shine" aria-hidden="true"></span>
 					<span class="pack-open-label">{{ .T "pack-opening-open" }}</span>
 				</button>
+				{{ if .Data.CollectionID }}
 				<!-- Out of boosters: buys one with coins, or offers coins when short -->
 				<button type="button" class="pack-open pack-buy" data-collection="{{ .Data.CollectionID }}"
 					data-price="{{ .Data.Price }}" aria-label="{{ .T "pack-opening-buy-label" "price" .Data.PriceLabel }}"
@@ -30,6 +35,7 @@
 					{{ .T "pack-opening-buy" }}
 					<span class="pack-buy-price">{{ template "coin-icon" }} {{ .Data.Price }}</span>
 				</button>
+				{{ end }}
 				<a class="pack-back" href="/inventory?tab=boosters">{{ .T "pack-opening-back" }}</a>
 			</form>
 
@@ -51,6 +57,7 @@
 					<p class="pack-note">{{ .T "pack-opening-odds-note" }}</p>
 				</div>
 
+				{{ if .Data.Total }}
 				<div class="pack-info-block">
 					<h2>{{ .T "pack-opening-progress-title" }}</h2>
 					<p class="pack-progress-count">
@@ -61,6 +68,7 @@
 					</div>
 					<p class="pack-note">{{ .T "pack-opening-progress-note" }}</p>
 				</div>
+				{{ end }}
 			</div>
 		</div>
 	</div>
