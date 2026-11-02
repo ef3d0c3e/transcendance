@@ -35,12 +35,24 @@ type Card struct {
 	ColorSecondary string
 }
 
-func (c *Card) Translate(localeName string, id string) (string, error) {
-	loc := c.Locales[localeName]
-	if loc == nil {
-		return "", fmt.Errorf("failed to find locale for '%s' card %s", localeName, c.Name)
+// Locale of the texts of cards, collections and tags missing in the requested one
+const FallbackLocale = "en"
+
+// The bundle of a locale holding a message, the fallback locale's when the locale lacks it: a new interface
+// language must not break the pages showing cards that are not translated yet
+func localizedMessage(locales map[string]*fluent.Bundle, localeName string, id string) (*fluent.Bundle, *fluent.Message) {
+	for _, name := range []string{localeName, FallbackLocale} {
+		if loc := locales[name]; loc != nil {
+			if msg, _ := loc.Message(id); msg != nil {
+				return loc, msg
+			}
+		}
 	}
-	msg, _ := loc.Message(id)
+	return nil, nil
+}
+
+func (c *Card) Translate(localeName string, id string) (string, error) {
+	loc, msg := localizedMessage(c.Locales, localeName, id)
 	if msg == nil {
 		return "", fmt.Errorf("failed to find message '%s/%s' for card %s", localeName, id, c.Name)
 	}
@@ -73,11 +85,7 @@ type Collection struct {
 }
 
 func (c *Collection) Translate(localeName string, id string) (string, error) {
-	loc := c.Locales[localeName]
-	if loc == nil {
-		return "", fmt.Errorf("failed to find locale for '%s' collection %s", localeName, c.Name)
-	}
-	msg, _ := loc.Message(id)
+	loc, msg := localizedMessage(c.Locales, localeName, id)
 	if msg == nil {
 		return "", fmt.Errorf("failed to find message '%s/%s' for collection %s", localeName, id, c.Name)
 	}
@@ -494,4 +502,12 @@ func tomlStrings(config *toml.Tree, path string, key string) ([]string, error) {
 		return nil, fmt.Errorf("%s: `%s` is missing or is not an array of strings", path, key)
 	}
 	return value, nil
+}
+
+// TagLocale is the bundle of tag names of a locale, the fallback locale's when it has none
+func (dc *Data) TagLocale(localeName string) *fluent.Bundle {
+	if loc := dc.Tags[localeName]; loc != nil {
+		return loc
+	}
+	return dc.Tags[FallbackLocale]
 }

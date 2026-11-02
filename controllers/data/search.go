@@ -55,7 +55,7 @@ type CollectionSearchSet struct {
 
 // Build IndexableCard for a (card, collection) pair
 func (dc *DataController) toIndexableCard(locale string, card *data.Card, collection *data.Collection) (*IndexableCard, error) {
-	tagsLoc := dc.Data.Tags[locale]
+	tagsLoc := dc.Data.TagLocale(locale)
 
 	// Card data
 	name, err := card.Translate(locale, "title")
@@ -117,7 +117,7 @@ func (dc *DataController) toIndexableCard(locale string, card *data.Card, collec
 
 // Build IndexableCollection for a collection
 func (dc *DataController) toIndexableCollection(locale string, collection *data.Collection) (*IndexableCollection, error) {
-	tagsLoc := dc.Data.Tags[locale]
+	tagsLoc := dc.Data.TagLocale(locale)
 
 	name, err := collection.Translate(locale, "title")
 	if err != nil {
