@@ -18,11 +18,14 @@
     the collection-and-rarity order of `data-tradeup-order`. All of it without
     navigating, keeping the contract: the picks live here, not in the page.
     Picks the filters hide stay in it. `#tradeup-no-match` shows when they
-    hide every card.
+    hide every card. The grid is paged in the page too, in the
+    `.tradeup-pager` elements, so picks survive turning pages.
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
+	import { attachCardFilter } from "./card-filter.js";
+	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
 
@@ -42,13 +45,19 @@
 	const labelClear = $derived(target.dataset.labelClear ?? "");
 	const labelSubmit = $derived(target.dataset.labelSubmit ?? "");
 	const labelEmpty = $derived(target.dataset.labelEmpty ?? "");
+	const labelFoil = $derived(target.dataset.labelFoil ?? "");
+	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 
 	// Copies put into the contract, in the order they were added
 	let selection = $state([]);
+	// The slots' group, focused when the last filled slot is taken out
+	let slotsElement = $state();
 	// Rarity of the contract so far, "" while it is still empty
-	let rarity = $derived(selection[0]?.rarity ?? "");
-	let filled = $derived(selection.length);
-	let ready = $derived(filled === cost);
+	const rarity = $derived(selection[0]?.rarity ?? "");
+	const filled = $derived(selection.length);
+	const ready = $derived(filled === cost);
+	// One slot per card of the contract
+	const slots = $derived(Array.from({ length: cost }, (_, index) => index));
 
 	function cardOf(tile) {
 		return {
@@ -81,57 +90,20 @@
 		selection.push(card);
 	}
 
-	function remove(index) {
+	// The focused slot is gone: the focus goes to the slot taking its place,
+	// else the one before, else the slots
+	async function remove(index) {
 		selection.splice(index, 1);
+		await tick();
+		const filledSlots = slotsElement.querySelectorAll(".tradeup-slot.is-filled");
+		(filledSlots[index] ?? filledSlots[index - 1] ?? slotsElement).focus();
 	}
 
-	// Case and accents are ignored when searching
-	function fold(text) {
-		return text.normalize("NFD").replaceAll(/\p{Diacritic}/gu, "").toLowerCase();
-	}
-
-	// Hides the tiles of the other collections and rarities and those the
-	// search misses, then orders the rest, without navigating, so a contract
-	// in progress survives. `collection` is a collection ID and `rarity` a
-	// rarity, "" shows all, as does an empty `query`. `sort` is "" for the
-	// biggest stacks first and "grouped" for the collection-and-rarity order.
-	// Every tile carries its place in that order (`data-tradeup-order`), which
-	// breaks the ties of both sorts, so switching between them leaves the grid
-	// exactly as the page arrived.
-	function applyGrid({ collection, query, rarity, sort }) {
-		const folded = fold(query.trim());
-		const cards = [...document.querySelectorAll(CARD_SELECTOR)];
-		let shown = 0;
-		for (const card of cards) {
-			const name = fold(`${card.dataset.tradeupTitle ?? ""} ${card.dataset.tradeupCollection ?? ""}`);
-			card.hidden = (collection !== "" && card.dataset.tradeupCollectionId !== collection)
-				|| (rarity !== "" && card.dataset.tradeupRarity !== rarity)
-				|| (folded !== "" && !name.includes(folded));
-			if (!card.hidden) shown++;
-		}
-		const noMatch = document.querySelector(NO_MATCH_SELECTOR);
-		if (noMatch) noMatch.hidden = shown > 0;
-
-		cards.sort((a, b) => {
-			const byOrder = Number(a.dataset.tradeupOrder) - Number(b.dataset.tradeupOrder);
-			const byCount = Number(b.dataset.tradeupCount) - Number(a.dataset.tradeupCount);
-			return sort === "grouped" ? byOrder : byCount || byOrder;
-		});
-		const cluster = cards[0]?.parentElement;
-		for (const card of cards) cluster?.append(card);
-		if (cluster && noMatch) cluster.append(noMatch);
-
-		// A refresh lands on the same filters and sort
-		const url = new URL(location.href);
-		if (collection === "") url.searchParams.delete("collection");
-		else url.searchParams.set("collection", collection);
-		if (folded === "") url.searchParams.delete("q");
-		else url.searchParams.set("q", query.trim());
-		if (rarity === "") url.searchParams.delete("rarity");
-		else url.searchParams.set("rarity", rarity);
-		if (sort === "") url.searchParams.delete("sort");
-		else url.searchParams.set("sort", sort);
-		history.replaceState(history.state, "", url);
+	// The clear button is disabled once the contract is empty
+	async function clear() {
+		selection = [];
+		await tick();
+		slotsElement.focus();
 	}
 
 	// Tiles of another rarity, exhausted stacks and a full contract are inert;
@@ -141,10 +113,11 @@
 			const info = cardOf(card);
 			const blocked = !canTake(info);
 			card.classList.toggle("tradeup-card-blocked", blocked);
-			card.setAttribute("aria-disabled", blocked ? "true" : "false");
 
 			const tile = card.querySelector(".card-container");
 			if (!tile) continue;
+			// On the button itself, so screen readers tell it does nothing
+			tile.setAttribute("aria-disabled", blocked ? "true" : "false");
 			const count = taken(info.id, info.foil);
 			let pill = tile.querySelector(":scope > .tradeup-taken");
 			if (count === 0) {
@@ -182,86 +155,62 @@
 			add(card);
 		}
 
+		// The focused element is the tile, inside the card's wrapper
+		// A held key adds the card once, not until the contract is full
 		function onKeyDown(e) {
 			if (e.key !== "Enter" && e.key !== " ") return;
-			const card = cardFrom(e);
-			if (!card || e.target !== card) return;
+			if (e.repeat) return;
+			if (!(e.target instanceof Element) || !e.target.matches(TILE_SELECTOR)) return;
 
 			e.preventDefault();
-			add(card);
+			add(e.target.closest(CARD_SELECTOR));
 		}
 
 		// Cards add to the contract, make them reachable and announced as buttons
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
-			tile.tabIndex = 0;
-			tile.setAttribute("role", "button");
-			tile.setAttribute("aria-label", tile.closest(CARD_SELECTOR).dataset.tradeupTitle);
+			const card = tile.closest(CARD_SELECTOR);
+			makeCardButton(tile, {
+				foil: labelFoil,
+				copies: labelCopies,
+				count: card.dataset.tradeupCount,
+			});
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
 		document.addEventListener("click", onClick);
 		document.addEventListener("keydown", onKeyDown);
 
-		const filter = document.querySelector(FILTER_SELECTOR);
-		const search = document.querySelector(SEARCH_SELECTOR);
-		const rarityFilter = document.querySelector(RARITY_SELECTOR);
-		const sortSelect = document.querySelector(SORT_SELECTOR);
-		function onControlChange() {
-			applyGrid({
-				collection: filter?.value ?? "",
-				query: search?.value ?? "",
-				rarity: rarityFilter?.value ?? "",
-				sort: sortSelect?.value ?? "",
-			});
-		}
-		filter?.addEventListener("change", onControlChange);
-		search?.addEventListener("input", onControlChange);
-		rarityFilter?.addEventListener("change", onControlChange);
-		sortSelect?.addEventListener("change", onControlChange);
-		// Filtering happens as the text is typed, Enter would leave the page
-		function onSearchKeyDown(e) {
-			if (e.key === "Enter") e.preventDefault();
-		}
-		search?.addEventListener("keydown", onSearchKeyDown);
-
-		// A shared link can arrive already filtered and sorted
-		const params = new URL(location.href).searchParams;
-		if (filter && params.get("collection")) {
-			filter.value = params.get("collection");
-		}
-		if (search && params.get("q")) {
-			search.value = params.get("q");
-		}
-		if (rarityFilter && params.get("rarity")) {
-			rarityFilter.value = params.get("rarity");
-		}
-		if (sortSelect && params.get("sort")) {
-			sortSelect.value = params.get("sort");
-		}
-		if (params.get("collection") || params.get("q") || params.get("rarity") || params.get("sort")) {
-			onControlChange();
-		}
+		const detachFilter = attachCardFilter({
+			tiles: CARD_SELECTOR,
+			read: (tile) => ({
+				title: tile.dataset.tradeupTitle ?? "",
+				collection: tile.dataset.tradeupCollection ?? "",
+				collectionId: tile.dataset.tradeupCollectionId ?? "",
+				rarity: tile.dataset.tradeupRarity ?? "",
+				number: Number(tile.dataset.tradeupId ?? 0),
+				count: Number(tile.dataset.tradeupCount ?? 0),
+				order: Number(tile.dataset.tradeupOrder ?? 0),
+			}),
+			search: SEARCH_SELECTOR,
+			collection: FILTER_SELECTOR,
+			rarity: RARITY_SELECTOR,
+			sort: SORT_SELECTOR,
+			noMatch: NO_MATCH_SELECTOR,
+			pagers: ".tradeup-pager",
+		});
 
 		return () => {
 			document.removeEventListener("pointerdown", onPointerDown);
 			document.removeEventListener("click", onClick);
 			document.removeEventListener("keydown", onKeyDown);
-			filter?.removeEventListener("change", onControlChange);
-			search?.removeEventListener("input", onControlChange);
-			rarityFilter?.removeEventListener("change", onControlChange);
-			sortSelect?.removeEventListener("change", onControlChange);
-			search?.removeEventListener("keydown", onSearchKeyDown);
+			detachFilter();
 		};
 	});
 </script>
 
 <div class="tradeup-picker">
-	<p class="tradeup-progress" aria-live="polite">
-		<span class="tradeup-progress-count">{filled} / {cost}</span>
-	</p>
-
-	<div class="tradeup-slots" role="group" aria-label={labelSlots}>
-		{#each Array(cost) as _, i}
+	<div class="tradeup-slots" role="group" aria-label={labelSlots} tabindex="-1" bind:this={slotsElement}>
+		{#each slots as i (i)}
 			{#if i < filled}
 				<button
 					type="button"
@@ -281,8 +230,13 @@
 		<input type="hidden" name="card" value={card.foil ? `${card.id}:${card.foil}` : `${card.id}`} />
 	{/each}
 
+	<!-- Pinned to the bottom of the sidebar, or of the screen on small ones -->
 	<div class="tradeup-actions">
-		<button type="button" class="tradeup-clear" onclick={() => (selection = [])} disabled={filled === 0}>
+		<p class="tradeup-progress" aria-live="polite">
+			<span class="tradeup-progress-label">{labelSlots}</span>
+			<span class="tradeup-progress-count">{filled} / {cost}</span>
+		</p>
+		<button type="button" class="tradeup-clear" onclick={clear} disabled={filled === 0}>
 			{labelClear}
 		</button>
 		<button type="submit" class="tradeup-submit" disabled={!ready}>{labelSubmit}</button>
@@ -302,15 +256,37 @@
 		border-radius: 1rem;
 	}
 
+	/* How full the contract is, on a row of its own above the buttons */
 	.tradeup-progress {
+		grid-column: 1 / -1;
+
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
 		margin: 0;
 
+		line-height: 1.2;
+	}
+
+	.tradeup-progress-label {
+		min-width: 0;
+
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.tradeup-progress-count {
+		font-size: 1.15rem;
+		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 		font-weight: 650;
 		letter-spacing: -0.01em;
 	}
 
 	.tradeup-slots {
+		border-radius: 0.5rem;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
 		gap: 0.5rem;
@@ -341,26 +317,44 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}
 
+	/* Pinned to the bottom of the scrolling sidebar, past the padding it
+	   keeps for focus rings, so nothing shows under the bar */
 	.tradeup-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.75rem;
+		position: sticky;
+		bottom: -4px;
+		z-index: 1;
+
+		/* The progress on a row of its own, the two buttons sharing the next */
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-items: center;
+		gap: 0.6rem 0.75rem;
+
+		margin: 0 -1.25rem -1.25rem;
+		padding: 0.85rem 1.25rem 1.25rem;
+
+		background: var(--color-bg-2);
+		border-top: 1px solid var(--color-border-1);
+		border-radius: 0 0 1rem 1rem;
 	}
 
+	/* Labels never break inside a word: the buttons share the row instead */
 	.tradeup-clear,
 	.tradeup-submit {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 
-		min-width: 5.5rem;
+		min-width: 0;
 		min-height: 2.5rem;
-		padding: 0.45rem 1rem;
+		padding: 0.45rem 0.75rem;
+
+		white-space: nowrap;
 
 		border: 0;
 		border-radius: 0.55rem;
@@ -390,7 +384,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}
@@ -401,14 +395,40 @@
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 480px) {
+	/* The sidebar comes after the grid: the bar is fixed to the screen instead */
+	@media (max-width: 900px) {
 		.tradeup-actions {
-			flex-direction: column-reverse;
+			position: fixed;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 30;
+
+			margin: 0;
+			padding: 0.75rem max(1rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom))
+				max(1rem, env(safe-area-inset-left));
+
+			border: 1px solid var(--color-border-1);
+			border-bottom: 0;
+			border-radius: 1rem 1rem 0 0;
+			box-shadow: 0 -6px 20px var(--color-shadow);
+		}
+	}
+
+	/* Across a whole screen there is room for one row */
+	@media (480px < width <= 900px) {
+		.tradeup-actions {
+			grid-template-columns: 1fr auto auto;
+		}
+
+		.tradeup-progress {
+			grid-column: auto;
+			justify-content: flex-start;
 		}
 
 		.tradeup-clear,
 		.tradeup-submit {
-			width: 100%;
+			min-width: 7rem;
 		}
 	}
 </style>

@@ -1,0 +1,2 @@
+title = Or natif
+description = L'or natif est la forme minérale naturelle de l'élément or, généralement allié à un peu d'argent. Il se présente en pépites, en grains, en paillettes, en fils et plus rarement en cristaux octaédriques, dans des filons de quartz ou dans des gisements alluviaux où sa densité le concentre au fond des rivières. Presque inaltérable, il conserve son éclat jaune et est recherché comme métal précieux depuis la préhistoire.

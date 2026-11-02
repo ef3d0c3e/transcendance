@@ -1,0 +1,358 @@
+id = 8
+tags = ["element"]
+color-primary = "#5fc7c0"
+color-secondary = "#12333a"
+
+[[cards]]
+name = "hydrogen"
+
+[[cards]]
+name = "helium"
+
+[[cards]]
+name = "lithium"
+
+[[cards]]
+name = "beryllium"
+
+[[cards]]
+name = "boron"
+
+[[cards]]
+name = "carbon"
+
+[[cards]]
+name = "nitrogen"
+
+[[cards]]
+name = "oxygen"
+
+[[cards]]
+name = "fluorine"
+
+[[cards]]
+name = "neon"
+
+[[cards]]
+name = "sodium"
+
+[[cards]]
+name = "magnesium"
+
+[[cards]]
+name = "aluminium"
+
+[[cards]]
+name = "silicon"
+
+[[cards]]
+name = "phosphorus"
+
+[[cards]]
+name = "sulfur-element"
+
+[[cards]]
+name = "chlorine"
+
+[[cards]]
+name = "argon"
+
+[[cards]]
+name = "potassium"
+
+[[cards]]
+name = "calcium"
+
+[[cards]]
+name = "scandium"
+
+[[cards]]
+name = "titanium"
+
+[[cards]]
+name = "vanadium"
+
+[[cards]]
+name = "chromium"
+
+[[cards]]
+name = "manganese"
+
+[[cards]]
+name = "iron"
+
+[[cards]]
+name = "cobalt"
+
+[[cards]]
+name = "nickel"
+
+[[cards]]
+name = "copper-element"
+
+[[cards]]
+name = "zinc"
+
+[[cards]]
+name = "gallium"
+
+[[cards]]
+name = "germanium"
+
+[[cards]]
+name = "arsenic"
+
+[[cards]]
+name = "selenium"
+
+[[cards]]
+name = "bromine"
+
+[[cards]]
+name = "krypton"
+
+[[cards]]
+name = "rubidium"
+
+[[cards]]
+name = "strontium"
+
+[[cards]]
+name = "yttrium"
+
+[[cards]]
+name = "zirconium"
+
+[[cards]]
+name = "niobium"
+
+[[cards]]
+name = "molybdenum"
+
+[[cards]]
+name = "technetium"
+
+[[cards]]
+name = "ruthenium"
+
+[[cards]]
+name = "rhodium"
+
+[[cards]]
+name = "palladium"
+
+[[cards]]
+name = "silver-element"
+
+[[cards]]
+name = "cadmium"
+
+[[cards]]
+name = "indium"
+
+[[cards]]
+name = "tin"
+
+[[cards]]
+name = "antimony"
+
+[[cards]]
+name = "tellurium"
+
+[[cards]]
+name = "iodine"
+
+[[cards]]
+name = "xenon"
+
+[[cards]]
+name = "caesium"
+
+[[cards]]
+name = "barium"
+
+[[cards]]
+name = "lanthanum"
+
+[[cards]]
+name = "cerium"
+
+[[cards]]
+name = "praseodymium"
+
+[[cards]]
+name = "neodymium"
+
+[[cards]]
+name = "promethium"
+
+[[cards]]
+name = "samarium"
+
+[[cards]]
+name = "europium"
+
+[[cards]]
+name = "gadolinium"
+
+[[cards]]
+name = "terbium"
+
+[[cards]]
+name = "dysprosium"
+
+[[cards]]
+name = "holmium"
+
+[[cards]]
+name = "erbium"
+
+[[cards]]
+name = "thulium"
+
+[[cards]]
+name = "ytterbium"
+
+[[cards]]
+name = "lutetium"
+
+[[cards]]
+name = "hafnium"
+
+[[cards]]
+name = "tantalum"
+
+[[cards]]
+name = "tungsten-element"
+
+[[cards]]
+name = "rhenium"
+
+[[cards]]
+name = "osmium"
+
+[[cards]]
+name = "iridium"
+
+[[cards]]
+name = "platinum"
+
+[[cards]]
+name = "gold-element"
+
+[[cards]]
+name = "mercury"
+
+[[cards]]
+name = "thallium"
+
+[[cards]]
+name = "lead"
+
+[[cards]]
+name = "bismuth-element"
+
+[[cards]]
+name = "polonium"
+
+[[cards]]
+name = "astatine"
+
+[[cards]]
+name = "radon"
+
+[[cards]]
+name = "francium"
+
+[[cards]]
+name = "radium"
+
+[[cards]]
+name = "actinium"
+
+[[cards]]
+name = "thorium"
+
+[[cards]]
+name = "protactinium"
+
+[[cards]]
+name = "uranium"
+
+[[cards]]
+name = "neptunium"
+
+[[cards]]
+name = "plutonium"
+
+[[cards]]
+name = "americium"
+
+[[cards]]
+name = "curium"
+
+[[cards]]
+name = "berkelium"
+
+[[cards]]
+name = "californium"
+
+[[cards]]
+name = "einsteinium"
+
+[[cards]]
+name = "fermium"
+
+[[cards]]
+name = "mendelevium"
+
+[[cards]]
+name = "nobelium"
+
+[[cards]]
+name = "lawrencium"
+
+[[cards]]
+name = "rutherfordium"
+
+[[cards]]
+name = "dubnium"
+
+[[cards]]
+name = "seaborgium"
+
+[[cards]]
+name = "bohrium"
+
+[[cards]]
+name = "hassium"
+
+[[cards]]
+name = "meitnerium"
+
+[[cards]]
+name = "darmstadtium"
+
+[[cards]]
+name = "roentgenium"
+
+[[cards]]
+name = "copernicium"
+
+[[cards]]
+name = "nihonium"
+
+[[cards]]
+name = "flerovium"
+
+[[cards]]
+name = "moscovium"
+
+[[cards]]
+name = "livermorium"
+
+[[cards]]
+name = "tennessine"
+
+[[cards]]
+name = "oganesson"

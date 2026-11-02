@@ -1,0 +1,418 @@
+id = 9
+tags = ["firearm"]
+color-primary = "#879099"
+color-secondary = "#2b2622"
+
+[[cards]]
+name = "ai-arctic-warfare"
+
+[[cards]]
+name = "ak-47"
+
+[[cards]]
+name = "ak-74"
+
+[[cards]]
+name = "akm"
+
+[[cards]]
+name = "arisaka"
+
+[[cards]]
+name = "at4"
+
+[[cards]]
+name = "baker-rifle"
+
+[[cards]]
+name = "bar"
+
+[[cards]]
+name = "barrett-m82"
+
+[[cards]]
+name = "bazooka"
+
+[[cards]]
+name = "benelli-m4"
+
+[[cards]]
+name = "beretta-92"
+
+[[cards]]
+name = "beretta-model-38"
+
+[[cards]]
+name = "boys-at-rifle"
+
+[[cards]]
+name = "bren"
+
+[[cards]]
+name = "brown-bess"
+
+[[cards]]
+name = "browning-auto-5"
+
+[[cards]]
+name = "browning-hi-power"
+
+[[cards]]
+name = "carcano"
+
+[[cards]]
+name = "carl-gustaf"
+
+[[cards]]
+name = "charleville-musket"
+
+[[cards]]
+name = "chauchat"
+
+[[cards]]
+name = "colt-paterson"
+
+[[cards]]
+name = "colt-python"
+
+[[cards]]
+name = "colt-single-action-army"
+
+[[cards]]
+name = "cz-75"
+
+[[cards]]
+name = "desert-eagle"
+
+[[cards]]
+name = "dp-27"
+
+[[cards]]
+name = "famas"
+
+[[cards]]
+name = "fedorov-avtomat"
+
+[[cards]]
+name = "fn-fal"
+
+[[cards]]
+name = "fn-five-seven"
+
+[[cards]]
+name = "fn-mag"
+
+[[cards]]
+name = "fn-p90"
+
+[[cards]]
+name = "fn-scar"
+
+[[cards]]
+name = "g36"
+
+[[cards]]
+name = "galil"
+
+[[cards]]
+name = "gatling-gun"
+
+[[cards]]
+name = "gewehr-43"
+
+[[cards]]
+name = "gewehr-98"
+
+[[cards]]
+name = "glock-17"
+
+[[cards]]
+name = "henry-rifle"
+
+[[cards]]
+name = "hk-g3"
+
+[[cards]]
+name = "hk416"
+
+[[cards]]
+name = "insas"
+
+[[cards]]
+name = "ithaca-37"
+
+[[cards]]
+name = "jericho-941"
+
+[[cards]]
+name = "kar98k"
+
+[[cards]]
+name = "krag-jorgensen"
+
+[[cards]]
+name = "lebel-1886"
+
+[[cards]]
+name = "lee-enfield"
+
+[[cards]]
+name = "lewis-gun"
+
+[[cards]]
+name = "long-rifle"
+
+[[cards]]
+name = "luger"
+
+[[cards]]
+name = "m1-carbine"
+
+[[cards]]
+name = "m134-minigun"
+
+[[cards]]
+name = "m14"
+
+[[cards]]
+name = "m16"
+
+[[cards]]
+name = "m1903-springfield"
+
+[[cards]]
+name = "m1911"
+
+[[cards]]
+name = "m1919-browning"
+
+[[cards]]
+name = "m2-browning"
+
+[[cards]]
+name = "m203"
+
+[[cards]]
+name = "m24"
+
+[[cards]]
+name = "m249"
+
+[[cards]]
+name = "m3-grease-gun"
+
+[[cards]]
+name = "m4-carbine"
+
+[[cards]]
+name = "m40"
+
+[[cards]]
+name = "m60"
+
+[[cards]]
+name = "m72-law"
+
+[[cards]]
+name = "m79"
+
+[[cards]]
+name = "mac-10"
+
+[[cards]]
+name = "makarov"
+
+[[cards]]
+name = "mannlicher-m1895"
+
+[[cards]]
+name = "mas-36"
+
+[[cards]]
+name = "mat-49"
+
+[[cards]]
+name = "mauser-c96"
+
+[[cards]]
+name = "maxim-gun"
+
+[[cards]]
+name = "mg-08"
+
+[[cards]]
+name = "mg-34"
+
+[[cards]]
+name = "mg-42"
+
+[[cards]]
+name = "mk19"
+
+[[cards]]
+name = "mosin-nagant"
+
+[[cards]]
+name = "mossberg-500"
+
+[[cards]]
+name = "mp-18"
+
+[[cards]]
+name = "mp-40"
+
+[[cards]]
+name = "mp5"
+
+[[cards]]
+name = "mp7"
+
+[[cards]]
+name = "nagant-m1895"
+
+[[cards]]
+name = "nambu-pistol"
+
+[[cards]]
+name = "owen-gun"
+
+[[cards]]
+name = "panzerfaust"
+
+[[cards]]
+name = "panzerschreck"
+
+[[cards]]
+name = "pattern-1853-enfield"
+
+[[cards]]
+name = "piat"
+
+[[cards]]
+name = "pkm"
+
+[[cards]]
+name = "pps"
+
+[[cards]]
+name = "ppsh-41"
+
+[[cards]]
+name = "psg1"
+
+[[cards]]
+name = "ptrd-41"
+
+[[cards]]
+name = "ptrs-41"
+
+[[cards]]
+name = "qbz-95"
+
+[[cards]]
+name = "remington-700"
+
+[[cards]]
+name = "remington-870"
+
+[[cards]]
+name = "rpd"
+
+[[cards]]
+name = "rpg-7"
+
+[[cards]]
+name = "rpk"
+
+[[cards]]
+name = "sa80"
+
+[[cards]]
+name = "saiga-12"
+
+[[cards]]
+name = "sharps-rifle"
+
+[[cards]]
+name = "sig-550"
+
+[[cards]]
+name = "sig-p226"
+
+[[cards]]
+name = "sks"
+
+[[cards]]
+name = "spas-12"
+
+[[cards]]
+name = "spencer-rifle"
+
+[[cards]]
+name = "springfield-1861"
+
+[[cards]]
+name = "sten"
+
+[[cards]]
+name = "sterling"
+
+[[cards]]
+name = "steyr-aug"
+
+[[cards]]
+name = "stg-44"
+
+[[cards]]
+name = "suomi-kp-31"
+
+[[cards]]
+name = "svd-dragunov"
+
+[[cards]]
+name = "svt-40"
+
+[[cards]]
+name = "sw-model-29"
+
+[[cards]]
+name = "tavor"
+
+[[cards]]
+name = "thompson"
+
+[[cards]]
+name = "tokarev-tt-33"
+
+[[cards]]
+name = "type-56"
+
+[[cards]]
+name = "uzi"
+
+[[cards]]
+name = "vickers"
+
+[[cards]]
+name = "vss-vintorez"
+
+[[cards]]
+name = "vz-58"
+
+[[cards]]
+name = "walther-p38"
+
+[[cards]]
+name = "walther-ppk"
+
+[[cards]]
+name = "webley"
+
+[[cards]]
+name = "winchester-1873"
+
+[[cards]]
+name = "winchester-1897"
+
+[[cards]]
+name = "zastava-m70"

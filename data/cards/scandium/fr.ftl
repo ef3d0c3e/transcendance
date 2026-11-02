@@ -1,0 +1,2 @@
+title = Scandium
+description = Le scandium est l'élément chimique de numéro atomique 21, de symbole Sc. Il fait partie des métaux de transition et — avec l'yttrium et les lanthanides — des terres rares. Le scandium est généralement présent à de faibles teneurs parmi les terres rares, mais c'est aussi un élément principal de quelques minéraux rares, notamment découverts en Scandinavie (d'où son nom).

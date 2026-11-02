@@ -1,0 +1,2 @@
+title = Larimar
+description = Larimar is the tradename for a rare blue variety of the silicate mineral pectolite found only in the Dominican Republic, around the city of Barahona. Its coloration varies from bluish white, light-blue, light-green, teal, green-blue, turquoise blue, turquoise green, turquoise blue-green, deep green, dark green, to deep blue, dark blue and purple, violet and indigo and the larimar can come in many varieties and color mixes.

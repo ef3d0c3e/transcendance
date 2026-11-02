@@ -1,0 +1,2 @@
+title = Strontium
+description = Strontium is a chemical element; it has symbol Sr and atomic number 38. An alkaline earth metal, it is a soft silver-white yellowish metallic element that is highly chemically reactive. The metal forms a dark oxide layer when it is exposed to air. Strontium has physical and chemical properties similar to those of its two vertical neighbors in the periodic table, calcium and barium.

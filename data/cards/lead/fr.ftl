@@ -1,0 +1,2 @@
+title = Plomb
+description = Le plomb est l'élément chimique de numéro atomique 82, de symbole Pb. Dans les conditions standard, le corps simple plomb est un métal malléable et gris bleuâtre, qui blanchit lentement en s'oxydant. Le mot plomb et le symbole Pb viennent du latin plumbum (le métal plomb). Le plomb appartient au groupe 14 et à la période 6 du tableau périodique. C'est le plus « lourd » des éléments stables.

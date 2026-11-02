@@ -1,0 +1,2 @@
+title = Ouigo
+description = Ouigo (prononcé [wigo]) est le service commercial ferroviaire à bas prix de la SNCF. Il est lancé en France en plusieurs étapes : d'abord avec des rames TGV (spécialement réaménagées) le 2 avril 2013, puis avec des trains classiques les 11 avril 2022 (pour les liaisons nationales) et 19 décembre 2024 (pour la relation avec la Belgique, dans le cadre d'une collaboration internationale avec la SNCB).

@@ -1,0 +1,2 @@
+title = Lawrencium
+description = Le lawrencium est l'élément chimique de numéro atomique 103 et de symbole Lr (anciennement Lw jusqu'en 1963). Produit artificiellement en 1961 par Albert Ghiorso, Torbjørn Sikkeland, Almon E. Larsh et Robert M. Latimer (États-Unis), il porte le nom d'Ernest Orlando Lawrence, qui découvrit le principe du cyclotron en 1929. Son point de fusion prédit est d'environ 1 627 °C.

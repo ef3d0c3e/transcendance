@@ -1,7 +1,7 @@
 {{ define "daily-streak" }}
 <section class="daily-streak">
 	<div class="daily-streak-info">
-		<h3 class="daily-streak-title">{{ .Title }}</h3>
+		<h2 class="daily-streak-title">{{ .Title }}</h2>
 		<div class="daily-streak-meter">
 			{{- range .Tiers }}
 			<span{{ if .Current }} aria-current="true"{{ end }} class="daily-streak-tier{{ if .Current }} daily-streak-tier-current{{ end }}">{{ .Label }}</span>

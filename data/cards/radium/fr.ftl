@@ -1,0 +1,2 @@
+title = Radium
+description = Le radium est l'élément chimique de numéro atomique 88, de symbole Ra. Il fait partie de la série des métaux alcalino-terreux. Son corps simple est un métal d'un aspect parfaitement blanc mais il noircit lors de son exposition à l'air libre. Il est extrêmement radioactif, la demi-vie de son isotope le plus stable le radium 226 étant de 1 600 ans. Il fournit du radon comme produit de désintégration.

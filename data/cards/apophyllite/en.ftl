@@ -1,0 +1,2 @@
+title = Apophyllite
+description = The name apophyllite refers to a specific group of phyllosilicates, a class of minerals. Originally, the group name referred to a specific mineral, but was redefined in 1978 to stand for a class of minerals of similar chemical makeup that comprise a solid solution series, and includes the members fluorapophyllite-(K), fluorapophyllite-(Na), hydroxyapophyllite-(K).

@@ -214,11 +214,11 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	}, cookie)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 	require.Equal(t, uint(500), shopBalance(t, "shopdave"))
 
 	// The shop shows the new balance and confirms the checkout
-	rec = shopRequest(t, router, http.MethodGet, "/inventory?topup=medium", nil, cookie)
+	rec = shopRequest(t, router, http.MethodGet, rec.Header().Get("Location"), nil, cookie)
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
 	require.Contains(t, body, `Balance: <span id="shop-coins">500 coins</span>`)

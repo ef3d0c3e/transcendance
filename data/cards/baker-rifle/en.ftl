@@ -1,0 +1,2 @@
+title = Baker Rifle
+description = The Pattern 1800 Infantry Rifle, better known as the Baker rifle, was a flintlock rifle designed by English gunsmith Ezekiel Baker and used by the British Armed Forces from 1801 to 1837. First seeing action during the French Revolutionary and Napoleonic Wars, it was the first British-made firearm to be issued as a service rifle to all soldiers in the British Army's rifle units.

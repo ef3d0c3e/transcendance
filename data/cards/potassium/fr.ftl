@@ -1,0 +1,2 @@
+title = Potassium
+description = Le potassium est l'élément chimique de numéro atomique 19, de symbole K (du latin kalium). Il fait partie du premier groupe du tableau périodique et plus particulièrement des métaux alcalins. Ses propriétés chimiques sont voisines de celles du sodium. Sur Terre et dans les autres corps rocheux, il est généralement lié à d'autres éléments au sein de nombreux minéraux.

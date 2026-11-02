@@ -1,0 +1,2 @@
+title = SNCF Class CC 72000
+description = The SNCF Class CC 72000 was a class of C′C′ diesel-electric locomotives designed and built by French manufacturing conglomerate Alsthom. They are regarded as being the most powerful class of diesel locomotives to be built in France. Ninety-two locomotives were produced between 1967 and 1974. The last regular workings of the type were conducted during August 2019.

@@ -1,0 +1,2 @@
+title = Arsenic
+description = L'arsenic est l'élément chimique de numéro atomique 33, noté par le symbole As. Son corps simple se présente sous la forme d'un solide cristallin argenté. L'arsenic appartient au groupe des pnictogènes (groupe 15) avec l'azote (N), le phosphore (P), l'antimoine (Sb), le bismuth (Bi) et le moscovium (Mc). Il a des propriétés intermédiaires entre celles des métaux et des non-métaux, comme l'antimoine dont il est proche.

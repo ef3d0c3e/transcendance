@@ -104,13 +104,13 @@ func TestTradeupMixesCollectionsOfOneRarity(t *testing.T) {
 	// Three distinct commons, all in the dev collection
 	giveCards(t, "tradeup3", cardPythagorean, 5)
 	giveCards(t, "tradeup3", cardFlyingScotsman, 3)
-	giveCards(t, "tradeup3", cardTungsten, 2)
+	giveCards(t, "tradeup3", cardRosetta, 2)
 	cookie := login(t, router, "tradeup3", "foo-bar-baz-qux")
 
 	form := contract(append(append(
 		copies(cardPythagorean, "", 5),
 		copies(cardFlyingScotsman, "", 3)...),
-		copies(cardTungsten, "", 2)...)...)
+		copies(cardRosetta, "", 2)...)...)
 	rec := tradeup(t, router, cookie, form)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
@@ -314,12 +314,12 @@ func TestTradeupTabOrdersCardsByHowManyCopiesToSpend(t *testing.T) {
 	createAccount(t, router, "tradeup15", "foo-bar-baz-qux", 0)
 	giveCards(t, "tradeup15", cardPythagorean, 30)
 	giveCards(t, "tradeup15", cardMcMurdo, 5)
-	giveCards(t, "tradeup15", cardTungsten, 2)
+	giveCards(t, "tradeup15", cardRosetta, 2)
 	cookie := login(t, router, "tradeup15", "foo-bar-baz-qux")
 
 	// The biggest stacks to spend come first, whatever their rarity
 	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
-	require.Equal(t, []string{"Pythagorean tiling", "McMurdo Station", "Tungsten"}, cardTitles(body))
+	require.Equal(t, []string{"Pythagorean tiling", "McMurdo Station", "Rosetta Stone"}, cardTitles(body))
 
 	// Each tile keeps its place in the collection-and-rarity order, the one
 	// the sort control restores: the rare McMurdo first, then the commons by
@@ -357,12 +357,12 @@ func TestTradeupKeepsCopiesUpInTrades(t *testing.T) {
 	createAccount(t, router, "tradeup16", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "tradeup17", "foo-bar-baz-qux", 0)
 	giveCards(t, "tradeup16", cardPythagorean, 11)
-	giveCards(t, "tradeup17", cardTungsten, 1)
+	giveCards(t, "tradeup17", cardRosetta, 1)
 	cookie := login(t, router, "tradeup16", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie, "/trades", tradeBody(t, "tradeup17",
 		[]models.TradeItem{item(cardPythagorean, "", 2)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The tab only offers the 9 free copies

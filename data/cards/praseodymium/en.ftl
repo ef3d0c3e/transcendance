@@ -1,0 +1,2 @@
+title = Praseodymium
+description = Praseodymium is a chemical element; it has symbol Pr and atomic number 59. It is the third member of the lanthanide series and is considered one of the rare-earth metals. It is a soft, silvery, malleable and ductile metal, valued for its magnetic, electrical, chemical, and optical properties. It is too reactive to be found in native form, and pure praseodymium metal slowly develops a green oxide coating when exposed to air.

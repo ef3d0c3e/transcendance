@@ -1,0 +1,2 @@
+title = Citadis 401
+description = Le Citadis est un tramway à plancher bas produit par Alstom. Au total, plus de 2 300 rames de ce modèle ont été vendues, à près de 65 villes dans le monde. Le Citadis 401 d'Alstom circule sur une voie de 1435 mm est composé de 5 voitures, est alimenté par un système électrique de 750 V CC. Ce tramway est un élément essentiel de la flotte du Tramway de Montpellier, connu sous le nom de TAM Citadis 401.

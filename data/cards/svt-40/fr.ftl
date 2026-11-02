@@ -1,0 +1,2 @@
+title = SVT-40
+description = Le fusil semi-automatique SVT-40 est une amelioration du SVT-38, mise au point par Fiodor Vassilievitch Tokarev et mise en service dans l'Armée rouge en 1940. Comme son prédécesseur, il est chambré pour la cartouche 7,62 × 54 mm R utilisée dans les Mosin-Nagant 1891 et 1891/30 et dans la mitrailleuse Maxim 1910. Plus de 1 600 000 de ces fusils ont été fabriqués jusqu'en 1945.

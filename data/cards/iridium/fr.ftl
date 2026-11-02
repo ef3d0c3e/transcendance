@@ -1,0 +1,2 @@
+title = Iridium
+description = L'iridium est l'élément chimique de numéro atomique 77, de symbole Ir. C'est un métal de transition du groupe du platine, blanc argenté, très dur et cassant. Deuxième métal le plus dense après l'osmium, il est aussi le plus résistant à la corrosion. Rare dans la croûte terrestre mais abondant dans les météorites, il forme une fine couche d'argile qui marque l'impact d'astéroïde à l'origine de l'extinction des dinosaures.

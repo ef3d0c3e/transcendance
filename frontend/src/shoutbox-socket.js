@@ -53,11 +53,14 @@ export class ShoutboxConnection {
 	}
 
 	#handleMessage(event) {
+		let data;
 		try {
-			this.#onEvent(JSON.parse(event.data));
-		} catch (error) {
-			console.error('Invalid shoutbox event:', error);
+			data = JSON.parse(event.data);
+		} catch {
+			// Not an event of the server, there is nothing to show for it
+			return;
 		}
+		this.#onEvent(data);
 	}
 
 	#handleClose(event) {
@@ -102,6 +105,20 @@ export class ShoutboxConnection {
 
 	unignore(username) {
 		return this.#request({ type: 'unignore', username });
+	}
+
+	// Moderators: delete a shoutbox message for everyone
+	deleteMessage(id) {
+		return this.#request({ type: 'delete', id });
+	}
+
+	// Moderators: refuse the shoutbox messages of a user for an `hour`, a `day` or a `week`
+	mute(username, duration) {
+		return this.#request({ type: 'mute', username, duration });
+	}
+
+	unmute(username) {
+		return this.#request({ type: 'unmute', username });
 	}
 
 	close() {

@@ -1,0 +1,2 @@
+title = Sphalerite
+description = Sphalerite is a sulfide mineral with the chemical formula (Zn, Fe)S. It is the most important ore of zinc. Sphalerite is found in a variety of deposit types, but it is primarily in sedimentary exhalative, Mississippi-Valley type, and volcanogenic massive sulfide deposits. It is found in association with galena, chalcopyrite, pyrite, calcite, dolomite, quartz, rhodochrosite, and fluorite.

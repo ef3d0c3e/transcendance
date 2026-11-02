@@ -1,0 +1,2 @@
+title = Tin
+description = Tin is a chemical element; it has the symbol Sn (from Latin stannum) and atomic number 50. A metallic-gray metal, tin is soft enough to be cut with little force, and a bar of tin can be bent by hand with little effort. When bent, a bar of tin makes a sound, the so-called "tin cry", as a result of twinning in tin crystals. Tin is a post-transition metal in group 14 of the periodic table of elements.

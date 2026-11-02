@@ -10,6 +10,7 @@ folder() {
 
 folder mariadb 999:999
 folder elasticsearch 1000:0
+folder log-archive 1000:0
 folder prometheus 65534:65534
 folder grafana 472:0
 folder alertmanager 65534:65534

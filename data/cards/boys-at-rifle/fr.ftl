@@ -1,0 +1,2 @@
+title = Fusil antichar Boys
+description = Le fusil antichar Boys, parfois appelé à tort « Boyes », était un fusil antichar britannique. Trois versions successives de l'arme existèrent : le premier modèle Mark I avec un frein de bouche circulaire et un monopied en T, le Mark I*, avec frein de bouche carré et bipied en V, et le troisième modèle destiné aux troupes aéroportées avec un canon raccourci et pas de frein de bouche.
