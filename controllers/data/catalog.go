@@ -20,7 +20,7 @@ import (
 	"gorm.io/gorm"
 )
 
-// Catalog card sort keeping the collection order, used when not searching
+// Collection order, the default sort when not searching
 const catalogSortNumber = "number"
 
 // In a collection, cards the user is missing first, then the collection order
@@ -34,7 +34,6 @@ const (
 
 var catalogStatuses = []string{catalogStatusOwned, catalogStatusMissing}
 
-// Card sorts of the catalog, relevance is only available when searching
 var catalogSorts = []string{
 	inventorySortRelevance,
 	catalogSortNumber,
@@ -43,7 +42,6 @@ var catalogSorts = []string{
 	inventorySortRarity,
 }
 
-// Sort used when none is picked: search relevance, or collection order
 func defaultCatalogSort(query string) string {
 	if strings.TrimSpace(query) != "" {
 		return inventorySortRelevance
@@ -51,7 +49,6 @@ func defaultCatalogSort(query string) string {
 	return catalogSortNumber
 }
 
-// Everything needed to render the catalog page
 type catalogView struct {
 	Query string
 	// Card filters, "" or 0 when unfiltered
@@ -63,7 +60,7 @@ type catalogView struct {
 	Sort string
 	// Error or empty state message
 	Message string
-	// Rendered cards
+	// Rendered cards of the page
 	Items []map[string]any
 	Page  int
 	// Number of matching cards
@@ -79,7 +76,6 @@ type catalogView struct {
 	Copies map[uint]cardStack
 }
 
-// Every collection, in ID order
 func (dc *DataController) sortedCollections() []*data.Collection {
 	collections := make([]*data.Collection, 0, len(dc.Data.Collections))
 	for _, collection := range dc.Data.Collections {
@@ -116,7 +112,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 			count = dc.Renderer.T(c, "inventory-count", "count", v.Count)
 		}
 	}
-	// The page lists every card, or a collection's
+
 	action := "/cards/search/"
 	if v.Scope != nil {
 		action = fmt.Sprint("/collections/", v.Scope.ID, "/")
@@ -256,7 +252,6 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	dc.Renderer.Render(c, &builder)
 }
 
-// Global IDs of the cards of a collection owned by a user
 func (dc *DataController) ownedCards(userID uint, collection *data.Collection) (map[uint]bool, error) {
 	var ids []uint
 	if err := dc.DB.
@@ -274,7 +269,6 @@ func (dc *DataController) ownedCards(userID uint, collection *data.Collection) (
 	return owned, nil
 }
 
-// Translated title of a collection, its name when missing
 func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Collection) string {
 	title, err := collection.Translate(dc.Renderer.Localizer.GetLocale(c), "title")
 	if err != nil {
@@ -284,7 +278,6 @@ func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Colle
 	return title
 }
 
-// Page number from the query, 1 when missing or invalid
 func catalogPage(c *gin.Context) int {
 	return controllers.PageParam(c.Query("p"))
 }
@@ -299,7 +292,6 @@ func (dc *DataController) collectionCards(c *gin.Context, collection *data.Colle
 	dc.searchCards(c, collection)
 }
 
-// Card search page, within scope when it isn't nil
 func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	v := &catalogView{
 		Query: c.Query("q"),
@@ -359,7 +351,6 @@ func (dc *DataController) searchCards(c *gin.Context, scope *data.Collection) {
 	dc.renderCatalog(c, v)
 }
 
-// Fill the view with the matching cards, sorted and paginated
 func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
@@ -435,7 +426,6 @@ func (dc *DataController) catalogCardItems(c *gin.Context, v *catalogView) error
 	return nil
 }
 
-// 0 for false, 1 for true, to sort on a flag
 func boolRank(b bool) int {
 	if b {
 		return 1

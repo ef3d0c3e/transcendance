@@ -8,14 +8,12 @@ import (
 	"transcendance/data"
 )
 
-// Size of the packs drawn in tests
 const testPackSize = 5
 
 func testCard(name string, rarity string) *data.Card {
 	return &data.Card{Name: name, Rarity: rarity}
 }
 
-// Collection of every card of the test pools
 var testCollection = &data.Collection{}
 
 func testPoolCard(name string, rarity string) poolCard {
@@ -47,7 +45,6 @@ func TestRollRarityDistribution(t *testing.T) {
 		counts[rollRarity(rnd)]++
 	}
 
-	// Drop table is common 80%, rare 15%, legendary 5%
 	expected := map[string]float64{
 		"common":    0.80,
 		"rare":      0.15,
@@ -267,18 +264,15 @@ func TestBuildReelPlacesWinnerInWindow(t *testing.T) {
 		}
 	}
 
-	// The won card must survive the trip through the strip
 	if got := strip[reelAbove].Card; got != winner.card {
 		t.Errorf("strip[%d] = %q, want winner %q", reelAbove, got.Name, winner.card.Name)
 	}
 
-	// The cards beneath the winner are the ones that run past as the reel
-	// drops: they have to be there or the spin is too short
+	// The cards beneath the winner make the spin, too few and it is too short
 	if reelBelow < 8 {
 		t.Errorf("reelBelow = %d, want at least 8 cards of spin", reelBelow)
 	}
 
-	// Fillers must come from the collection pool
 	allowed := map[string]bool{"a": true, "b": true, "c": true, "d": true}
 	for i, entry := range strip {
 		if entry.Win {
@@ -372,7 +366,6 @@ func TestDrawDefaultPackRarityOdds(t *testing.T) {
 		}
 	}
 
-	// Drop table is common 80%, rare 15%, legendary 5%
 	expected := map[string]float64{
 		"common":    0.80,
 		"rare":      0.15,
@@ -387,9 +380,7 @@ func TestDrawDefaultPackRarityOdds(t *testing.T) {
 }
 
 func TestDrawDefaultPackIsUniformAcrossCollections(t *testing.T) {
-	// A collection with one card and a collection with three: cards of the
-	// same rarity must be drawn as often as each other, whatever their
-	// collection
+	// A one-card collection and a three-card one: their commons are drawn equally
 	small := &data.Collection{ID: 1}
 	big := &data.Collection{ID: 2}
 	pool := []poolCard{

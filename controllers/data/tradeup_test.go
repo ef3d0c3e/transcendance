@@ -7,7 +7,6 @@ import (
 	"transcendance/data"
 )
 
-// A card of a tradeup pool, from the collection of the given ID
 func tradeupCard(collectionID int, name string, rarity string) poolCard {
 	return poolCard{card: testCard(name, rarity), collection: &data.Collection{ID: collectionID}}
 }
@@ -95,7 +94,7 @@ func TestDrawTradeupPicksTargetTierCards(t *testing.T) {
 		}
 		seen[drawn.card.Name] = true
 	}
-	// Both cards of the tier must be reachable
+
 	for _, entry := range wanted {
 		if !seen[entry.card.Name] {
 			t.Errorf("card %q was never drawn", entry.card.Name)
@@ -133,7 +132,7 @@ func TestDrawTradeupNoOutcomes(t *testing.T) {
 	if _, ok := drawTradeup(rnd, nil); ok {
 		t.Error("drawTradeup(nil) drew a card")
 	}
-	// Outcomes that contribute nothing can't win either
+
 	if _, ok := drawTradeup(rnd, []tradeupOutcome{{CollectionID: 1}}); ok {
 		t.Error("drawTradeup with no weight drew a card")
 	}

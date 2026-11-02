@@ -16,11 +16,9 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-// Stacks of one side of the trade menu sent per request: the menu asks for
-// the next page as its picker is scrolled down
+// Stacks per side and request, the picker asks for more as it scrolls
 const tradeStacksPageSize = 24
 
-// One (card, foil) stack of a user, shown by the trade menu
 type tradeStack struct {
 	CardID uint   `json:"card_id"`
 	Foil   string `json:"foil"`
@@ -30,8 +28,8 @@ type tradeStack struct {
 	Collection string `json:"collection"`
 	Rarity     string `json:"rarity"`
 	Image      string `json:"image"`
-	// The stack's card, rendered as on the inventory page. Left out of the
-	// prefilled stacks, which only show in the deal box
+	// Rendered card, left out of the prefilled stacks which only show in the
+	// deal box
 	HTML string `json:"html,omitempty"`
 	// Copies a counter starts with on this stack, capped to the free ones
 	Picked uint `json:"picked,omitempty"`
@@ -41,7 +39,6 @@ type tradeStack struct {
 	copies     uint
 }
 
-// One (card, foil) stack as grouped by the database
 type tradeStackRow struct {
 	CardID uint
 	Foil   string
@@ -58,11 +55,9 @@ func foldTradeSearch(text string) string {
 	return strings.ToLower(folded)
 }
 
-// Card stacks of a user, with the fields shown by the trade menu, in card
-// order. The counts are the copies free to be put up: what the user has
-// committed to other pending offers is left out. Only the stacks whose card
-// or collection title holds the query are kept, when there is one. No card
-// is rendered here, the stacks of a whole inventory are cheap to list
+// tradeStacks counts the copies free to be put up, leaving out those committed
+// to other pending offers. No card is rendered here, so listing a whole
+// inventory stays cheap
 func (dc *DataController) tradeStacks(loc string, userID uint, committed *controllers.TradeCommitments, query string) ([]tradeStack, error) {
 	var rows []tradeStackRow
 	if err := dc.DB.Model(&models.Card{}).
@@ -119,8 +114,7 @@ func (dc *DataController) tradeStacks(loc string, userID uint, committed *contro
 	return stacks, nil
 }
 
-// One page of the stacks of a user, the only ones whose card is rendered,
-// and how many stacks match in all
+// tradeStacksPage renders the cards of one page only, and counts every match
 func (dc *DataController) tradeStacksPage(c *gin.Context, loc string, userID uint, committed *controllers.TradeCommitments, query string, page int) ([]tradeStack, int, error) {
 	stacks, err := dc.tradeStacks(loc, userID, committed, query)
 	if err != nil {
@@ -168,13 +162,12 @@ func (dc *DataController) tradePrefill(loc string, userID uint, committed *contr
 
 // /api/trade/stacks GET: the card stacks of the user and of the trade partner
 //
-// Query: `u` is the trade partner, `counter` is the offer being countered if
-// any, whose contents are left unlocked on the partner's side since it will be
-// replaced. `side` (`mine` or `theirs`) restricts the reply to one side,
-// `page` (from 1) is the page of stacks of each side and `q` filters them by
-// card or collection title. Without a side, the reply of a counter also
-// holds the stacks of the offer it replaces, in `mine_picked` and
-// `theirs_picked`
+// Query: `u` is the partner; `counter` is the offer being countered, whose
+// contents stay unlocked on the partner's side since it will be replaced;
+// `side` (`mine` or `theirs`) restricts the reply to one side; `page` (from 1)
+// pages each side; `q` filters by card or collection title. Without a side, a
+// counter's reply also holds the stacks of the offer it replaces, in
+// `mine_picked` and `theirs_picked`
 func (dc *DataController) TradeStacksGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
@@ -240,8 +233,7 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 		skipTradeID = countered.ID
 	}
 
-	// What each side put up in other pending offers is locked there: the
-	// stacks only show the copies free to be put up again. The countered
+	// Copies put up in other pending offers are locked there. The countered
 	// offer is the partner's, so only their side skips it
 	mine, err := controllers.TradeCommitmentsOf(dc.DB, user.ID, 0)
 	if err != nil {
