@@ -18,7 +18,6 @@ import (
 // Characters kept from a key comment to name its owner
 var unsafeUserChars = regexp.MustCompile(`[^A-Za-z0-9._@+-]`)
 
-// An admin allowed to sign in
 type authorizedKey struct {
 	// SHA256 fingerprint, as printed by ssh-keygen -l
 	Fingerprint string
