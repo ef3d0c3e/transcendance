@@ -3864,6 +3864,12 @@ form .notification-action {
     border-radius: 0.6rem;
 }
 
+/* Under the foil roulette's rules, which it says can't be played */
+.foil-noscript {
+    max-width: 36rem;
+    margin: 0 auto 1.25rem;
+}
+
 /* Trades page */
 .trades-page {
     width: 100%;
@@ -4177,11 +4183,18 @@ form .notification-action {
     pointer-events: none;
 }
 
-/* Card picked for a foil roll */
+/* Card picked for a foil roll: a ring of another color than the keyboard
+   focus, which shows as a separate outline around it, like the picked tiles
+   of the trade menu */
 .foil-card-rolled .card-container {
-    outline: 3px solid var(--color-accent-secondary);
-    outline-offset: 4px;
-    border-radius: 1rem;
+    border-radius: var(--card-border-radius);
+    box-shadow:
+        0 0 0 3px var(--color-bg-1),
+        0 0 0 6px var(--color-accent-primary);
+
+    &:focus-visible {
+        outline-offset: 9px;
+    }
 }
 
 .tradeup-rules {

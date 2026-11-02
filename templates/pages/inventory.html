@@ -195,7 +195,7 @@
 	{{ with .Data.FoilResult }}
 	<div id="tradeup-result"
 		{{ if $.Data.FoilResultLost }}data-outcome="lost" data-label-title="{{ $.T "foil-result-lost" }}"
-		data-label-text="{{ $.T "foil-result-lost-text" }}"
+		data-label-text="{{ $.T "foil-result-lost-text" "title" .Data.CardTitle }}"
 		{{ else }}data-label-title="{{ $.T "foil-result-won" }}" data-label-text="{{ $.T "foil-result-won-text" }}"{{ end }}
 		data-label-close="{{ $.T "tradeup-result-close" }}">
 		<template>{{ template "card" . }}</template>
@@ -203,6 +203,10 @@
 	{{ end }}
 	{{ if ne (len .Data.Items) 0 }}
 	<p class="tradeup-rules">{{ .Data.FoilRules }}</p>
+	{{/* The tiles are picked and the roll built by frontend/src/FoilRoulette.svelte */}}
+	<noscript>
+		<p class="trade-menu-noscript foil-noscript">{{ .T "foil-noscript" }}</p>
+	</noscript>
 	<div class="tradeup-layout">
 		<div class="tradeup-main">
 			<div class="foil-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
@@ -268,7 +272,9 @@
 					data-label-submit="{{ .T "foil-submit" }}" data-label-cancel="{{ .T "inventory-sell-cancel" }}"
 					data-label-confirm-title="{{ .T "foil-confirm-title" }}"
 					data-label-confirm-text="{{ .Data.FoilConfirmText }}"
-					data-label-confirm-sacrifices="{{ .Data.FoilConfirmSacrifices }}"></div>
+					data-label-confirm-sacrifices="{{ .Data.FoilConfirmSacrifices }}"
+					data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+					data-label-copies="{{ .T "inventory-card-copies" }}"></div>
 			</form>
 		</div>
 	</div>
