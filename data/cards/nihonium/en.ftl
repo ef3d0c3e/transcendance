@@ -1,0 +1,2 @@
+title = Nihonium
+description = Nihonium is a synthetic chemical element; it has symbol Nh and atomic number 113. It is extremely radioactive: its most stable known isotope, nihonium-286, has a half-life of about 10 seconds. In the periodic table, nihonium is a transactinide element in the p-block. It is a member of period 7 and group 13.

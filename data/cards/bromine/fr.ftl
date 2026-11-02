@@ -1,0 +1,2 @@
+title = Brome
+description = Le brome est l'élément chimique de numéro atomique 35, de symbole Br. C'est un membre de la famille des halogènes. Le corps simple brome, de formule chimique Br2 (dibrome, formé de molécules homonucléaires diatomiques), est un liquide de couleur brunâtre dans les conditions normales de température et de pression. Carl Löwig et Antoine-Jérôme Balard ont découvert ce corps simple en 1825 et 1826, indépendamment l'un de l'autre.

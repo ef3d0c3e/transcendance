@@ -1,0 +1,2 @@
+title = Cerium
+description = Cerium is a chemical element; it has symbol Ce and atomic number 58, and is a soft, ductile, and silvery-white metal that tarnishes when exposed to air. Cerium is the second element in the lanthanide series, and while it often shows the oxidation state of +3 characteristic of the series, it also has a stable +4 state that does not oxidize water. It is considered one of the rare-earth elements.

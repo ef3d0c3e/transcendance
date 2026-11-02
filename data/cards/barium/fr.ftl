@@ -1,0 +1,2 @@
+title = Baryum
+description = Le baryum est l'élément chimique de numéro atomique 56, de symbole Ba. C'est un métal alcalino-terreux mou et argenté, si réactif qu'il n'existe jamais à l'état natif. Son nom vient du grec barys, « lourd », en référence à la densité de son principal minerai, la baryte. Le sulfate de baryum sert de produit de contraste en radiologie, et ses sels donnent leur couleur verte aux feux d'artifice.

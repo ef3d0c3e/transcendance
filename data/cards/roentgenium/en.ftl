@@ -1,0 +1,2 @@
+title = Roentgenium
+description = Roentgenium is a synthetic chemical element; it has symbol Rg and atomic number 111. It is extremely radioactive and can only be created in a laboratory. The most stable known isotope, roentgenium-282, has a half-life of 130 seconds, although the unconfirmed roentgenium-286 may have a longer half-life of about 10.7 minutes. Roentgenium was first created in December 1994 by the GSI Helmholtz Centre for Heavy Ion Research near Darmstadt, Germany.

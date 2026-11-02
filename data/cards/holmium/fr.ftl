@@ -1,0 +1,2 @@
+title = Holmium
+description = L'holmium est l'élément chimique de numéro atomique 67, de symbole Ho. L'holmium est un métal du groupe des terres rares. Comme les autres lanthanides, il est malléable et ductile à température ambiante, s'oxyde lentement dans l'air sec mais rapidement dans l'air humide. Le nom de cet élément provient de la latinisation après aphérèse du toponyme Stockholm, ville natale de son découvreur Per Thodor Cleve.

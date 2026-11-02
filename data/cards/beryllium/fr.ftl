@@ -1,0 +1,2 @@
+title = Béryllium
+description = Le béryllium est l'élément chimique de numéro atomique 4, de symbole Be. Dans le tableau périodique, c'est le premier représentant des métaux alcalino-terreux. Son nom vient du grec βήρυλλος / beryllos qui désignait l'aigue-marine ou l'émeraude. Dans les conditions normales de température et de pression, le corps simple est un métal d'aspect gris acier, léger et fragile.

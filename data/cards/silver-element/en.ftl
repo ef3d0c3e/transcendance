@@ -1,0 +1,2 @@
+title = Silver
+description = Silver is a chemical element; it has symbol Ag (from Latin argentum) and atomic number 47. A soft, white, lustrous transition metal, it exhibits the highest electrical conductivity, thermal conductivity and reflectivity of any metal. Silver is found in the Earth's crust in the pure, free elemental form ("native silver"), as an alloy with gold (electrum) and other metals, and in minerals such as acanthite, argentite and chlorargyrite.

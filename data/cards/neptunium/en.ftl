@@ -1,0 +1,2 @@
+title = Neptunium
+description = Neptunium is a chemical element; it has the chemical symbol Np and atomic number 93. A radioactive actinide metal, neptunium is the first transuranic element. It is named after Neptune, the planet beyond Uranus in the Solar System, which uranium is named after. A neptunium atom has 93 protons and 93 electrons, of which seven are valence electrons. Neptunium metal is silvery and tarnishes when exposed to air.

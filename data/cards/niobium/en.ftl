@@ -1,0 +1,2 @@
+title = Niobium
+description = Niobium is a chemical element; it has symbol Nb (formerly columbium, Cb) and atomic number 41. It is a light grey, crystalline transition metal. Pure niobium has a Mohs hardness rating similar to pure titanium, and it has similar ductility to iron. Niobium oxidizes in Earth's atmosphere very slowly, hence its application in jewelry as a hypoallergenic alternative to nickel.

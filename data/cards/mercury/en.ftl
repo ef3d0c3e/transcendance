@@ -1,0 +1,2 @@
+title = Mercury
+description = Mercury is a chemical element; it has symbol Hg (from Latin hydrargyrum) and atomic number 80. It is commonly known as quicksilver. A heavy, silvery d-block element, mercury is the only metallic element that is known to be liquid at standard temperature and pressure. As well as having the lowest freezing point, mercury has the lowest boiling point and the narrowest liquid state range of any metal at standard conditions.

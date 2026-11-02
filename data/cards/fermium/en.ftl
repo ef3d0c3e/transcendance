@@ -1,0 +1,2 @@
+title = Fermium
+description = Fermium is a synthetic chemical element; it has symbol Fm and atomic number 100. It is an actinide and the heaviest element that can be formed by neutron bombardment of lighter elements, and hence the last element that can be prepared in macroscopic quantities, although pure fermium metal has not been prepared yet. A total of 20 isotopes are known, with 257Fm being the longest-lived with a half-life of 100.5 days.

@@ -1,0 +1,2 @@
+title = Livermorium
+description = Le livermorium (symbole Lv) est l'élément chimique de numéro atomique 116. Il correspond à l'ununhexium (Uuh) de la dénomination systématique de l'IUPAC, et est encore appelé élément 116 dans la littérature. Il a été synthétisé pour la première fois en juillet 2000 par la réaction 248Cm (48Ca, 3n) 293Lv au Joint Institute for Nuclear Research (JINR) à Doubna, en Russie.

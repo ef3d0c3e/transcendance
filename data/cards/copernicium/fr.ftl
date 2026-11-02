@@ -1,0 +1,2 @@
+title = Copernicium
+description = Le copernicium (symbole Cn) est l'élément chimique de numéro atomique 112. Il correspond à l'ununbium (Uub) de la dénomination systématique de l'IUPAC, et est encore appelé élément 112 dans la littérature. Il a été synthétisé pour la première fois le 9 février 1996 par la réaction 208Pb (70Zn, n) 277Cn au Gesellschaft für Schwerionenforschung (GSI) de Darmstadt, en Allemagne, et son identification a été validée par l'IUPAC en mai 2009.
