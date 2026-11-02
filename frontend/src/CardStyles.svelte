@@ -133,6 +133,32 @@
 		);
 	}
 
+	/* First copy of a card their owner had none of, marked on the opening
+		reels, opposite the rarity badge */
+	:global(span.card-new) {
+		z-index: 12;
+		position: absolute;
+		top: 0.5em;
+		right: 1ch;
+		align-self: flex-start;
+		padding: 0.5ch 0.8ch;
+
+		/* The opening reels scale their cards down, the pill stays readable */
+		font-size: max(0.7rem, calc(0.45rem / var(--pack-scale, 1)));
+		letter-spacing: 0.1ch;
+		font-weight: 800;
+		text-transform: uppercase;
+		/* Loud lime gradient, clear of the blue/red/gold rarity badges */
+		color: #08240e;
+		background: linear-gradient(160deg, #c8ff3c, #2ee06a);
+		border-radius: 10ch;
+		box-shadow:
+			0 2px 6px var(--color-shadow),
+			0 0 12px color-mix(in srgb, #6cf05a, transparent 45%);
+
+		pointer-events: none;
+	}
+
 	:global(.card img.card-image) {
 		z-index: 11;
 		border-radius: var(--card-border-radius) var(--card-border-radius) 0 0;

@@ -1098,6 +1098,24 @@
 		display: none;
 	}
 
+	/* The new pill would spoil the draw: it waits for its reel to lock, and
+		only the won card may show it */
+	.pack-reel:not(.is-landed) .pack-cell :global(.card-new),
+	.pack-reel .pack-cell[data-win="false"] :global(.card-new) {
+		display: none;
+	}
+
+	/* It pops in on the landing card */
+	.is-landed .pack-cell[data-win="true"] :global(.card-new) {
+		animation: pack-new-pop 0.5s cubic-bezier(0.34, 1.5, 0.64, 1) both;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.is-landed .pack-cell[data-win="true"] :global(.card-new) {
+			animation: none;
+		}
+	}
+
 	/* The cards sway with their window, on their reel's clock. A sway on each
 		card would be repainted every frame in Firefox, one per window runs on
 		the compositor. */
@@ -1500,6 +1518,13 @@
 
 		100% {
 			transform: scale(1);
+		}
+	}
+
+	@keyframes pack-new-pop {
+		from {
+			opacity: 0;
+			transform: scale(0.4);
 		}
 	}
 

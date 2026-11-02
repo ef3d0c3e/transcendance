@@ -2,6 +2,7 @@ package data
 
 import (
 	"math/rand/v2"
+	"slices"
 	"testing"
 
 	"transcendance/data"
@@ -19,6 +20,22 @@ var testCollection = &data.Collection{}
 
 func testPoolCard(name string, rarity string) poolCard {
 	return poolCard{card: testCard(name, rarity), collection: testCollection}
+}
+
+func TestFirstCopiesMarksNewCards(t *testing.T) {
+	// The owner already has a copy of 1
+	owned := map[uint]bool{1: true}
+	// 2 is new, 1 is theirs already, 2 again follows its first copy, 3 is new
+	drawn := []uint{2, 1, 2, 3}
+
+	want := []bool{true, false, false, true}
+	if got := firstCopies(owned, drawn); !slices.Equal(got, want) {
+		t.Errorf("firstCopies = %v, want %v", got, want)
+	}
+
+	if got := firstCopies(nil, nil); len(got) != 0 {
+		t.Errorf("firstCopies of an empty pack = %v, want none", got)
+	}
 }
 
 func TestRollRarityDistribution(t *testing.T) {
