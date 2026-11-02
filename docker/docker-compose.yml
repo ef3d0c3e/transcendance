@@ -169,7 +169,7 @@ services:
       GRAFANA_ES_PASSWORD: ${GRAFANA_ES_PASSWORD:?}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-730}
       LOG_COMPRESS_AFTER_DAYS: ${LOG_COMPRESS_AFTER_DAYS:-14}
-      LOG_ARCHIVE_DAYS: ${LOG_ARCHIVE_DAYS:-1095}
+      LOG_ARCHIVE_DAYS: ${LOG_ARCHIVE_DAYS:-30}
     volumes:
       - ./elasticsearch/setup.sh:/setup.sh:ro
     depends_on:

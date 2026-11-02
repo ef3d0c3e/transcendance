@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -14,12 +15,20 @@ import (
 	"gorm.io/gorm"
 )
 
-const testDatabase = "main_test"
+// Database the tests recreate, MYSQL_TEST_DATABASE when set: test runs sharing a database server need one each
+const defaultTestDatabase = "main_test"
 
 func ConnectTestDatabase() (*gorm.DB, func(), error) {
 	// The environment may come from CI instead of a .env file
 	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, nil, fmt.Errorf("load .env: %w", err)
+	}
+	testDatabase := os.Getenv("MYSQL_TEST_DATABASE")
+	if testDatabase == "" {
+		testDatabase = defaultTestDatabase
+	}
+	if strings.ContainsAny(testDatabase, "`\\") {
+		return nil, nil, fmt.Errorf("invalid MYSQL_TEST_DATABASE %q", testDatabase)
 	}
 
 	user := os.Getenv("MYSQL_USER")

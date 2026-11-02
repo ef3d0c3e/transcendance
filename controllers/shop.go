@@ -157,6 +157,8 @@ func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopN
 		return ShopNotice{Message: renderer.T(c, "shop-error-funds"), Error: true}
 	case "quantity":
 		return ShopNotice{Message: renderer.T(c, "shop-error-quantity", "max", maxBuyQuantity), Error: true}
+	case "opening":
+		return ShopNotice{Message: renderer.T(c, "pack-opening-error-internal"), Error: true}
 	case "sell-card", "sell-quantity", "sell-missing", "sell-locked", "sell-none", "sell-internal":
 		code := strings.TrimPrefix(reason, "sell-")
 		return ShopNotice{Message: renderer.T(c, "inventory-sell-error-"+code), Error: true}
