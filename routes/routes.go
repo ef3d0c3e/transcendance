@@ -23,7 +23,8 @@ func RegisterRoutes(
 		Logins:   controllers.NewLoginLimits(),
 	}
 
-	// Before the routes, so every route gets it
+	// Before the routes, so every route gets them
+	router.Use(controllers.SecurityHeaders())
 	router.Use(controllers.SoftErrors())
 	// Debug tools are for admins, and never part of a release build
 	debug := gin.Mode() != gin.ReleaseMode
