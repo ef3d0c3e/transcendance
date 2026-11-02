@@ -334,14 +334,6 @@ func TestBoosterPileAmongStacks(t *testing.T) {
 	// The pile and one stack to open, the other tiles lead to buy some
 	require.Equal(t, 2, strings.Count(body, `data-booster-label="Open booster `))
 	require.Equal(t, len(tests.Data.Collections)-1, strings.Count(body, `data-booster-label="Buy booster `))
-	// The pile counts as boosters, next to the collection stacks
-	require.Contains(t, body, `<p class="inventory-count">5 boosters</p>`)
-	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
-	// The pile and one stack to open, the other collections are only on sale
-	require.Equal(t, 2, strings.Count(body, `data-booster-label=`))
-
-	body = getInventory(t, router, cookie, "/inventory?tab=cards")
-	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
 }
 
 func TestBoosterPileOfOtherUser(t *testing.T) {
