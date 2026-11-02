@@ -38,9 +38,13 @@
 
 	{{ template "inventory-tabs" . }}
 
-	<!-- Sales made without reloading say what they did here (frontend/src/sell.js) -->
-	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}"
-		data-inventory-notice role="status" tabindex="-1"{{ if not .Data.Notice.Message }} hidden{{ end }}>{{ .Data.Notice.Message }}</p>
+	<!-- Sales made without reloading say what they did here (frontend/src/sell.js).
+	     The live region is in the page from the start, the message shown in it
+	     is announced -->
+	<div role="status">
+		<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}"
+			data-inventory-notice tabindex="-1"{{ if not .Data.Notice.Message }} hidden{{ end }}>{{ .Data.Notice.Message }}</p>
+	</div>
 
 	{{ if .Data.Topups }}
 	<div class="inventory-wallet">
@@ -90,7 +94,7 @@
 	</div>
 	{{ with .Data.Duplicates }}{{ if .Count }}
 	<!-- Says what selling the duplicates pays before doing it -->
-	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm"
+	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm" data-count="{{ .Count }}"
 		aria-labelledby="inventory-sell-duplicates-title" aria-describedby="inventory-sell-duplicates-text">
 		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post"
 			data-label-error="{{ $.T "inventory-sell-error-internal" }}">
@@ -365,6 +369,16 @@
 		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
 		data-label-error="{{ .T "inventory-sell-error-internal" }}"
 		data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+		{{/* What a sale without reloading changes in the page (frontend/src/sell.js):
+		the count next to the title in its two plural forms, unless it counts the
+		whole catalog */}}
+		{{ if not .Data.All }}
+		data-label-count-one="{{ if .Data.Filtered }}{{ .T "inventory-search-count" "count" 1 }}{{ else }}{{ .T "inventory-count" "count" 1 }}{{ end }}"
+		data-label-count-other="{{ if .Data.Filtered }}{{ .T "inventory-search-count" "count" 2 }}{{ else }}{{ .T "inventory-count" "count" 2 }}{{ end }}"
+		{{ if .Data.Filtered }}data-filtered{{ end }}
+		{{ end }}
+		data-label-stale="{{ .T "inventory-sold-stale" }}" data-label-page-sold="{{ .T "inventory-page-sold" }}"
+		data-label-reload="{{ .T "inventory-reload" }}"
 		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}
 	{{ end }}

@@ -112,7 +112,9 @@
 	}
 
 	// Sell the copies picked without reloading, then close on the sale: the
-	// page behind the popup gets the coins, the copies and the message
+	// page behind the popup gets the coins, the copies and the message. The
+	// confirm button is only marked busy meanwhile: disabled, it would drop
+	// the focus, which stays on it when the sale fails.
 	async function onSellSubmit(e) {
 		e.preventDefault();
 		if (pending) return;
@@ -127,7 +129,8 @@
 		}
 
 		const tile = returnFocus;
-		applySale(result);
+		// The copies sold are those of a card the page lists
+		applySale(result, { sold: Number(quantity), inView: true });
 		close();
 		// Selling the last copy takes the card out of the page, and the focus
 		// with it: the sale's message gets the focus instead
@@ -235,7 +238,7 @@
 				{/if}
 				<div class="inventory-popup-actions">
 					<button type="button" class="inventory-popup-neutral" onclick={close}>{labelClose}</button>
-					<button type="submit" disabled={pending}>{labelConfirm}</button>
+					<button type="submit" aria-disabled={pending ? "true" : undefined}>{labelConfirm}</button>
 				</div>
 			</form>
 		{:else}

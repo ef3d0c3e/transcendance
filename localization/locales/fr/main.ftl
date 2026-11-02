@@ -304,6 +304,9 @@ inventory-sold = { $count ->
     [one] Vous avez vendu { $count } carte pour { $amount } pièces
    *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
 }
+inventory-sold-stale = Le nombre de cartes à côté du titre se met à jour en rechargeant la page.
+inventory-page-sold = Toutes les cartes de cette page ont été vendues
+inventory-reload = Recharger la page
 inventory-sell-error-card = Cette carte ne peut pas être vendue
 inventory-sell-error-quantity = Choisissez une quantité d’au moins 1
 inventory-sell-error-missing = Vous n’avez pas autant d’exemplaires à vendre
