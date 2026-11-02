@@ -24,8 +24,7 @@ import (
 // Number of cards a tradeup consumes
 const tradeupCost = 10
 
-// Tradeup grid sorts. The default "" lists the biggest stacks to spend first,
-// "grouped" stands the cards by collection, then rarity, then count
+// Grouped as by sortTradeupStacks, the default "" lists the biggest stacks first
 const tradeupSortGrouped = "grouped"
 
 var (
@@ -35,9 +34,7 @@ var (
 	errTradeupLocked = errors.New("tradeup cards are up in trades")
 )
 
-// tierAbove returns the rarity one tier above the given one, "" for the
-// highest tier and for unknown rarities. rarityTiers runs from highest to
-// lowest, so the tier above is the entry before it.
+// tierAbove is "" for the highest tier and unknown rarities
 func tierAbove(rarity string) string {
 	i := indexOfTier(rarity)
 	if i <= 0 {
@@ -49,18 +46,13 @@ func tierAbove(rarity string) string {
 // One collection a tradeup can draw its reward from
 type tradeupOutcome struct {
 	CollectionID int
-	// How many of the contract's cards come from this collection, its share
-	// of the odds
+	// Contract cards from this collection, its share of the odds
 	Weight int
 	// Cards of the rewarded rarity the collection holds
 	Cards []poolCard
 }
 
-// tradeupOutcomes lists the collections that can pay out a contract of
-// `inputRarity` cards. Each is weighted by how many of the contract's cards
-// come from it, and only a collection holding at least one card of the
-// rewarded rarity can win. `byCollection` maps a collection ID to its cards
-// grouped by rarity, as returned by groupByRarity.
+// tradeupOutcomes skips the collections holding no card of the rewarded rarity
 func tradeupOutcomes(byCollection map[int]map[string][]poolCard, inputRarity string, contributions map[int]int) []tradeupOutcome {
 	target := tierAbove(inputRarity)
 	if target == "" {
@@ -89,10 +81,8 @@ func tradeupOutcomes(byCollection map[int]map[string][]poolCard, inputRarity str
 	return outcomes
 }
 
-// drawTradeup picks a contract's reward: first a collection, with odds
-// proportional to how many of the contract's cards come from it, then one of
-// its cards of the rewarded rarity at random. Returns false when no outcome
-// can pay out.
+// drawTradeup picks a collection with odds proportional to its weight, then
+// one of its cards at random. False when no outcome can pay out
 func drawTradeup(rnd *rand.Rand, outcomes []tradeupOutcome) (poolCard, bool) {
 	total := 0
 	for _, outcome := range outcomes {
@@ -112,14 +102,13 @@ func drawTradeup(rnd *rand.Rand, outcomes []tradeupOutcome) (poolCard, bool) {
 	return poolCard{}, false
 }
 
-// One (card, foil) stack a contract takes copies of
 type tradeupTake struct {
 	CardID uint
 	Foil   string
 }
 
-// /tradeup POST: trade `tradeupCost` cards of one rarity for a random card of
-// the tier above, then show the tradeup tab with what came out
+// /tradeup POST: trade `tradeupCost` cards of one rarity for a random card
+// of the tier above
 func (dc *DataController) TradeupPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
@@ -195,9 +184,8 @@ func (dc *DataController) TradeupPost(c *gin.Context) {
 		return
 	}
 
-	// Take the contract's cards and award the reward at once. Deleting with
-	// the owner check means the same card can't be spent twice, even when the
-	// request is sent twice.
+	// The conditional delete keeps a card from being spent twice, even when the
+	// request is sent twice
 	now := time.Now()
 	reward := uint(winner.collection.ID*1000 + winner.card.ID)
 	err := dc.DB.Transaction(func(tx *gorm.DB) error {
@@ -266,8 +254,7 @@ func rarityRank(s cardStack) int {
 	return len(rarityTiers)
 }
 
-// Tradeup cards stand grouped by collection, then by rarity, then by how many
-// copies there are to spend
+// Grouped by collection, then rarity, then how many copies there are to spend
 func sortTradeupStacks(stacks []cardStack, loc string) {
 	titles := make(map[uint]string, len(stacks))
 	for _, stack := range stacks {
@@ -291,7 +278,6 @@ func sortTradeupStacks(stacks []cardStack, loc string) {
 	})
 }
 
-// Message for a tradeup error code, "" when the code is unknown
 func (dc *DataController) tradeupErrorMessage(c *gin.Context, code string) string {
 	switch code {
 	case "count":
@@ -302,9 +288,7 @@ func (dc *DataController) tradeupErrorMessage(c *gin.Context, code string) strin
 	return ""
 }
 
-// Fill the view with every card that can go into a tradeup, and the outcome of
-// the last one if it was just completed. Copies up in pending trades cannot
-// be spent, so they are left out.
+// Copies up in pending trades cannot be spent, so they are left out
 func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inventoryView) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
@@ -343,13 +327,12 @@ func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inven
 		stacks = append(stacks, stack)
 		v.Count += stack.Count
 	}
-	// Grouped by collection, then rarity, then how many copies to spend
+
 	sortTradeupStacks(stacks, loc)
 
-	// The grid lists the biggest stacks first. Each tile keeps its place in
-	// the grouped order above (`data-tradeup-order`), which breaks the ties of
-	// every sort the grid offers: the client can restore the grouped order and
-	// come back to this one exactly.
+	// The grid lists the biggest stacks first. Each tile keeps its grouped order
+	// (`data-tradeup-order`), which breaks the ties of every sort the grid
+	// offers, so the client can restore either order exactly
 	orders := make(map[tradeupTake]int, len(stacks))
 	for i, stack := range stacks {
 		orders[tradeupTake{CardID: stack.CardID, Foil: stack.Foil}] = i
@@ -397,7 +380,7 @@ func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inven
 		})
 	}
 
-	// The card the last tradeup awarded, with the foil it rolled, as the contract signed it
+	// The card the last tradeup awarded, with the foil it rolled, if signed
 	if id, err := strconv.Atoi(c.Query("result")); err == nil && controllers.NoticeSigned(c, "result="+c.Query("result")) {
 		card, collection := dc.Data.GetCard(id)
 		if card != nil && collection != nil {
