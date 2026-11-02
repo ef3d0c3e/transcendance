@@ -10,6 +10,7 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
 import TradeUpPicker from './TradeUpPicker.svelte';
 import TradeUpResult from './TradeUpResult.svelte';
+import FoilRoulette from './FoilRoulette.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -325,7 +326,16 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Tradeup result popup
+// Foil roulette picker
+{
+	const target = document.querySelector('#foil-roulette');
+
+	if (target) {
+		mount(FoilRoulette, { target, props: { target } });
+	}
+}
+
+// Tradeup and foil roulette result popup
 {
 	const target = document.querySelector('#tradeup-result');
 

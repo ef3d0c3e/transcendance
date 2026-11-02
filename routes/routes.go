@@ -125,6 +125,8 @@ func RegisterRoutes(
 
 	// tradeup.go
 	router.POST("/tradeup", dataController.TradeupPost)
+	// foil.go
+	router.POST("/foil", dataController.FoilRoulettePost)
 
 	// Debug: add a booster to the authenticated admin's inventory
 	if debug {
