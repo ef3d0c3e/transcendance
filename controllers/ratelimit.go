@@ -55,7 +55,6 @@ func (l *AttemptLimiter) Blocked(key string) (bool, time.Duration) {
 	return true, time.Duration((1 - b.tokens) * float64(l.refill))
 }
 
-// Fail takes one of the key's attempts
 func (l *AttemptLimiter) Fail(key string) {
 	l.mu.Lock()
 	defer l.mu.Unlock()

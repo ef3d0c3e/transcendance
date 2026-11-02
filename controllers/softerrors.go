@@ -13,10 +13,9 @@ const softErrorsHeader = "X-Soft-Errors"
 // Response header holding the real status of a softened error
 const softStatusHeader = "X-Status"
 
-// SoftErrors answers client errors (4xx) with 200 and the real status in `X-Status`, for requests sending
-// `X-Soft-Errors: 1`. Browsers log every failed request in the console, so a wrong password typed in a form
-// submitted with fetch would show an error there; the page reads the status from the header instead. The body
-// is unchanged, and logs and metrics still see the real status.
+// SoftErrors answers 4xx with 200 and the real status in `X-Status`, for requests sending `X-Soft-Errors: 1`.
+// Browsers log every failed request in the console, so a wrong password submitted with fetch would show there;
+// the page reads the header instead. The body is unchanged, and logs and metrics see the real status.
 func SoftErrors() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.GetHeader(softErrorsHeader) == "1" {
@@ -48,8 +47,7 @@ func (w *softErrorWriter) Status() int {
 	return w.ResponseWriter.Status()
 }
 
-// wantsJSON reports whether the request comes from a page script expecting JSON rather than a plain form
-// submission, which gets a redirect
+// wantsJSON reports whether a page script expects JSON, where a plain form submission gets a redirect
 func wantsJSON(c *gin.Context) bool {
 	return c.GetHeader(softErrorsHeader) == "1" || c.NegotiateFormat(gin.MIMEJSON, gin.MIMEHTML) == gin.MIMEJSON
 }

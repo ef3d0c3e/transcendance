@@ -18,15 +18,12 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// daysAgo returns the start of the day n days before today
 func daysAgo(n int) time.Time {
 	now := time.Now()
 	today := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.Local)
 	return today.AddDate(0, 0, -n)
 }
 
-// setDailyStreak gives a user a connection streak that claimed its last
-// reward on the given day, with the given best streak
 func setDailyStreak(t *testing.T, username string, day uint, best uint, lastDay *time.Time) {
 	t.Helper()
 	id := userID(t, username)
@@ -46,8 +43,6 @@ func dailyStreak(t *testing.T, username string) models.DailyStreak {
 	return streak
 }
 
-// claimDaily claims the connection streak reward of the day from the
-// inventory's streak section
 func claimDaily(t *testing.T, router *gin.Engine, cookie *http.Cookie, tab string) *httptest.ResponseRecorder {
 	t.Helper()
 	return postForm(t, router, cookie, "/inventory/claim", url.Values{"tab": {tab}})
@@ -120,8 +115,7 @@ func TestDailyRewardClimbsPastTheCap(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "streak5", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "streak5", "foo-bar-baz-qux")
-	// Past the last reward day the counter keeps climbing, and the last
-	// reward keeps paying
+	// Past the last reward day the counter keeps climbing and the last reward keeps paying
 	yesterday := daysAgo(1)
 	setDailyStreak(t, "streak5", 5, 5, &yesterday)
 
@@ -141,15 +135,13 @@ func TestDailyRewardSectionHoldsTheRecord(t *testing.T) {
 	setDailyStreak(t, "streak6", 12, 12, &yesterday)
 
 	body := getInventory(t, router, cookie, "/inventory")
-	// The meter shows every tier with its coin value, the one of today's
-	// bonus standing out
+	// Every tier shows its coin value, today's standing out
 	require.Contains(t, body, `<span class="daily-streak-tier">1 · 200</span>`)
 	require.Contains(t, body, `<span class="daily-streak-tier">2 · 300</span>`)
 	require.Contains(t, body, `<span class="daily-streak-tier">3 · 500</span>`)
 	require.Contains(t, body, `<span class="daily-streak-tier">4 · 700</span>`)
 	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">5 · 1,000</span>`)
-	// Past the reward cap the raw streak shows next to the meter, and the
-	// best streak is the ongoing one
+	// Past the reward cap the raw streak shows, and the best streak is the ongoing one
 	require.Contains(t, body, `<span class="daily-streak-count">Streak 12</span>`)
 	require.Contains(t, body, `<span class="daily-streak-best">Best: current</span>`)
 	require.Contains(t, body, "Claim 1,000 coins")
@@ -163,8 +155,7 @@ func TestDailyRewardSectionBelowTheCap(t *testing.T) {
 	setDailyStreak(t, "streak7", 3, 8, &yesterday)
 
 	body := getInventory(t, router, cookie, "/inventory")
-	// The highlighted tier is the one of today's bonus: the fourth day of
-	// the ladder
+	// Today's bonus is the fourth day of the ladder
 	require.Contains(t, body, `<span aria-current="true" class="daily-streak-tier daily-streak-tier-current">4 · 700</span>`)
 	// The other tiers are grayed out
 	require.Contains(t, body, `<span class="daily-streak-tier">1 · 200</span>`)
@@ -248,7 +239,6 @@ func TestDailyRewardSectionClaimsFromTheTab(t *testing.T) {
 	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=collections"), `<input type="hidden" name="tab" value="collections">`)
 }
 
-// The claim of the bonus is confirmed with the amount credited to the balance
 func TestDailyRewardClaimNotice(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "streak14", "foo-bar-baz-qux", 0)
@@ -280,7 +270,6 @@ func TestDailyRewardUnauthenticated(t *testing.T) {
 	require.Zero(t, count)
 }
 
-// setBoosterPile gives a user a pile of default boosters
 func setBoosterPile(t *testing.T, username string, count uint, nextAt *time.Time) {
 	t.Helper()
 	id := userID(t, username)
@@ -306,7 +295,6 @@ func TestBoosterPileEmpty(t *testing.T) {
 	setBoosterPile(t, "pile1", 0, nil)
 
 	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
-	// The pile shows its count and the countdown of its next booster
 	require.Contains(t, body, `<span class="booster-pile-count">×0</span>`)
 	require.Contains(t, body, `data-countdown=`)
 	require.Contains(t, body, "Default booster")
@@ -345,7 +333,6 @@ func TestBoosterPileCountedInTotals(t *testing.T) {
 	// The pile and one stack to open, the other collections are only on sale
 	require.Equal(t, 2, strings.Count(body, `data-booster-label=`))
 
-	// The tab count is the same from the cards tab
 	body = getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
 }
@@ -367,8 +354,7 @@ func TestBoosterPileAccruesOverTime(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "pile6", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "pile6", "foo-bar-baz-qux")
-	// Two boosters were due while the pile was left alone, a third one is
-	// not due yet
+	// Two boosters came due while the pile was left alone, not a third yet
 	past := time.Now().Add(-25 * time.Minute)
 	setBoosterPile(t, "pile6", 1, &past)
 
@@ -377,8 +363,7 @@ func TestBoosterPileAccruesOverTime(t *testing.T) {
 	pile := boosterPile(t, "pile6")
 	require.Equal(t, uint(4), pile.Count)
 	require.NotNil(t, pile.NextAt)
-	// The countdown keeps counting from the moment the pile stopped being
-	// full, 5 minutes before the next booster
+	// The countdown keeps counting from when the pile stopped being full: 5 minutes left
 	require.WithinDuration(t, time.Now().Add(5*time.Minute), *pile.NextAt, time.Minute)
 }
 
@@ -393,7 +378,6 @@ func TestBoosterPileAccrualStopsAtCap(t *testing.T) {
 	require.Contains(t, body, `<span class="booster-pile-count">×5</span>`)
 	pile := boosterPile(t, "pile7")
 	require.Equal(t, uint(5), pile.Count)
-	// A full pile has no countdown
 	require.Nil(t, pile.NextAt)
 	require.NotContains(t, body, "data-countdown")
 }
@@ -452,7 +436,6 @@ func TestOpenDefaultBooster(t *testing.T) {
 	require.Len(t, ownedCards(t, "dpile1"), 10)
 	require.Zero(t, boosterPile(t, "dpile1").Count)
 
-	// The pile is empty now
 	code, resp = openDefaultBooster(t, router, cookie)
 	require.Equal(t, http.StatusNotFound, code)
 	require.Equal(t, "No default booster available", stripIsolation(resp.Message))

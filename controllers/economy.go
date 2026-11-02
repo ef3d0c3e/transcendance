@@ -10,14 +10,12 @@ import (
 	"transcendance/models"
 )
 
-// ErrNoPileBooster is returned when the pile holds no default booster.
 var ErrNoPileBooster = errors.New("no default booster available")
 
-// ErrDailyRewardClaimed is returned when the bonus of the day is claimed already.
 var ErrDailyRewardClaimed = errors.New("daily reward claimed already")
 
-// ensureBoosterPile returns a user's pile of default boosters, creating it
-// when the account predates the pile. A new pile starts refilling right away.
+// ensureBoosterPile creates the pile of accounts that predate it. A new pile
+// starts refilling right away.
 func ensureBoosterPile(db *gorm.DB, ownerID uint, now time.Time) (models.BoosterPile, error) {
 	var pile models.BoosterPile
 	err := db.Where("owner_id = ?", ownerID).First(&pile).Error
@@ -39,9 +37,8 @@ func ensureBoosterPile(db *gorm.DB, ownerID uint, now time.Time) (models.Booster
 	return pile, nil
 }
 
-// accrueBoosterPile adds the boosters that refilled until now, and reports
-// whether the pile changed. While the pile is not full, one booster joins it
-// every boosterPileInterval, counting from the moment it stopped being full.
+// accrueBoosterPile reports whether the pile changed. While not full, it gains
+// one booster every boosterPileInterval, counting from when it stopped being full.
 func accrueBoosterPile(pile *models.BoosterPile, now time.Time) bool {
 	if pile.Count >= boosterPileCap {
 		changed := pile.Count != boosterPileCap || pile.NextAt != nil
@@ -68,7 +65,6 @@ func accrueBoosterPile(pile *models.BoosterPile, now time.Time) bool {
 	return changed
 }
 
-// AccrueBoosterPile tops a user's pile up to now and returns its state.
 func AccrueBoosterPile(db *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 	now := time.Now()
 	pile, err := ensureBoosterPile(db, ownerID, now)
@@ -90,11 +86,9 @@ func AccrueBoosterPile(db *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 	return pile, err
 }
 
-// ConsumePileBooster takes one default booster out of a user's pile inside a
-// transaction, returning the pile it has left. Only a full pile stops being
-// full, so taking one out of a full pile starts the countdown, while taking
-// one out of a pile that already refills leaves the countdown alone.
-// Returns ErrNoPileBooster when the pile is empty.
+// ConsumePileBooster takes one booster out of the pile in the caller's
+// transaction, or returns ErrNoPileBooster. Only taking one out of a full pile
+// starts the countdown.
 func ConsumePileBooster(tx *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 	now := time.Now()
 	pile, err := AccrueBoosterPile(tx, ownerID)
@@ -112,8 +106,7 @@ func ConsumePileBooster(tx *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 		updates["next_at"] = next
 		nextAt = &next
 	}
-	// Taking the last booster with a conditional update keeps concurrent
-	// openings from digging into an empty pile
+	// Conditional update, so concurrent openings cannot dig into an empty pile
 	result := tx.Model(&models.BoosterPile{}).
 		Where("owner_id = ? AND count > 0", ownerID).
 		Updates(updates)
@@ -131,8 +124,7 @@ func ConsumePileBooster(tx *gorm.DB, ownerID uint) (models.BoosterPile, error) {
 	return pile, nil
 }
 
-// ensureDailyStreak returns a user's connection streak, creating it when the
-// account predates the streaks.
+// ensureDailyStreak creates the streak of accounts that predate streaks.
 func ensureDailyStreak(db *gorm.DB, userID uint) (models.DailyStreak, error) {
 	var streak models.DailyStreak
 	err := db.Where("user_id = ?", userID).First(&streak).Error
@@ -153,16 +145,13 @@ func ensureDailyStreak(db *gorm.DB, userID uint) (models.DailyStreak, error) {
 	return streak, nil
 }
 
-// startOfDay returns the start of a day in the server's timezone
 func startOfDay(t time.Time) time.Time {
 	local := t.In(time.Local)
 	return time.Date(local.Year(), local.Month(), local.Day(), 0, 0, 0, 0, time.Local)
 }
 
-// ClaimDailyReward credits the connection streak reward of the day to a
-// user's balance, once per day, growing their streak. A missed day resets
-// the streak to day 1. `user.Coins` is updated to the new balance.
-// Returns ErrDailyRewardClaimed when the bonus of the day is claimed already.
+// ClaimDailyReward pays the streak reward of the day once per day, and updates
+// user.Coins to the new balance.
 func ClaimDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) error {
 	today := startOfDay(now)
 	yesterday := startOfDay(now.AddDate(0, 0, -1))
@@ -177,7 +166,6 @@ func ClaimDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) error
 		last := startOfDay(*streak.LastDay)
 		switch {
 		case last.Equal(today):
-			// The day is claimed already
 			return ErrDailyRewardClaimed
 		case last.Equal(yesterday):
 			// Consecutive day: the streak keeps growing, past the reward cap
@@ -215,31 +203,24 @@ func ClaimDailyReward(db *gorm.DB, user *AuthenticatedUser, now time.Time) error
 	})
 }
 
-// bestStreak returns the best streak recorded for a user, counting the
-// streaks that predate the best-streak tracking
+// bestStreak counts the streaks that predate the best-streak tracking
 func bestStreak(streak *models.DailyStreak) uint {
 	return max(streak.Best, streak.Day)
 }
 
-// DailyStreakState describes a user's connection streak for display
 type StreakState struct {
 	// Consecutive days claimed in a row, 0 when the streak is over
 	Day uint
 	// Tier of the bonus of the day, 1 to the last tier of Rewards
-	Tier uint
-	// Coin reward of each tier of the ladder
+	Tier    uint
 	Rewards []uint
-	// Coins the bonus of the day pays
-	Reward uint
-	// Best streak the user has done
-	Best uint
-	// Whether the bonus of the day is claimed already
+	Reward  uint
+	Best    uint
 	Claimed bool
 	// Start of the next day, server time, when the bonus comes back
 	NextAt time.Time
 }
 
-// DailyStreakState returns the state of a user's connection streak at `now`
 func DailyStreakState(db *gorm.DB, userID uint, now time.Time) (StreakState, error) {
 	streak, err := ensureDailyStreak(db, userID)
 	if err != nil {

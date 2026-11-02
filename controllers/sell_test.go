@@ -22,7 +22,6 @@ func sell(t *testing.T, router *gin.Engine, cookie *http.Cookie, form url.Values
 	return postForm(t, router, cookie, "/shop/sell", form)
 }
 
-// The `card`, `foil` and `quantity` fields of a sale
 func sellForm(cardID uint, foil string, quantity int) url.Values {
 	return url.Values{
 		"card":     {strconv.FormatUint(uint64(cardID), 10)},
@@ -38,8 +37,7 @@ func sellDuplicates(t *testing.T, router *gin.Engine, cookie *http.Cookie) strin
 	return rec.Header().Get("Location")
 }
 
-// The same sale as sell() and sellDuplicates(), made by a page that stays
-// put: the answer is the outcome as JSON instead of a redirect
+// sellInPlace sells as the pages that stay put do, getting JSON back
 func sellInPlace(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string, form url.Values) *httptest.ResponseRecorder {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPost, target, strings.NewReader(form.Encode()))
@@ -54,7 +52,7 @@ func sellInPlace(t *testing.T, router *gin.Engine, cookie *http.Cookie, target s
 	return rec
 }
 
-// What a sale made without reloading reports (saleOutcome in sell.go)
+// Mirrors saleOutcome in sell.go
 type saleOutcome struct {
 	Coins      uint   `json:"coins"`
 	CoinsLabel string `json:"coinsLabel"`
@@ -75,7 +73,6 @@ type saleOutcome struct {
 	} `json:"duplicates"`
 }
 
-// Why a sale made without reloading failed
 type saleFailure struct {
 	Error string `json:"error"`
 }
@@ -97,7 +94,6 @@ func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
 	require.Equal(t, uint(50), shopBalance(t, "sell1"))
 	require.Empty(t, ownedCards(t, "sell1"))
 
-	// The page the sale lands on says what it did
 	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
 	require.Contains(t, body, "You sold 3 cards for 30 coins")
 
@@ -175,7 +171,6 @@ func TestSellRejectsBadSales(t *testing.T) {
 		"You do not have that many copies to sell")
 }
 
-// Copies up in a trade leave with it, they cannot be sold meanwhile
 func TestSellKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell6", "foo-bar-baz-qux", 0)
@@ -248,8 +243,6 @@ func TestSellDuplicates(t *testing.T) {
 	require.Equal(t, uint(120), shopBalance(t, "sell8"))
 }
 
-// A sale made without reloading says what it paid, what is left of the stack
-// and what the duplicates left are worth, so the page can update itself
 func TestSellInPlaceReportsWhatChanged(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell10", "foo-bar-baz-qux", 0)
@@ -295,8 +288,6 @@ func TestSellInPlaceReportsWhatChanged(t *testing.T) {
 	require.Len(t, ownedCards(t, "sell10"), 2)
 }
 
-// A sale that cannot be made says why as JSON too, instead of the redirect
-// that would show why
 func TestSellInPlaceSaysWhyItFailed(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell11", "foo-bar-baz-qux", 0)
@@ -323,8 +314,7 @@ func TestSellInPlaceSaysWhyItFailed(t *testing.T) {
 	require.Zero(t, shopBalance(t, "sell11"))
 }
 
-// The copies up in trades stay out of the count the card popup sells from,
-// said apart from the copies left
+// Owned leaves out the copies up in trades, Copies counts them
 func TestSellInPlaceKeepsTheCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell12", "foo-bar-baz-qux", 0)
@@ -347,8 +337,6 @@ func TestSellInPlaceKeepsTheCopiesUpInTrades(t *testing.T) {
 	require.Zero(t, outcome.Stacks[0].Owned)
 }
 
-// Selling the duplicates without reloading reports every stack it thinned,
-// one copy of each kept
 func TestSellDuplicatesInPlace(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell14", "foo-bar-baz-qux", 0)

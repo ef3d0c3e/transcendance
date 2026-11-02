@@ -54,10 +54,8 @@ var userJoinedDurations = map[string]time.Duration{
 // Status filters, only online users for now
 var userStatusFilters = []string{"online"}
 
-// Number of cards owned by the user of the row
 const userCardCount = "(SELECT COUNT(*) FROM cards WHERE cards.owner_id = users.id)"
 
-// Sort used when none is picked: search relevance, or usernames
 func defaultUserSort(query string) string {
 	if query != "" {
 		return userSortRelevance
@@ -81,7 +79,6 @@ func fuzzyPattern(query string) string {
 	return b.String()
 }
 
-// A user shown in the results
 type userSearchResult struct {
 	ID        uint
 	Username  string
@@ -94,7 +91,6 @@ type userSearchResult struct {
 	Relation string
 }
 
-// Everything needed to render the user search page
 type userSearchView struct {
 	Query string
 	// Join date filter, "" when unfiltered
@@ -111,7 +107,6 @@ type userSearchView struct {
 	List  string
 }
 
-// Page of the search
 func (v *userSearchView) path() string {
 	if v.List != "" {
 		return "/friends"
@@ -190,7 +185,6 @@ func userOrder(v *userSearchView) clause.Expression {
 	}
 }
 
-// Fill the view with the matching users of the page
 func (sc *Controller) searchUsers(c *gin.Context, v *userSearchView) error {
 	if err := sc.userQuery(c, v).Count(&v.Count).Error; err != nil {
 		return err
@@ -253,7 +247,6 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 	sc.renderSearch(c, v, "search-user-title")
 }
 
-// Options of the filter and sort selects
 func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[string]any {
 	joined := SelectOptions(append([]string{""}, userJoinedFilters...), v.Joined, func(value string) string {
 		if value == "" {

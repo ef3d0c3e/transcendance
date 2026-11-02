@@ -44,10 +44,9 @@ const (
 	shoutboxErrorMessageNotFound = "message-not-found"
 )
 
-// Clean up a message body, returns an error code if it can't be posted
-//
-// Line breaks and tabs become spaces, other control and invisible formatting characters (e.g. bidirectional
-// overrides) are removed, as well as excessive combining marks
+// sanitizeShoutboxMessage returns an error code if the body can't be posted. Line breaks and tabs become spaces,
+// other control and invisible formatting characters (e.g. bidirectional overrides) and excess combining marks are
+// removed
 func sanitizeShoutboxMessage(body string) (string, string) {
 	if !utf8.ValidString(body) {
 		body = strings.ToValidUTF8(body, "\uFFFD")
@@ -110,10 +109,8 @@ func (b *shoutboxBucket) take(now time.Time) (bool, time.Duration) {
 	return false, time.Duration((1 - b.tokens) * float64(shoutboxRefill))
 }
 
-// Connected shoutbox clients
 type shoutboxHub struct {
-	mu sync.Mutex
-	// Open connections per user, one for each tab
+	mu    sync.Mutex
 	users map[uint]map[*shoutboxClient]struct{}
 	// Rate limits are per user, opening more connections doesn't give more messages
 	buckets map[uint]*shoutboxBucket
@@ -129,7 +126,7 @@ func newShoutboxHub() *shoutboxHub {
 	}
 }
 
-// Add a client with its user's ignores, fails when its user has too many connections
+// register fails when the user has too many connections
 func (h *shoutboxHub) register(client *shoutboxClient, ignores map[uint]time.Time) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -158,7 +155,7 @@ func (h *shoutboxHub) register(client *shoutboxClient, ignores map[uint]time.Tim
 	return true
 }
 
-// Remove a client, the caller holds the lock
+// The caller holds the lock
 func (h *shoutboxHub) remove(client *shoutboxClient) {
 	clients, ok := h.users[client.userID]
 	if !ok {
@@ -177,7 +174,6 @@ func (h *shoutboxHub) unregister(client *shoutboxClient) {
 	h.remove(client)
 }
 
-// Take one of the user's message tokens
 func (h *shoutboxHub) allow(userID uint) (bool, time.Duration) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -191,7 +187,6 @@ func (h *shoutboxHub) allow(userID uint) (bool, time.Duration) {
 	return bucket.take(now)
 }
 
-// Replace the ignores of a user, if connected
 func (h *shoutboxHub) setIgnores(userID uint, ignores map[uint]time.Time) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -200,20 +195,18 @@ func (h *shoutboxHub) setIgnores(userID uint, ignores map[uint]time.Time) {
 	}
 }
 
-// Whether a connected user ignores another, the caller holds the lock
+// The caller holds the lock
 func (h *shoutboxHub) ignoring(userID uint, otherID uint, now time.Time) bool {
 	until, ok := h.ignores[userID][otherID]
 	return ok && now.Before(until)
 }
 
-// Set the user whose conversation a client shows, 0 for none
 func (h *shoutboxHub) setViewing(client *shoutboxClient, partnerID uint) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 	client.viewing = partnerID
 }
 
-// Whether one of the user's clients shows the conversation with a partner
 func (h *shoutboxHub) viewing(userID uint, partnerID uint) bool {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -225,14 +218,14 @@ func (h *shoutboxHub) viewing(userID uint, partnerID uint) bool {
 	return false
 }
 
-// Queue a payload for a client, slow clients that can't keep up are disconnected. The caller holds the lock.
+// queue disconnects the slow clients that can't keep up. The caller holds the lock.
 func (h *shoutboxHub) queue(client *shoutboxClient, payload []byte) {
 	if !client.queue(payload) {
 		h.remove(client)
 	}
 }
 
-// Queue a payload for every client, except those of users ignoring the sender
+// broadcast skips the clients of users ignoring the sender
 func (h *shoutboxHub) broadcast(senderID uint, payload []byte) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -248,7 +241,7 @@ func (h *shoutboxHub) broadcast(senderID uint, payload []byte) {
 	}
 }
 
-// Queue a payload for every client, whoever sent what it is about
+// broadcastAll queues for every client, even those ignoring the sender
 func (h *shoutboxHub) broadcastAll(payload []byte) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -259,7 +252,6 @@ func (h *shoutboxHub) broadcastAll(payload []byte) {
 	}
 }
 
-// Queue a payload for every client of the given users
 func (h *shoutboxHub) deliver(payload []byte, userIDs ...uint) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -275,7 +267,6 @@ func (h *shoutboxHub) deliver(payload []byte, userIDs ...uint) {
 	}
 }
 
-// A websocket connection to the shoutbox
 type shoutboxClient struct {
 	userID uint
 	// User whose conversation is shown, 0 for none. Guarded by the hub's lock.

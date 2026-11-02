@@ -15,12 +15,10 @@ import (
 	"golang.org/x/text/message"
 )
 
-// Format a count as the English pages render it, digits grouped by thousands
 func englishCount(n int) string {
 	return message.NewPrinter(language.English).Sprintf("%d", n)
 }
 
-// Get a page as a visitor, without bidi isolation marks
 func getPage(t *testing.T, router *gin.Engine, target string) string {
 	req := httptest.NewRequest(http.MethodGet, target, nil)
 
@@ -55,8 +53,8 @@ func TestCatalogSearchFiltersAndSorts(t *testing.T) {
 		"/cards/search/?collection=1&rarity=common&sort=name-desc": {"Rosetta Stone", "Pythagorean tiling", "Flying Scotsman"},
 		"/cards/search/?collection=1&sort=rarity":                  {"Ford Model T", "McMurdo Station", "Pythagorean tiling", "Flying Scotsman", "Rosetta Stone"},
 		"/cards/search/?collection=1&sort=name":                    {"Flying Scotsman", "Ford Model T", "McMurdo Station", "Pythagorean tiling", "Rosetta Stone"},
-		"/cards/search/?q=rosetta":                                {"Rosetta Stone"},
-		"/cards/search/?q=rosetta&rarity=rare":                    nil,
+		"/cards/search/?q=rosetta":                                 {"Rosetta Stone"},
+		"/cards/search/?q=rosetta&rarity=rare":                     nil,
 		"/cards/search/?collection=1&rarity=rare":                  {"McMurdo Station"},
 		// Unknown filters are ignored
 		"/cards/search/?collection=999&rarity=mythic": cardTitles(getPage(t, router, "/cards/search/")),
@@ -205,7 +203,7 @@ func TestCollectionCardsFilterAndSort(t *testing.T) {
 		"/collections/1/": {"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Rosetta Stone"},
 		"/collections/1/?rarity=common&sort=name-desc": {"Rosetta Stone", "Pythagorean tiling", "Flying Scotsman"},
 		"/collections/1/?rarity=rare":                  {"McMurdo Station"},
-		"/collections/1/?q=rosetta":                   {"Rosetta Stone"},
+		"/collections/1/?q=rosetta":                    {"Rosetta Stone"},
 		// The collection can't be swapped through the query
 		"/collections/1/?collection=2&rarity=rare": {"McMurdo Station"},
 	}

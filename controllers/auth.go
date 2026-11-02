@@ -22,11 +22,9 @@ import (
 	"transcendance/views"
 )
 
-// PasswordHashCost is the bcrypt cost of new password hashes. The tests
-// lower it, hashing at the default cost is slow under the race detector
+// PasswordHashCost is the bcrypt cost of new password hashes, lowered by the tests
 var PasswordHashCost = bcrypt.DefaultCost
 
-// Lifetime of a session
 const sessionDuration = 3 * 24 * time.Hour
 
 // Failed logins allowed in a row per account, then one more every refill period. Attempts are not limited per
@@ -54,24 +52,20 @@ type AuthenticatedUser struct {
 	ID       uint
 	Username string
 	// One of the ranks, e.g models.RankAdmin
-	Rank uint
-	// In-shop currency balance
+	Rank  uint
 	Coins uint
 	// Coins of the balance up in pending trades, which cannot be spent
 	LockedCoins uint
 }
 
-// FreeCoins is the balance the user can spend
 func (u *AuthenticatedUser) FreeCoins() uint {
 	return FreeCoins(u.Coins, u.LockedCoins)
 }
 
-// IsModerator reports whether the user can moderate the chat, which admins can too
 func (u *AuthenticatedUser) IsModerator() bool {
 	return u != nil && u.Rank >= models.RankModerator
 }
 
-// IsAdmin reports whether the user can manage accounts and roles
 func (u *AuthenticatedUser) IsAdmin() bool {
 	return u != nil && u.Rank >= models.RankAdmin
 }
@@ -100,7 +94,6 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Invalid or expired tokens are unauthenticated
 		var user models.User
 		err = db.Model(&models.User{}).
 			Select("users.id", "users.username", "users.rank", "users.coins", "users.last_seen_at").
@@ -386,7 +379,6 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		return
 	}
 
-	// Token
 	buf := make([]byte, 32)
 	if _, err := rand.Read(buf); err != nil {
 		log.Printf("Failed to acquire randomness: %s", err)
@@ -451,7 +443,6 @@ func (ac *Controller) LogoutPost(c *gin.Context) {
 	}
 
 	if v := c.Query("all"); v == "yes" {
-		// Log out all devices
 		ctx := c.Request.Context()
 		_, err := gorm.G[models.UserSession](ac.DB).
 			Where("user_id = ?", user.ID).
@@ -463,7 +454,6 @@ func (ac *Controller) LogoutPost(c *gin.Context) {
 			return
 		}
 	} else {
-		// Log out current device
 		token, err := c.Cookie("session_token")
 		if err == nil && token != "" {
 			ctx := c.Request.Context()
