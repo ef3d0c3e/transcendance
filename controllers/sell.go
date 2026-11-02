@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -50,9 +51,122 @@ func soldRedirect(c *gin.Context, count uint, coins uint) {
 		"&coins="+strconv.FormatUint(uint64(coins), 10))
 }
 
-// Redirect back to the cards of the inventory with why a sale failed
-func sellFailed(c *gin.Context, code string) {
+// Pages selling without reloading ask for the outcome as JSON instead
+// (frontend/src/sell.js)
+func wantsJSON(c *gin.Context) bool {
+	return c.GetHeader("Accept") == "application/json"
+}
+
+// Redirect back to the cards of the inventory with why a sale failed, or say
+// why to the pages that sell without reloading
+func (sc *Controller) sellFailed(c *gin.Context, code string) {
+	if wantsJSON(c) {
+		status := http.StatusBadRequest
+		if code == "internal" {
+			status = http.StatusInternalServerError
+		}
+		c.JSON(status, gin.H{"error": sc.Renderer.T(c, "inventory-sell-error-"+code)})
+		return
+	}
 	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&error=sell-"+code)
+}
+
+// soldStack is what is left of a stack of identical copies once a sale took
+// some of them, to keep the page that sold them up to date
+type soldStack struct {
+	Card uint   `json:"card"`
+	Foil string `json:"foil"`
+	// Copies left in the stack
+	Copies uint `json:"copies"`
+	// Copies left that no pending trade holds, the ones the popup sells
+	Owned uint `json:"owned"`
+	// When the newest copy left was acquired, shown by the card popup
+	AcquiredLast string `json:"acquiredLast"`
+}
+
+// saleOutcome is what a sale did, for the pages that make one without
+// reloading: the new balance, what the stacks look like now and what selling
+// the remaining duplicates would pay
+type saleOutcome struct {
+	Coins      uint   `json:"coins"`
+	CoinsLabel string `json:"coinsLabel"`
+	NavBalance string `json:"navBalance"`
+	Message    string      `json:"message"`
+	Stacks     []soldStack `json:"stacks"`
+	Duplicates struct {
+		Count uint `json:"count"`
+		Coins uint `json:"coins"`
+		// The confirmation dialog of the page, translated here
+		Text    string `json:"text"`
+		Confirm string `json:"confirm"`
+	} `json:"duplicates"`
+}
+
+// What is left of a stack once copies of it were sold
+func stackAfterSale(tx *gorm.DB, ownerID uint, cardID uint, foil string, committed *TradeCommitments) (soldStack, error) {
+	stack := soldStack{Card: cardID, Foil: foil}
+
+	var count int64
+	if err := tx.Model(&models.Card{}).
+		Where("owner_id = ? AND card_id = ? AND foil = ?", ownerID, cardID, foil).
+		Count(&count).Error; err != nil {
+		return stack, err
+	}
+	stack.Copies = uint(count)
+	if count == 0 {
+		return stack, nil
+	}
+
+	// The sale takes the newest copies, so the newest one left is the one the
+	// card popup shows
+	var newest models.Card
+	if err := tx.Model(&models.Card{}).Select("acquired").
+		Where("owner_id = ? AND card_id = ? AND foil = ?", ownerID, cardID, foil).
+		Order("acquired DESC").Take(&newest).Error; err != nil {
+		return stack, err
+	}
+	stack.AcquiredLast = newest.Acquired.Format(time.RFC3339)
+	stack.Owned = stack.Copies - min(stack.Copies, committed.Copies(cardID, foil))
+	return stack, nil
+}
+
+// The balance the user can spend now their sale was credited
+func (sc *Controller) spendableBalance(userID uint) (uint, error) {
+	var coins uint
+	if err := sc.DB.Model(&models.User{}).Where("id = ?", userID).Pluck("coins", &coins).Error; err != nil {
+		return 0, err
+	}
+	locked, err := TradeCommittedCoins(sc.DB, userID)
+	if err != nil {
+		return 0, err
+	}
+	return FreeCoins(coins, locked), nil
+}
+
+// Reply to a sale made without reloading the page with everything it changed
+func (sc *Controller) saleJSON(c *gin.Context, user *AuthenticatedUser, sold uint, coins uint, stacks []soldStack) {
+	outcome := saleOutcome{Stacks: stacks}
+	balance, err := sc.spendableBalance(user.ID)
+	if err == nil {
+		var duplicates DuplicateSale
+		duplicates, err = DuplicatesForSale(sc.DB, sc.Data, user.ID)
+		if err == nil {
+			outcome.Coins = balance
+			outcome.CoinsLabel = sc.Renderer.T(c, "shop-price", "amount", balance)
+			outcome.NavBalance = sc.Renderer.T(c, "header-balance", "amount", balance)
+			outcome.Message = sc.Renderer.T(c, "inventory-sold", "count", sold, "amount", coins)
+			outcome.Duplicates.Count = duplicates.Count
+			outcome.Duplicates.Coins = duplicates.Coins
+			outcome.Duplicates.Text = sc.Renderer.T(c, "inventory-sell-duplicates-text",
+				"count", duplicates.Count, "amount", duplicates.Coins)
+			outcome.Duplicates.Confirm = sc.Renderer.T(c, "inventory-sell-duplicates-confirm",
+				"amount", duplicates.Coins)
+			c.JSON(http.StatusOK, outcome)
+			return
+		}
+	}
+	log.Printf("WARN failed to report the sale of user '%s': %s", user.Username, err)
+	sc.sellFailed(c, "internal")
 }
 
 // Take `count` copies of a stack out of an inventory, the last acquired first
@@ -88,34 +202,41 @@ func creditSale(tx *gorm.DB, ownerID uint, coins uint) error {
 
 // ShopSellPost takes copies of one card out of the inventory and pays their
 // value in coins. The reply is a redirect back to the inventory, so
-// refreshing it cannot sell the cards twice.
+// refreshing it cannot sell the cards twice, or the outcome as JSON to the
+// pages that sell without reloading.
 func (sc *Controller) ShopSellPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
+		if wantsJSON(c) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": sc.Renderer.T(c, "shop-error-unauthenticated")})
+			return
+		}
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
+	asJSON := wantsJSON(c)
 
 	// The card to sell and which of its foil variants, then how many copies
 	id, err := strconv.Atoi(c.PostForm("card"))
 	if err != nil || id <= 0 {
-		sellFailed(c, "card")
+		sc.sellFailed(c, "card")
 		return
 	}
 	foil := c.PostForm("foil")
 	card, _ := sc.Data.GetCard(id)
 	if card == nil || SellPrice(card.Rarity, foil) == 0 {
-		sellFailed(c, "card")
+		sc.sellFailed(c, "card")
 		return
 	}
 	quantity, err := strconv.Atoi(c.PostForm("quantity"))
 	if err != nil || quantity < 1 {
-		sellFailed(c, "quantity")
+		sc.sellFailed(c, "quantity")
 		return
 	}
 
 	// The unit price is fixed whatever the quantity
 	total := SellPrice(card.Rarity, foil) * uint(quantity)
+	var stack soldStack
 	err = sc.DB.Transaction(func(tx *gorm.DB) error {
 		// Locked, so no offer can put up the copies while they are sold
 		if err := LockUsers(tx, user.ID); err != nil {
@@ -141,18 +262,31 @@ func (sc *Controller) ShopSellPost(c *gin.Context) {
 		if err := removeCopies(tx, user.ID, uint(id), foil, uint(quantity)); err != nil {
 			return err
 		}
-		return creditSale(tx, user.ID, total)
+		if err := creditSale(tx, user.ID, total); err != nil {
+			return err
+		}
+		// The page staying put needs to know what is left of the stack
+		if asJSON {
+			left, err := stackAfterSale(tx, user.ID, uint(id), foil, committed)
+			stack = left
+			return err
+		}
+		return nil
 	})
 
 	switch {
 	case errors.Is(err, errSellMissing):
-		sellFailed(c, "missing")
+		sc.sellFailed(c, "missing")
 	case errors.Is(err, errSellLocked):
-		sellFailed(c, "locked")
+		sc.sellFailed(c, "locked")
 	case err != nil:
 		log.Printf("WARN failed to sell %d copies of card %d for user '%s': %s", quantity, id, user.Username, err)
-		sellFailed(c, "internal")
+		sc.sellFailed(c, "internal")
 	default:
+		if asJSON {
+			sc.saleJSON(c, user, uint(quantity), total, []soldStack{stack})
+			return
+		}
 		soldRedirect(c, uint(quantity), total)
 	}
 }
@@ -223,15 +357,22 @@ func DuplicatesForSale(db *gorm.DB, d *data.Data, userID uint) (DuplicateSale, e
 }
 
 // ShopSellDuplicatesPost sells every duplicate card of the inventory, keeping
-// one copy of each stack
+// one copy of each stack. Like ShopSellPost, it redirects back or says what it
+// did as JSON.
 func (sc *Controller) ShopSellDuplicatesPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
+		if wantsJSON(c) {
+			c.JSON(http.StatusUnauthorized, gin.H{"error": sc.Renderer.T(c, "shop-error-unauthenticated")})
+			return
+		}
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
+	asJSON := wantsJSON(c)
 
 	var sale DuplicateSale
+	var remaining []soldStack
 	err := sc.DB.Transaction(func(tx *gorm.DB) error {
 		// Locked, so the duplicates cannot change while they are sold
 		if err := LockUsers(tx, user.ID); err != nil {
@@ -249,16 +390,37 @@ func (sc *Controller) ShopSellDuplicatesPost(c *gin.Context) {
 				return err
 			}
 		}
-		return creditSale(tx, user.ID, sale.Coins)
+		if err := creditSale(tx, user.ID, sale.Coins); err != nil {
+			return err
+		}
+		// The page staying put needs to know what is left of each stack
+		if asJSON {
+			committed, err := TradeCommitmentsOf(tx, user.ID, 0)
+			if err != nil {
+				return err
+			}
+			for _, stack := range sale.stacks {
+				left, err := stackAfterSale(tx, user.ID, stack.CardID, stack.Foil, committed)
+				if err != nil {
+					return err
+				}
+				remaining = append(remaining, left)
+			}
+		}
+		return nil
 	})
 
 	switch {
 	case errors.Is(err, errSellNone):
-		sellFailed(c, "none")
+		sc.sellFailed(c, "none")
 	case err != nil:
 		log.Printf("WARN failed to sell the duplicates of user '%s': %s", user.Username, err)
-		sellFailed(c, "internal")
+		sc.sellFailed(c, "internal")
 	default:
+		if asJSON {
+			sc.saleJSON(c, user, sale.Count, sale.Coins, remaining)
+			return
+		}
 		soldRedirect(c, sale.Count, sale.Coins)
 	}
 }
