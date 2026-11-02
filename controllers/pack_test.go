@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"transcendance/models"
 	"transcendance/tests"
@@ -35,6 +36,13 @@ type openingResponse struct {
 }
 
 var cardTitleRe = regexp.MustCompile(`<h2 class="card-title">([^<]*)</h2>`)
+var cardArtworkRe = regexp.MustCompile(`/cards/([0-9]+)/thumbnail`)
+
+// One card an opening reel landed on: its global ID and the new mark it shows
+type wonCard struct {
+	ID  uint
+	New bool
+}
 
 func postForm(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string, form url.Values) *httptest.ResponseRecorder {
 	req := httptest.NewRequest(http.MethodPost, target, strings.NewReader(form.Encode()))
@@ -112,6 +120,65 @@ func ownedTitles(t *testing.T, cards []models.Card) []string {
 	return titles
 }
 
+// The cards the reels landed on, in reel order
+func wonCards(t *testing.T, reels [][]openingSlot) []wonCard {
+	t.Helper()
+	won := make([]wonCard, 0, len(reels))
+	for i, reel := range reels {
+		winners := 0
+		for _, slot := range reel {
+			if !slot.Win {
+				continue
+			}
+			winners++
+			match := cardArtworkRe.FindStringSubmatch(slot.HTML)
+			require.NotNil(t, match, "reel %d winner shows no artwork", i)
+			id, err := strconv.ParseUint(match[1], 10, 64)
+			require.NoError(t, err)
+			won = append(won, wonCard{
+				ID:  uint(id),
+				New: strings.Contains(slot.HTML, `class="card-new"`),
+			})
+		}
+		require.Equal(t, 1, winners, "reel %d holds %d winners, want exactly 1", i, winners)
+	}
+	return won
+}
+
+// Global IDs of every card an account owns
+func ownedIDs(t *testing.T, username string) map[uint]bool {
+	t.Helper()
+	ids := make(map[uint]bool)
+	for _, card := range ownedCards(t, username) {
+		ids[card.CardID] = true
+	}
+	return ids
+}
+
+// requireNewFlags checks the new marks of an opening against the copies the
+// account held before it: a card is new when it had none, where the copies
+// won before it in the same pack already count as its own. Returns how many
+// winners were marked new.
+func requireNewFlags(t *testing.T, reels [][]openingSlot, summary string, owned map[uint]bool) int {
+	t.Helper()
+	have := make(map[uint]bool, len(owned))
+	for id := range owned {
+		have[id] = true
+	}
+	newCount := 0
+	for i, won := range wonCards(t, reels) {
+		want := !have[won.ID]
+		have[won.ID] = true
+		require.Equal(t, want, won.New, "card %d of reel %d is marked new = %v, want %v", won.ID, i, won.New, want)
+		if won.New {
+			newCount++
+		}
+	}
+	// Screen readers hear the new cards as such
+	require.Equal(t, newCount, strings.Count(stripIsolation(summary), ", new)"))
+	return newCount
+}
+
 func TestOpenBoosterAwardsCards(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "packopen1", "foo-bar-baz-qux", 0)
@@ -142,7 +209,8 @@ func TestOpenBoosterAwardsCards(t *testing.T) {
 			foils++
 		}
 	}
-	require.Equal(t, foils, strings.Count(summary, ", foil)"))
+	// New cards append their mark after the foil one
+	require.Equal(t, foils, strings.Count(summary, ", foil"))
 
 	// Cards are stored in reel order, each winner shows the foil its card was obtained with
 	slices.SortFunc(cards, func(a, b models.Card) int { return int(a.ID) - int(b.ID) })
@@ -159,6 +227,46 @@ func TestOpenBoosterAwardsCards(t *testing.T) {
 			require.Contains(t, winner.HTML, `data-mask="/cards/assets/`+card.Foil+`.png"`)
 		}
 	}
+}
+
+// The cards an account wins before it owns any are new to it, marked until
+// its own copies arrive
+func TestOpenBoosterMarksNewCards(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packnew1", "foo-bar-baz-qux", 0)
+	giveBoosters(t, "packnew1", collectionDev, 5, 2)
+	cookie := login(t, router, "packnew1", "foo-bar-baz-qux")
+
+	boosters := ownedBoosters(t, "packnew1")
+	code, resp := openBooster(t, router, cookie, boosters[0].ID)
+	require.Equal(t, http.StatusOK, code)
+	// Nothing owned yet: every first copy won is new
+	require.NotZero(t, requireNewFlags(t, resp.Reels, resp.Summary, map[uint]bool{}))
+
+	// The next booster only marks the cards the first one did not give
+	owned := ownedIDs(t, "packnew1")
+	code, resp = openBooster(t, router, cookie, boosters[1].ID)
+	require.Equal(t, http.StatusOK, code)
+	requireNewFlags(t, resp.Reels, resp.Summary, owned)
+}
+
+// A foil copy is a copy: the cards an account holds a foil of already are
+// not new to it
+func TestOpenBoosterFoilCardsNotNew(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "packnew2", "foo-bar-baz-qux", 0)
+	giveBoosters(t, "packnew2", collectionDev, 5, 1)
+	cookie := login(t, router, "packnew2", "foo-bar-baz-qux")
+
+	// One foil copy of every card of the dev collection
+	for _, id := range []uint{cardPythagorean, cardFlyingScotsman, cardMcMurdo, cardFordT, cardTungsten} {
+		giveCardAt(t, "packnew2", id, "foil1", time.Now())
+	}
+
+	owned := ownedIDs(t, "packnew2")
+	code, resp := openBooster(t, router, cookie, ownedBoosters(t, "packnew2")[0].ID)
+	require.Equal(t, http.StatusOK, code)
+	require.Zero(t, requireNewFlags(t, resp.Reels, resp.Summary, owned))
 }
 
 func TestOpenBoosterUsesBoosterSize(t *testing.T) {
