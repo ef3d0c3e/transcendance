@@ -68,10 +68,7 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 	if filter != notificationFilterUnread {
 		filter = ""
 	}
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page < 1 {
-		page = 1
-	}
+	page := PageParam(c.Query("p"))
 
 	list, err := nc.list(c, user.ID, filter, page, notificationPageSize)
 	if err != nil {
@@ -219,10 +216,7 @@ func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
+	page := PageParam(c.Query("page"))
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(notificationPageSize)))
 	if err != nil || limit < 1 {
 		limit = notificationPageSize

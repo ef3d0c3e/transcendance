@@ -109,6 +109,11 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": dc.Renderer.T(c, "trade-error-user")})
 		return
 	}
+	// Compared by ID too: usernames compare ignoring case and trailing spaces in the database
+	if target.ID == user.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"message": dc.Renderer.T(c, "trade-error-self")})
+		return
+	}
 	if blocked, err := controllers.TradeBlocked(dc.DB, user.ID, target.ID); err != nil || blocked {
 		c.JSON(http.StatusForbidden, gin.H{"message": dc.Renderer.T(c, "trade-error-blocked")})
 		return

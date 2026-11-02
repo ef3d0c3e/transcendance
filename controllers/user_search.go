@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -229,9 +228,7 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 		Query: strings.TrimSpace(c.Query("q")),
 		Page:  1,
 	}
-	if page, err := strconv.Atoi(c.Query("p")); err == nil && page > 1 {
-		v.Page = page
-	}
+	v.Page = PageParam(c.Query("p"))
 	if joined := c.Query("joined"); slices.Contains(userJoinedFilters, joined) {
 		v.Joined = joined
 	}

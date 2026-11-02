@@ -102,9 +102,10 @@ func (sc *Controller) ShopSellPost(c *gin.Context) {
 		sellFailed(c, "card")
 		return
 	}
+	// Exactly a known foil: the database compares " " like "", which would sell plain cards at the foil price
 	foil := c.PostForm("foil")
 	card, _ := sc.Data.GetCard(id)
-	if card == nil || SellPrice(card.Rarity, foil) == 0 {
+	if card == nil || !models.ValidFoil(foil) || SellPrice(card.Rarity, foil) == 0 {
 		sellFailed(c, "card")
 		return
 	}

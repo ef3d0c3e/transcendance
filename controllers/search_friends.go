@@ -4,7 +4,6 @@ import (
 	"log"
 	"net/http"
 	"slices"
-	"strconv"
 	"strings"
 	"transcendance/models"
 
@@ -53,9 +52,7 @@ func (sc *Controller) FriendsGet(c *gin.Context) {
 	if list := c.Query("list"); slices.Contains(friendsLists, list) {
 		v.List = list
 	}
-	if page, err := strconv.Atoi(c.Query("p")); err == nil && page > 1 {
-		v.Page = page
-	}
+	v.Page = PageParam(c.Query("p"))
 	if joined := c.Query("joined"); slices.Contains(userJoinedFilters, joined) {
 		v.Joined = joined
 	}

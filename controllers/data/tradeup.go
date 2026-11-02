@@ -137,7 +137,7 @@ func (dc *DataController) TradeupPost(c *gin.Context) {
 	for _, value := range values {
 		idPart, foil, _ := strings.Cut(value, ":")
 		id, err := strconv.ParseUint(idPart, 10, 32)
-		if err != nil || id == 0 {
+		if err != nil || id == 0 || !models.ValidFoil(foil) {
 			fail("missing")
 			return
 		}
@@ -184,10 +184,7 @@ func (dc *DataController) TradeupPost(c *gin.Context) {
 		return
 	}
 
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
+	rnd := newRand()
 	winner, ok := drawTradeup(rnd, outcomes)
 	if !ok {
 		fail("empty")
