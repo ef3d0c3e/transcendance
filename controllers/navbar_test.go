@@ -32,7 +32,7 @@ func TestNavbarAuthenticated(t *testing.T) {
 	createAccount(t, router, "navbar1", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "navbar1", "foo-bar-baz-qux")
 
-	body := getInventory(t, router, cookie, "/cards/search/?q=tungsten")
+	body := getInventory(t, router, cookie, "/cards/search/?q=rosetta")
 	require.Contains(t, body, `<a class="nav-user" href="/profile"`)
 	require.Contains(t, body, `<span>navbar1</span>`)
 	require.Contains(t, body, `data-logout="/api/logout"`)
