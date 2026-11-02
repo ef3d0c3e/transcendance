@@ -436,10 +436,10 @@ shop-buy-total = Total
 shop-coins = coins
 shop-coins-locked = { $amount } up in trades
 
-index-title = Transcendance, collect trading cards
-meta-description = Transcendance is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
+index-title = AnyCardz, collect trading cards
+meta-description = AnyCardz is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
 index-heading = Collect, trade and show off your cards
-index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
+index-tagline = AnyCardz is a trading card game: buy boosters and trade cards to grow your collection.
 index-stat-cards = { $count ->
     [one] { $count } card
     *[other] { $count } cards
@@ -458,7 +458,7 @@ index-step-open-text = Every booster holds a handful of cards, some of them rare
 index-step-trade-title = Trade cards
 index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
 index-install-title = Install the app
-index-install-text = Add Transcendance to your home screen to open it like an app, without the browser's bars.
+index-install-text = Add AnyCardz to your home screen to open it like an app, without the browser's bars.
 index-install-ios-title = iPhone and iPad:
 index-install-ios-text = in Safari, tap Share, then Add to Home Screen.
 index-install-android-title = Android:
@@ -471,14 +471,14 @@ index-collections-title = Collections
 index-collections-all = See every collection
 
 footer-label = Site information
-footer-project = Transcendance, a student project
+footer-project = AnyCardz, a student project
 
 info-page-updated = Last updated: October 29, 2026
 
 terms-title = Terms of Service
-terms-intro = These terms govern your use of Transcendance. By creating an account or using the site, you agree to them.
+terms-intro = These terms govern your use of AnyCardz. By creating an account or using the site, you agree to them.
 terms-service-title = 1. The service
-terms-service-text = Transcendance is a non-commercial student project where you collect, open and trade virtual cards. It is provided free of charge, for entertainment and educational purposes.
+terms-service-text = AnyCardz is a non-commercial student project where you collect, open and trade virtual cards. It is provided free of charge, for entertainment and educational purposes.
 terms-account-title = 2. Your account
 terms-account-text = You need a username, an email and a password to create an account. Your email is not verified and is used only to log in; we do not send email. You may log in using your username or email. You can edit your email, and administrators can edit it for you. You are responsible for keeping your password secret and for everything done with your account. Offensive usernames, or usernames impersonating someone, may be changed or removed.
 terms-conduct-title = 3. Acceptable use
@@ -501,9 +501,9 @@ terms-law-title = 9. Applicable law
 terms-law-text = These terms are governed by French law.
 
 legal-title = Legal notice & privacy
-legal-intro = This page describes who runs Transcendance, which personal data it processes and why, and which cookies it uses.
+legal-intro = This page describes who runs AnyCardz, which personal data it processes and why, and which cookies it uses.
 legal-publisher-title = Publisher
-legal-publisher-text = Transcendance is a non-commercial student project, published and run by its development team:
+legal-publisher-text = AnyCardz is a non-commercial student project, published and run by its development team:
 legal-publisher-source = The source code is public:
 legal-host-text = The site and its database are hosted by the development team.
 legal-privacy-title = Personal data
@@ -537,7 +537,7 @@ legal-cookies-year = 1 year
 legal-cookies-consent = These cookies are needed for the site to work or to remember your own choices, so they do not require your consent. There are no analytics or advertising cookies.
 
 contact-title = Contact
-contact-intro = Transcendance is made by a small team of students. Here is how to reach us.
+contact-intro = AnyCardz is made by a small team of students. Here is how to reach us.
 contact-issues-title = Bugs, suggestions and questions
 contact-issues-text = The best way to reach us is to open an issue on the project's GitHub repository. Issues are public, so do not include personal information.
 contact-issues-link = Open an issue on GitHub

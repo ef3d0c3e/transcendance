@@ -18,7 +18,7 @@
 	{{- with .Data.Description }}{{ $description = . }}{{ end }}
 	<meta name="description" content="{{ $description }}">
 	<meta property="og:type" content="website">
-	<meta property="og:site_name" content="Transcendance">
+	<meta property="og:site_name" content="AnyCardz">
 	<meta property="og:title" content="{{ .Data.Title }}">
 	<meta property="og:description" content="{{ $description }}">
 
@@ -37,7 +37,7 @@
 	<header>
 		<!-- Not a heading: each page has its own title as its h1 -->
 		<p class="header-title">
-			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
+			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>AnyCardz</a>
 		</p>
 
 		{{/* Shown on narrow screens only, where the navigation becomes a side

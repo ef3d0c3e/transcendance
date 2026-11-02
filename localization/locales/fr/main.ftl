@@ -436,10 +436,10 @@ shop-buy-total = Total
 shop-coins = pièces
 shop-coins-locked = { $amount } dans des échanges
 
-index-title = Transcendance, collectionnez des cartes
-meta-description = Transcendance est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
+index-title = AnyCardz, collectionnez des cartes
+meta-description = AnyCardz est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
 index-heading = Collectionnez, troquez et exposez vos cartes
-index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
+index-tagline = AnyCardz est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
 index-stat-cards = { $count ->
     [one] { $count } carte
     *[other] { $count } cartes
@@ -458,7 +458,7 @@ index-step-open-text = Chaque booster contient quelques cartes, dont certaines r
 index-step-trade-title = Troquez vos cartes
 index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
 index-install-title = Installer l’application
-index-install-text = Ajoutez Transcendance à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
+index-install-text = Ajoutez AnyCardz à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
 index-install-ios-title = iPhone et iPad :
 index-install-ios-text = dans Safari, touchez Partager, puis Sur l’écran d’accueil.
 index-install-android-title = Android :
@@ -471,14 +471,14 @@ index-collections-title = Collections
 index-collections-all = Voir toutes les collections
 
 footer-label = Informations sur le site
-footer-project = Transcendance, un projet étudiant
+footer-project = AnyCardz, un projet étudiant
 
 info-page-updated = Dernière mise à jour : 29 octobre 2026
 
 terms-title = Conditions d'Utilisation
-terms-intro = Ces conditions encadrent votre utilisation de Transcendance. En créant un compte ou en utilisant le site, vous les acceptez.
+terms-intro = Ces conditions encadrent votre utilisation de AnyCardz. En créant un compte ou en utilisant le site, vous les acceptez.
 terms-service-title = 1. Le service
-terms-service-text = Transcendance est un projet étudiant non commercial dans lequel vous collectionnez, ouvrez et échangez des cartes virtuelles. Il est fourni gratuitement, à des fins de divertissement et d'apprentissage.
+terms-service-text = AnyCardz est un projet étudiant non commercial dans lequel vous collectionnez, ouvrez et échangez des cartes virtuelles. Il est fourni gratuitement, à des fins de divertissement et d'apprentissage.
 terms-account-title = 2. Votre compte
 terms-account-text = Un nom d'utilisateur, une adresse e-mail et un mot de passe sont nécessaires pour créer un compte. Votre adresse e-mail n’est pas vérifiée et sert uniquement à vous connecter ; aucun e-mail n’est envoyé. Vous pouvez vous connecter avec votre nom d’utilisateur ou votre adresse e-mail. Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité réalisée avec votre compte. Les noms d’utilisateur injurieux ou usurpant une identité peuvent être modifiés ou supprimés.
 terms-conduct-title = 3. Règles d'usage
@@ -501,9 +501,9 @@ terms-law-title = 9. Droit applicable
 terms-law-text = Ces conditions sont régies par le droit français.
 
 legal-title = Mentions légales et confidentialité
-legal-intro = Cette page indique qui édite Transcendance, quelles données personnelles sont traitées et pourquoi, et quels cookies sont utilisés.
+legal-intro = Cette page indique qui édite AnyCardz, quelles données personnelles sont traitées et pourquoi, et quels cookies sont utilisés.
 legal-publisher-title = Éditeur
-legal-publisher-text = Transcendance est un projet étudiant non commercial, édité et exploité par son équipe de développement :
+legal-publisher-text = AnyCardz est un projet étudiant non commercial, édité et exploité par son équipe de développement :
 legal-publisher-source = Le code source est public :
 legal-host-text = Le site et sa base de données sont hébergés par l'équipe de développement.
 legal-privacy-title = Données personnelles
@@ -537,7 +537,7 @@ legal-cookies-year = 1 an
 legal-cookies-consent = Ces cookies sont nécessaires au fonctionnement du site ou à la mémorisation de vos propres choix, ils ne requièrent donc pas votre consentement. Il n'y a aucun cookie de mesure d'audience ni de publicité.
 
 contact-title = Contact
-contact-intro = Transcendance est réalisé par une petite équipe d'étudiants. Voici comment nous joindre.
+contact-intro = AnyCardz est réalisé par une petite équipe d'étudiants. Voici comment nous joindre.
 contact-issues-title = Bugs, suggestions et questions
 contact-issues-text = Le meilleur moyen de nous joindre est d'ouvrir une issue sur le dépôt GitHub du projet. Les issues sont publiques, n'y mettez donc pas d'informations personnelles.
 contact-issues-link = Ouvrir une issue sur GitHub
