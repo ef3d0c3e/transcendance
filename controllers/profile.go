@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 	"transcendance/models"
 	"transcendance/views"
@@ -51,6 +52,19 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 
 	editMode := c.Param("username") == "" || (user.Rank == 2 && userProfile.UserID != user.ID)
 
+	relation := ""
+	if userProfile.UserID != user.ID {
+		var err error
+		if relation, err = relationOf(pc.DB, user.ID, userProfile.UserID); err != nil {
+			pc.Renderer.RenderError(c, views.ErrorPage{
+				User:       user,
+				StatusCode: http.StatusInternalServerError,
+				Message:    pc.Renderer.T(c, "error-unexpected"),
+			})
+			return
+		}
+	}
+
 	builder := views.PageBuilder("base", gin.H{
 		"Title": pc.Renderer.T(c, "profile-title"),
 		"User":  user,
@@ -71,6 +85,7 @@ func (pc *Controller) ProfileGet(c *gin.Context) {
 		"CanSeeEmail":       canSeeEmail,
 		"Own":               userProfile.UserID == user.ID,
 		"Online":            models.IsOnline(userProfile.User.LastSeenAt),
+		"Relation":          relation,
 		"Locale":            pc.Renderer.Localizer.GetLocale(c),
 		"FormAction":        formAction,
 		"AvatarAction":      avatarAction,
@@ -233,7 +248,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		if errorMessages["password"] == "" && errorMessages["new_password"] == "" && errorMessages["confirm_password"] == "" {
 			newPasswordHash, err := bcrypt.GenerateFromPassword(
 				[]byte(newPassword),
-				bcrypt.DefaultCost,
+				PasswordHashCost,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
@@ -304,7 +319,9 @@ func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*
 	origin := c.GetHeader("Origin")
 	if origin != "" {
 		u, err := url.Parse(origin)
-		if err != nil || u.Host != c.Request.Host || (u.Scheme != "http" && u.Scheme != "https") {
+		// Ports are not compared, the gateway forwards the host without the port
+		host := (&url.URL{Host: c.Request.Host}).Hostname()
+		if err != nil || !strings.EqualFold(u.Hostname(), host) || (u.Scheme != "http" && u.Scheme != "https") {
 			return nil, http.StatusForbidden
 		}
 	}

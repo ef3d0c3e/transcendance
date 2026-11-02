@@ -34,3 +34,21 @@ func TestTopupAmountUnknown(t *testing.T) {
 		require.Falsef(t, ok, "pack %q must not be on sale", id)
 	}
 }
+
+func TestSellPricePerRarity(t *testing.T) {
+	require.Equal(t, uint(10), SellPrice("common", ""))
+	require.Equal(t, uint(50), SellPrice("rare", ""))
+	require.Equal(t, uint(250), SellPrice("legendary", ""))
+}
+
+func TestSellPriceFoilIsDouble(t *testing.T) {
+	require.Equal(t, uint(20), SellPrice("common", "foil1"))
+	require.Equal(t, uint(100), SellPrice("rare", "foil1"))
+	require.Equal(t, uint(500), SellPrice("legendary", "foil1"))
+}
+
+func TestSellPriceUnknownRarityIsNothing(t *testing.T) {
+	for _, rarity := range []string{"", "mythic", "COMMON"} {
+		require.Zerof(t, SellPrice(rarity, ""), "rarity %q must not be worth coins", rarity)
+	}
+}

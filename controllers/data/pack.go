@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"transcendance/controllers"
@@ -84,28 +85,35 @@ func pickTier(rolled string, available map[string]bool) string {
 	return ""
 }
 
+// poolCard is one card of a draw pool, with the collection it belongs to
+type poolCard struct {
+	card       *data.Card
+	collection *data.Collection
+}
+
 // groupByRarity indexes the cards of a collection by rarity
-func groupByRarity(cards map[string]*data.Card, collection *data.Collection) map[string][]*data.Card {
-	byRarity := make(map[string][]*data.Card, len(rarityTiers))
+func groupByRarity(cards map[string]*data.Card, collection *data.Collection) map[string][]poolCard {
+	byRarity := make(map[string][]poolCard, len(rarityTiers))
 	for _, entry := range collection.Cards {
 		card, ok := cards[entry.Name]
 		if !ok {
 			continue
 		}
-		byRarity[card.Rarity] = append(byRarity[card.Rarity], card)
+		byRarity[card.Rarity] = append(byRarity[card.Rarity], poolCard{card: card, collection: collection})
 	}
 	return byRarity
 }
 
 // stripEntry is one slot on an opening reel
 type stripEntry struct {
-	Card *data.Card
-	Win  bool
+	Card       *data.Card
+	Collection *data.Collection
+	Win        bool
 }
 
 // flattenByRarity returns every card of the collection in one slice
-func flattenByRarity(byRarity map[string][]*data.Card) []*data.Card {
-	pool := make([]*data.Card, 0)
+func flattenByRarity(byRarity map[string][]poolCard) []poolCard {
+	pool := make([]poolCard, 0)
 	for _, tier := range rarityTiers {
 		pool = append(pool, byRarity[tier]...)
 	}
@@ -114,35 +122,39 @@ func flattenByRarity(byRarity map[string][]*data.Card) []*data.Card {
 
 // buildReel returns the stack for one won card: cards above the winner at
 // index reelAbove, the winner, then the cards that will run past the window
-// as the reel drops. Returns nil when the collection holds no card to fill
-// with.
-func buildReel(rnd *rand.Rand, pool []*data.Card, winner *data.Card) []stripEntry {
+// as the reel drops. Returns nil when the pool holds no card to fill with.
+func buildReel(rnd *rand.Rand, pool []poolCard, winner poolCard) []stripEntry {
 	if len(pool) == 0 {
 		return nil
 	}
 
 	strip := make([]stripEntry, 0, reelAbove+1+reelBelow)
 	for i := 0; i < reelAbove; i++ {
-		strip = append(strip, stripEntry{Card: pool[rnd.N(len(pool))], Win: false})
+		strip = append(strip, newStripEntry(pool[rnd.N(len(pool))], false))
 	}
-	strip = append(strip, stripEntry{Card: winner, Win: true})
+	strip = append(strip, newStripEntry(winner, true))
 	for i := 0; i < reelBelow; i++ {
-		strip = append(strip, stripEntry{Card: pool[rnd.N(len(pool))], Win: false})
+		strip = append(strip, newStripEntry(pool[rnd.N(len(pool))], false))
 	}
 
 	return strip
 }
 
+// newStripEntry places one pool card on an opening reel slot
+func newStripEntry(pc poolCard, win bool) stripEntry {
+	return stripEntry{Card: pc.card, Collection: pc.collection, Win: win}
+}
+
 // drawPack draws `size` cards from a collection. The rarity of each card is
 // rolled first, then a card is picked uniformly among that tier's cards.
 // Duplicates are allowed. Returns nil when the collection holds no card.
-func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*data.Card {
+func drawPack(rnd *rand.Rand, byRarity map[string][]poolCard, size int) []poolCard {
 	available := make(map[string]bool, len(rarityTiers))
 	for _, tier := range rarityTiers {
 		available[tier] = len(byRarity[tier]) > 0
 	}
 
-	pack := make([]*data.Card, 0, size)
+	pack := make([]poolCard, 0, size)
 	for i := 0; i < size; i++ {
 		tier := pickTier(rollRarity(rnd), available)
 		if tier == "" {
@@ -153,9 +165,26 @@ func drawPack(rnd *rand.Rand, byRarity map[string][]*data.Card, size int) []*dat
 	return pack
 }
 
+// drawDefaultPack draws `size` cards among the pool of every collection. It
+// rolls the same rarity drop table as a collection booster, then picks a card
+// uniformly among the pool's cards of that tier. Duplicates are allowed.
+// Returns nil when the pool holds no card.
+func drawDefaultPack(rnd *rand.Rand, pool []poolCard, size int) []poolCard {
+	return drawPack(rnd, groupPoolByRarity(pool), size)
+}
+
+// groupPoolByRarity indexes the cards of a pool by rarity
+func groupPoolByRarity(pool []poolCard) map[string][]poolCard {
+	byRarity := make(map[string][]poolCard, len(rarityTiers))
+	for _, entry := range pool {
+		byRarity[entry.card.Rarity] = append(byRarity[entry.card.Rarity], entry)
+	}
+	return byRarity
+}
+
 // Chance in percent for each card of a booster to be of a rarity, after the
 // fallback of the tiers the collection lacks. Tiers that can't drop are left out.
-func boosterOdds(byRarity map[string][]*data.Card) map[string]int {
+func boosterOdds(byRarity map[string][]poolCard) map[string]int {
 	available := make(map[string]bool, len(rarityTiers))
 	for _, tier := range rarityTiers {
 		available[tier] = len(byRarity[tier]) > 0
@@ -215,12 +244,100 @@ func (dc *DataController) nextBooster(ownerID uint, collectionID uint, size uint
 	return &booster, nil
 }
 
+// allCardsPool returns every card of every collection in one pool, cards of
+// the lower IDs first
+func (dc *DataController) allCardsPool() []poolCard {
+	sorted := make([]*data.Collection, 0, len(dc.Data.Collections))
+	for _, collection := range dc.Data.Collections {
+		sorted = append(sorted, collection)
+	}
+	sort.Slice(sorted, func(i, j int) bool {
+		return sorted[i].ID < sorted[j].ID
+	})
+
+	pool := make([]poolCard, 0)
+	for _, collection := range sorted {
+		pool = append(pool, flattenByRarity(groupByRarity(dc.Data.Cards, collection))...)
+	}
+	return pool
+}
+
+// packReels renders the opening reels of a drawn pack from a pool of
+// possible cards, or writes the failure
+func (dc *DataController) packReels(c *gin.Context, rnd *rand.Rand, pool []poolCard, pack []poolCard, foils []string) ([][]gin.H, bool) {
+	reels := make([][]gin.H, 0, len(pack))
+	for i, winner := range pack {
+		strip := buildReel(rnd, pool, winner)
+
+		slots := make([]gin.H, 0, len(strip))
+		for _, entry := range strip {
+			// Only the won card shows the foil it was obtained with
+			foil := ""
+			if entry.Win {
+				foil = foils[i]
+			}
+			html, ok := packCard(dc, c, entry.Collection, entry.Card, foil)
+			if !ok {
+				return nil, false
+			}
+			slots = append(slots, gin.H{
+				"rarity": entry.Card.Rarity,
+				"html":   html,
+				"win":    entry.Win,
+			})
+		}
+		reels = append(reels, slots)
+	}
+	return reels, true
+}
+
 // /opening GET: open one of the user's boosters (?booster=ID), or boosters
 // of a collection bought with coins (?collection=ID)
 func (dc *DataController) OpeningGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+
+	// A default booster comes out of the user's pile of default boosters
+	if c.Query("booster") == defaultBoosterRef {
+		pile, err := controllers.AccrueBoosterPile(dc.DB, user.ID)
+		if err != nil {
+			log.Printf("[WARN] Failed to get the booster pile of user '%s': %s", user.Username, err)
+		}
+		if err != nil || pile.Count == 0 {
+			c.Redirect(http.StatusSeeOther, "/inventory?tab=boosters")
+			return
+		}
+
+		// Drawn from every collection, so there is no collection progress
+		// nor any to buy more of
+		byRarity := groupPoolByRarity(dc.allCardsPool())
+		coins := user.FreeCoins()
+		// Without its countdown: reloading the page when it runs out would
+		// open a booster on arrival, unasked
+		tile := dc.pileTileData(c, &pile)
+		tile.PileTimerLabel = ""
+		builder := views.PageBuilder("base", map[string]any{
+			"Title": dc.Renderer.T(c, "pack-opening-title"),
+			"User":  user,
+		})
+		builder.Add("pack-opening", "Content", map[string]any{
+			"BoosterID":       defaultBoosterRef,
+			"Pile":            tile,
+			"CollectionTitle": dc.Renderer.T(c, "booster-pile-title"),
+			"ColorPrimary":    defaultBoosterColorPrimary,
+			"ColorSecondary":  defaultBoosterColorSecondary,
+			"BoosterSize":     dc.Renderer.T(c, "collection-booster", "count", defaultBoosterSize),
+			"Remaining":       dc.Renderer.T(c, "pack-opening-remaining", "count", int(pile.Count)),
+			"Rates":           dc.boosterRates(c, byRarity),
+			"FoilChance":      foilChance,
+			"Coins":           coins,
+			"CoinsLabel":      dc.Renderer.T(c, "shop-price", "amount", coins),
+			"Topups":          controllers.TopupChoices(c, dc.Renderer),
+		})
+		dc.Renderer.Render(c, &builder)
 		return
 	}
 
@@ -275,21 +392,7 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		progress = int(owned) * 100 / total
 	}
 
-	byRarity := groupByRarity(dc.Data.Cards, collection)
-	odds := boosterOdds(byRarity)
-	rates := make([]map[string]any, 0, len(rarityTiers))
-	for i := len(rarityTiers) - 1; i >= 0; i-- {
-		tier := rarityTiers[i]
-		if odds[tier] == 0 {
-			continue
-		}
-		rates = append(rates, map[string]any{
-			"Rarity":  tier,
-			"Label":   dc.Renderer.T(c, "card-rarity-"+tier),
-			"Percent": odds[tier],
-		})
-	}
-
+	coins := user.FreeCoins()
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": dc.Renderer.T(c, "pack-opening-title"),
 		"User":  user,
@@ -305,17 +408,49 @@ func (dc *DataController) OpeningGet(c *gin.Context) {
 		"Owned":           owned,
 		"Total":           total,
 		"Progress":        progress,
-		"Rates":           rates,
+		"Rates":           dc.boosterRates(c, groupByRarity(dc.Data.Cards, collection)),
 		"FoilChance":      foilChance,
 		// Once out of boosters, more are bought with coins
 		"CollectionID": collection.ID,
-		"Coins":        user.Coins,
-		"CoinsLabel":   dc.Renderer.T(c, "shop-price", "amount", user.Coins),
+		"Coins":        coins,
+		"CoinsLabel":   dc.Renderer.T(c, "shop-price", "amount", coins),
 		"Price":        controllers.BoosterPrice(collection.ID),
 		"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", controllers.BoosterPrice(collection.ID)),
 		"Topups":       controllers.TopupChoices(c, dc.Renderer),
 	})
 	dc.Renderer.Render(c, &builder)
+}
+
+// boosterRates lists the drop rate of each rarity that can drop, rarest first
+func (dc *DataController) boosterRates(c *gin.Context, byRarity map[string][]poolCard) []map[string]any {
+	odds := boosterOdds(byRarity)
+	rates := make([]map[string]any, 0, len(rarityTiers))
+	for i := len(rarityTiers) - 1; i >= 0; i-- {
+		tier := rarityTiers[i]
+		if odds[tier] == 0 {
+			continue
+		}
+		rates = append(rates, map[string]any{
+			"Rarity":  tier,
+			"Label":   dc.Renderer.T(c, "card-rarity-"+tier),
+			"Percent": odds[tier],
+		})
+	}
+	return rates
+}
+
+// freeCoins reads again the coins a user can spend, once a purchase changed
+// them: the ones up in their pending trades are left out
+func (dc *DataController) freeCoins(user *controllers.AuthenticatedUser) uint {
+	balance := user.Coins
+	if err := dc.DB.Model(&models.User{}).Where("id = ?", user.ID).Select("coins").Scan(&balance).Error; err != nil {
+		log.Printf("[WARN] Failed to read the balance of user '%s': %s", user.Username, err)
+	}
+	locked, err := controllers.TradeCommittedCoins(dc.DB, user.ID)
+	if err != nil {
+		log.Printf("[WARN] Failed to get the coins user '%s' put up in trades: %s", user.Username, err)
+	}
+	return controllers.FreeCoins(balance, locked)
 }
 
 // packCard renders one drawn card with its foil ("" for none) as an HTML fragment, or writes the failure
@@ -346,6 +481,31 @@ func packCard(dc *DataController, c *gin.Context, collection *data.Collection, c
 	return html, true
 }
 
+// packSummary lists the drawn cards in a sentence, announced to screen
+// readers once the reels stopped, or writes the failure
+func packSummary(dc *DataController, c *gin.Context, pack []poolCard, foils []string) (string, bool) {
+	loc := dc.Renderer.Localizer.GetLocale(c)
+
+	labels := make([]string, len(pack))
+	for i, drawn := range pack {
+		card := drawn.card
+		title, err := card.Translate(loc, "title")
+		if err != nil {
+			log.Printf("[WARN] Failed to translate card '%s': %s", card.Name, err)
+			c.JSON(http.StatusInternalServerError, gin.H{
+				"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+			})
+			return "", false
+		}
+		key := "pack-opening-card"
+		if foils[i] != "" {
+			key = "pack-opening-card-foil"
+		}
+		labels[i] = dc.Renderer.T(c, key, "title", title, "rarity", dc.Renderer.T(c, "card-rarity-"+card.Rarity))
+	}
+	return dc.Renderer.T(c, "pack-opening-summary", "cards", strings.Join(labels, ", ")), true
+}
+
 // /opening POST: open one of the user's boosters, its cards are added to the inventory
 func (dc *DataController) OpeningPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
@@ -353,6 +513,12 @@ func (dc *DataController) OpeningPost(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{
 			"message": dc.Renderer.T(c, "inventory-unauthenticated"),
 		})
+		return
+	}
+
+	// A default booster comes out of the user's pile of default boosters
+	if c.PostForm("booster") == defaultBoosterRef {
+		dc.openDefaultPost(c, user)
 		return
 	}
 
@@ -408,12 +574,20 @@ func (dc *DataController) OpeningBuyPost(c *gin.Context) {
 		return
 	}
 
-	// Debit only when the balance covers the price, so concurrent
-	// purchases cannot overdraw
+	// Debit only when the free balance covers the price, so concurrent
+	// purchases cannot overdraw. Coins up in pending trades leave with those
+	// trades, so they cannot pay here
 	price := controllers.BoosterPrice(collection.ID)
 	dc.openPack(c, user, collection, uint(collection.BoosterSize), func(tx *gorm.DB) error {
+		if err := controllers.LockUsers(tx, user.ID); err != nil {
+			return err
+		}
+		locked, err := controllers.TradeCommittedCoins(tx, user.ID)
+		if err != nil {
+			return err
+		}
 		result := tx.Model(&models.User{}).
-			Where("id = ? AND coins >= ?", user.ID, price).
+			Where("id = ? AND coins >= ?", user.ID, price+locked).
 			Update("coins", gorm.Expr("coins - ?", price))
 		if result.Error != nil {
 			return result.Error
@@ -455,9 +629,9 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 		}
 
 		cards := make([]models.Card, len(pack))
-		for i, card := range pack {
+		for i, drawn := range pack {
 			cards[i] = models.Card{
-				CardID:   uint(collection.ID*1000 + card.ID),
+				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
 				Acquired: now,
 				Foil:     foils[i],
 				OwnerID:  user.ID,
@@ -485,29 +659,13 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 	}
 
 	// The cards are in the inventory, what follows is only the animation
-	pool := flattenByRarity(byRarity)
-	reels := make([][]gin.H, 0, len(pack))
-	for i, winner := range pack {
-		strip := buildReel(rnd, pool, winner)
-
-		slots := make([]gin.H, 0, len(strip))
-		for _, entry := range strip {
-			// Only the won card shows the foil it was obtained with
-			foil := ""
-			if entry.Win {
-				foil = foils[i]
-			}
-			html, ok := packCard(dc, c, collection, entry.Card, foil)
-			if !ok {
-				return
-			}
-			slots = append(slots, gin.H{
-				"rarity": entry.Card.Rarity,
-				"html":   html,
-				"win":    entry.Win,
-			})
-		}
-		reels = append(reels, slots)
+	summary, ok := packSummary(dc, c, pack, foils)
+	if !ok {
+		return
+	}
+	reels, ok := dc.packReels(c, rnd, flattenByRarity(byRarity), pack, foils)
+	if !ok {
+		return
 	}
 
 	// Let the page chain into the next booster of the same stack
@@ -527,10 +685,7 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 		log.Printf("[WARN] Failed to count cards for user '%s': %s", user.Username, err)
 	}
 	// Tells the page whether the next booster can be bought
-	coins := user.Coins
-	if err := dc.DB.Model(&models.User{}).Where("id = ?", user.ID).Select("coins").Scan(&coins).Error; err != nil {
-		log.Printf("[WARN] Failed to read the balance of user '%s': %s", user.Username, err)
-	}
+	coins := dc.freeCoins(user)
 
 	c.JSON(http.StatusOK, gin.H{
 		"reels":          reels,
@@ -538,8 +693,10 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 		"remaining":      remaining,
 		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(remaining)),
 		"owned":          owned,
+		"summary":        summary,
 		"coins":          coins,
 		"coinsLabel":     dc.Renderer.T(c, "shop-price", "amount", coins),
+		"navBalance":     dc.Renderer.T(c, "header-balance", "amount", coins),
 		"colors": gin.H{
 			"primary":   collection.ColorPrimary,
 			"secondary": collection.ColorSecondary,
@@ -551,6 +708,92 @@ var (
 	errBoosterOpened  = errors.New("booster already opened")
 	errNotEnoughCoins = errors.New("not enough coins")
 )
+
+// openDefaultPost opens one default booster out of the user's pile, its
+// cards are added to the inventory
+func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.AuthenticatedUser) {
+	// Draw before touching the pile, an empty catalog keeps the booster
+	rnd := rand.New(rand.NewPCG(
+		uint64(time.Now().UnixNano()),
+		uint64(time.Now().UnixNano()),
+	))
+	pool := dc.allCardsPool()
+	pack := drawDefaultPack(rnd, pool, defaultBoosterSize)
+	if pack == nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-empty"),
+		})
+		return
+	}
+	foils := make([]string, len(pack))
+	for i := range pack {
+		foils[i] = rollFoil(rnd)
+	}
+
+	// Take the booster out of the pile and award its cards at once. The
+	// conditional consume keeps concurrent openings from digging into an
+	// empty pile.
+	now := time.Now()
+	var pile models.BoosterPile
+	err := dc.DB.Transaction(func(tx *gorm.DB) error {
+		var err error
+		pile, err = controllers.ConsumePileBooster(tx, user.ID)
+		if err != nil {
+			return err
+		}
+
+		cards := make([]models.Card, len(pack))
+		for i, drawn := range pack {
+			cards[i] = models.Card{
+				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
+				Acquired: now,
+				Foil:     foils[i],
+				OwnerID:  user.ID,
+			}
+		}
+		return tx.Create(&cards).Error
+	})
+	if errors.Is(err, controllers.ErrNoPileBooster) {
+		c.JSON(http.StatusNotFound, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-pile"),
+		})
+		return
+	}
+	if err != nil {
+		log.Printf("[WARN] Failed to open a default booster for user '%s': %s", user.Username, err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": dc.Renderer.T(c, "pack-opening-error-internal"),
+		})
+		return
+	}
+
+	// The cards are in the inventory, what follows is only the animation
+	summary, ok := packSummary(dc, c, pack, foils)
+	if !ok {
+		return
+	}
+	reels, ok := dc.packReels(c, rnd, pool, pack, foils)
+	if !ok {
+		return
+	}
+
+	// Let the page chain into the next default booster of the pile
+	next := ""
+	if pile.Count > 0 {
+		next = defaultBoosterRef
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"reels":          reels,
+		"next":           next,
+		"remaining":      pile.Count,
+		"remainingLabel": dc.Renderer.T(c, "pack-opening-remaining", "count", int(pile.Count)),
+		"summary":        summary,
+		"colors": gin.H{
+			"primary":   defaultBoosterColorPrimary,
+			"secondary": defaultBoosterColorSecondary,
+		},
+	})
+}
 
 // Collections sorted by ID, with their translated title
 func (dc *DataController) collectionChoices(c *gin.Context) []map[string]any {

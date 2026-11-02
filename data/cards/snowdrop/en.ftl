@@ -1,0 +1,2 @@
+title = Snowdrop
+description = Galanthus nivalis, the snowdrop or common snowdrop, is the best-known and most widespread of the 20 species in its genus, Galanthus. Snowdrops are among the first bulbs to bloom in spring and can form impressive carpets of white in areas where they are native or have been naturalised.

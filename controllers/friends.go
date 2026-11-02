@@ -1,156 +1,254 @@
 package controllers
 
 import (
+	"errors"
+	"net/http"
+	"net/url"
+	"slices"
 	"strconv"
 	"transcendance/models"
 
-	"net/http"
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	"gorm.io/datatypes"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
-func GetRelation(target models.User, c *gin.Context, db *gorm.DB) string {
-	user := models.User{}
-	db.First(&user, GetAuthenticatedUser(c).ID)
-	if user.ID == target.ID {
-		return "you"
+// Relation of the authenticated user to another user, as sent to clients
+const (
+	friendNone = ""
+	// The user sent a request
+	friendPending = "pending"
+	// The other user sent a request
+	friendRespond   = "respond"
+	friendFriends   = "friends"
+	friendBlocked   = "blocked"
+	friendBlockedBy = "block"
+)
+
+// Actions of `/friendaction`
+var friendActions = []string{"add", "cancel", "accept", "deny", "unfriend", "block", "unblock"}
+
+// The relation of a user to others, by ID. A block takes precedence over anything else.
+func relationsOf(db *gorm.DB, userID uint, others []uint) (map[uint]string, error) {
+	result := make(map[uint]string, len(others))
+	if len(others) == 0 {
+		return result, nil
 	}
-	relation := models.Relation{}
-	res := db.First(&relation, "user_id = ? and target_id = ?", user.ID, target.ID)
-	if res.RowsAffected == 0 {
-		res = db.First(&relation, "user_id = ? and target_id = ?", target.ID, user.ID)
-		if res.RowsAffected == 0 {
-			return ""
+	var rows []models.Relation
+	if err := db.
+		Where("(user_id = ? AND target_id IN ?) OR (target_id = ? AND user_id IN ?)", userID, others, userID, others).
+		Find(&rows).
+		Error; err != nil {
+		return nil, err
+	}
+
+	mine := make(map[uint]string, len(rows))
+	theirs := make(map[uint]string, len(rows))
+	for _, row := range rows {
+		if row.UserID == userID {
+			mine[row.TargetID] = row.Type
+		} else {
+			theirs[row.UserID] = row.Type
 		}
-		switch relation.Type {
-		case "blocked":
-			return "block"
-		case "pending":
-			return "respond"
+	}
+	for _, id := range others {
+		switch {
+		case mine[id] == models.RelationBlocked:
+			result[id] = friendBlocked
+		case theirs[id] == models.RelationBlocked:
+			result[id] = friendBlockedBy
+		case mine[id] == models.RelationFriends:
+			result[id] = friendFriends
+		// Answering wins when both sent a request at once
+		case theirs[id] == models.RelationPending:
+			result[id] = friendRespond
+		case mine[id] == models.RelationPending:
+			result[id] = friendPending
 		default:
-			return "default"
+			result[id] = friendNone
 		}
 	}
-	if res.Error != nil {
-		return ""
-	}
-	return relation.Type
+	return result, nil
 }
 
-func (fc *Controller) ApiFriendsGet(c *gin.Context) {
-	targetID := c.Param("target")
-	if (targetID == "/") {
-		c.JSON(http.StatusBadRequest, "No specified user")
-		return;
-	} else {
-		targetID = strings.ReplaceAll(targetID, "/", "")
-		targetID, _ := strconv.Atoi(targetID)
-		target := models.User{}
-		res := fc.DB.First(&target, targetID)
-		if res.RowsAffected == 0 {
-			c.JSON(http.StatusBadRequest, "No such user")
-			return
-		}
-		c.JSON(http.StatusOK, gin.H{"relation": GetRelation(target, c, fc.DB)})
-	}
+func relationOf(db *gorm.DB, userID uint, otherID uint) (string, error) {
+	relations, err := relationsOf(db, userID, []uint{otherID})
+	return relations[otherID], err
 }
 
-func updateRelation(db *gorm.DB, user, target models.User, action string){
-	var relation models.Relation
+// Delete the relations from a user to another, of the given types
+func deleteRelations(tx *gorm.DB, userID uint, targetID uint, types ...string) error {
+	return tx.Where("user_id = ? AND target_id = ? AND type IN ?", userID, targetID, types).Delete(&models.Relation{}).Error
+}
+
+func createRelation(tx *gorm.DB, userID uint, targetID uint, kind string) error {
+	return tx.Clauses(clause.OnConflict{UpdateAll: true}).
+		Create(&models.Relation{UserID: userID, TargetID: targetID, Type: kind}).
+		Error
+}
+
+// Notify a user of something another user did, linking to the other user's profile
+func notifyFriend(tx *gorm.DB, userID uint, fromID uint, fromUsername string, kind string) error {
+	return tx.Create(&models.Notification{
+		UserID: userID,
+		Type:   kind,
+		Data:   datatypes.JSONMap{"sender": fromID, "username": fromUsername},
+		Action: "/profile/" + url.PathEscape(fromUsername),
+	}).Error
+}
+
+// The unread friend request notifications a user got from another
+func friendRequestNotifications(tx *gorm.DB, userID uint, senderID uint) *gorm.DB {
+	return tx.Model(&models.Notification{}).
+		Where("user_id = ? AND type = ?", userID, models.NotificationFriendRequest).
+		Where("JSON_VALUE(data, '$.sender') = ?", senderID)
+}
+
+// Become friends with a user who sent a request, which is then read
+func acceptFriend(tx *gorm.DB, user *AuthenticatedUser, target *models.User) error {
+	if err := deleteRelations(tx, target.ID, user.ID, models.RelationPending); err != nil {
+		return err
+	}
+	if err := deleteRelations(tx, user.ID, target.ID, models.RelationPending); err != nil {
+		return err
+	}
+	if err := createRelation(tx, user.ID, target.ID, models.RelationFriends); err != nil {
+		return err
+	}
+	if err := createRelation(tx, target.ID, user.ID, models.RelationFriends); err != nil {
+		return err
+	}
+	if err := friendRequestNotifications(tx, user.ID, target.ID).
+		Where("read_at IS NULL").
+		Update("read_at", gorm.Expr("NOW()")).
+		Error; err != nil {
+		return err
+	}
+	return notifyFriend(tx, target.ID, user.ID, user.Username, models.NotificationFriendAccepted)
+}
+
+// Apply an action of the user on their relation to the target, returns the translation key of the reason it
+// can't be done. Actions that don't apply to the current relation do nothing.
+func applyFriendAction(tx *gorm.DB, user *AuthenticatedUser, target *models.User, current string, action string) (string, error) {
 	switch action {
-	case "delete":
-		res := db.Where("user_id = ? and target_id = ?", user.ID, target.ID).
-		Delete(&relation)
-		if res.Error != nil {
-			return
+	case "add":
+		switch current {
+		case friendNone:
+			if err := createRelation(tx, user.ID, target.ID, models.RelationPending); err != nil {
+				return "", err
+			}
+			return "", notifyFriend(tx, target.ID, user.ID, user.Username, models.NotificationFriendRequest)
+		case friendRespond:
+			return "", acceptFriend(tx, user, target)
+		case friendBlocked:
+			return "friends-unblock-error", nil
+		case friendBlockedBy:
+			return "friends-blocked-error", nil
 		}
-		if  res.RowsAffected ==  0  {
-			return
+	case "cancel":
+		if current == friendPending {
+			if err := deleteRelations(tx, user.ID, target.ID, models.RelationPending); err != nil {
+				return "", err
+			}
+			// The request is gone
+			return "", friendRequestNotifications(tx, target.ID, user.ID).Delete(&models.Notification{}).Error
 		}
-	case "pending":
-		//fails silently if user is blocked
-		db.First(&relation).
-		Where("user_id = ? and target_id = ?", target.ID, user.ID)
-		if relation.Type == "blocked" {
-			return
+	case "accept":
+		if current == friendRespond {
+			return "", acceptFriend(tx, user, target)
 		}
-		fallthrough
-	default:
-		relation = models.Relation{
-			Type: action, 
-			UserID: user.ID,
-			User: user,
-			TargetID: target.ID,
-			Target: target,
+	case "deny":
+		if current == friendRespond {
+			if err := deleteRelations(tx, target.ID, user.ID, models.RelationPending); err != nil {
+				return "", err
+			}
+			return "", friendRequestNotifications(tx, user.ID, target.ID).
+				Where("read_at IS NULL").
+				Update("read_at", gorm.Expr("NOW()")).
+				Error
 		}
-		res := db.Create(&relation)
-		if res.Error != nil {
-			//something went wrong
-			return
+	case "unfriend":
+		if current == friendFriends {
+			if err := deleteRelations(tx, user.ID, target.ID, models.RelationFriends); err != nil {
+				return "", err
+			}
+			return "", deleteRelations(tx, target.ID, user.ID, models.RelationFriends)
+		}
+	case "block":
+		if current == friendBlocked {
+			return "", nil
+		}
+		// Their own block of the user stays
+		if err := deleteRelations(tx, target.ID, user.ID, models.RelationPending, models.RelationFriends); err != nil {
+			return "", err
+		}
+		if err := createRelation(tx, user.ID, target.ID, models.RelationBlocked); err != nil {
+			return "", err
+		}
+		if err := friendRequestNotifications(tx, user.ID, target.ID).Delete(&models.Notification{}).Error; err != nil {
+			return "", err
+		}
+		return "", friendRequestNotifications(tx, target.ID, user.ID).Delete(&models.Notification{}).Error
+	case "unblock":
+		if current == friendBlocked {
+			return "", deleteRelations(tx, user.ID, target.ID, models.RelationBlocked)
 		}
 	}
+	return "", nil
 }
 
+// /friendaction POST: change the relation to the `target` user ID with an `action`: add, cancel, accept, deny,
+// unfriend, block or unblock. Answers with the new relation, and a message when the action failed.
 func (fc *Controller) FriendsPost(c *gin.Context) {
-	if GetAuthenticatedUser(c) == nil {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"message": fc.Renderer.T(c, "error-unauthorized")})
 		return
 	}
-	var user  models.User
-	fc.DB.First(&user, GetAuthenticatedUser(c).ID)
-	targetID := c.Query("target")
+
 	action := c.Query("action")
-	if targetID == "" || action == "" {
+	if !slices.Contains(friendActions, action) {
+		c.JSON(http.StatusBadRequest, gin.H{"message": fc.Renderer.T(c, "friends-unknown-error")})
 		return
 	}
-	var target  models.User
-	fc.DB.First(&target, targetID)
+	var target models.User
+	err := gorm.ErrRecordNotFound
+	if targetID, parseErr := strconv.ParseUint(c.Query("target"), 10, 0); parseErr == nil {
+		err = fc.DB.Select("id", "username").First(&target, targetID).Error
+	}
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusNotFound, gin.H{"message": fc.Renderer.T(c, "friends-not-found-error")})
+		return
+	}
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": fc.Renderer.T(c, "friends-unknown-error")})
+		return
+	}
 	if target.ID == user.ID {
-		c.JSON(http.StatusOK, gin.H{
-			"response": fc.Renderer.T(c, "friends-yourself-error"),
-		})
-		return;
+		c.JSON(http.StatusBadRequest, gin.H{"message": fc.Renderer.T(c, "friends-yourself-error")})
+		return
 	}
-	var relation models.Relation
-	res := fc.DB.First(&relation, "user_id = ? and type = ?", user.ID, "pending")
-	activeInvite := res.RowsAffected > 0
-	relationStr := GetRelation(target, c, fc.DB)
-	switch {
-	case action == "add":
-		if activeInvite {
-			c.JSON(http.StatusOK, gin.H{
-				"response": fc.Renderer.T(c, "friends-spam-error"),
-			})
-			return
+
+	var relation, failure string
+	err = fc.DB.WithContext(c.Request.Context()).Transaction(func(tx *gorm.DB) error {
+		current, err := relationOf(tx, user.ID, target.ID)
+		if err != nil {
+			return err
 		}
-		if relationStr == "block" {
-			c.JSON(http.StatusOK, gin.H{
-				"response": fc.Renderer.T(c, "friends-blocked-error"),
-			})
-			return
+		if failure, err = applyFriendAction(tx, user, &target, current, action); err != nil {
+			return err
 		}
-		updateRelation(fc.DB, user, target, "pending")
-	case relationStr == "block" && action == "add":
-	case relationStr == "respond" && action == "accept":
-		updateRelation(fc.DB, target, user, "delete")
-		updateRelation(fc.DB, user, target, "friends")
-		updateRelation(fc.DB, target, user, "friends")
-	case relationStr == "respond" && action == "deny":
-		updateRelation(fc.DB, target, user, "delete")
-	case relationStr == "blocked" && action == "unblock":
-		updateRelation(fc.DB, user, target, "delete")
-	case (relationStr == "friends" ) && (action == "unfriend"):
-		updateRelation(fc.DB, user, target, "delete")
-		updateRelation(fc.DB, target, user, "delete")
-	case relationStr == "pending" && action == "cancel":
-		updateRelation(fc.DB, user, target, "delete")
-	case action == "block":
-		updateRelation(fc.DB, user, target, "delete")
-		updateRelation(fc.DB, target, user, "delete")
-		updateRelation(fc.DB, user, target, "blocked")
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"response": "ok",
+		relation, err = relationOf(tx, user.ID, target.ID)
+		return err
 	})
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"message": fc.Renderer.T(c, "friends-unknown-error")})
+		return
+	}
+	if failure != "" {
+		c.JSON(http.StatusConflict, gin.H{"relation": relation, "message": fc.Renderer.T(c, failure)})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"relation": relation})
 }

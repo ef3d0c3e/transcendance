@@ -1,8 +1,9 @@
 {{ define "base" }}
 <!DOCTYPE html>
-<html theme="{{ .Theme }}">
+<html lang="{{ .Lang }}" theme="{{ .Theme }}">
 
 <head>
+	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<script src="/static/vendor/e-layout.min.js"></script>
 	<link rel="stylesheet" href="/static/base.css">
@@ -19,15 +20,21 @@
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
+	<!-- Added to the home screen, the site opens as an app, without the browser's bars -->
+	<link rel="manifest" href="/static/manifest.json">
+	<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
 	<script type="module" src="/frontend/main.js"></script>
 </head>
 
 <body>
+	<a class="skip-link" href="#main">{{ .T "navbar-skip" }}</a>
 	<header>
-		<h1 class="header-title">
+		<!-- Not a heading: each page has its own title as its h1 -->
+		<p class="header-title">
 			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
-		</h1>
+		</p>
 
 		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
 		<label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
@@ -37,7 +44,7 @@
 			</svg>
 		</label>
 
-		<nav id="header-nav">
+		<nav id="header-nav" aria-label="{{ .T "navbar-label-main" }}">
 			<label for="nav-toggle" class="nav-close" aria-hidden="true">
 				<svg width="24" height="24" viewBox="0 0 24 24">
 					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
@@ -46,16 +53,16 @@
 			</label>
 
 			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
-				<li><a href="/cards/search/" {{ if hasPrefix .Path "/cards" }}aria-current="page"{{ end }}>{{ .T "navbar-cards" }}</a></li>
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
 				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
-				<li><a href="/friends/">{{ .T "navbar-friends" }}</a></li>
+				<li><a href="/friends" {{ if hasPrefix .Path "/friends" }}aria-current="page"{{ end }}>{{ .T "navbar-friends" }}</a></li>
 				{{ end }}
 			</ul>
 
 			<div class="nav-end">
 				{{ if .User }}
+					<span class="nav-balance">{{ template "coin-icon" }} <span class="nav-balance-amount">{{ .T "header-balance" "amount" .User.FreeCoins }}</span></span>
 					<span id="notification" data-label-title="{{ .T "notification-title" }}"
 						data-label-unread="{{ .T "notification-unread" }}"
 						data-label-loading="{{ .T "notification-loading" }}"
@@ -63,6 +70,45 @@
 						data-label-error="{{ .T "notification-error" }}"
 						data-label-view-all="{{ .T "notification-view-all" }}"
 						data-label-mark-all-read="{{ .T "notification-mark-all-read" }}"></span>
+					<span id="shoutbox" data-username="{{ .User.Username }}"
+						data-label-title="{{ .T "shoutbox-title" }}"
+						data-label-unread="{{ .T "shoutbox-unread" }}"
+						data-label-close="{{ .T "shoutbox-close" }}"
+						data-label-connected="{{ .T "shoutbox-connected" }}"
+						data-label-connecting="{{ .T "shoutbox-connecting" }}"
+						data-label-empty="{{ .T "shoutbox-empty" }}"
+						data-label-placeholder="{{ .T "shoutbox-placeholder" }}"
+						data-label-send="{{ .T "shoutbox-send" }}"
+						data-label-error-empty="{{ .T "shoutbox-error-empty" }}"
+						data-label-error-too-long="{{ .T "shoutbox-error-too-long" }}"
+						data-label-error-rate-limited="{{ .T "shoutbox-error-rate-limited" }}"
+						data-label-error-internal="{{ .T "shoutbox-error-internal" }}"
+						data-label-closed-unauthorized="{{ .T "shoutbox-closed-unauthorized" }}"
+						data-label-closed-too-many="{{ .T "shoutbox-closed-too-many" }}"
+						data-label-closed-error="{{ .T "shoutbox-closed-error" }}"
+						data-label-tab-shout="{{ .T "shoutbox-tab-shout" }}"
+						data-label-tab-messages="{{ .T "shoutbox-tab-messages" }}"
+						data-label-private-placeholder="{{ .T "shoutbox-private-placeholder" }}"
+						data-label-conversation-empty="{{ .T "shoutbox-conversation-empty" }}"
+						data-label-conversations-empty="{{ .T "shoutbox-conversations-empty" }}"
+						data-label-start="{{ .T "shoutbox-start" }}"
+						data-label-start-placeholder="{{ .T "shoutbox-start-placeholder" }}"
+						data-label-start-button="{{ .T "shoutbox-start-button" }}"
+						data-label-back="{{ .T "shoutbox-back" }}"
+						data-label-you="{{ .T "shoutbox-you" }}"
+						data-label-user-menu="{{ .T "shoutbox-user-menu" }}"
+						data-label-message-user="{{ .T "shoutbox-message-user" }}"
+						data-label-view-profile="{{ .T "shoutbox-view-profile" }}"
+						data-label-ignore-hour="{{ .T "shoutbox-ignore-hour" }}"
+						data-label-ignore-day="{{ .T "shoutbox-ignore-day" }}"
+						data-label-ignore-week="{{ .T "shoutbox-ignore-week" }}"
+						data-label-unignore="{{ .T "shoutbox-unignore" }}"
+						data-label-ignored-title="{{ .T "shoutbox-ignored-title" }}"
+						data-label-ignored-until="{{ .T "shoutbox-ignored-until" }}"
+						data-label-ignoring-notice="{{ .T "shoutbox-ignoring-notice" }}"
+						data-label-error-user-not-found="{{ .T "shoutbox-error-user-not-found" }}"
+						data-label-error-self="{{ .T "shoutbox-error-self" }}"
+						data-label-error-blocked="{{ .T "shoutbox-error-blocked" }}"></span>
 				{{ end }}
 				<div id="language-switcher" data-label="{{ .T "language-switcher" }}"></div>
 
@@ -87,7 +133,7 @@
 			</div>
 		</nav>
 	</header>
-	<main>
+	<main id="main" tabindex="-1">
 		{{ .Children.Content }}
 	</main>
 	<footer class="site-footer">

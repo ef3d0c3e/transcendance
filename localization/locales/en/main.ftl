@@ -1,5 +1,3 @@
-cancel = Cancel
-
 register-title = Create account
 register-username = Username
 register-password = Password
@@ -77,18 +75,28 @@ friends-deny = Ignore
 friends-unfriend = Unfriend
 friends-block = Block user
 friends-unblock = Unblock
-friends-unknown-error = Something went wrong !
-friends-spam-error = You may only have one outgoing invite active
+friends-unknown-error = Something went wrong
 friends-blocked-error = Can't add this user as a friend
+friends-unblock-error = Unblock this user first
+friends-not-found-error = This user doesn't exist
+friends-yourself-error = You can't add yourself as a friend
+friends-list = Show
+friends-list-friends = Friends
+friends-list-sent = Sent requests
+friends-list-received = Received requests
+friends-empty-friends = You have no friends yet
+friends-empty-sent = You haven't sent any friend request
+friends-empty-received = You have no friend request
 
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
-navbar-cards = Cards
+navbar-skip = Skip to content
 navbar-users = Users
 navbar-inventory = Inventory
 navbar-friends = Friends
 navbar-profile = Your profile
 navbar-logout = Log out
+header-balance = Balance: { $amount }
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
@@ -99,6 +107,7 @@ cards-error-not-found = Card not found
 cards-error-collection-not-found = Collection not found
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bottom of the list
 paginator-label-previous = Previous page
 paginator-label-next = Next page
 
@@ -107,6 +116,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
 card-search-placeholder = Search for cards
+card-filter-placeholder = Filter by card or collection name
+card-filter-no-match = No card matches this filter
 card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
@@ -156,6 +167,7 @@ profile-error-network = Unable to contact the server
 
 error-unexpected = An error occurred
 error-unauthorized = You must be logged in to access this resource
+error-not-found = This page does not exist
 
 error-title = Error
 
@@ -170,6 +182,7 @@ profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
 profile-inventory = View inventory
+profile-message = Send a message
 
 profile-rank = Rank
 profile-rank-user = User
@@ -198,8 +211,19 @@ notification-empty-unread = No unread notifications
 
 notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-accepted-title = Friend request accepted
+notification-friend-accepted-desc = { $username } accepted your friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-trade-title = Trade offer
+notification-trade-desc = { $username } sent you a trade offer
+notification-trade-counter-title = Trade offer countered
+notification-trade-counter-desc = { $username } countered your trade offer
+notification-private-message-title = { $count ->
+    [one] New message from { $username }
+   *[other] { $count } new messages from { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
 catalog-collection-count = { $count ->
@@ -227,15 +251,44 @@ inventory-search-submit = Search
 inventory-search-clear = Clear search
 inventory-card-acquired = Acquired on
 inventory-card-close = Close
+inventory-card-value = Value
+inventory-card-sell = Sell
+inventory-sell-quantity = Quantity
+inventory-sell-total = Total
+inventory-sell-confirm = Confirm sale
+inventory-sold = { $count ->
+    [one] You sold { $count } card for { $amount } coins
+   *[other] You sold { $count } cards for { $amount } coins
+}
+inventory-sell-error-card = This card cannot be sold
+inventory-sell-error-quantity = Choose a quantity of at least 1
+inventory-sell-error-missing = You do not have that many copies to sell
+inventory-sell-error-locked = Some of these copies are up in trades
+inventory-sell-error-none = You have no duplicate cards to sell
+inventory-sell-error-internal = Failed to sell your cards
+inventory-sell-duplicates = Sell duplicates
+inventory-sell-duplicates-title = Sell duplicate cards
+inventory-sell-duplicates-text = { $count ->
+    [one] Sell { $count } duplicate card for { $amount } coins?
+   *[other] Sell { $count } duplicate cards for { $amount } coins?
+}
+inventory-sell-duplicates-note = One copy of each card is kept, for each foil. Copies up in trades are neither sold nor counted as the copy kept.
+inventory-sell-duplicates-confirm = Sell for { $amount } coins
+inventory-sell-cancel = Cancel
 inventory-card-acquired-first = First acquired on
 inventory-card-acquired-last = Last acquired on
 inventory-card-copies = Copies
 inventory-filter-rarity = Rarity
 inventory-filter-rarity-all = All rarities
+inventory-show = Show
+inventory-show-owned = Owned cards
+inventory-show-all = All cards
 inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
 inventory-filter-effect-foil = Foil
+inventory-filter-collection = Collection
+inventory-filter-collection-all = All collections
 inventory-sort = Sort by
 inventory-sort-relevance = Relevance
 inventory-sort-recent = Last acquired
@@ -248,6 +301,7 @@ inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Trade up
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
@@ -262,6 +316,19 @@ inventory-search-count = { $count ->
     [one] { $count } card found
     *[other] { $count } cards found
 }
+inventory-locked-badge = { $count } in trades
+
+booster-pile-title = Default booster
+booster-pile-desc = { $count } random cards from all collections
+daily-streak-title = Daily streak
+daily-streak-meter = { $tier } · { $amount }
+daily-streak-count = Streak { $days }
+daily-streak-best = Best: { $best }
+daily-streak-best-current = current
+daily-streak-none = —
+daily-streak-claim = Claim { $amount } coins
+daily-streak-claimed = Available in
+daily-streak-claimed-notice = { $amount } coins added to your balance
 
 pack-opening-title = Pack Opening
 pack-opening-open = Open pack
@@ -276,6 +343,7 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+pack-opening-error-pile = No default booster available
 pack-opening-buy = Open again
 pack-opening-buy-label = Open again for { $price }
 pack-opening-sound-on = Sound on
@@ -285,6 +353,11 @@ pack-opening-odds-foil = Foil
 pack-opening-odds-note = Each card of the booster is rolled on its own.
 pack-opening-progress-title = Collection progress
 pack-opening-progress-note = Different cards of this collection you own.
+pack-opening-summary = Cards drawn: { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, foil)
+pack-opening-spinning = Opening the pack…
+pack-opening-skip = Skip
 
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters
@@ -305,6 +378,7 @@ shop-buy-close = Close
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
+shop-coins-locked = { $amount } up in trades
 
 index-title = Transcendance, collect trading cards
 index-heading = Collect, trade and show off your cards
@@ -320,13 +394,20 @@ index-stat-collections = { $count ->
 index-action-register = Create an account
 index-action-browse = Browse the cards
 index-action-inventory = Open your inventory
-index-action-shop = Visit the shop
 index-step-buy-title = Buy boosters
-index-step-buy-text = Spend your coins in the shop on boosters of the collection you like.
+index-step-buy-text = Spend your coins on boosters of the collection you like, right from your inventory.
 index-step-open-title = Open packs
 index-step-open-text = Every booster holds a handful of cards, some of them rare, legendary or foil.
 index-step-trade-title = Trade cards
 index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
+index-install-title = Install the app
+index-install-text = Add Transcendance to your home screen to open it like an app, without the browser's bars.
+index-install-ios-title = iPhone and iPad:
+index-install-ios-text = in Safari, tap Share, then Add to Home Screen.
+index-install-android-title = Android:
+index-install-android-text = in Chrome, open the ⋮ menu, then tap Add to Home screen or Install app.
+index-install-desktop-title = Computer:
+index-install-desktop-text = in Chrome or Edge, click the install icon at the end of the address bar.
 index-cards-title = Rarest cards
 index-cards-all = See every card
 index-collections-title = Collections
@@ -407,3 +488,114 @@ contact-team-title = The team
 contact-team-text = You can also reach a team member directly through their GitHub profile:
 contact-privacy-title = Personal data requests
 contact-privacy-text = For a request about your personal data, contact a team member privately rather than opening a public issue. You can delete your account at any time from your profile.
+
+inventory-trade = Propose a trade
+inventory-trades = Your trades
+inventory-trades-incoming = { $count ->
+    [one] { $count } offer waiting for your answer
+   *[other] { $count } offers waiting for your answer
+}
+
+trades-title = Trades
+trade-menu-title = Trade with { $username }
+trade-you-give = You give
+trade-you-get = You get
+trade-coins = Coins
+trade-send = Send offer
+trade-counter-send = Send counter-offer
+trade-back = Back to trades
+trade-accept = Accept
+trade-decline = Decline
+trade-counter = Counter
+trade-cancel = Cancel
+trade-incoming = Incoming offers
+trade-outgoing = Outgoing offers
+trade-history = Past trades
+trade-state-accepted = Accepted
+trade-state-declined = Declined
+trade-state-cancelled = Cancelled
+trade-none-incoming = No incoming offers
+trade-none-outgoing = No pending offers
+trade-none-history = No past trades
+trade-stack = { $count }× { $title }
+trade-menu-empty = Nothing to trade here
+trade-menu-loading = Loading…
+trade-menu-increase = Add one
+trade-menu-decrease = Remove one
+trade-menu-error-network = Unable to contact the server
+trade-menu-noscript = The trade menu needs JavaScript
+trade-error-settle = This trade offer cannot be completed anymore
+trade-error-invalid = Invalid trade offer
+trade-error-internal = Failed to save the trade offer
+trade-error-not-found = Trade offer not found
+trade-error-user = User not found
+trade-error-self = You cannot trade with yourself
+trade-error-empty-give = Offer at least one card or coins
+trade-error-empty-want = Request at least one card or coins
+trade-error-count = Invalid card count
+trade-error-items = Too many card stacks in the offer
+trade-error-card = Unknown card
+trade-error-duplicate = The same card stack appears twice
+trade-error-owned = Not enough copies of a card
+trade-error-locked = Some copies of a card are up in another trade
+trade-error-coins = Not enough coins
+trade-error-locked-coins = Some coins are up in another trade
+trade-error-want-coins = The other user does not have that many coins
+trade-error-state = This trade offer is not pending anymore
+trade-error-forbidden = This trade offer is not yours
+trade-error-blocked = You cannot trade with this user
+shoutbox-title = Chat
+shoutbox-unread = new messages
+shoutbox-close = Close
+shoutbox-connected = Live
+shoutbox-connecting = Connecting...
+shoutbox-empty = No messages yet, say hi!
+shoutbox-placeholder = Write a message
+shoutbox-send = Send
+shoutbox-error-empty = Your message is empty
+shoutbox-error-too-long = Your message is too long, 500 characters at most
+shoutbox-error-rate-limited = You're sending messages too fast, wait a moment
+shoutbox-error-internal = Your message could not be sent, try again
+shoutbox-closed-unauthorized = Your session expired, log in again to chat
+shoutbox-closed-too-many = The shoutbox is open in too many tabs, close some and reload the page
+shoutbox-closed-error = Disconnected from the shoutbox, reload the page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Write a private message
+shoutbox-conversation-empty = No messages yet, say hi!
+shoutbox-conversations-empty = No conversations yet
+shoutbox-start = Start a conversation with a user
+shoutbox-start-placeholder = Username
+shoutbox-start-button = Open
+shoutbox-back = Back to conversations
+shoutbox-you = You
+shoutbox-user-menu = User actions
+shoutbox-message-user = Send a private message
+shoutbox-view-profile = View profile
+shoutbox-ignore-hour = Ignore for 1 hour
+shoutbox-ignore-day = Ignore for 1 day
+shoutbox-ignore-week = Ignore for 1 week
+shoutbox-unignore = Stop ignoring
+shoutbox-ignored-title = Ignored users
+shoutbox-ignored-until = Until
+shoutbox-ignoring-notice = You are ignoring this user: their shoutbox messages are hidden and they can't message you.
+shoutbox-error-user-not-found = This user doesn't exist
+shoutbox-error-self = You can't message yourself
+shoutbox-error-blocked = This user isn't accepting your messages right now
+
+tradeup-rules = Trade { $count } cards of the same rarity for one random card of the next rarity. Each collection's chance follows how many of the cards come from it.
+tradeup-empty = No cards here can be traded up
+tradeup-slots = Trade-up slots
+tradeup-remove = Remove
+tradeup-slot-empty = Empty slot
+tradeup-clear = Clear
+tradeup-submit = Trade up
+tradeup-result = You obtained
+tradeup-result-close = Close
+tradeup-error-count = A trade-up needs exactly { $count } cards
+tradeup-error-rarity = Every card in a trade-up must share the same rarity
+tradeup-error-tier = These cards cannot be traded up
+tradeup-error-missing = You do not own enough of these cards
+tradeup-error-locked = Some of these cards are up in trades
+tradeup-error-empty = None of these collections holds a card of the next rarity
+tradeup-error-internal = Failed to complete the trade-up
