@@ -1,0 +1,2 @@
+title = Halite
+description = La halite, couramment appelée sel gemme dans le langage minier, est un minéral solide composé de chlorure de sodium de formule brute NaCl. Elle est tendre, très légère, fragile, de ténacité cassante, a une saveur saline puisqu'elle contient du sel en très grande majorité, et contient aussi des traces d'iode, brome, fluor, fer, oxygène et silicium. Elle est contenue dans des roches de type évaporites.

@@ -1,0 +1,2 @@
+title = Taaffeite
+description = Taaffeite (BeMgAl4O8) is a mineral, named after its discoverer Richard Taaffe (1898–1967) who found the first sample, a cut and polished gem, in October 1945 in a jeweler's shop in Dublin, Ireland. As such, it is the only gemstone to have been initially identified from a faceted stone. Taaffeite is a million times rarer than diamonds, and it comes in shades of purple, pink, red.

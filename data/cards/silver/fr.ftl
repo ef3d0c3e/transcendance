@@ -1,0 +1,2 @@
+title = Argent natif
+description = L'argent natif est un minéral de la classe des éléments natifs, constitué d'argent métallique pur ou presque, de formule Ag. Il cristallise dans le système cubique et se présente le plus souvent en fils, en dendrites ou en masses dans les filons hydrothermaux. Rare à l'état natif, l'argent est surtout extrait de sulfures et de sulfosels, souvent comme sous-produit des minerais de plomb, de zinc et de cuivre.

@@ -1,7 +1,10 @@
 package data
 
 import (
+	crand "crypto/rand"
 	"math/rand/v2"
+
+	"transcendance/models"
 )
 
 // A foil pattern a card can be obtained with
@@ -12,15 +15,14 @@ type foilPattern struct {
 	Scale float64
 }
 
-// Foil patterns obtainable when opening a booster
-var foilPatterns = []foilPattern{
-	{Name: "foil1", Scale: 0.5},
-	{Name: "foil2", Scale: 0.5},
-	{Name: "foil3", Scale: 0.5},
-	{Name: "foil4", Scale: 0.5},
-	{Name: "foil5", Scale: 0.5},
-	{Name: "foil6", Scale: 0.5},
-}
+// Foil patterns obtainable when opening a booster, see models.FoilPatterns
+var foilPatterns = func() []foilPattern {
+	patterns := make([]foilPattern, len(models.FoilPatterns))
+	for i, name := range models.FoilPatterns {
+		patterns[i] = foilPattern{Name: name, Scale: 0.5}
+	}
+	return patterns
+}()
 
 // Chance for an obtained card to be foil, in percent
 const foilChance = 5
@@ -59,4 +61,11 @@ func setCardFoil(cardData map[string]any, foil string) {
 	cardData["CardFoilScale"] = pattern.Scale
 	cardData["CardFoilColor"] = foilColor
 	cardData["CardFoilOpacity"] = foilOpacity
+}
+
+// A random generator for one draw, seeded by the system: two draws at the same time get different cards
+func newRand() *rand.Rand {
+	var seed [32]byte
+	_, _ = crand.Read(seed[:])
+	return rand.New(rand.NewChaCha8(seed))
 }

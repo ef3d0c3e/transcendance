@@ -19,7 +19,7 @@ es /_security/user/kibana_system/_password -X POST -d "{\"password\": \"${KIBANA
 
 # Admins reach Kibana through the gateway as this user
 es /_security/role/log_admin -X PUT -d '{
-	"cluster": ["monitor", "manage_ilm", "manage_index_templates"],
+	"cluster": ["monitor", "manage_ilm", "manage_index_templates", "manage_slm", "monitor_snapshot"],
 	"indices": [{"names": ["logs-transcendance-*"], "privileges": ["all"]}]
 }'
 es /_security/user/kibana_gateway -X PUT -d "{
@@ -62,7 +62,7 @@ es /_ilm/policy/transcendance-logs -X PUT -d "{
 		\"phases\": {
 			\"hot\": {
 				\"actions\": {
-					\"rollover\": {\"max_age\": \"1d\", \"max_primary_shard_size\": \"5gb\"}
+					\"rollover\": {\"max_age\": \"7d\", \"max_primary_shard_size\": \"5gb\"}
 				}
 			},
 			\"warm\": {
@@ -94,5 +94,19 @@ es /_index_template/logs-transcendance -X PUT -d '{
 }'
 # Indices made before the template, if any
 es '/logs-transcendance-*/_settings?allow_no_indices=true' -X PUT -d '{"index.number_of_replicas": 0}'
+
+# Archive: every night the logs are copied to snapshots outside of the cluster's data, in DATA_DIR/log-archive,
+# kept LOG_ARCHIVE_DAYS. Snapshots are incremental, a night only adds what changed.
+es /_snapshot/log-archive -X PUT -d '{
+	"type": "fs",
+	"settings": {"location": "/usr/share/elasticsearch/snapshots", "compress": true}
+}'
+es /_slm/policy/nightly-logs -X PUT -d "{
+	\"schedule\": \"0 30 1 * * ?\",
+	\"name\": \"<logs-{now/d}>\",
+	\"repository\": \"log-archive\",
+	\"config\": {\"indices\": [\"logs-transcendance-*\"], \"include_global_state\": false},
+	\"retention\": {\"expire_after\": \"${LOG_ARCHIVE_DAYS}d\", \"min_count\": 7}
+}"
 
 echo "Elasticsearch is set up"

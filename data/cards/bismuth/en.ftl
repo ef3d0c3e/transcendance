@@ -1,0 +1,2 @@
+title = Bismuth
+description = Bismuth is a chemical element; it has symbol Bi and atomic number 83. It is a post-transition metal and one of the pnictogens, with chemical properties resembling its lighter group 15 siblings arsenic and antimony. Elemental bismuth occurs naturally, and its sulfide and oxide forms are important commercial ores. The free element is 86% as dense as lead. It is a brittle metal with a silvery-white color when freshly produced.

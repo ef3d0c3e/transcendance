@@ -1,0 +1,2 @@
+title = Rhodonite
+description = La rhodonite est une espèce minérale du groupe des silicates sous-groupe des inosilicates de la famille des pyroxénoïdes, composée principalement d'oxygène, de manganèse et de silicium. Le manganèse peut être partiellement remplacé par d'autres cations bivalents, comme le fer, le magnésium et le calcium. Sa formule chimique idéale est (Mn2+,Fe2+,Mg,Ca)SiO3 avec des traces de Al et Zn.

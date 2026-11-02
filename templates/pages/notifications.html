@@ -26,6 +26,7 @@
 			<span class="notification-icon" data-type="{{ .Type }}" aria-hidden="true"></span>
 			<a class="notification-body" href="/notification/{{ .ID }}">
 				<span class="notification-title">{{ .Title }}</span>
+				{{- if not .Read }} <span class="sr-only">({{ $.T "notification-unread" }})</span>{{ end }}
 				<span class="notification-desc">{{ .Desc }}</span>
 				<time class="notification-time" datetime="{{ .CreatedAt }}">{{ .CreatedAt }}</time>
 			</a>

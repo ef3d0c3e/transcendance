@@ -1,0 +1,2 @@
+title = Apatite
+description = Apatite is a group of phosphate minerals, usually hydroxyapatite, fluorapatite and chlorapatite, with high concentrations of OH−, F− and Cl− ion, respectively, in the crystal. The formula of the admixture of the three most common endmembers is written as Ca10(PO4)6(OH,F,Cl)2, and the crystal unit cell formulae of the individual minerals are written as Ca10(PO4)6(OH)2, Ca10(PO4)6F2 and Ca10(PO4)6Cl2.

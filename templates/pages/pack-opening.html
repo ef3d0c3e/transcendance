@@ -5,14 +5,6 @@
 		data-color-secondary="{{ .Data.ColorSecondary }}"></div>
 
 	<div class="pack-hero">
-		<div class="pack-booster">
-			{{ if .Data.Pile }}
-			{{ template "booster-pile" .Data.Pile }}
-			{{ else }}
-			{{ template "collection" .Data.Booster }}
-			{{ end }}
-		</div>
-
 		<div class="pack-panel">
 			<p class="pack-kicker">{{ .Data.CollectionTitle }}</p>
 			<h1>{{ .T "pack-opening-title" }}</h1>
@@ -71,6 +63,16 @@
 				{{ end }}
 			</div>
 		</div>
+
+		{{/* After the panel, so the page's h1 comes before the booster's h2;
+		shown first all the same (order: -1) */}}
+		<div class="pack-booster">
+			{{ if .Data.Pile }}
+			{{ template "booster-pile" .Data.Pile }}
+			{{ else }}
+			{{ template "collection" .Data.Booster }}
+			{{ end }}
+		</div>
 	</div>
 
 	<div id="pack-opening"
@@ -78,8 +80,8 @@
 		data-retry-label="{{ .T "pack-opening-open-another" }}"
 		data-error-label="{{ .T "pack-opening-error-internal" }}"
 		data-again-label="{{ .T "pack-opening-buy" }}"
-		data-sound-on="{{ .T "pack-opening-sound-on" }}"
-		data-sound-off="{{ .T "pack-opening-sound-off" }}"
+		data-sound-label="{{ .T "pack-opening-sound" }}"
+		data-motion-label="{{ .T "pack-opening-motion" }}"
 		data-skip-label="{{ .T "pack-opening-skip" }}"
 		data-spinning-label="{{ .T "pack-opening-spinning" }}"
 		data-coins="{{ .Data.Coins }}"

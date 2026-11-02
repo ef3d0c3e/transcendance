@@ -1,0 +1,2 @@
+title = Stibnite
+description = Stibnite, sometimes called antimonite, is a sulfide mineral, a mineral form of antimony trisulfide (Sb2S3). It is a soft, metallic grey crystalline solid with an orthorhombic space group. It is the most important source for the metalloid antimony. The name is derived from the Greek στίβι stibi through the Latin stibium as the former name for the mineral and the element antimony.
