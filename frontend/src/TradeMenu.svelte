@@ -950,6 +950,43 @@
 		}
 	}
 
+	/* On phones the two halves are too narrow side by side: they stack, the
+	   giving side first, and each gets the full width back */
+	@media (max-width: 40rem) {
+		.trade-menu-sides {
+			grid-template-columns: minmax(0, 1fr);
+		}
+
+		.trade-menu-side + .trade-menu-side {
+			border-left: 0;
+			border-top: 1px solid var(--color-border-1);
+		}
+
+		/* Nothing to line up across the halves anymore: the coins go back
+		   next to the heading */
+		.trade-menu-side-head {
+			flex-wrap: nowrap;
+			align-items: center;
+			min-height: 2.5rem;
+		}
+
+		.trade-menu-coins {
+			flex: 0 1 auto;
+			margin-left: auto;
+		}
+
+		/* The amount field gives way first, so the label stays readable */
+		.trade-menu-coins span {
+			flex: none;
+		}
+
+		.trade-menu-coins input {
+			flex: 0 1 6rem;
+			width: 6rem;
+			min-width: 3.5rem;
+		}
+	}
+
 	@media (max-width: 24rem) {
 		/* The deal rows pack tighter still so the stepper never gets squeezed */
 		.trade-menu-item {
