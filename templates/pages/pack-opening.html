@@ -19,12 +19,15 @@
 					<span class="pack-open-label">{{ .T "pack-opening-open" }}</span>
 				</button>
 				{{ if .Data.CollectionID }}
-				<!-- Out of boosters: buys one with coins, or offers coins when short -->
+				<!-- Out of boosters: buys one with coins, or offers coins when short.
+				Its label opens like the open button's, only saying "another"
+				once one was opened -->
 				<button type="button" class="pack-open pack-buy" data-collection="{{ .Data.CollectionID }}"
-					data-price="{{ .Data.Price }}" aria-label="{{ .T "pack-opening-buy-label" "price" .Data.PriceLabel }}"
+					data-price="{{ .Data.Price }}" data-retry-aria="{{ .T "pack-opening-buy-label-another" "price" .Data.PriceLabel }}"
+					aria-label="{{ .T "pack-opening-buy-label-open" "price" .Data.PriceLabel }}"
 					{{ if .Data.BoosterID }}hidden{{ end }}>
 					<span class="pack-open-shine" aria-hidden="true"></span>
-					{{ .T "pack-opening-buy" }}
+					<span class="pack-buy-label">{{ .T "pack-opening-open" }}</span>
 					<span class="pack-buy-price">{{ template "coin-icon" }} {{ .Data.Price }}</span>
 				</button>
 				{{ end }}

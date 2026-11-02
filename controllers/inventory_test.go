@@ -272,15 +272,16 @@ func TestInventoryBoosters(t *testing.T) {
 	require.Contains(t, body, `aria-label="Open booster Development, 1 booster"`)
 	require.Contains(t, body, "5 cards booster")
 	require.Contains(t, body, "3 cards booster")
-	require.Contains(t, body, `<p class="inventory-count">4 boosters</p>`)
+	// No booster count, not even next to the title
+	require.NotContains(t, body, `<p class="inventory-count">`)
 	// Each tile leads to its pack opening page, with the collection progress
 	require.Contains(t, body, `data-booster-open="/opening?booster=`)
 	require.Contains(t, body, `class="inventory-collection-progress"`)
 	require.Contains(t, body, "<strong>1</strong> / 5")
-	// Boosters can't be searched, and tabs show both counts
+	// Boosters can't be searched, and their tab shows no count
 	require.NotContains(t, body, `id="search-form"`)
-	require.Contains(t, body, `<span class="inventory-tab-count">2</span>`)
-	require.Contains(t, body, `<span class="inventory-tab-count">4</span>`)
+	require.Contains(t, body, `Cards <span class="inventory-tab-count">2</span>`)
+	require.NotContains(t, body, `Boosters <span`)
 	require.Zero(t, countCard(body, "Rosetta Stone"))
 
 	// The cards tab is unaffected

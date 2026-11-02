@@ -572,13 +572,20 @@
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			revealPage();
-			// Its light stays, only its label changes
-			openButton.querySelector(".pack-open-label").textContent = retryLabel ?? openLabel;
+			// Their light stays, only their labels change
+			const label = retryLabel ?? openLabel;
+			openButton.querySelector(".pack-open-label").textContent = label;
 			openButton.hidden = !chained;
 			// Default boosters have none to buy: the page ends with the pile
 			const buyable = !chained && Boolean(buyButton);
 			if (buyButton) {
 				buyButton.hidden = chained;
+				// One was opened: the buy button says so too, its accessible
+				// name keeping the price
+				buyButton.querySelector(".pack-buy-label").textContent = label;
+				if (buyButton.dataset.retryAria) {
+					buyButton.setAttribute("aria-label", buyButton.dataset.retryAria);
+				}
 			}
 			// Calls for the next opening, until it is clicked
 			const next = chained ? openButton : buyButton;

@@ -153,7 +153,6 @@ type inventoryView struct {
 	Count int64
 	// Count shown in each tab
 	TotalCards       int64
-	TotalBoosters    int64
 	TotalCollections int64
 	// Daily streak section, shown on one's own inventory
 	Streak *streakTile
@@ -214,8 +213,6 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		switch {
 		case searching:
 			count = dc.Renderer.T(c, "inventory-search-count", "count", int(v.Count))
-		case v.Tab == inventoryTabBoosters:
-			count = dc.Renderer.T(c, "inventory-booster-count", "count", int(v.Count))
 		case v.Tab == inventoryTabCollections:
 			count = dc.Renderer.T(c, "catalog-collection-count", "count", int(v.Count))
 		default:
@@ -273,7 +270,6 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TabCardsUrl":    tabUrl(inventoryTabCards),
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
 		"TotalCards":     v.TotalCards,
-		"TotalBoosters":  v.TotalBoosters,
 		"Streak":         v.Streak,
 		"Pile":           v.Pile,
 		// Collections are part of the catalog: the same for every user
@@ -470,7 +466,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	// Tab counts
-	if v.TotalCards, v.TotalBoosters, err = dc.inventoryCounts(userID); err != nil {
+	if v.TotalCards, err = dc.countCards(userID); err != nil {
 		fail("counts", err)
 		return
 	}
@@ -496,7 +492,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 
 	// The pile of default boosters tops itself up over time, and only belongs
-	// to one's own inventory. It counts in the boosters tab from every tab
+	// to one's own inventory
 	var pile *models.BoosterPile
 	if own {
 		accrued, err := controllers.AccrueBoosterPile(dc.DB, userID)
@@ -505,7 +501,6 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			return
 		}
 		pile = &accrued
-		v.TotalBoosters += int64(pile.Count)
 	}
 
 	if v.Tab == inventoryTabCollections {
@@ -770,7 +765,6 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 		Error; err != nil {
 		return err
 	}
-	v.Count = v.TotalBoosters
 
 	byCollection := make(map[uint][]boosterStack)
 	for _, stack := range stacks {
@@ -840,13 +834,11 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 	return nil
 }
 
-// Number of cards and boosters a user owns, shown in the inventory tabs
-func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters int64, err error) {
-	if err = dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&cards).Error; err != nil {
-		return
-	}
-	err = dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&boosters).Error
-	return
+// Number of cards a user owns, shown in the inventory tabs
+func (dc *DataController) countCards(userID uint) (int64, error) {
+	var count int64
+	err := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&count).Error
+	return count, err
 }
 
 // Fill the view with every collection, and how many of its cards the user owns
