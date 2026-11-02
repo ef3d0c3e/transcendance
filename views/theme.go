@@ -7,12 +7,9 @@ import (
 const themeContextKey string = "views.Themer"
 
 type Themer struct {
-	// Available themes
 	Available []string
 
-	// Theme GET parameter
 	QueryParam string
-	// Theme cookie name
 	CookieName string
 }
 
@@ -24,11 +21,10 @@ func NewThemer() (*Themer) {
 	}
 }
 
-// Theme middleware. Negotiate theme based on request parameters and/or cookie
+// Middleware negotiates the theme from the query parameter and/or cookie
 func (t *Themer) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if _, exists := c.Get(themeContextKey); !exists {
-			// Negotiate and store
 			theme := t.negotiate(c)
 			c.Set(themeContextKey, theme)
 
@@ -48,7 +44,6 @@ func (t *Themer) Theme(c *gin.Context) string {
 	return theme
 }
 
-// negotiate builds the requested locales list, using the cache, and returns a Localization
 func (t *Themer) negotiate(c *gin.Context) string {
 	requested := t.Available[0]
 	if v, err := c.Cookie(t.CookieName); err == nil && v != "" {

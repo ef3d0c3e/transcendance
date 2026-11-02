@@ -28,8 +28,7 @@ type User struct {
 	DeletedAt    gorm.DeletedAt `gorm:"index"`
 	Avatar       []byte         `gorm:"type:mediumblob" json:"-"`
 	Rank         uint           `gorm:"not null;default:0"`
-	// Coins is the in-shop currency balance
-	Coins uint `gorm:"not null;default:0"`
+	Coins        uint           `gorm:"not null;default:0"`
 	// Last authenticated request, refreshed at most every LastSeenRefresh
 	LastSeenAt *time.Time `gorm:"index"`
 }
@@ -41,7 +40,6 @@ const (
 	LastSeenRefresh = time.Minute
 )
 
-// Whether a user last seen at the given time is online
 func IsOnline(lastSeen *time.Time) bool {
 	return lastSeen != nil && time.Since(*lastSeen) < OnlineWindow
 }
