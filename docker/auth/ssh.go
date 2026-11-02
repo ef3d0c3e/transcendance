@@ -143,7 +143,7 @@ func (s *server) prompt(channel ssh.Channel, pty bool, code string, admin map[st
 		return 1
 	}
 	_, _ = fmt.Fprintf(channel,
-		"Sign-in request for the transcendance admin tools\r\n"+
+		"Sign-in request for the AnyCardz admin tools\r\n"+
 			"  From:    %s\r\n"+
 			"  Browser: %s\r\n\r\n"+
 			"Only approve a request you made yourself.\r\n"+
