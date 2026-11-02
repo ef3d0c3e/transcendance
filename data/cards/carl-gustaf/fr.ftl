@@ -1,0 +1,2 @@
+title = Carl Gustav
+description = Le Carl Gustav est le nom commun du canon sans recul antichar portatif de 84 mm créé par Bofors Anti Armour AB en Suède. Le Carl Gustav a été produit à partir de 1946 (M1) puis modernisé en 1964 (M2), en 1991 (M3) et en 2014 (M4). Bien que des armes similaires de même génération aient généralement disparu, le Carl Gustav reste encore couramment utilisé de nos jours et ses utilisations se sont diversifiées.

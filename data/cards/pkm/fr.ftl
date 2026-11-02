@@ -1,0 +1,2 @@
+title = Mitrailleuse Kalachnikov
+description = La mitrailleuse Kalachnikov, plus connue sous les initiales PK de son nom russe : пулемёт Калашникова, poulemiot Kalachnikova, est une mitrailleuse soviétique adoptée en 1961 et produite depuis lors à plus d'un million d'exemplaires. Comme l'indique sa désignation officielle, elle exploite le mécanisme du célèbre fusil d'assaut AK-47 adapté à une munition plus puissante.

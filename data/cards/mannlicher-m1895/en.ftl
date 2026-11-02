@@ -1,0 +1,2 @@
+title = Mannlicher M1895
+description = The Mannlicher M1895 is an Austro-Hungarian straight pull bolt-action rifle, designed by Ferdinand Ritter von Mannlicher that used a refined version of his revolutionary straight-pull action bolt, much like the Mannlicher M1890 carbine. It was nicknamed the Ruck-Zuck-[Gewehr] by Austrian troops and "Ta-Pum" by Italian troops, who wrote a song about it during World War I.

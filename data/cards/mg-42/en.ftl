@@ -1,0 +1,2 @@
+title = MG 42
+description = The MG 42 is a German recoil-operated air-cooled general-purpose machine gun used extensively by the Wehrmacht and the Waffen-SS during the second half of World War II. Entering production in 1942, it was intended to supplement and replace the earlier MG 34, which was more expensive and took much longer to produce, but both weapons were produced until the end of World War II.
