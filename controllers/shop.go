@@ -1,6 +1,10 @@
 package controllers
 
 import (
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
@@ -130,16 +134,46 @@ type ShopNotice struct {
 	LinkLabel string
 }
 
-// notice builds the notice shown after a shop round-trip, if any.
-// GetShopNotice reads the outcome of a purchase from the query
+// Secret signing the success notices of redirects, new on every start: a notice link lasts until then
+var noticeSecret = func() []byte {
+	secret := make([]byte, 32)
+	_, _ = rand.Read(secret)
+	return secret
+}()
+
+// Signature of a success notice for a user: a link made by someone else, or for someone else, shows nothing
+func noticeSignature(userID uint, notice string) string {
+	mac := hmac.New(sha256.New, noticeSecret)
+	_, _ = fmt.Fprintf(mac, "%d:%s", userID, notice)
+	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil)[:16])
+}
+
+// signedNotice is the query of a success notice for the user, with its signature
+func signedNotice(c *gin.Context, notice string) string {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		return notice
+	}
+	return notice + "&sig=" + noticeSignature(user.ID, notice)
+}
+
+// Whether the query holds the signature of the notice for the user, as signedNotice made it
+func noticeSigned(c *gin.Context, notice string) bool {
+	user := GetAuthenticatedUser(c)
+	return user != nil && hmac.Equal([]byte(c.Query("sig")), []byte(noticeSignature(user.ID, notice)))
+}
+
+// GetShopNotice reads the outcome of a purchase or a sale from the query. Successes are only shown when the
+// action signed them, errors claim nothing and need no signature.
 func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopNotice {
-	if packID := c.Query("topup"); packID != "" {
+	if packID := c.Query("topup"); packID != "" && noticeSigned(c, "topup="+packID) {
 		if amount, ok := topupAmount(packID); ok {
 			return ShopNotice{Message: renderer.T(c, "shop-topup-success", "amount", amount)}
 		}
 	}
 	if sold, err := strconv.Atoi(c.Query("sold")); err == nil && sold > 0 {
-		if coins, err := strconv.Atoi(c.Query("coins")); err == nil && coins >= 0 {
+		coins, err := strconv.Atoi(c.Query("coins"))
+		if err == nil && coins >= 0 && noticeSigned(c, "sold="+c.Query("sold")+"&coins="+c.Query("coins")) {
 			return ShopNotice{Message: renderer.T(c, "inventory-sold", "count", sold, "amount", coins)}
 		}
 	}
@@ -320,5 +354,5 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/inventory?topup="+packID)
+	c.Redirect(http.StatusSeeOther, "/inventory?"+signedNotice(c, "topup="+packID))
 }

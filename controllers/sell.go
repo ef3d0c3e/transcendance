@@ -46,8 +46,8 @@ var (
 
 // Redirect back to the cards of the inventory with what a sale did
 func soldRedirect(c *gin.Context, count uint, coins uint) {
-	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&sold="+strconv.FormatUint(uint64(count), 10)+
-		"&coins="+strconv.FormatUint(uint64(coins), 10))
+	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&"+signedNotice(c, "sold="+strconv.FormatUint(uint64(count), 10)+
+		"&coins="+strconv.FormatUint(uint64(coins), 10)))
 }
 
 // Redirect back to the cards of the inventory with why a sale failed

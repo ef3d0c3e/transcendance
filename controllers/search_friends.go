@@ -6,6 +6,7 @@ import (
 	"slices"
 	"strings"
 	"transcendance/models"
+	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -67,8 +68,10 @@ func (sc *Controller) FriendsGet(c *gin.Context) {
 
 	if err := sc.searchUsers(c, v); err != nil {
 		log.Printf("WARN friends search failed for term '%s': %s", v.Query, err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": sc.Renderer.T(c, "search-user-error-internal"),
+		sc.Renderer.RenderError(c, views.ErrorPage{
+			User:       GetAuthenticatedUser(c),
+			StatusCode: http.StatusInternalServerError,
+			Message:    sc.Renderer.T(c, "search-user-error-internal"),
 		})
 		return
 	}

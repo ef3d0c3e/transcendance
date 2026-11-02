@@ -346,7 +346,7 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 		"pack": {"medium"},
 	}, cookie)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?topup=medium", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?topup=medium", rec.Header().Get("Location"))
 	require.Equal(t, uint(500), shopBalance(t, "packbuy2"))
 
 	req = httptest.NewRequest(http.MethodGet, "/opening?collection=1&buy=1", nil)
@@ -379,7 +379,7 @@ func TestShopTopupIgnoresReturn(t *testing.T) {
 			"return": {back},
 		}, cookie)
 		require.Equal(t, http.StatusSeeOther, rec.Code)
-		require.Equal(t, "/inventory?topup=small", rec.Header().Get("Location"), back)
+		requireSignedNotice(t, "/inventory?topup=small", rec.Header().Get("Location"), back)
 	}
 }
 

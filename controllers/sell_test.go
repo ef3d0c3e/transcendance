@@ -5,6 +5,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -45,17 +46,28 @@ func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
 	// Two common cards are worth 20 coins
 	rec := sell(t, router, cookie, sellForm(cardTungsten, "", 2))
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=cards&sold=2&coins=20", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=2&coins=20", rec.Header().Get("Location"))
 	require.Equal(t, uint(20), shopBalance(t, "sell1"))
 
 	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 3))
-	require.Equal(t, "/inventory?tab=cards&sold=3&coins=30", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=3&coins=30", rec.Header().Get("Location"))
 	require.Equal(t, uint(50), shopBalance(t, "sell1"))
 	require.Empty(t, ownedCards(t, "sell1"))
 
 	// The page the sale lands on says what it did
-	body := getInventory(t, router, cookie, "/inventory?tab=cards&sold=3&coins=30")
+	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
 	require.Contains(t, body, "You sold 3 cards for 30 coins")
+
+	// A link claiming a sale that never happened shows nothing, nor someone else's notice
+	require.NotContains(t, getInventory(t, router, cookie, "/inventory?tab=cards&sold=999&coins=999999"), "You sold")
+	createAccount(t, router, "sell1b", "foo-bar-baz-qux", 0)
+	require.NotContains(t, getInventory(t, router, login(t, router, "sell1b", "foo-bar-baz-qux"), rec.Header().Get("Location")), "You sold")
+}
+
+// A success notice is the target of the redirect plus its signature
+func requireSignedNotice(t *testing.T, want string, location string, msgAndArgs ...any) {
+	t.Helper()
+	require.True(t, strings.HasPrefix(location, want+"&sig="), append([]any{"%s does not sign %s", location, want}, msgAndArgs...)...)
 }
 
 func TestSellFoilIsWorthDouble(t *testing.T) {
@@ -68,7 +80,7 @@ func TestSellFoilIsWorthDouble(t *testing.T) {
 
 	// The foils are worth 20 each, only the plain copies stay behind
 	rec := sell(t, router, cookie, sellForm(cardTungsten, "foil1", 2))
-	require.Equal(t, "/inventory?tab=cards&sold=2&coins=40", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=2&coins=40", rec.Header().Get("Location"))
 	owned := ownedCards(t, "sell2")
 	require.Len(t, owned, 2)
 	for _, card := range owned {
@@ -140,7 +152,7 @@ func TestSellKeepsCopiesUpInTrades(t *testing.T) {
 	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 2))
 	require.Equal(t, "/inventory?tab=cards&error=sell-locked", rec.Header().Get("Location"))
 	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 1))
-	require.Equal(t, "/inventory?tab=cards&sold=1&coins=10", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=1&coins=10", rec.Header().Get("Location"))
 
 	// The trade can still be settled
 	target := tradeAction(t, router, login(t, router, "sell7", "foo-bar-baz-qux"), tradesOf(t, "sell6")[0].ID, "accept")
@@ -176,7 +188,7 @@ func TestSellDuplicates(t *testing.T) {
 	require.Contains(t, body, "Sell 3 duplicate cards for 120 coins?")
 	require.Contains(t, body, "Sell for 120 coins")
 
-	require.Equal(t, "/inventory?tab=cards&sold=3&coins=120", sellDuplicates(t, router, cookie))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=3&coins=120", sellDuplicates(t, router, cookie))
 	require.Equal(t, uint(120), shopBalance(t, "sell8"))
 	require.Equal(t, int64(1), ownedCardCount(t, "sell8", cardTungsten, ""))
 	require.Equal(t, int64(2), ownedCardCount(t, "sell8", cardMcMurdo, ""))
