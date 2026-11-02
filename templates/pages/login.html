@@ -46,7 +46,9 @@ shows the one of the chosen login type. */}}
 
 	<button type="submit">{{ .T "login-submit" }}</button>
 </form>
+{{ end }}
 </section>
+{{ if not .Data.User }}
 <div id="login-enhancement"></div>
 {{ end }}
 {{ end }}

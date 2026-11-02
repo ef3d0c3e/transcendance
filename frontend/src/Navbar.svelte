@@ -68,11 +68,13 @@
 		const onToggle = () => setOpen(!isOpen(), { focus: true });
 		const onClose = () => setOpen(false, { focus: true });
 
-		// Escape works from anywhere in the menu, not only from its button
+		// Escape works from anywhere in the menu, not only from its button. A
+		// popup opened from it (language, notifications, a dialog) is still
+		// open when this runs: that Escape is the popup's, the menu stays.
 		const onKeydown = (e) => {
-			if (e.key === 'Escape' && isOpen()) {
-				setOpen(false, { focus: true });
-			}
+			if (e.key !== 'Escape' || !isOpen()) return;
+			if (document.querySelector('dialog[open]') || nav.querySelector('[aria-expanded="true"]')) return;
+			setOpen(false, { focus: true });
 		};
 
 		// A click outside of the menu closes it, as does the focus leaving it.

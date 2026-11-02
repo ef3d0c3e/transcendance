@@ -176,8 +176,10 @@
 		}
 
 		// The focused element is the tile, inside the card's wrapper
+		// A held key adds the card once, not until the contract is full
 		function onKeyDown(e) {
 			if (e.key !== "Enter" && e.key !== " ") return;
+			if (e.repeat) return;
 			if (!(e.target instanceof Element) || !e.target.matches(TILE_SELECTOR)) return;
 
 			e.preventDefault();

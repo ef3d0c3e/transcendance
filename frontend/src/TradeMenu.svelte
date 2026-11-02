@@ -134,9 +134,19 @@
 		toggle(side, stack);
 	}
 
+	// The tile is the button: the card's collection link stays clickable but
+	// leaves the tab order
+	function unfocusLinks(node) {
+		for (const link of node.querySelectorAll("a")) {
+			link.tabIndex = -1;
+		}
+	}
+
 	function pickKey(e, side, stack) {
 		if (e.key !== "Enter" && e.key !== " ") return;
 		e.preventDefault();
+		// A held key toggles once
+		if (e.repeat) return;
 		toggle(side, stack);
 	}
 
@@ -303,7 +313,7 @@
 							<!-- The stack's card, rendered by the server's html/template from the
 							     static card data, never from user input -->
 							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							<div class="trade-menu-card" inert>{@html stack.html}</div>
+							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
 						<p class="trade-menu-empty">{mine.length > 0 ? labelNoMatch : labelEmpty}</p>
@@ -349,7 +359,7 @@
 							<!-- The stack's card, rendered by the server's html/template from the
 							     static card data, never from user input -->
 							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
-							<div class="trade-menu-card" inert>{@html stack.html}</div>
+							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
 						<p class="trade-menu-empty">{theirs.length > 0 ? labelNoMatch : labelEmpty}</p>
