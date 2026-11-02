@@ -1,0 +1,2 @@
+title = Xénon
+description = Le xénon est l'élément chimique de numéro atomique 54, de symbole Xe. C'est un gaz noble, inodore et incolore. Dans une lampe à décharge, il émet une lumière bleue. Le xénon est le plus rare et le plus cher des gaz nobles, à l'exception du radon dont tous les isotopes sont radioactifs. Étymologiquement, le nom de « xénon » dérive du mot grec ξένος / xénos, « étranger ».

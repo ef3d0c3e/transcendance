@@ -1,0 +1,2 @@
+title = Neptunium
+description = Le neptunium est un élément chimique de synthèse de symbole Np et de numéro atomique 93. Élément métallique radioactif, le neptunium est le premier des transuraniens et appartient à la famille des actinides. Son isotope le plus stable, le neptunium 237, est produit dans les réacteurs nucléaires. On le trouve aussi sous forme de traces dans le minerai d'uranium. Il fut découvert en 1940 à l'Université de Californie.

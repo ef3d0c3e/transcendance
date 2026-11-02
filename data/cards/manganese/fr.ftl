@@ -1,0 +1,2 @@
+title = Manganèse
+description = Le manganèse (symbole Mn) est un élément chimique possédant un seul isotope stable, et dont le numéro atomique est 25. Sous forme de corps simple, le manganèse est un métal de transition, dont le solide grisâtre existe sous quatre variétés allotropiques. Plus d'une quinzaine de millions de tonnes de cet élément sont produits chaque année, pour être utilisé dans l'industrie ou l'agriculture.

@@ -1,0 +1,2 @@
+title = Tennessine
+description = Tennessine is a synthetic element; it has symbol Ts and atomic number 117. It has the second-highest atomic number and the joint-highest atomic mass of all known elements, and is the penultimate element of the 7th period of the periodic table. It is named after the U.S. state or region of Tennessee where key research institutions involved in its discovery are located.

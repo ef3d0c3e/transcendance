@@ -1,0 +1,2 @@
+title = Silicium
+description = Le silicium est l'élément chimique de numéro atomique 14, de symbole Si. Membre du groupe 14 du tableau périodique, il est tétravalent et, comme le germanium, c'est un métalloïde. Le nom dérive du latin silex, silicĭs qui signifie « caillou » ou « silex ». Le silicium est le deuxième élément le plus abondant dans la croûte terrestre après l'oxygène, et constitue 25,7 % de sa masse.

@@ -1,0 +1,2 @@
+title = Lead
+description = Lead is a chemical element with the symbol Pb (from Latin plumbum) and has the atomic number 82. It is a heavy metal, meaning it is denser than most common materials. Lead is malleable and soft, meaning it can be shaped into different shapes and lead has a relatively low melting point. When freshly cut or melted, it appears shiny silvery with a bluish tint, but tarnishes to dull gray on exposure to air.

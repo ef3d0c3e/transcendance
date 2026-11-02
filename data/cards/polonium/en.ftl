@@ -1,0 +1,2 @@
+title = Polonium
+description = Polonium is a chemical element; it has symbol Po and atomic number 84. A rare and highly radioactive metal (although sometimes classified as a metalloid) with no stable isotopes, polonium is a chalcogen and chemically similar to selenium and tellurium, though its metallic character resembles that of its horizontal neighbours in the periodic table: thallium, lead, and bismuth.

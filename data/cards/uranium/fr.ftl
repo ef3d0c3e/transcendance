@@ -1,0 +1,2 @@
+title = Uranium
+description = L’uranium est l'élément chimique de numéro atomique 92, de symbole U. Il fait partie de la famille des actinides. L'uranium est le 48e élément naturel le plus abondant dans la croûte terrestre, son abondance est supérieure à celle de l'argent, comparable à celle du molybdène ou de l'arsenic, mais quatre fois inférieure à celle du thorium. Il se trouve partout à l'état de traces, y compris dans l'eau de mer.

@@ -40,16 +40,16 @@ func sellDuplicates(t *testing.T, router *gin.Engine, cookie *http.Cookie) strin
 func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell1", "foo-bar-baz-qux", 0)
-	giveCards(t, "sell1", cardTungsten, 5)
+	giveCards(t, "sell1", cardRosetta, 5)
 	cookie := login(t, router, "sell1", "foo-bar-baz-qux")
 
 	// Two common cards are worth 20 coins
-	rec := sell(t, router, cookie, sellForm(cardTungsten, "", 2))
+	rec := sell(t, router, cookie, sellForm(cardRosetta, "", 2))
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	requireSignedNotice(t, "/inventory?tab=cards&sold=2&coins=20", rec.Header().Get("Location"))
 	require.Equal(t, uint(20), shopBalance(t, "sell1"))
 
-	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 3))
+	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 3))
 	requireSignedNotice(t, "/inventory?tab=cards&sold=3&coins=30", rec.Header().Get("Location"))
 	require.Equal(t, uint(50), shopBalance(t, "sell1"))
 	require.Empty(t, ownedCards(t, "sell1"))
@@ -73,13 +73,13 @@ func requireSignedNotice(t *testing.T, want string, location string, msgAndArgs 
 func TestSellFoilIsWorthDouble(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell2", "foo-bar-baz-qux", 0)
-	giveCards(t, "sell2", cardTungsten, 2)
-	giveCardAt(t, "sell2", cardTungsten, "foil1", time.Now())
-	giveCardAt(t, "sell2", cardTungsten, "foil1", time.Now())
+	giveCards(t, "sell2", cardRosetta, 2)
+	giveCardAt(t, "sell2", cardRosetta, "foil1", time.Now())
+	giveCardAt(t, "sell2", cardRosetta, "foil1", time.Now())
 	cookie := login(t, router, "sell2", "foo-bar-baz-qux")
 
 	// The foils are worth 20 each, only the plain copies stay behind
-	rec := sell(t, router, cookie, sellForm(cardTungsten, "foil1", 2))
+	rec := sell(t, router, cookie, sellForm(cardRosetta, "foil1", 2))
 	requireSignedNotice(t, "/inventory?tab=cards&sold=2&coins=40", rec.Header().Get("Location"))
 	owned := ownedCards(t, "sell2")
 	require.Len(t, owned, 2)
@@ -92,7 +92,7 @@ func TestSellPopupData(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell3", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "sell4", "foo-bar-baz-qux", 0)
-	giveCards(t, "sell3", cardTungsten, 1)
+	giveCards(t, "sell3", cardRosetta, 1)
 	giveCards(t, "sell3", cardMcMurdo, 1)
 	giveCards(t, "sell3", cardFordT, 1)
 	cookie3 := login(t, router, "sell3", "foo-bar-baz-qux")
@@ -113,12 +113,12 @@ func TestSellPopupData(t *testing.T) {
 func TestSellRejectsBadSales(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell5", "foo-bar-baz-qux", 0)
-	giveCards(t, "sell5", cardTungsten, 3)
+	giveCards(t, "sell5", cardRosetta, 3)
 	cookie := login(t, router, "sell5", "foo-bar-baz-qux")
 
 	cases := map[string]url.Values{
-		"/inventory?tab=cards&error=sell-quantity": sellForm(cardTungsten, "", 0),
-		"/inventory?tab=cards&error=sell-missing":  sellForm(cardTungsten, "", 4),
+		"/inventory?tab=cards&error=sell-quantity": sellForm(cardRosetta, "", 0),
+		"/inventory?tab=cards&error=sell-missing":  sellForm(cardRosetta, "", 4),
 		"/inventory?tab=cards&error=sell-card":     sellForm(9999, "", 1),
 	}
 	for target, form := range cases {
@@ -137,27 +137,27 @@ func TestSellKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell6", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "sell7", "foo-bar-baz-qux", 0)
-	giveCards(t, "sell6", cardTungsten, 3)
+	giveCards(t, "sell6", cardRosetta, 3)
 	giveCards(t, "sell7", cardMcMurdo, 1)
 	cookie := login(t, router, "sell6", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie, "/trades", tradeBody(t, "sell7",
-		[]models.TradeItem{item(cardTungsten, "", 2)}, 0,
+		[]models.TradeItem{item(cardRosetta, "", 2)}, 0,
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The popup only offers the free copy
 	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=cards"), `data-sell-owned="1"`)
 
-	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 2))
+	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 2))
 	require.Equal(t, "/inventory?tab=cards&error=sell-locked", rec.Header().Get("Location"))
-	rec = sell(t, router, cookie, sellForm(cardTungsten, "", 1))
+	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 1))
 	requireSignedNotice(t, "/inventory?tab=cards&sold=1&coins=10", rec.Header().Get("Location"))
 
 	// The trade can still be settled
 	target := tradeAction(t, router, login(t, router, "sell7", "foo-bar-baz-qux"), tradesOf(t, "sell6")[0].ID, "accept")
 	require.Equal(t, "/trades", target)
-	require.Equal(t, int64(2), ownedCardCount(t, "sell7", cardTungsten, ""))
+	require.Equal(t, int64(2), ownedCardCount(t, "sell7", cardRosetta, ""))
 }
 
 func TestSellDuplicates(t *testing.T) {
@@ -166,8 +166,8 @@ func TestSellDuplicates(t *testing.T) {
 	createAccount(t, router, "sell9", "foo-bar-baz-qux", 0)
 	// 3 common, 2 rare, 2 foil rare, and a single legendary
 	first := time.Now().Add(-time.Hour)
-	giveCardAt(t, "sell8", cardTungsten, "", first)
-	giveCards(t, "sell8", cardTungsten, 2)
+	giveCardAt(t, "sell8", cardRosetta, "", first)
+	giveCards(t, "sell8", cardRosetta, 2)
 	giveCards(t, "sell8", cardMcMurdo, 2)
 	giveCardAt(t, "sell8", cardMcMurdo, "foil1", time.Now())
 	giveCardAt(t, "sell8", cardMcMurdo, "foil1", time.Now())
@@ -190,13 +190,13 @@ func TestSellDuplicates(t *testing.T) {
 
 	requireSignedNotice(t, "/inventory?tab=cards&sold=3&coins=120", sellDuplicates(t, router, cookie))
 	require.Equal(t, uint(120), shopBalance(t, "sell8"))
-	require.Equal(t, int64(1), ownedCardCount(t, "sell8", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "sell8", cardRosetta, ""))
 	require.Equal(t, int64(2), ownedCardCount(t, "sell8", cardMcMurdo, ""))
 	require.Equal(t, int64(1), ownedCardCount(t, "sell8", cardMcMurdo, "foil1"))
 	require.Equal(t, int64(1), ownedCardCount(t, "sell8", cardFordT, ""))
 	// The oldest copy is the one kept
 	var kept models.Card
-	require.NoError(t, tests.DB.Where("owner_id = ? AND card_id = ?", userID(t, "sell8"), cardTungsten).First(&kept).Error)
+	require.NoError(t, tests.DB.Where("owner_id = ? AND card_id = ?", userID(t, "sell8"), cardRosetta).First(&kept).Error)
 	require.WithinDuration(t, first, kept.Acquired, time.Second)
 
 	// Nothing left to sell: no button, and selling again says so

@@ -1,0 +1,2 @@
+title = Ruthenium
+description = Ruthenium is a chemical element; it has symbol Ru and atomic number 44. It is a rare transition metal belonging to the platinum group of the periodic table. Like the other metals of the platinum group, ruthenium is unreactive to most chemicals. Karl Ernst Claus, a Russian scientist of Baltic-German ancestry, discovered the element in 1844 at Kazan State University and named it in honor of Russia, using the Latin name Ruthenia.

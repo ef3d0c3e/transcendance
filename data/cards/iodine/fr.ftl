@@ -1,0 +1,2 @@
+title = Iode
+description = L'iode est l'élément chimique de numéro atomique 53, de symbole I. C'est un membre de la famille des halogènes. Il s'agit d'un élément relativement rare dans le milieu naturel, arrivant 47e dans l'écorce terrestre. Comme les autres halogènes, on le trouve essentiellement sous forme diatomique I2, correspondant au diiode, solide gris métallique aux vapeurs violettes appelé communément « iode » par abus de langage.

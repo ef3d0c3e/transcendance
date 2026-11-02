@@ -1,0 +1,2 @@
+title = Bohrium
+description = Bohrium is a synthetic chemical element; it has symbol Bh and atomic number 107. It is named after Danish physicist Niels Bohr. As a synthetic element, it can be created in particle accelerators but is not found in nature. All known isotopes of bohrium are highly radioactive; the most stable known isotope is 270Bh with a half-life of approximately 2.4 minutes, though the unconfirmed 278Bh may have a longer half-life of about 11.5 minutes.
