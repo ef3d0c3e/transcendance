@@ -7,11 +7,10 @@
 		<div class="index-actions">
 			{{ if .Data.User }}
 			<a class="index-action-primary" href="/inventory">{{ .T "index-action-inventory" }}</a>
-			<a class="index-action" href="/shop">{{ .T "index-action-shop" }}</a>
 			{{ else }}
 			<a class="index-action-primary" href="/register">{{ .T "index-action-register" }}</a>
-			<a class="index-action" href="/cards/search/">{{ .T "index-action-browse" }}</a>
 			{{ end }}
+			<a class="index-action" href="/cards/search/">{{ .T "index-action-browse" }}</a>
 		</div>
 	</div>
 
@@ -29,6 +28,16 @@
 			<p>{{ .T "index-step-trade-text" }}</p>
 		</li>
 	</ol>
+
+	<section class="index-install">
+		<h2>{{ .T "index-install-title" }}</h2>
+		<p>{{ .T "index-install-text" }}</p>
+		<ul>
+			<li><strong>{{ .T "index-install-ios-title" }}</strong> {{ .T "index-install-ios-text" }}</li>
+			<li><strong>{{ .T "index-install-android-title" }}</strong> {{ .T "index-install-android-text" }}</li>
+			<li><strong>{{ .T "index-install-desktop-title" }}</strong> {{ .T "index-install-desktop-text" }}</li>
+		</ul>
+	</section>
 
 	{{ if ne (len .Data.Cards) 0 }}
 	<div class="index-showcase">

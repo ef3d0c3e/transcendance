@@ -1,0 +1,406 @@
+id = 6
+tags = ["flower"]
+color-primary = "#e58fb1"
+color-secondary = "#4b1d34"
+
+[[cards]]
+name = "african-violet"
+
+[[cards]]
+name = "agapanthus"
+
+[[cards]]
+name = "amaryllis"
+
+[[cards]]
+name = "azalea"
+
+[[cards]]
+name = "babys-breath"
+
+[[cards]]
+name = "banksia"
+
+[[cards]]
+name = "barberton-daisy"
+
+[[cards]]
+name = "bee-orchid"
+
+[[cards]]
+name = "begonia"
+
+[[cards]]
+name = "bird-of-paradise"
+
+[[cards]]
+name = "black-eyed-susan"
+
+[[cards]]
+name = "bleeding-heart"
+
+[[cards]]
+name = "blue-lotus"
+
+[[cards]]
+name = "blue-passionflower"
+
+[[cards]]
+name = "bluebell"
+
+[[cards]]
+name = "bottlebrush"
+
+[[cards]]
+name = "bougainvillea"
+
+[[cards]]
+name = "bush-lily"
+
+[[cards]]
+name = "busy-lizzie"
+
+[[cards]]
+name = "butterfly-bush"
+
+[[cards]]
+name = "california-poppy"
+
+[[cards]]
+name = "calla-lily"
+
+[[cards]]
+name = "cardinal-flower"
+
+[[cards]]
+name = "carnation"
+
+[[cards]]
+name = "cattleya"
+
+[[cards]]
+name = "chamomile"
+
+[[cards]]
+name = "chinese-hibiscus"
+
+[[cards]]
+name = "chinese-wisteria"
+
+[[cards]]
+name = "christmas-rose"
+
+[[cards]]
+name = "chrysanthemum"
+
+[[cards]]
+name = "clematis"
+
+[[cards]]
+name = "columbine"
+
+[[cards]]
+name = "common-daisy"
+
+[[cards]]
+name = "common-poppy"
+
+[[cards]]
+name = "cornflower"
+
+[[cards]]
+name = "corpse-lily"
+
+[[cards]]
+name = "crown-imperial"
+
+[[cards]]
+name = "cyclamen"
+
+[[cards]]
+name = "daffodil"
+
+[[cards]]
+name = "dahlia"
+
+[[cards]]
+name = "dandelion"
+
+[[cards]]
+name = "daylily"
+
+[[cards]]
+name = "dendrobium"
+
+[[cards]]
+name = "edelweiss"
+
+[[cards]]
+name = "flame-lily"
+
+[[cards]]
+name = "flame-tree"
+
+[[cards]]
+name = "flamingo-flower"
+
+[[cards]]
+name = "flowering-dogwood"
+
+[[cards]]
+name = "forget-me-not"
+
+[[cards]]
+name = "forsythia"
+
+[[cards]]
+name = "four-oclock-flower"
+
+[[cards]]
+name = "foxglove"
+
+[[cards]]
+name = "frangipani"
+
+[[cards]]
+name = "freesia"
+
+[[cards]]
+name = "fuchsia"
+
+[[cards]]
+name = "garden-cosmos"
+
+[[cards]]
+name = "garden-lupin"
+
+[[cards]]
+name = "garden-pansy"
+
+[[cards]]
+name = "gardenia"
+
+[[cards]]
+name = "geranium"
+
+[[cards]]
+name = "giant-onion"
+
+[[cards]]
+name = "giant-water-lily"
+
+[[cards]]
+name = "gladiolus"
+
+[[cards]]
+name = "golden-everlasting"
+
+[[cards]]
+name = "grape-hyacinth"
+
+[[cards]]
+name = "heartsease"
+
+[[cards]]
+name = "heather"
+
+[[cards]]
+name = "heliconia"
+
+[[cards]]
+name = "hippeastrum"
+
+[[cards]]
+name = "hollyhock"
+
+[[cards]]
+name = "honeysuckle"
+
+[[cards]]
+name = "hyacinth"
+
+[[cards]]
+name = "hydrangea"
+
+[[cards]]
+name = "iris"
+
+[[cards]]
+name = "jacaranda"
+
+[[cards]]
+name = "japanese-camellia"
+
+[[cards]]
+name = "japanese-cherry"
+
+[[cards]]
+name = "jasmine"
+
+[[cards]]
+name = "judas-tree"
+
+[[cards]]
+name = "kangaroo-paw"
+
+[[cards]]
+name = "king-protea"
+
+[[cards]]
+name = "ladys-slipper-orchid"
+
+[[cards]]
+name = "lantana"
+
+[[cards]]
+name = "larkspur"
+
+[[cards]]
+name = "lavender"
+
+[[cards]]
+name = "lilac"
+
+[[cards]]
+name = "lily"
+
+[[cards]]
+name = "lily-of-the-valley"
+
+[[cards]]
+name = "love-in-a-mist"
+
+[[cards]]
+name = "magnolia"
+
+[[cards]]
+name = "marsh-marigold"
+
+[[cards]]
+name = "meadow-buttercup"
+
+[[cards]]
+name = "mexican-marigold"
+
+[[cards]]
+name = "monkey-face-orchid"
+
+[[cards]]
+name = "monkshood"
+
+[[cards]]
+name = "morning-glory"
+
+[[cards]]
+name = "moth-orchid"
+
+[[cards]]
+name = "nasturtium"
+
+[[cards]]
+name = "oleander"
+
+[[cards]]
+name = "opium-poppy"
+
+[[cards]]
+name = "oxeye-daisy"
+
+[[cards]]
+name = "peony"
+
+[[cards]]
+name = "persian-buttercup"
+
+[[cards]]
+name = "peruvian-lily"
+
+[[cards]]
+name = "petunia"
+
+[[cards]]
+name = "poppy-anemone"
+
+[[cards]]
+name = "pot-marigold"
+
+[[cards]]
+name = "primrose"
+
+[[cards]]
+name = "purple-coneflower"
+
+[[cards]]
+name = "queen-of-the-andes"
+
+[[cards]]
+name = "red-hot-poker"
+
+[[cards]]
+name = "rhododendron"
+
+[[cards]]
+name = "rose"
+
+[[cards]]
+name = "sacred-lotus"
+
+[[cards]]
+name = "saffron-crocus"
+
+[[cards]]
+name = "silver-wattle"
+
+[[cards]]
+name = "snakes-head-fritillary"
+
+[[cards]]
+name = "snapdragon"
+
+[[cards]]
+name = "snowdrop"
+
+[[cards]]
+name = "spring-crocus"
+
+[[cards]]
+name = "stemless-gentian"
+
+[[cards]]
+name = "sturts-desert-pea"
+
+[[cards]]
+name = "sunflower"
+
+[[cards]]
+name = "sweet-pea"
+
+[[cards]]
+name = "titan-arum"
+
+[[cards]]
+name = "tulip"
+
+[[cards]]
+name = "vanilla-orchid"
+
+[[cards]]
+name = "venus-slipper"
+
+[[cards]]
+name = "waratah"
+
+[[cards]]
+name = "water-hyacinth"
+
+[[cards]]
+name = "water-lily"
+
+[[cards]]
+name = "white-trillium"
+
+[[cards]]
+name = "yarrow"
+
+[[cards]]
+name = "zinnia"

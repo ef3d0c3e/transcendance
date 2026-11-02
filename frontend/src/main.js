@@ -1,10 +1,11 @@
 import { mount } from 'svelte';
 import Popup from './FormPopup.svelte';
 import FormEnhancement from './FormEnhancement.svelte';
+import FriendButton from './FriendButton.svelte';
 import CardRender from './CardRender.svelte';
 import InventoryCardPopup from './InventoryCardPopup.svelte';
-import InventoryBoosterPopup from './InventoryBoosterPopup.svelte';
 import PackOpening from './PackOpening.svelte';
+import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
 
@@ -13,8 +14,10 @@ import ThemeSwitcher from './ThemeSwitcher.svelte';
 import LanguageSwitcher from './LanguageSwitcher.svelte';
 import Profile from './ProfileEnhancement.svelte';
 import Notification from './Notification.svelte';
+import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 import { enhanceCountdowns } from './countdown.js';
+import { openTopup } from './topup.js';
 
 // Navbar
 {
@@ -48,6 +51,20 @@ import { enhanceCountdowns } from './countdown.js';
 
 	if (target) {
 		mount(Notification, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
+// Shoutbox
+{
+	const target = document.querySelector('#shoutbox');
+
+	if (target) {
+		mount(Shoutbox, {
 			target,
 			props: {
 				dataset: target.dataset,
@@ -198,6 +215,18 @@ import { enhanceCountdowns } from './countdown.js';
 	}
 }
 
+// Friend buttons
+{
+	for (const target of document.querySelectorAll('.friend-button')) {
+		mount(FriendButton, {
+			target,
+			props: {
+				dataset: target.dataset,
+			},
+		});
+	}
+}
+
 // Cards
 {
 	const target = document.querySelector('#card-rendering');
@@ -256,12 +285,36 @@ import { enhanceCountdowns } from './countdown.js';
 	}
 }
 
-// Inventory booster popup
+// Inventory boosters open on click, dragging to tilt them doesn't count
 {
-	const target = document.querySelector('#inventory-booster-popup');
+	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
+	// Pointer travel (px) after which a press counts as a tilt drag
+	const dragThreshold = 6;
+	let press;
 
-	if (target) {
-		mount(InventoryBoosterPopup, { target, props: { target } });
+	for (const tile of tiles) {
+		const booster = tile.closest('.inventory-booster');
+		const open = () => location.assign(booster.dataset.boosterOpen);
+
+		tile.tabIndex = 0;
+		tile.setAttribute('role', 'link');
+		tile.setAttribute('aria-label', booster.dataset.boosterLabel ?? '');
+		tile.addEventListener('pointerdown', (event) => {
+			press = { x: event.clientX, y: event.clientY };
+		}, { passive: true });
+		tile.addEventListener('click', (event) => {
+			if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > dragThreshold) {
+				return;
+			}
+			open();
+		});
+		tile.addEventListener('keydown', (event) => {
+			if (event.key !== 'Enter') {
+				return;
+			}
+			event.preventDefault();
+			open();
+		});
 	}
 }
 
@@ -277,13 +330,24 @@ import { enhanceCountdowns } from './countdown.js';
 				openLabel: target.dataset.openLabel,
 				retryLabel: target.dataset.retryLabel,
 				errorLabel: target.dataset.errorLabel,
-				obtainedLabel: target.dataset.obtainedLabel,
-				returnLabel: target.dataset.returnLabel,
-				returnUrl: target.dataset.returnUrl,
-				openAgainLabel: target.dataset.openAgainLabel,
+				againLabel: target.dataset.againLabel,
+				coins: Number(target.dataset.coins) || 0,
 				autostart: target.dataset.autostart === 'true',
+				soundOnLabel: target.dataset.soundOn,
+				soundOffLabel: target.dataset.soundOff,
+				skipLabel: target.dataset.skipLabel,
+				spinningLabel: target.dataset.spinningLabel,
 			},
 		});
+	}
+}
+
+// Pack opening animated background
+{
+	const target = document.querySelector('#pack-background');
+
+	if (target) {
+		mount(PackBackground, { target, props: { target } });
 	}
 }
 
@@ -315,6 +379,29 @@ import { enhanceCountdowns } from './countdown.js';
 	}
 }
 
+// Confirmation popups opened by a button, e.g selling the duplicate cards
+{
+	for (const button of document.querySelectorAll('[data-dialog-open]')) {
+		const dialog = document.querySelector(`#${CSS.escape(button.dataset.dialogOpen)}`);
+		if (!dialog) {
+			continue;
+		}
+		button.setAttribute('aria-controls', dialog.id);
+		button.addEventListener('click', () => dialog.showModal());
+		for (const close of dialog.querySelectorAll('[data-dialog-close]')) {
+			close.addEventListener('click', () => dialog.close());
+		}
+		// Clicking the backdrop targets the dialog itself
+		dialog.addEventListener('click', (event) => {
+			if (event.target === dialog) {
+				dialog.close();
+			}
+		});
+		// Focus comes back to the button, as it opened the popup
+		dialog.addEventListener('close', () => button.focus());
+	}
+}
+
 // Shop coin top-up popup
 {
 	const dialog = document.querySelector('#shop-topup-popup');
@@ -325,7 +412,7 @@ import { enhanceCountdowns } from './countdown.js';
 		for (const button of document.querySelectorAll('.shop-topup-open')) {
 			button.addEventListener('click', () => {
 				returnFocus = button;
-				dialog.showModal();
+				openTopup();
 			});
 		}
 		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {

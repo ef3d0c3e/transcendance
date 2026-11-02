@@ -31,6 +31,27 @@ logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
 logout-error-all = Impossible de déconnecter tous les appareilles
 
+friends-title = Liste d'amis
+friends-add = Ajouter
+friends-cancel = Annuler
+friends-accept = Accepter
+friends-deny = Ignorer
+friends-unfriend = Supprimer
+friends-block = Bloquer
+friends-unblock = Débloquer
+friends-unknown-error = Une erreur est survenue
+friends-blocked-error = Vous ne pouvez pas ajouter cet utilisateur.
+friends-unblock-error = Débloquez d'abord cet utilisateur.
+friends-not-found-error = Cet utilisateur n'existe pas.
+friends-yourself-error = Vous ne pouvez pas vous ajouter en ami.
+friends-list = Afficher
+friends-list-friends = Amis
+friends-list-sent = Demandes envoyées
+friends-list-received = Demandes reçues
+friends-empty-friends = Vous n'avez pas encore d'amis
+friends-empty-sent = Vous n'avez envoyé aucune demande d'ami
+friends-empty-received = Vous n'avez reçu aucune demande d'ami
+
 account-delete-error-generic = Echec de la suppression du compte
 account-delete-title = Supprimer le compte
 account-email = Adresse e-mail
@@ -69,11 +90,11 @@ user-status-last-seen = Dernière activité :
 
 navbar-label-toggle = Afficher/masquer le menu
 navbar-label-main = Navigation principale
-navbar-cards = Cartes
+navbar-skip = Aller au contenu
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
-navbar-shop = Boutique
 navbar-profile = Votre profil
+navbar-friends = Amis
 navbar-logout = Se déconnecter
 header-balance = Solde : { $amount }
 
@@ -86,6 +107,7 @@ cards-error-not-found = Carte non trouvée
 cards-error-collection-not-found = Collection non trouvée
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bas de la liste
 paginator-label-previous = Page précédente
 paginator-label-next = Page suivante
 
@@ -143,6 +165,7 @@ profile-error-network = Impossible de contacter le serveur
 
 error-unexpected = Une erreur est survenue
 error-unauthorized = Vous devez être connecté pour accéder à cette ressource
+error-not-found = Cette page n'existe pas
 
 error-title = Erreur
 
@@ -157,6 +180,7 @@ profile-avatar-delete-title = Supprimer la photo de profil ?
 profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
 profile-avatar-cancel = Annuler
 profile-inventory = Voir l’inventaire
+profile-message = Envoyer un message
 
 profile-rank = Rôle
 profile-rank-user = Utilisateur
@@ -185,17 +209,21 @@ notification-empty-unread = Aucune notification non lue
 
 notification-friend-request-title = Demande en Ami
 notification-friend-request-desc = { $username } vous a envoyé une demande d'ami
+notification-friend-accepted-title = Demande d'ami acceptée
+notification-friend-accepted-desc = { $username } a accepté votre demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
 notification-trade-title = Offre d’échange
 notification-trade-desc = { $username } vous a envoyé une offre d’échange
 notification-trade-counter-title = Offre d’échange contre-proposée
 notification-trade-counter-desc = { $username } a contre-proposé votre offre d’échange
+notification-private-message-title = { $count ->
+    [one] Nouveau message de { $username }
+   *[other] { $count } nouveaux messages de { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Catalogue de cartes
-catalog-tabs-label = Sections du catalogue
-catalog-tab-cards = Cartes
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -203,6 +231,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = Toutes les collections
 catalog-sort-number = Ordre de la collection
+catalog-filter-status = Possédées
+catalog-filter-status-all = Toutes les cartes
+catalog-filter-status-owned = Possédées
+catalog-filter-status-missing = Manquantes
+catalog-sort-missing = Manquantes d'abord
 
 inventory-title = Votre inventaire
 inventory-title-other = Inventaire de { $username }
@@ -216,11 +249,38 @@ inventory-search-submit = Rechercher
 inventory-search-clear = Effacer la recherche
 inventory-card-acquired = Obtenue le
 inventory-card-close = Fermer
+inventory-card-value = Valeur
+inventory-card-sell = Vendre
+inventory-sell-quantity = Quantité
+inventory-sell-total = Total
+inventory-sell-confirm = Confirmer la vente
+inventory-sold = { $count ->
+    [one] Vous avez vendu { $count } carte pour { $amount } pièces
+   *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
+}
+inventory-sell-error-card = Cette carte ne peut pas être vendue
+inventory-sell-error-quantity = Choisissez une quantité d’au moins 1
+inventory-sell-error-missing = Vous n’avez pas autant d’exemplaires à vendre
+inventory-sell-error-locked = Certains de ces exemplaires sont dans des échanges
+inventory-sell-error-none = Vous n’avez aucune carte en double à vendre
+inventory-sell-error-internal = Échec de la vente de vos cartes
+inventory-sell-duplicates = Vendre les doublons
+inventory-sell-duplicates-title = Vendre les cartes en double
+inventory-sell-duplicates-text = { $count ->
+    [one] Vendre { $count } carte en double pour { $amount } pièces ?
+   *[other] Vendre { $count } cartes en double pour { $amount } pièces ?
+}
+inventory-sell-duplicates-note = Un exemplaire de chaque carte est conservé, pour chaque version foil. Les exemplaires dans des échanges ne sont ni vendus ni comptés comme l’exemplaire conservé.
+inventory-sell-duplicates-confirm = Vendre pour { $amount } pièces
+inventory-sell-cancel = Annuler
 inventory-card-acquired-first = Première obtenue le
 inventory-card-acquired-last = Dernière obtenue le
 inventory-card-copies = Exemplaires
 inventory-filter-rarity = Rareté
 inventory-filter-rarity-all = Toutes les raretés
+inventory-show = Afficher
+inventory-show-owned = Cartes possédées
+inventory-show-all = Toutes les cartes
 inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
@@ -236,10 +296,9 @@ inventory-sort-name-desc = Nom (Z-A)
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = Aucun booster pour l'instant
-inventory-booster-open-confirm = Ouvrir le booster { $name } ?
-inventory-booster-open-yes = Oui
-inventory-booster-open-no = Non
+inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -256,7 +315,6 @@ inventory-locked-badge = { $count } dans des échanges
 
 booster-pile-title = Booster par défaut
 booster-pile-desc = { $count } cartes aléatoires de toutes les collections
-booster-pile-open-confirm = Ouvrir un booster par défaut ?
 daily-streak-title = Série quotidienne
 daily-streak-meter = { $tier } · { $amount }
 daily-streak-count = Série { $days }
@@ -273,10 +331,7 @@ pack-opening-open-another = Ouvrir un autre booster
 pack-opening-error-collection = Collection introuvable
 pack-opening-error-empty = Ce booster ne contient aucune carte
 pack-opening-error-internal = Impossible d'ouvrir le booster
-pack-opening-obtained = Cartes obtenues
 pack-opening-back = Retour à l'inventaire
-pack-opening-return = Retour
-pack-opening-open-again = Ouvrir à nouveau
 pack-opening-remaining = { $count ->
     [0] Plus aucun booster
     [one] { $count } booster restant
@@ -284,16 +339,28 @@ pack-opening-remaining = { $count ->
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
 pack-opening-error-pile = Aucun booster par défaut disponible
+pack-opening-buy = Ouvrir à nouveau
+pack-opening-buy-label = Ouvrir à nouveau pour { $price }
+pack-opening-sound-on = Son activé
+pack-opening-sound-off = Son coupé
+pack-opening-odds-title = Taux d'obtention
+pack-opening-odds-foil = Holographique
+pack-opening-odds-note = Chaque carte du booster est tirée séparément.
+pack-opening-progress-title = Progression de la collection
+pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
+pack-opening-summary = Cartes tirées : { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, holographique)
+pack-opening-spinning = Ouverture du paquet…
+pack-opening-skip = Passer
 
-shop-title = Boutique
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = Aucun booster n'est en vente pour le moment
 shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
+shop-topup-error-unconfirmed = Impossible de confirmer l’ajout de pièces. Actualisez la page pour vérifier votre solde avant de réessayer.
 shop-topup-price = { $euros },{ $cents } €
 shop-topup-open = Acheter des pièces
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
@@ -303,11 +370,6 @@ shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
 shop-error-quantity = Saisissez une quantité entre 1 et { $max }
 shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
-shop-buy-success = { $count ->
-    [one] Un booster { $collection } a été ajouté à votre inventaire
-   *[other] { $count } boosters { $collection } ont été ajoutés à votre inventaire
-}
-shop-buy-view-inventory = Voir l'inventaire
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
@@ -327,13 +389,20 @@ index-stat-collections = { $count ->
 index-action-register = Créer un compte
 index-action-browse = Parcourir les cartes
 index-action-inventory = Ouvrir votre inventaire
-index-action-shop = Visiter la boutique
 index-step-buy-title = Achetez des boosters
-index-step-buy-text = Dépensez vos pièces dans la boutique pour des boosters de la collection de votre choix.
+index-step-buy-text = Dépensez vos pièces en boosters de la collection de votre choix, directement depuis votre inventaire.
 index-step-open-title = Ouvrez des paquets
 index-step-open-text = Chaque booster contient quelques cartes, dont certaines rares, légendaires ou holographiques.
 index-step-trade-title = Troquez vos cartes
 index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
+index-install-title = Installer l’application
+index-install-text = Ajoutez Transcendance à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
+index-install-ios-title = iPhone et iPad :
+index-install-ios-text = dans Safari, touchez Partager, puis Sur l’écran d’accueil.
+index-install-android-title = Android :
+index-install-android-text = dans Chrome, ouvrez le menu ⋮, puis touchez Ajouter à l’écran d’accueil ou Installer l’application.
+index-install-desktop-title = Ordinateur :
+index-install-desktop-text = dans Chrome ou Edge, cliquez sur l’icône d’installation au bout de la barre d’adresse.
 index-cards-title = Cartes les plus rares
 index-cards-all = Voir toutes les cartes
 index-collections-title = Collections
@@ -464,3 +533,42 @@ trade-error-locked-coins = Certaines pièces sont dans un autre échange
 trade-error-want-coins = L’autre utilisateur n’a pas autant de pièces
 trade-error-state = Cette offre d’échange n’est plus en attente
 trade-error-forbidden = Cette offre d’échange ne vous appartient pas
+trade-error-blocked = Vous ne pouvez pas échanger avec cet utilisateur
+shoutbox-title = Discussion
+shoutbox-unread = nouveaux messages
+shoutbox-close = Fermer
+shoutbox-connected = En direct
+shoutbox-connecting = Connexion...
+shoutbox-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-placeholder = Écrire un message
+shoutbox-send = Envoyer
+shoutbox-error-empty = Votre message est vide
+shoutbox-error-too-long = Votre message est trop long, 500 caractères maximum
+shoutbox-error-rate-limited = Vous envoyez des messages trop vite, patientez un instant
+shoutbox-error-internal = Votre message n'a pas pu être envoyé, réessayez
+shoutbox-closed-unauthorized = Votre session a expiré, reconnectez-vous pour discuter
+shoutbox-closed-too-many = La shoutbox est ouverte dans trop d'onglets, fermez-en et rechargez la page
+shoutbox-closed-error = Déconnecté de la shoutbox, rechargez la page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Écrire un message privé
+shoutbox-conversation-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-conversations-empty = Aucune conversation pour le moment
+shoutbox-start = Démarrer une conversation avec un utilisateur
+shoutbox-start-placeholder = Nom d'utilisateur
+shoutbox-start-button = Ouvrir
+shoutbox-back = Retour aux conversations
+shoutbox-you = Vous
+shoutbox-user-menu = Actions sur l'utilisateur
+shoutbox-message-user = Envoyer un message privé
+shoutbox-view-profile = Voir le profil
+shoutbox-ignore-hour = Ignorer pendant 1 heure
+shoutbox-ignore-day = Ignorer pendant 1 jour
+shoutbox-ignore-week = Ignorer pendant 1 semaine
+shoutbox-unignore = Ne plus ignorer
+shoutbox-ignored-title = Utilisateurs ignorés
+shoutbox-ignored-until = Jusqu'au
+shoutbox-ignoring-notice = Vous ignorez cet utilisateur : ses messages de la shoutbox sont masqués et il ne peut pas vous écrire.
+shoutbox-error-user-not-found = Cet utilisateur n'existe pas
+shoutbox-error-self = Vous ne pouvez pas vous écrire à vous-même
+shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le moment

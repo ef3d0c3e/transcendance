@@ -30,6 +30,9 @@ func RegisterRoutes(
 	// health.go
 	router.GET("/healthz", controller.HealthzGet)
 
+	// errors.go
+	router.NoRoute(controller.NotFound)
+
 	// auth.go
 	router.GET("/register", controller.RegisterGet)
 	router.POST("/register", controller.RegisterPost)
@@ -71,6 +74,13 @@ func RegisterRoutes(
 	router.GET("/add_notification", controller.AddNotificationGet)
 	router.POST("/add_notification", controller.AddNotificationPost)
 
+	// shoutbox.go
+	shoutboxController := controllers.NewShoutboxController(db, renderer)
+	router.GET("/api/shoutbox", shoutboxController.ApiShoutboxGet)
+	//friends
+	router.POST("/friendaction", controller.FriendsPost)
+	router.GET("/friends", controller.FriendsGet)
+
 	// Data
 	dataController := ctrldata.DataController{
 		DB:       db,
@@ -87,6 +97,7 @@ func RegisterRoutes(
 
 	router.GET("/opening", dataController.OpeningGet)
 	router.POST("/opening", dataController.OpeningPost)
+	router.POST("/opening/buy", dataController.OpeningBuyPost)
 
 	// Debug: add a booster to the authenticated user's inventory
 	router.GET("/add_booster", dataController.AddBoosterGet)
@@ -105,4 +116,6 @@ func RegisterRoutes(
 	router.GET("/shop", controller.ShopGet)
 	router.POST("/shop/topup", controller.ShopTopupPost)
 	router.POST("/shop/buy", controller.ShopBuyPost)
+	router.POST("/shop/sell", controller.ShopSellPost)
+	router.POST("/shop/sell-duplicates", controller.ShopSellDuplicatesPost)
 }

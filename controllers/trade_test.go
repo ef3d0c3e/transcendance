@@ -313,6 +313,14 @@ func TestTradeOfferValidation(t *testing.T) {
 			error:  "The same card stack appears twice",
 		},
 		{
+			name: "same stack with another count",
+			body: tradeBody(t, "trade8",
+				[]models.TradeItem{item(cardFordT, "", 1), item(cardFordT, "", 2)}, 0,
+				[]models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			status: http.StatusBadRequest,
+			error:  "The same card stack appears twice",
+		},
+		{
 			name:   "too many copies",
 			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 5)}, 0, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
 			status: http.StatusBadRequest,
@@ -711,7 +719,7 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 	offer := tradesOf(t, "trade27")[0]
 
 	// The shop shows what is free to spend and what is up in trades
-	body := shopBody(shopRequest(t, router, http.MethodGet, "/shop", nil, cookie27))
+	body := getInventory(t, router, cookie27, "/inventory?tab=boosters")
 	require.Contains(t, body, "105 coins")
 	require.Contains(t, body, "200 up in trades")
 
@@ -720,7 +728,7 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 		"collection": {"1"},
 	}, cookie27)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?error=funds", rec.Header().Get("Location"))
+	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
 	require.Equal(t, uint(305), shopBalance(t, "trade27"))
 	require.Empty(t, shopBoosters(t, "trade27"))
 
@@ -731,7 +739,7 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 		"collection": {"1"},
 	}, cookie27)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/shop?bought=1", rec.Header().Get("Location"))
+	require.True(t, strings.HasPrefix(rec.Header().Get("Location"), "/opening?booster="))
 	require.Equal(t, uint(55), shopBalance(t, "trade27"))
 	require.Len(t, shopBoosters(t, "trade27"), 1)
 }
@@ -895,11 +903,11 @@ func TestTradeInventoryMarksLocked(t *testing.T) {
 		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
-	body := getInventory(t, router, cookie35, "/inventory")
+	body := getInventory(t, router, cookie35, "/inventory?tab=cards")
 	require.Contains(t, body, `<span class="card-locked">1 in trades</span>`)
 
 	// The cards of another user keep their trades to themselves
-	body = getInventory(t, router, cookie36, "/inventory?u=trade35")
+	body = getInventory(t, router, cookie36, "/inventory?u=trade35&tab=cards")
 	require.NotContains(t, body, "in trades")
 }
 
@@ -917,20 +925,20 @@ func TestTradeAcceptRespectsReceiverLocks(t *testing.T) {
 	cookie37 := login(t, router, "trade37", "foo-bar-baz-qux")
 	cookie39 := login(t, router, "trade39", "foo-bar-baz-qux")
 
-	// The Ford Model T and 80 coins go up in an offer to trade38
-	rec := postJSON(t, router, cookie37, "/trades", tradeBody(t, "trade38",
-		[]models.TradeItem{item(cardFordT, "", 1)}, 80,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
-	require.Equal(t, http.StatusCreated, rec.Code)
-
-	// trade39 asks for that Ford Model T, then for those coins
-	rec = postJSON(t, router, cookie39, "/trades", tradeBody(t, "trade37",
+	// trade39 asks for the Ford Model T, then for coins
+	rec := postJSON(t, router, cookie39, "/trades", tradeBody(t, "trade37",
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	rec = postJSON(t, router, cookie39, "/trades", tradeBodyWantCoins(t, "trade37",
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
 		nil, 50, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	// Then the Ford Model T and 80 coins go up in an offer to trade38
+	rec = postJSON(t, router, cookie37, "/trades", tradeBody(t, "trade38",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 80,
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	trades := tradesOf(t, "trade39")
@@ -947,4 +955,83 @@ func TestTradeAcceptRespectsReceiverLocks(t *testing.T) {
 	for _, trade := range tradesOf(t, "trade37") {
 		require.Equal(t, models.TradePending, trade.State)
 	}
+}
+
+// Users blocking each other cannot trade
+func TestTradeBlockedUsers(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "trade40", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade41", "foo-bar-baz-qux", 0)
+	giveCards(t, "trade40", cardFordT, 1)
+	giveCards(t, "trade41", cardTungsten, 1)
+
+	cookie40 := login(t, router, "trade40", "foo-bar-baz-qux")
+	cookie41 := login(t, router, "trade41", "foo-bar-baz-qux")
+	body := tradeBody(t, "trade41",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 0)
+
+	// An offer made before the block cannot be accepted after it
+	rec := postJSON(t, router, cookie40, "/trades", body)
+	require.Equal(t, http.StatusCreated, rec.Code)
+	require.NoError(t, tests.DB.Create(&models.Relation{
+		UserID:   userID(t, "trade41"),
+		TargetID: userID(t, "trade40"),
+		Type:     models.RelationBlocked,
+	}).Error)
+	target := tradeAction(t, router, cookie41, tradesOf(t, "trade40")[0].ID, "accept")
+	require.Equal(t, "/trades?error=settle", target)
+	require.Equal(t, int64(1), ownedCardCount(t, "trade40", cardFordT, ""))
+
+	// The blocked side can neither make a new offer nor open the menu
+	rec = postJSON(t, router, cookie40, "/trades", body)
+	require.Equal(t, http.StatusForbidden, rec.Code)
+	require.Contains(t, rec.Body.String(), "You cannot trade with this user")
+	require.Len(t, tradesOf(t, "trade40"), 1)
+	require.Equal(t, http.StatusForbidden, get(t, router, cookie40, "/trades/new?u=trade41").Code)
+	require.Equal(t, http.StatusForbidden, get(t, router, cookie40, "/api/trade/stacks?u=trade41").Code)
+
+	// Nor is it offered, on either side
+	require.NotContains(t, getInventory(t, router, cookie40, "/inventory?u=trade41"), "inventory-trade")
+	require.NotContains(t, getInventory(t, router, cookie41, "/inventory?u=trade40"), "inventory-trade")
+}
+
+// The requested coins must be free on the other side, as accepting needs them
+func TestTradeWantsFreeCoins(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "trade42", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade43", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade44", "foo-bar-baz-qux", 0)
+	giveCards(t, "trade42", cardFordT, 1)
+	giveCards(t, "trade43", cardTungsten, 1)
+	giveCards(t, "trade44", cardMcMurdo, 1)
+	setCoins(t, "trade43", 1000)
+
+	cookie42 := login(t, router, "trade42", "foo-bar-baz-qux")
+	cookie43 := login(t, router, "trade43", "foo-bar-baz-qux")
+
+	// 800 of trade43's coins go up in an offer to trade44
+	rec := postJSON(t, router, cookie43, "/trades", tradeBody(t, "trade44",
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 800,
+		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	// Asking trade43 for more than the 200 left, or for its locked card, fails
+	rec = postJSON(t, router, cookie42, "/trades", tradeBodyWantCoins(t, "trade43",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0, nil, 900, 0))
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Contains(t, rec.Body.String(), "The other user does not have that many coins")
+	rec = postJSON(t, router, cookie42, "/trades", tradeBody(t, "trade43",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	require.Contains(t, rec.Body.String(), "Some copies of a card are up in another trade")
+
+	// What is free can be asked for
+	rec = postJSON(t, router, cookie42, "/trades", tradeBodyWantCoins(t, "trade43",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0, nil, 200, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	// The navbar shows the free balance too
+	require.Contains(t, getInventory(t, router, cookie43, "/inventory?tab=cards"), "Balance: 200")
 }

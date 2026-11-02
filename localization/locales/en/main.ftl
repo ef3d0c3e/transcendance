@@ -67,12 +67,33 @@ user-status-online = Online
 user-status-offline = Offline
 user-status-last-seen = Last seen:
 
+friends-title = Friends list
+friends-add = Add Friend
+friends-cancel = Cancel
+friends-accept = Accept
+friends-deny = Ignore
+friends-unfriend = Unfriend
+friends-block = Block user
+friends-unblock = Unblock
+friends-unknown-error = Something went wrong
+friends-blocked-error = Can't add this user as a friend
+friends-unblock-error = Unblock this user first
+friends-not-found-error = This user doesn't exist
+friends-yourself-error = You can't add yourself as a friend
+friends-list = Show
+friends-list-friends = Friends
+friends-list-sent = Sent requests
+friends-list-received = Received requests
+friends-empty-friends = You have no friends yet
+friends-empty-sent = You haven't sent any friend request
+friends-empty-received = You have no friend request
+
 navbar-label-toggle = Toggle menu
 navbar-label-main = Main navigation
-navbar-cards = Cards
+navbar-skip = Skip to content
 navbar-users = Users
 navbar-inventory = Inventory
-navbar-shop = Shop
+navbar-friends = Friends
 navbar-profile = Your profile
 navbar-logout = Log out
 header-balance = Balance: { $amount }
@@ -86,6 +107,7 @@ cards-error-not-found = Card not found
 cards-error-collection-not-found = Collection not found
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bottom of the list
 paginator-label-previous = Previous page
 paginator-label-next = Next page
 
@@ -143,6 +165,7 @@ profile-error-network = Unable to contact the server
 
 error-unexpected = An error occurred
 error-unauthorized = You must be logged in to access this resource
+error-not-found = This page does not exist
 
 error-title = Error
 
@@ -157,6 +180,7 @@ profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
 profile-inventory = View inventory
+profile-message = Send a message
 
 profile-rank = Rank
 profile-rank-user = User
@@ -185,17 +209,21 @@ notification-empty-unread = No unread notifications
 
 notification-friend-request-title = Friend Request
 notification-friend-request-desc = { $username } sent you a friend request
+notification-friend-accepted-title = Friend request accepted
+notification-friend-accepted-desc = { $username } accepted your friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
 notification-trade-title = Trade offer
 notification-trade-desc = { $username } sent you a trade offer
 notification-trade-counter-title = Trade offer countered
 notification-trade-counter-desc = { $username } countered your trade offer
+notification-private-message-title = { $count ->
+    [one] New message from { $username }
+   *[other] { $count } new messages from { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
-catalog-tabs-label = Catalog sections
-catalog-tab-cards = Cards
-catalog-tab-collections = Collections
 catalog-collection-count = { $count ->
     [one] { $count } collection
     *[other] { $count } collections
@@ -203,6 +231,11 @@ catalog-collection-count = { $count ->
 catalog-filter-collection = Collection
 catalog-filter-collection-all = All collections
 catalog-sort-number = Collection order
+catalog-filter-status = Collected
+catalog-filter-status-all = All cards
+catalog-filter-status-owned = Collected
+catalog-filter-status-missing = Missing
+catalog-sort-missing = Missing first
 
 inventory-title = Your inventory
 inventory-title-other = { $username }'s inventory
@@ -216,11 +249,38 @@ inventory-search-submit = Search
 inventory-search-clear = Clear search
 inventory-card-acquired = Acquired on
 inventory-card-close = Close
+inventory-card-value = Value
+inventory-card-sell = Sell
+inventory-sell-quantity = Quantity
+inventory-sell-total = Total
+inventory-sell-confirm = Confirm sale
+inventory-sold = { $count ->
+    [one] You sold { $count } card for { $amount } coins
+   *[other] You sold { $count } cards for { $amount } coins
+}
+inventory-sell-error-card = This card cannot be sold
+inventory-sell-error-quantity = Choose a quantity of at least 1
+inventory-sell-error-missing = You do not have that many copies to sell
+inventory-sell-error-locked = Some of these copies are up in trades
+inventory-sell-error-none = You have no duplicate cards to sell
+inventory-sell-error-internal = Failed to sell your cards
+inventory-sell-duplicates = Sell duplicates
+inventory-sell-duplicates-title = Sell duplicate cards
+inventory-sell-duplicates-text = { $count ->
+    [one] Sell { $count } duplicate card for { $amount } coins?
+   *[other] Sell { $count } duplicate cards for { $amount } coins?
+}
+inventory-sell-duplicates-note = One copy of each card is kept, for each foil. Copies up in trades are neither sold nor counted as the copy kept.
+inventory-sell-duplicates-confirm = Sell for { $amount } coins
+inventory-sell-cancel = Cancel
 inventory-card-acquired-first = First acquired on
 inventory-card-acquired-last = Last acquired on
 inventory-card-copies = Copies
 inventory-filter-rarity = Rarity
 inventory-filter-rarity-all = All rarities
+inventory-show = Show
+inventory-show-owned = Owned cards
+inventory-show-all = All cards
 inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
@@ -236,10 +296,9 @@ inventory-sort-name-desc = Name (Z-A)
 inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
+inventory-tab-collections = Collections
 inventory-message-no-boosters = No boosters yet
-inventory-booster-open-confirm = Open booster { $name }?
-inventory-booster-open-yes = Yes
-inventory-booster-open-no = No
+inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -256,7 +315,6 @@ inventory-locked-badge = { $count } in trades
 
 booster-pile-title = Default booster
 booster-pile-desc = { $count } random cards from all collections
-booster-pile-open-confirm = Open a default booster?
 daily-streak-title = Daily streak
 daily-streak-meter = { $tier } · { $amount }
 daily-streak-count = Streak { $days }
@@ -273,10 +331,7 @@ pack-opening-open-another = Open another pack
 pack-opening-error-collection = Collection not found
 pack-opening-error-empty = This booster has no cards
 pack-opening-error-internal = Failed to open the pack
-pack-opening-obtained = Cards obtained
 pack-opening-back = Back to inventory
-pack-opening-return = Return
-pack-opening-open-again = Open again
 pack-opening-remaining = { $count ->
     [0] No boosters left
     [one] { $count } booster left
@@ -284,16 +339,28 @@ pack-opening-remaining = { $count ->
 }
 pack-opening-error-booster = This booster is not in your inventory
 pack-opening-error-pile = No default booster available
+pack-opening-buy = Open again
+pack-opening-buy-label = Open again for { $price }
+pack-opening-sound-on = Sound on
+pack-opening-sound-off = Sound off
+pack-opening-odds-title = Drop rates
+pack-opening-odds-foil = Foil
+pack-opening-odds-note = Each card of the booster is rolled on its own.
+pack-opening-progress-title = Collection progress
+pack-opening-progress-note = Different cards of this collection you own.
+pack-opening-summary = Cards drawn: { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, foil)
+pack-opening-spinning = Opening the pack…
+pack-opening-skip = Skip
 
-shop-title = Shop
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters
-shop-boosters-title = Boosters
-shop-boosters-empty = No boosters are on sale right now
 shop-booster-buy = Buy
 shop-price = { $amount } coins
 shop-topup-title = Get coins
 shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to your account immediately.
+shop-topup-error-unconfirmed = Unable to confirm the top-up. Refresh the page to check your balance before trying again.
 shop-topup-price = €{ $euros }.{ $cents }
 shop-topup-open = Buy more coins
 shop-topup-success = { $amount } coins have been added to your balance
@@ -303,11 +370,6 @@ shop-error-funds = You do not have enough coins for this purchase
 shop-error-quantity = Enter a quantity between 1 and { $max }
 shop-error-internal = Failed to update your balance
 shop-buy-close = Close
-shop-buy-success = { $count ->
-    [one] A { $collection } booster has been added to your inventory
-   *[other] { $count } { $collection } boosters have been added to your inventory
-}
-shop-buy-view-inventory = View inventory
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
@@ -327,13 +389,20 @@ index-stat-collections = { $count ->
 index-action-register = Create an account
 index-action-browse = Browse the cards
 index-action-inventory = Open your inventory
-index-action-shop = Visit the shop
 index-step-buy-title = Buy boosters
-index-step-buy-text = Spend your coins in the shop on boosters of the collection you like.
+index-step-buy-text = Spend your coins on boosters of the collection you like, right from your inventory.
 index-step-open-title = Open packs
 index-step-open-text = Every booster holds a handful of cards, some of them rare, legendary or foil.
 index-step-trade-title = Trade cards
 index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
+index-install-title = Install the app
+index-install-text = Add Transcendance to your home screen to open it like an app, without the browser's bars.
+index-install-ios-title = iPhone and iPad:
+index-install-ios-text = in Safari, tap Share, then Add to Home Screen.
+index-install-android-title = Android:
+index-install-android-text = in Chrome, open the ⋮ menu, then tap Add to Home screen or Install app.
+index-install-desktop-title = Computer:
+index-install-desktop-text = in Chrome or Edge, click the install icon at the end of the address bar.
 index-cards-title = Rarest cards
 index-cards-all = See every card
 index-collections-title = Collections
@@ -464,3 +533,42 @@ trade-error-locked-coins = Some coins are up in another trade
 trade-error-want-coins = The other user does not have that many coins
 trade-error-state = This trade offer is not pending anymore
 trade-error-forbidden = This trade offer is not yours
+trade-error-blocked = You cannot trade with this user
+shoutbox-title = Chat
+shoutbox-unread = new messages
+shoutbox-close = Close
+shoutbox-connected = Live
+shoutbox-connecting = Connecting...
+shoutbox-empty = No messages yet, say hi!
+shoutbox-placeholder = Write a message
+shoutbox-send = Send
+shoutbox-error-empty = Your message is empty
+shoutbox-error-too-long = Your message is too long, 500 characters at most
+shoutbox-error-rate-limited = You're sending messages too fast, wait a moment
+shoutbox-error-internal = Your message could not be sent, try again
+shoutbox-closed-unauthorized = Your session expired, log in again to chat
+shoutbox-closed-too-many = The shoutbox is open in too many tabs, close some and reload the page
+shoutbox-closed-error = Disconnected from the shoutbox, reload the page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Write a private message
+shoutbox-conversation-empty = No messages yet, say hi!
+shoutbox-conversations-empty = No conversations yet
+shoutbox-start = Start a conversation with a user
+shoutbox-start-placeholder = Username
+shoutbox-start-button = Open
+shoutbox-back = Back to conversations
+shoutbox-you = You
+shoutbox-user-menu = User actions
+shoutbox-message-user = Send a private message
+shoutbox-view-profile = View profile
+shoutbox-ignore-hour = Ignore for 1 hour
+shoutbox-ignore-day = Ignore for 1 day
+shoutbox-ignore-week = Ignore for 1 week
+shoutbox-unignore = Stop ignoring
+shoutbox-ignored-title = Ignored users
+shoutbox-ignored-until = Until
+shoutbox-ignoring-notice = You are ignoring this user: their shoutbox messages are hidden and they can't message you.
+shoutbox-error-user-not-found = This user doesn't exist
+shoutbox-error-self = You can't message yourself
+shoutbox-error-blocked = This user isn't accepting your messages right now

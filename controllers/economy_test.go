@@ -241,6 +241,11 @@ func TestDailyRewardSectionClaimsFromTheTab(t *testing.T) {
 	rec := claimDaily(t, router, cookie, "boosters")
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	require.Equal(t, "/inventory?claimed=1&tab=boosters", rec.Header().Get("Location"))
+	// Any tab, the claimed bonus only lacks the flag
+	rec = claimDaily(t, router, cookie, "cards")
+	require.Equal(t, "/inventory?tab=cards", rec.Header().Get("Location"))
+	// The section posts the tab it is shown on
+	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=collections"), `<input type="hidden" name="tab" value="collections">`)
 }
 
 // The claim of the bonus is confirmed with the amount credited to the balance
@@ -337,10 +342,11 @@ func TestBoosterPileCountedInTotals(t *testing.T) {
 	// The pile counts as boosters, next to the collection stacks
 	require.Contains(t, body, `<p class="inventory-count">5 boosters</p>`)
 	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
-	require.Equal(t, 1, strings.Count(body, `<article class="collection"`))
+	// The pile and one stack to open, the other collections are only on sale
+	require.Equal(t, 2, strings.Count(body, `data-booster-label=`))
 
 	// The tab count is the same from the cards tab
-	body = getInventory(t, router, cookie, "/inventory")
+	body = getInventory(t, router, cookie, "/inventory?tab=cards")
 	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
 }
 

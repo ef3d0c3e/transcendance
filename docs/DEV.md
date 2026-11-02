@@ -74,6 +74,7 @@ update users set rank = 2 where username='admin';
  * [go-toml](https://github.com/pelletier/go-toml) TOML support
  * [github.com/chai2010/webp](https://golang.org/x/image/webp) WEBP image support, the standard one doesn't support encoding
  * [blevesearch/bleve](https://github.com/blevesearch/bleve) Search engine library
+ * [coder/websocket](https://github.com/coder/websocket) WebSocket server, used by the shoutbox
 
 # Static routes
 

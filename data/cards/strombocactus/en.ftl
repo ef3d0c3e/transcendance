@@ -1,0 +1,2 @@
+title = Strombocactus
+description = Strombocactus disciformis is a rare species of cacti and the only species of the genus Strombocactus. The plant originates from Central and Northeast Mexico.

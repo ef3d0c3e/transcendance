@@ -106,6 +106,10 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": dc.Renderer.T(c, "trade-error-user")})
 		return
 	}
+	if blocked, err := controllers.TradeBlocked(dc.DB, user.ID, target.ID); err != nil || blocked {
+		c.JSON(http.StatusForbidden, gin.H{"message": dc.Renderer.T(c, "trade-error-blocked")})
+		return
+	}
 
 	// The countered offer must be one made by the partner to the user: it is
 	// the only one its counter replaces and unlocks
