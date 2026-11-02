@@ -357,19 +357,7 @@ import { apiFetch } from './api.js';
 	}
 }
 
-{
-	const target = document.querySelector('#shop-buy-popup');
-
-	if (target) {
-		mount(ShopBuyPopup, {
-			target,
-			props: {
-				target,
-			},
-		});
-	}
-}
-
+// Trade menu
 {
 	const target = document.querySelector('#trade-menu');
 
