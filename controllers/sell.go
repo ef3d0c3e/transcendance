@@ -47,20 +47,21 @@ var (
 
 // Redirect back to the cards of the inventory with what a sale did
 func soldRedirect(c *gin.Context, count uint, coins uint) {
-	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&sold="+strconv.FormatUint(uint64(count), 10)+
-		"&coins="+strconv.FormatUint(uint64(coins), 10))
+	c.Redirect(http.StatusSeeOther, "/inventory?tab=cards&"+signedNotice(c, "sold="+strconv.FormatUint(uint64(count), 10)+
+		"&coins="+strconv.FormatUint(uint64(coins), 10)))
 }
 
 // Pages selling without reloading ask for the outcome as JSON instead
-// (frontend/src/sell.js)
-func wantsJSON(c *gin.Context) bool {
+// (frontend/src/sell.js). Stricter than wantsJSON: a form posted without an
+// Accept header still gets its redirect.
+func sellWantsJSON(c *gin.Context) bool {
 	return c.GetHeader("Accept") == "application/json"
 }
 
 // Redirect back to the cards of the inventory with why a sale failed, or say
 // why to the pages that sell without reloading
 func (sc *Controller) sellFailed(c *gin.Context, code string) {
-	if wantsJSON(c) {
+	if sellWantsJSON(c) {
 		status := http.StatusBadRequest
 		if code == "internal" {
 			status = http.StatusInternalServerError
@@ -88,9 +89,9 @@ type soldStack struct {
 // reloading: the new balance, what the stacks look like now and what selling
 // the remaining duplicates would pay
 type saleOutcome struct {
-	Coins      uint   `json:"coins"`
-	CoinsLabel string `json:"coinsLabel"`
-	NavBalance string `json:"navBalance"`
+	Coins      uint        `json:"coins"`
+	CoinsLabel string      `json:"coinsLabel"`
+	NavBalance string      `json:"navBalance"`
 	Message    string      `json:"message"`
 	Stacks     []soldStack `json:"stacks"`
 	Duplicates struct {
@@ -207,14 +208,14 @@ func creditSale(tx *gorm.DB, ownerID uint, coins uint) error {
 func (sc *Controller) ShopSellPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		if wantsJSON(c) {
+		if sellWantsJSON(c) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": sc.Renderer.T(c, "shop-error-unauthenticated")})
 			return
 		}
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
-	asJSON := wantsJSON(c)
+	asJSON := sellWantsJSON(c)
 
 	// The card to sell and which of its foil variants, then how many copies
 	id, err := strconv.Atoi(c.PostForm("card"))
@@ -222,9 +223,10 @@ func (sc *Controller) ShopSellPost(c *gin.Context) {
 		sc.sellFailed(c, "card")
 		return
 	}
+	// Exactly a known foil: the database compares " " like "", which would sell plain cards at the foil price
 	foil := c.PostForm("foil")
 	card, _ := sc.Data.GetCard(id)
-	if card == nil || SellPrice(card.Rarity, foil) == 0 {
+	if card == nil || !models.ValidFoil(foil) || SellPrice(card.Rarity, foil) == 0 {
 		sc.sellFailed(c, "card")
 		return
 	}
@@ -362,14 +364,14 @@ func DuplicatesForSale(db *gorm.DB, d *data.Data, userID uint) (DuplicateSale, e
 func (sc *Controller) ShopSellDuplicatesPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
-		if wantsJSON(c) {
+		if sellWantsJSON(c) {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": sc.Renderer.T(c, "shop-error-unauthenticated")})
 			return
 		}
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
-	asJSON := wantsJSON(c)
+	asJSON := sellWantsJSON(c)
 
 	var sale DuplicateSale
 	var remaining []soldStack

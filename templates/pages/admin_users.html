@@ -1,0 +1,106 @@
+{{ define "admin_users" }}
+<div class="inventory admin-users">
+	<div class="inventory-header">
+		<div class="inventory-heading">
+			<h1 class="inventory-title">{{ .T "admin-users-title" }}</h1>
+			<p class="inventory-count">{{ .Data.Count }}</p>
+		</div>
+	</div>
+
+	<form class="inventory-filters admin-users-filters" action="/admin/users" method="get">
+		<label>
+			<span>{{ .T "admin-users-search" }}</span>
+			<input type="search" name="q" value="{{ .Data.Query }}" maxlength="254">
+		</label>
+		<label>
+			<span>{{ .T "admin-users-role" }}</span>
+			<select name="role">
+				{{ range .Data.RoleOptions }}
+				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+				{{ end }}
+			</select>
+		</label>
+		<button type="submit">{{ .T "admin-users-apply" }}</button>
+	</form>
+
+	{{ with .Data.Notice }}<p class="admin-users-notice" role="status">{{ . }}</p>{{ end }}
+	{{ with .Data.Error }}<p class="admin-users-error" role="alert">{{ . }}</p>{{ end }}
+
+	{{ if .Data.Users }}
+	{{ .Children.Paginator }}
+	<div class="admin-users-table">
+		<table>
+			<caption class="sr-only">{{ .T "admin-users-caption" }}</caption>
+			<thead>
+				<tr>
+					<th scope="col">{{ .T "admin-users-col-user" }}</th>
+					<th scope="col">{{ .T "account-email" }}</th>
+					<th scope="col">{{ .T "admin-users-col-joined" }}</th>
+					<th scope="col">{{ .T "admin-users-col-cards" }}</th>
+					<th scope="col">{{ .T "profile-rank" }}</th>
+					<th scope="col">{{ .T "admin-users-col-actions" }}</th>
+				</tr>
+			</thead>
+			<tbody>
+				{{ range .Data.Users }}
+				{{ $rank := printf "%d" .Rank }}
+				<tr>
+					<th scope="row">
+						<a href="/profile/{{ .Username }}">{{ .Username }}</a>
+						{{ if .Online }}<span class="admin-users-online">{{ $.T "admin-users-online" }}</span>{{ end }}
+					</th>
+					<td>{{ .Email }}</td>
+					<td><time datetime="{{ .CreatedAt.Format "2006-01-02" }}">{{ .CreatedAt.Format "2006-01-02" }}</time></td>
+					<td>{{ .CardCount }}</td>
+					<td>{{ $.T (printf "profile-rank-%s" .RankName) }}</td>
+					<td>
+						{{ if .Own }}
+						<a href="/profile">{{ $.T "admin-users-own" }}</a>
+						{{ else }}
+						<form class="admin-users-rank" method="post" action="/admin/users/{{ .ID }}/rank">
+							<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+							<label class="sr-only" for="rank-{{ .ID }}">{{ $.T "admin-users-rank-of" "username" .Username }}</label>
+							<select id="rank-{{ .ID }}" name="rank">
+								{{ range $.Data.RankOptions }}
+								<option value="{{ .Value }}" {{ if eq .Value $rank }}selected{{ end }}>{{ .Label }}</option>
+								{{ end }}
+							</select>
+							<button type="submit">{{ $.T "admin-users-rank-submit" }}<span class="sr-only"> {{ .Username }}</span></button>
+						</form>
+						<details class="admin-users-password">
+							<summary>{{ $.T "admin-users-password" }}<span class="sr-only"> {{ .Username }}</span></summary>
+							<form method="post" action="/admin/users/{{ .ID }}/password">
+								<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+								<label for="password-{{ .ID }}">{{ $.T "admin-users-password-new" }}</label>
+								<input type="password" id="password-{{ .ID }}" name="password" autocomplete="new-password"
+									required minlength="8" maxlength="72">
+								<label for="confirm-{{ .ID }}">{{ $.T "admin-users-password-confirm" }}</label>
+								<input type="password" id="confirm-{{ .ID }}" name="confirm" autocomplete="new-password"
+									required minlength="8" maxlength="72">
+								<p>{{ $.T "admin-users-password-hint" }}</p>
+								<button type="submit">{{ $.T "admin-users-password-submit" }}</button>
+							</form>
+						</details>
+						<details class="admin-users-delete">
+							<summary>{{ $.T "admin-users-delete" }}<span class="sr-only"> {{ .Username }}</span></summary>
+							<form method="post" action="/admin/users/{{ .ID }}/delete">
+								<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+								<p>{{ $.T "account-delete-profile-confirm" "username" .Username }}</p>
+								<button type="submit" class="button-danger">{{ $.T "account-delete-profile-submit" }}</button>
+							</form>
+						</details>
+						{{ end }}
+					</td>
+				</tr>
+				{{ end }}
+			</tbody>
+		</table>
+	</div>
+	{{ .Children.PaginatorBottom }}
+	{{ else }}
+	<div class="inventory-message">
+		<p>{{ .T "search-user-empty" }}</p>
+	</div>
+	{{ end }}
+</div>
+{{ end }}

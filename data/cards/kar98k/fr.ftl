@@ -1,0 +1,2 @@
+title = Karabiner 98k
+description = La Karabiner 98 kurz ou Karabiner 98k est une carabine à verrou allemande chambrée en 7,92 × 57 mm et conçue par Mauser Waffenfabrik. Elle fut adoptée le 21 juin 1935 comme arme de service par la Wehrmacht. Ce fut l'arme standard la plus commune des troupes à pied de toutes les branches de la Wehrmacht et de la Waffen-SS, devant les Sturmgewehr, MP 40, Gewehr 43 et autres Gewehr 41.

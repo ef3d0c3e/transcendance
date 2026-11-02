@@ -1,0 +1,2 @@
+title = Rhodonite
+description = Rhodonite is a manganese inosilicate, with the formula (Mn, Fe, Mg, Ca)SiO3, and member of the pyroxenoid group of minerals, crystallizing in the triclinic system. The term rhodonite was first introduced by Germar. from Ancient Greek ῥόδον (rhódon) 'rose'. It commonly occurs as cleavable to compact masses with a rose-red color often tending to brown due to surface oxidation. The rose-red hue is caused by the manganese cation (Mn2+).

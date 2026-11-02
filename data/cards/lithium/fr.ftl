@@ -1,0 +1,2 @@
+title = Lithium
+description = Le lithium est l'élément chimique de numéro atomique 3, de symbole Li. C'est un métal alcalin, du premier groupe du tableau périodique des éléments. Les noyaux atomiques des deux isotopes stables du lithium (6Li et 7Li) comptent parmi ceux ayant l'énergie de liaison par nucléon la plus faible de tous les isotopes stables, ce qui signifie que ces noyaux sont assez peu stables comparés à ceux des autres éléments légers.

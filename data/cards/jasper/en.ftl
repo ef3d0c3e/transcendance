@@ -1,0 +1,2 @@
+title = Jasper
+description = Jasper is an opaque type of silica that comes in a variety of colors, most commonly red, yellow, brown, green, and very rarely blue. It is made mostly of very fine-grained quartz or chalcedony, with other minerals contributing to its color and appearance. The common reddish color is due to iron inclusions. Jasper breaks with a smooth surface and is used for ornamentation or as a gemstone.

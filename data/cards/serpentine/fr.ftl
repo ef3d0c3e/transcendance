@@ -1,0 +1,2 @@
+title = Serpentine
+description = La serpentine n'est pas une espèce minérale, mais une famille de minéraux du groupe des silicates et du sous-groupe des phyllosilicates (ou silicates lamellaires). Cette famille contient plus de vingt membres, ou polymorphes, que l'on retrouve dans des roches métamorphiques riches en hydroxydes de fer, aluminium, manganèse, nickel, zinc, calcium ou de magnésium de formule générale (Mg, FeII)3Si2O5(OH)4.

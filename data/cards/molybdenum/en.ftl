@@ -1,0 +1,2 @@
+title = Molybdenum
+description = Molybdenum is a chemical element; it has symbol Mo and atomic number 42. The name is derived from Ancient Greek μόλυβδος mólybdos, meaning lead, since its ores were sometimes confused with those of lead. Molybdenum minerals have been known throughout history, but the element was discovered (in the sense of differentiating it as a new entity from the mineral salts of other metals) in 1778 by Carl Wilhelm Scheele.

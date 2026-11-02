@@ -1,0 +1,2 @@
+title = Actinium
+description = L’actinium est un élément chimique de la famille des actinides, de symbole Ac et de numéro atomique 89. Son nom vient du grec ancien ἀκτίς / aktís (au génitif ἀκτῖνος / aktīnos), « rayon de soleil », évoquant le caractère lumineux de cet élément. L’actinium a été découvert par André-Louis Debierne en 1899 dans des mélanges d’oxydes de terres rares. Le corps simple actinium est un métal blanc argenté et mou.

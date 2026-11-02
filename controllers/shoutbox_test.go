@@ -52,6 +52,8 @@ type shoutboxEvent struct {
 	Ignored       []chatIgnoredUser    `json:"ignored"`
 	Error         string               `json:"error"`
 	RetryAfter    int64                `json:"retryAfter"`
+	ID            uint                 `json:"id"`
+	Moderator     bool                 `json:"moderator"`
 }
 
 func shoutboxDial(t *testing.T, server *httptest.Server, cookie *http.Cookie, origin string, extraCookies ...*http.Cookie) (*websocket.Conn, *http.Response, error) {
@@ -305,7 +307,7 @@ func TestShoutboxLoggedOut(t *testing.T) {
 
 	conn, _ := shoutboxConnect(t, server, cookie)
 
-	req := httptest.NewRequest(http.MethodGet, "/api/logout", nil)
+	req := httptest.NewRequest(http.MethodPost, "/api/logout", nil)
 	req.AddCookie(cookie)
 	router.ServeHTTP(httptest.NewRecorder(), req)
 

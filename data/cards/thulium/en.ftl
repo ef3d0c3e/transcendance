@@ -1,0 +1,2 @@
+title = Thulium
+description = Thulium is a chemical element; it has symbol Tm and atomic number 69. It is the thirteenth element in the lanthanide series of metals. It is the second-least abundant lanthanide in the Earth's crust, after radioactively unstable promethium. It is an easily workable metal with a bright silvery-gray luster. It is fairly soft and slowly tarnishes in air. Despite its high price and rarity, thulium is used as a dopant in solid-state lasers.

@@ -1,0 +1,310 @@
+id = 7
+tags = ["mineral"]
+color-primary = "#a99be0"
+color-secondary = "#261f4a"
+
+[[cards]]
+name = "agate"
+
+[[cards]]
+name = "alexandrite"
+
+[[cards]]
+name = "amazonite"
+
+[[cards]]
+name = "amber"
+
+[[cards]]
+name = "amethyst"
+
+[[cards]]
+name = "ammolite"
+
+[[cards]]
+name = "andalusite"
+
+[[cards]]
+name = "apatite"
+
+[[cards]]
+name = "apophyllite"
+
+[[cards]]
+name = "aquamarine"
+
+[[cards]]
+name = "aragonite"
+
+[[cards]]
+name = "aventurine"
+
+[[cards]]
+name = "azurite"
+
+[[cards]]
+name = "barite"
+
+[[cards]]
+name = "benitoite"
+
+[[cards]]
+name = "bismuth"
+
+[[cards]]
+name = "bloodstone"
+
+[[cards]]
+name = "calcite"
+
+[[cards]]
+name = "carnelian"
+
+[[cards]]
+name = "celestine"
+
+[[cards]]
+name = "chalcedony"
+
+[[cards]]
+name = "charoite"
+
+[[cards]]
+name = "chrysoberyl"
+
+[[cards]]
+name = "chrysocolla"
+
+[[cards]]
+name = "chrysoprase"
+
+[[cards]]
+name = "cinnabar"
+
+[[cards]]
+name = "citrine"
+
+[[cards]]
+name = "copper"
+
+[[cards]]
+name = "coral"
+
+[[cards]]
+name = "crocoite"
+
+[[cards]]
+name = "demantoid"
+
+[[cards]]
+name = "desert-rose"
+
+[[cards]]
+name = "diamond"
+
+[[cards]]
+name = "dioptase"
+
+[[cards]]
+name = "emerald"
+
+[[cards]]
+name = "euclase"
+
+[[cards]]
+name = "fluorite"
+
+[[cards]]
+name = "galena"
+
+[[cards]]
+name = "garnet"
+
+[[cards]]
+name = "gold"
+
+[[cards]]
+name = "grandidierite"
+
+[[cards]]
+name = "gypsum"
+
+[[cards]]
+name = "halite"
+
+[[cards]]
+name = "hematite"
+
+[[cards]]
+name = "howlite"
+
+[[cards]]
+name = "iolite"
+
+[[cards]]
+name = "jadeite"
+
+[[cards]]
+name = "jasper"
+
+[[cards]]
+name = "jet"
+
+[[cards]]
+name = "kunzite"
+
+[[cards]]
+name = "kyanite"
+
+[[cards]]
+name = "labradorite"
+
+[[cards]]
+name = "lapis-lazuli"
+
+[[cards]]
+name = "larimar"
+
+[[cards]]
+name = "magnetite"
+
+[[cards]]
+name = "malachite"
+
+[[cards]]
+name = "moldavite"
+
+[[cards]]
+name = "moonstone"
+
+[[cards]]
+name = "morganite"
+
+[[cards]]
+name = "muscovite"
+
+[[cards]]
+name = "musgravite"
+
+[[cards]]
+name = "nephrite"
+
+[[cards]]
+name = "obsidian"
+
+[[cards]]
+name = "onyx"
+
+[[cards]]
+name = "opal"
+
+[[cards]]
+name = "painite"
+
+[[cards]]
+name = "pearl"
+
+[[cards]]
+name = "peridot"
+
+[[cards]]
+name = "prehnite"
+
+[[cards]]
+name = "pyrite"
+
+[[cards]]
+name = "quartz"
+
+[[cards]]
+name = "red-beryl"
+
+[[cards]]
+name = "rhodochrosite"
+
+[[cards]]
+name = "rhodonite"
+
+[[cards]]
+name = "rose-quartz"
+
+[[cards]]
+name = "ruby"
+
+[[cards]]
+name = "rutile"
+
+[[cards]]
+name = "sapphire"
+
+[[cards]]
+name = "selenite"
+
+[[cards]]
+name = "serpentine"
+
+[[cards]]
+name = "silver"
+
+[[cards]]
+name = "smithsonite"
+
+[[cards]]
+name = "smoky-quartz"
+
+[[cards]]
+name = "sodalite"
+
+[[cards]]
+name = "sphalerite"
+
+[[cards]]
+name = "spinel"
+
+[[cards]]
+name = "staurolite"
+
+[[cards]]
+name = "stibnite"
+
+[[cards]]
+name = "sugilite"
+
+[[cards]]
+name = "sulfur"
+
+[[cards]]
+name = "sunstone"
+
+[[cards]]
+name = "taaffeite"
+
+[[cards]]
+name = "talc"
+
+[[cards]]
+name = "tanzanite"
+
+[[cards]]
+name = "tigers-eye"
+
+[[cards]]
+name = "titanite"
+
+[[cards]]
+name = "topaz"
+
+[[cards]]
+name = "tourmaline"
+
+[[cards]]
+name = "turquoise"
+
+[[cards]]
+name = "vanadinite"
+
+[[cards]]
+name = "wulfenite"
+
+[[cards]]
+name = "zircon"

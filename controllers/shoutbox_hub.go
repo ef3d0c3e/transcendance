@@ -38,6 +38,10 @@ const (
 	shoutboxErrorUserNotFound = "user-not-found"
 	shoutboxErrorSelf         = "self"
 	shoutboxErrorBlocked      = "blocked"
+	// Moderation
+	shoutboxErrorForbidden       = "forbidden"
+	shoutboxErrorMuted           = "muted"
+	shoutboxErrorMessageNotFound = "message-not-found"
 )
 
 // Clean up a message body, returns an error code if it can't be posted
@@ -238,6 +242,17 @@ func (h *shoutboxHub) broadcast(senderID uint, payload []byte) {
 		if h.ignoring(userID, senderID, now) {
 			continue
 		}
+		for client := range clients {
+			h.queue(client, payload)
+		}
+	}
+}
+
+// Queue a payload for every client, whoever sent what it is about
+func (h *shoutboxHub) broadcastAll(payload []byte) {
+	h.mu.Lock()
+	defer h.mu.Unlock()
+	for _, clients := range h.users {
 		for client := range clients {
 			h.queue(client, payload)
 		}

@@ -1,0 +1,2 @@
+title = Sapphire
+description = Sapphire is a precious gemstone, a variety of the mineral corundum, consisting of aluminium oxide (α-Al2O3) with trace amounts of elements such as iron, titanium, cobalt, lead, chromium, vanadium, magnesium, boron, and silicon. The name sapphire is derived from the Latin word sapphirus, itself from the Greek word sappheiros (σάπφειρος, itself from a Semitic origin), which referred to lapis lazuli.

@@ -1,0 +1,2 @@
+title = Francium
+description = Francium is a chemical element; it has symbol Fr and atomic number 87. It is extremely radioactive; its most stable isotope, francium-223 (originally called actinium K after the natural decay chain in which it appears), has a half-life of only 22 minutes. It is the second-most electropositive element, behind only caesium, and is the second rarest naturally occurring element (after astatine).

@@ -1,0 +1,2 @@
+title = PIAT
+description = Le Projector Infantry Anti Tank est une arme portative anti-tank britannique de la Seconde Guerre mondiale. Il s'agit en pratique d'un lanceur à spigot. Cette arme très désagréable d'emploi est l'arme anti-char en dotation des troupes britanniques à partir du 30 avril 1943, date où la division d'infanterie britannique connaît une réorganisation, et remplace le fusil antichar Boys.

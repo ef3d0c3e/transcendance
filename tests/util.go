@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 
 	"transcendance/config"
@@ -48,12 +49,16 @@ func Run(data *data.Data, db *gorm.DB) *gin.Engine {
 func Init() error {
 	var err error
 
+	// Test accounts need no strong hash, and the default cost makes every
+	// registration and login slow under the race detector
+	controllers.PasswordHashCost = bcrypt.MinCost
+
 	data, err := data.LoadCards()
 	if err != nil {
 		return err
 	}
 	Data = data
-	
+
 	DB, cleanup, err = config.ConnectTestDatabase()
 	if err != nil {
 		return err

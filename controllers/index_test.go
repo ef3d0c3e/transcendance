@@ -28,7 +28,8 @@ func TestIndexPage(t *testing.T) {
 	for _, collection := range tests.Data.Collections {
 		cards += len(collection.Cards)
 	}
-	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%d cards · %d collections</p>`, cards, len(tests.Data.Collections)))
+	require.Contains(t, body, fmt.Sprintf(`<p class="index-stats">%s cards · %s collections</p>`,
+		englishCount(cards), englishCount(len(tests.Data.Collections))))
 	// Visitors are invited to register
 	require.Contains(t, body, `<a class="index-action-primary" href="/register">Create an account</a>`)
 	require.NotContains(t, body, `href="/inventory">Open your inventory</a>`)

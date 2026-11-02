@@ -1,0 +1,2 @@
+title = Caesium
+description = Caesium (IUPAC spelling; also spelled cesium in American English) is a chemical element; it has symbol Cs and atomic number 55. It is a soft, silvery-golden alkali metal with a melting point of 28.5 °C (83.3 °F; 301.6 K), which makes it one of only five elemental metals that are liquid at or near room temperature. Caesium has physical and chemical properties similar to those of rubidium and potassium.

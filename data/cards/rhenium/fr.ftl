@@ -1,0 +1,2 @@
+title = Rhénium
+description = Le rhénium est l'élément chimique de numéro atomique 75, de symbole Re. Il a été découvert en 1925 par les chimistes allemands Walter Noddack, Ida Tacke et Otto Berg. Son nom dérive du nom latin du Rhin, Rhenus. C'est le dernier élément stable à avoir été découvert, les suivants étant tous radioactifs. Le corps simple rhénium est un métal argenté et lourd qui résiste bien à la corrosion et a une tolérance exceptionnelle à la chaleur.
