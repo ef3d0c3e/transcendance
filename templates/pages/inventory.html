@@ -38,11 +38,9 @@
 
 	{{ template "inventory-tabs" . }}
 
-	{{ if .Data.Notice.Message }}
-	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}">
-		{{ .Data.Notice.Message }}
-	</p>
-	{{ end }}
+	<!-- Sales made without reloading say what they did here (frontend/src/sell.js) -->
+	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}"
+		data-inventory-notice role="status" tabindex="-1"{{ if not .Data.Notice.Message }} hidden{{ end }}>{{ .Data.Notice.Message }}</p>
 
 	{{ if .Data.Topups }}
 	<div class="inventory-wallet">
@@ -94,10 +92,12 @@
 	<!-- Says what selling the duplicates pays before doing it -->
 	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm"
 		aria-labelledby="inventory-sell-duplicates-title" aria-describedby="inventory-sell-duplicates-text">
-		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post">
+		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post"
+			data-label-error="{{ $.T "inventory-sell-error-internal" }}">
 			<h2 id="inventory-sell-duplicates-title">{{ $.T "inventory-sell-duplicates-title" }}</h2>
 			<p id="inventory-sell-duplicates-text">{{ $.T "inventory-sell-duplicates-text" "count" .Count "amount" .Coins }}</p>
 			<p class="inventory-confirm-note">{{ $.T "inventory-sell-duplicates-note" }}</p>
+			<p class="section-error" data-sell-error role="alert" hidden></p>
 			<div class="inventory-confirm-actions">
 				<button type="button" class="inventory-confirm-cancel" data-dialog-close>{{ $.T "inventory-sell-cancel" }}</button>
 				<button type="submit">{{ $.T "inventory-sell-duplicates-confirm" "amount" .Coins }}</button>
@@ -346,6 +346,7 @@
 		data-label-value="{{ .T "inventory-card-value" }}" data-label-sell="{{ .T "inventory-card-sell" }}"
 		data-label-quantity="{{ .T "inventory-sell-quantity" }}" data-label-total="{{ .T "inventory-sell-total" }}"
 		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
+		data-label-error="{{ .T "inventory-sell-error-internal" }}"
 		data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
 		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}

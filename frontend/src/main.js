@@ -21,6 +21,7 @@ import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 import { enhanceCountdowns } from './countdown.js';
 import { openTopup } from './topup.js';
+import { enhanceSellDuplicates } from './sell.js';
 import { apiFetch } from './api.js';
 
 // Navbar
@@ -425,6 +426,15 @@ import { apiFetch } from './api.js';
 		});
 		// Focus comes back to the button, as it opened the popup
 		dialog.addEventListener('close', () => button.focus());
+	}
+}
+
+// Selling the duplicate cards without reloading the page
+{
+	const form = document.querySelector('#inventory-sell-duplicates-popup form');
+
+	if (form) {
+		enhanceSellDuplicates(form);
 	}
 }
 
