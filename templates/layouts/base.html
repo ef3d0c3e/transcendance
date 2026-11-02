@@ -5,25 +5,28 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<script src="/static/vendor/e-layout.min.js"></script>
-	<link rel="stylesheet" href="/static/base.css">
+	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
-	<script>
-		if (!document.cookie.includes('theme=')) {
-			const theme = matchMedia('(prefers-color-scheme: dark)').matches
-				? 'dark'
-				: 'light';
-			document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
-			document.documentElement.setAttribute("theme", theme);
-		}
-	</script>
+	{{/* Picks the theme on a first visit before anything is painted: kept
+	synchronous and before the stylesheets, and a file rather than an
+	inline script for the Content-Security-Policy (script-src 'self') */}}
+	<script src="/static/theme-init.js"></script>
+	<link rel="stylesheet" href="/static/base.css">
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
+	{{/* The page's own description when its controller gives one */}}
+	{{ $description := .T "meta-description" }}
+	{{- with .Data.Description }}{{ $description = . }}{{ end }}
+	<meta name="description" content="{{ $description }}">
+	<meta property="og:type" content="website">
+	<meta property="og:site_name" content="Transcendance">
+	<meta property="og:title" content="{{ .Data.Title }}">
+	<meta property="og:description" content="{{ $description }}">
+
 	<!-- Added to the home screen, the site opens as an app, without the browser's bars -->
 	<link rel="manifest" href="/static/manifest.json">
 	<link rel="apple-touch-icon" href="/static/icons/icon-192.png">
-	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
 	<script type="module" src="/frontend/main.js"></script>
 </head>
@@ -131,7 +134,10 @@
 						</svg>
 						<span>{{ .Username }}</span>
 					</a>
-					<button type="button" class="nav-logout" data-logout="/api/logout">{{ $.T "navbar-logout" }}</button>
+					{{/* A plain POST without JavaScript, which redirects home */}}
+					<form class="nav-logout-form" method="post" action="/api/logout" data-logout="/api/logout">
+						<button type="submit" class="nav-logout">{{ $.T "navbar-logout" }}</button>
+					</form>
 					{{ else }}
 					{{/* Links to the pages, which JavaScript turns into buttons
 					opening the form in a popup */}}
@@ -163,6 +169,9 @@
 	</footer>
 	<!-- Card rendering styles and interactions, mounted once for every card on the page -->
 	<div id="card-rendering"></div>
+	{{/* <e-cluster> layouts: base.css already lays them out, the script
+	doesn't block the page's rendering at the end of the body */}}
+	<script src="/static/vendor/e-layout.min.js"></script>
 </body>
 
 </html>

@@ -28,7 +28,7 @@ export default [
 	},
 
 	{
-		files: ['frontend/**/*.js', 'docker/*/static/**/*.js'],
+		files: ['frontend/**/*.js', 'static/*.js', 'docker/*/static/**/*.js'],
 		languageOptions: {
 			globals: globals.browser,
 		},

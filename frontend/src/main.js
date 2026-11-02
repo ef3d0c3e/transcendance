@@ -105,15 +105,22 @@ import { apiFetch } from './api.js';
 	enhanceCountdowns();
 }
 
-// Log out, then land on a page visitors can see
+// Log out in the background, then land on the home page, which visitors can
+// see. Without JavaScript the form posts and the server redirects there.
 {
-	for (const button of document.querySelectorAll('[data-logout]')) {
-		button.addEventListener('click', async () => {
-			button.disabled = true;
+	for (const form of document.querySelectorAll('form[data-logout]')) {
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			form.querySelector('button')?.setAttribute('aria-disabled', 'true');
 			try {
-				await fetch(button.dataset.logout, { credentials: 'same-origin' });
-			} finally {
-				location.assign('/cards/search/');
+				await apiFetch(form.dataset.logout, {
+					method: 'POST',
+					headers: { Accept: 'application/json' },
+				});
+				location.assign('/');
+			} catch {
+				// Offline: posted as is, the browser tells what went wrong
+				form.submit();
 			}
 		});
 	}
@@ -285,35 +292,22 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Inventory boosters open on click, dragging to tilt them doesn't count
+// Inventory boosters are links to their opening: dragging one to tilt it
+// isn't a click on it
 {
-	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
 	// Pointer travel (px) after which a press counts as a tilt drag
 	const dragThreshold = 6;
-	let press;
 
-	for (const tile of tiles) {
-		const booster = tile.closest('.inventory-booster');
-		const open = () => location.assign(booster.dataset.boosterOpen);
-
-		tile.tabIndex = 0;
-		tile.setAttribute('role', 'link');
-		tile.setAttribute('aria-label', booster.dataset.boosterLabel ?? '');
-		tile.addEventListener('pointerdown', (event) => {
+	for (const link of document.querySelectorAll('a.inventory-booster[data-booster-open]')) {
+		let press;
+		link.addEventListener('pointerdown', (event) => {
 			press = { x: event.clientX, y: event.clientY };
 		}, { passive: true });
-		tile.addEventListener('click', (event) => {
+		link.addEventListener('click', (event) => {
 			if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > dragThreshold) {
-				return;
+				event.preventDefault();
 			}
-			open();
-		});
-		tile.addEventListener('keydown', (event) => {
-			if (event.key !== 'Enter') {
-				return;
-			}
-			event.preventDefault();
-			open();
+			press = undefined;
 		});
 	}
 }
