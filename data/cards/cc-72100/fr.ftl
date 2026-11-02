@@ -1,0 +1,2 @@
+title = CC 72100
+description = Les CC 72100 sont des CC 72000 (locomotives Diesel-électriques) qui ont été remotorisés, entre 2002 et 2004. À la suite de plaintes récurrentes de riverains de la gare de l'Est à Paris et pour correspondre aux nouvelles réglementations antipollution de l'UIC, mais aussi pour prolonger leur durée de vie, il a été décidé par la SNCF et les collectivités de remotoriser 30 machines affectées au dépôt de Chalindrey, pour la ligne Paris – Mulhouse. Cette opération a permis un prolongement de leur durée de vie d'environ 15 années supplémentaires.

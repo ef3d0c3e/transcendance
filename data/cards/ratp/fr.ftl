@@ -1,0 +1,2 @@
+title = RATP
+description = La Régie autonome des transports parisiens (RATP) est un établissement public à caractère industriel et commercial de l'État français assurant l'exploitation d'une partie des transports en commun de Paris et de sa banlieue. Elle exploite les seize lignes du métro de Paris, onze des quinze lignes du tramway d'Île-de-France, une partie des lignes de bus d'Île-de-France, et une partie des lignes A et B du RER. En région parisienne, elle transporte plus de 3,3 milliards de passagers par an.

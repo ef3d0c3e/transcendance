@@ -1,0 +1,2 @@
+title = TaM Montpellier 3M
+description = TaM Montpellier 3M (parfois simplifié en TaM) est le nom commercial de la société publique locale Transports de l'agglomération de Montpellier chargée par délégation de service public des transports en commun, de la location de vélos de courte durée, du stationnement sur la voie publique et de la gestion de certains parcs de stationnement de Montpellier et de sa métropole.
