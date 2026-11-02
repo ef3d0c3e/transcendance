@@ -1,0 +1,2 @@
+title = Zirconium
+description = Zirconium is a chemical element; it has symbol Zr and atomic number 40. First identified in 1789, isolated in impure form in 1824, and manufactured at scale by 1925, pure zirconium is a lustrous transition metal with a greyish-white color that closely resembles hafnium and, to a lesser extent, titanium. It is solid at room temperature, ductile, malleable and corrosion-resistant.

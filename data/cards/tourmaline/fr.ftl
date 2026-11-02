@@ -1,0 +1,2 @@
+title = Tourmaline
+description = La tourmaline est un groupe de minéraux de la famille des silicates, sous-groupe des cyclosilicates, de composition chimique complexe à base de bore. Elle cristallise dans le système trigonal en baguettes ou aiguilles allongées à section triangulaire et faces striées, et présente une palette de couleurs plus large que toute autre gemme, parfois plusieurs dans un même cristal.

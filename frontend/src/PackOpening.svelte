@@ -1,7 +1,9 @@
 <script>
 	import { onMount, tick } from "svelte";
-	import { openTopup } from "./topup.js";
+	import { openTopup, updateNavBalance } from "./topup.js";
+	import { apiFetch } from "./api.js";
 	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
+	import { loadStill, saveStill } from "./pack-motion.js";
 
 	let {
 		formSelector,
@@ -11,13 +13,23 @@
 		againLabel,
 		coins: initialCoins = 0,
 		autostart = false,
-		// Labels of the sound switch, while the sound is on and off
-		soundOnLabel = "Sound on",
-		soundOffLabel = "Sound off",
+		// Names of the sound and animation switches, which tell their state
+		// with aria-pressed and an icon
+		soundLabel = "Sound",
+		motionLabel = "Animations",
+		// Button cutting the spin short, and what screen readers hear meanwhile
+		skipLabel = "Skip",
+		spinningLabel = "Opening the pack…",
 	} = $props();
 
 	let muted = $state(loadMuted());
-	let sounds = $derived(packSounds(muted));
+	const sounds = $derived(packSounds(muted));
+	// The page's endless animations are stopped
+	let still = $state(loadStill());
+
+	$effect(() => {
+		document.querySelector(".pack-page")?.classList.toggle("is-still", still);
+	});
 	// How far each reel rolled past the payline, in ticks: a tick plays when
 	// it changes
 	let paylineTicks = [];
@@ -43,15 +55,21 @@
 	let stageAction = $state(null);
 	// Price shown on the stage's button when it buys, the page's buy button markup
 	let priceHtml = $state("");
-	// Rare and legendary landings flash the whole stage
+	// A rare or legendary pull flashes the whole stage, once per opening
+	// once every reel landed: never three flashes in a second
 	let stageFlash = $state({ key: 0, rarity: "" });
+	// Read by screen readers: the opening started, then the cards it gave
+	let announcement = $state("");
+	let skipButton = $state();
+	// Ends the wait for the reels at once, set while they turn
+	let skipWait = null;
 	// The page's form, with its open button for boosters left in the stack,
 	// and its buy button once they are all opened
 	let pageForm;
 	let openButton;
 	let buyButton;
-	// Balance, kept up to date by every purchase
-	let coins = initialCoins;
+	// Balance, the page's on mount, then kept up to date by every purchase
+	let coins = 0;
 	let timers = [];
 
 	// Slot machine: five vertical reels side by side. Each drops past its
@@ -102,6 +120,15 @@
 	// Period of the reels' sway, picked per reel so they never move in sync
 	const SWAY_MIN_S = 2.6;
 	const SWAY_MAX_S = 4.2;
+	// Spin length when the user asked for less motion: the reels barely turn
+	const REDUCED_SPIN_MIN_MS = 500;
+	const REDUCED_SPIN_MAX_MS = 700;
+	// Landing order of rarities, the best one plays when the spin is skipped
+	const RARITY_RANK = { common: 0, rare: 1, legendary: 2 };
+
+	function reducedMotion() {
+		return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+	}
 
 	// Scale the cards so the reels fill the viewport width, while a whole
 	// card stays visible in height
@@ -277,20 +304,60 @@
 		fadeCells();
 	}
 
-	function delay(ms) {
+	// Wait for the reels to stop, or for the spin to be skipped
+	function waitForReels(ms) {
 		return new Promise((resolve) => {
-			setTimeout(resolve, ms);
+			skipWait = resolve;
+			timers.push(setTimeout(resolve, ms));
 		});
+	}
+
+	// Every reel locks onto its card at once, the best landing plays alone
+	function skipSpin() {
+		if (!spinning || !skipWait) {
+			return;
+		}
+		const resolve = skipWait;
+		skipWait = null;
+		clearTimers();
+
+		const elements = stageElement.querySelectorAll(".pack-strip");
+		let best = null;
+		reels.forEach((reel, index) => {
+			const element = elements[index];
+			const winnerIndex = Math.max(0, reel.slots.findIndex((cell) => cell.win));
+			element.style.transition = "none";
+			element.style.transform = `translateY(${restOffset(element, winnerIndex)}px)`;
+			if (!reel.landed) {
+				reel.landed = true;
+				if (best === null || RARITY_RANK[reel.rarity] > RARITY_RANK[best]) {
+					best = reel.rarity;
+				}
+			}
+		});
+		// Where the cards now rest
+		fadeCells();
+		if (best !== null) {
+			sounds.land(best);
+		}
+		resolve();
+	}
+
+	// Escape skips the spin too
+	function handleKeydown(event) {
+		if (event.key === "Escape" && spinning) {
+			skipSpin();
+		}
 	}
 
 	// Opens the booster of the form, or buys one of the collection with coins
 	async function requestPack(buy) {
 		const response = buy
-			? await fetch(BUY_URL, {
+			? await apiFetch(BUY_URL, {
 				method: "POST",
 				body: new URLSearchParams({ collection: buyButton.dataset.collection }),
 			})
-			: await fetch(pageForm.action, {
+			: await apiFetch(pageForm.action, {
 				method: pageForm.method,
 				body: new FormData(pageForm),
 			});
@@ -311,6 +378,8 @@
 			owned,
 			coins: data.coins,
 			coinsLabel: data.coinsLabel ?? "",
+			navBalance: data.navBalance ?? "",
+			summary: data.summary ?? "",
 		};
 	}
 
@@ -375,8 +444,12 @@
 	function spinReels(stacks) {
 		const elements = stageElement.querySelectorAll(".pack-strip");
 
+		const [min, max] = reducedMotion()
+			? [REDUCED_SPIN_MIN_MS, REDUCED_SPIN_MAX_MS]
+			: [SPIN_MIN_MS, SPIN_MAX_MS];
+
 		return stacks.map((slots, index) => {
-			const duration = SPIN_MIN_MS + Math.random() * (SPIN_MAX_MS - SPIN_MIN_MS);
+			const duration = min + Math.random() * (max - min);
 			const winnerIndex = Math.max(0, slots.findIndex((cell) => cell.win));
 			const element = elements[index];
 
@@ -386,17 +459,40 @@
 				bounceReel(element, winnerIndex);
 			}, duration));
 
-			timers.push(setTimeout(async () => {
+			timers.push(setTimeout(() => {
 				reels[index].landed = true;
 				sounds.land(reels[index].rarity);
-				// Good pulls light up the whole stage
-				if (reels[index].rarity !== "common") {
-					stageFlash = { key: stageFlash.key + 1, rarity: reels[index].rarity };
-				}
 			}, duration + BOUNCE_MS));
 
 			return duration;
 		});
+	}
+
+	// Light up the stage once for the best card of the opening, if it's good
+	function flashBest() {
+		let best = "common";
+		for (const reel of reels) {
+			if (RARITY_RANK[reel.rarity] > RARITY_RANK[best]) {
+				best = reel.rarity;
+			}
+		}
+		if (best !== "common") {
+			stageFlash = { key: stageFlash.key + 1, rarity: best };
+		}
+	}
+
+	// The skip button is gone once the reels stopped: the focus goes to what
+	// comes next, the stage's button, else the page's, else the way back
+	// Left alone if the user moved somewhere else meanwhile, e.g. the chat
+	async function focusNext() {
+		await tick();
+		const current = document.activeElement;
+		const lost = !current || current === document.body;
+		if (!lost && !stageElement?.contains(current) && !pageForm?.contains(current)) {
+			return;
+		}
+		const visible = [openButton, buyButton].find((button) => button && !button.hidden);
+		(againButton ?? visible ?? pageForm?.querySelector(".pack-back"))?.focus();
 	}
 
 	// Disable both buttons while a pack is opening
@@ -427,6 +523,7 @@
 		failed = false;
 		message = "";
 		stageAction = null;
+		announcement = spinningLabel;
 		hidePage();
 		setButtonsDisabled(true);
 		openButton?.classList.remove("is-ready");
@@ -462,32 +559,47 @@
 			spinning = true;
 			const durations = spinReels(result.reels);
 			startFading();
+			// Focus on the skip button: the keyboard can cut the spin short
+			await tick();
+			skipButton?.focus();
 
-			await delay(Math.max(...durations) + BOUNCE_MS + 80);
+			await waitForReels(Math.max(...durations) + BOUNCE_MS + 80);
+			skipWait = null;
 			timers.push(setTimeout(stopFading, FADE_SETTLE_MS));
 			spinning = false;
 			settled = true;
+			flashBest();
+			announcement = result.summary;
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			revealPage();
 			// Its light stays, only its label changes
 			openButton.querySelector(".pack-open-label").textContent = retryLabel ?? openLabel;
 			openButton.hidden = !chained;
-			buyButton.hidden = chained;
+			// Default boosters have none to buy: the page ends with the pile
+			const buyable = !chained && Boolean(buyButton);
+			if (buyButton) {
+				buyButton.hidden = chained;
+			}
 			// Calls for the next opening, until it is clicked
 			const next = chained ? openButton : buyButton;
-			next.classList.add("is-ready");
+			next?.classList.add("is-ready");
 
 			// The won cards stay on the stage, its button opens the next one
-			priceHtml = chained ? "" : (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "");
-			stageAction = chained ? "open" : "buy";
-			await tick();
-			againButton?.focus();
+			priceHtml = buyable ? (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "") : "";
+			stageAction = null;
+			if (chained) {
+				stageAction = "open";
+			} else if (buyable) {
+				stageAction = "buy";
+			}
 		} catch (error) {
 			showFailure(error instanceof PackError ? error.message : errorLabel);
+			announcement = "";
 		} finally {
 			busy = false;
 			setButtonsDisabled(false);
+			focusNext();
 		}
 	}
 
@@ -554,6 +666,13 @@
 		if (left && result.remainingLabel) {
 			left.textContent = result.remainingLabel;
 		}
+		// The pile of default boosters shows what it has left
+		const pile = document.querySelector(".pack-booster .booster-pile-count");
+		if (pile) {
+			pile.textContent = `×${result.remaining}`;
+			pile.closest(".card-container")?.querySelector(".booster-pile-art")
+				?.classList.toggle("booster-pile-empty", result.remaining === 0);
+		}
 
 		const owned = document.querySelector("#pack-owned");
 		const total = Number(document.querySelector("#pack-total")?.textContent);
@@ -562,6 +681,7 @@
 		if (balance && result.coinsLabel) {
 			balance.textContent = result.coinsLabel;
 		}
+		updateNavBalance(result.navBalance);
 
 		if (owned && typeof result.owned === "number") {
 			countUp(owned, result.owned);
@@ -578,6 +698,7 @@
 			return;
 		}
 		pageForm = form;
+		coins = initialCoins;
 		openButton = form.querySelector("button[type=submit]");
 		buyButton = form.querySelector(".pack-buy");
 
@@ -601,7 +722,12 @@
 	});
 </script>
 
-<div class="pack-stage" class:is-active={busy || reels.length > 0} aria-label={againLabel} bind:this={stageElement}>
+<svelte:window onkeydown={handleKeydown} />
+
+<!-- What the reels show, for screen readers: the decoy cards are hidden from them -->
+<p class="sr-only" role="status">{announcement}</p>
+
+<div class="pack-stage" class:is-active={busy || reels.length > 0} bind:this={stageElement}>
 	{#key stageFlash.key}
 		{#if stageFlash.rarity}
 			<div class="pack-stage-flash" data-rarity={stageFlash.rarity} aria-hidden="true"></div>
@@ -609,20 +735,25 @@
 	{/key}
 
 	{#if message}
-		<section class={failed ? "section-error" : "section-success"}>{message}</section>
+		<section class={failed ? "section-error" : "section-success"} role={failed ? "alert" : "status"}>{message}</section>
 	{/if}
 
 	{#if reels.length > 0}
 		<div class="pack-reels" class:is-spinning={spinning} class:is-settled={settled}
 			style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; --pack-peek: {reelPeek}px; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
-			{#each reels as reel}
+			{#each reels as reel, reelIndex (reelIndex)}
 				<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity} style={reel.sway}>
 					<div class="pack-rays" aria-hidden="true"></div>
 					<div class="pack-window">
 						<div class="pack-strip">
-							{#each reel.slots as cell}
-								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}>
+							{#each reel.slots as cell, cellIndex (cellIndex)}
+								<!-- Only the won card, once landed, is reachable: the rest are decoys -->
+								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}
+									inert={!(cell.win && reel.landed)} aria-hidden={cell.win && reel.landed ? undefined : "true"}>
 									<div class="pack-cell-inner">
+										<!-- Card markup rendered by the server's html/template from
+										     the static card data, never from user input -->
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 										{@html cell.html}
 									</div>
 								</div>
@@ -638,45 +769,101 @@
 	{/if}
 
 	<div class="pack-stage-actions">
-		{#if stageAction}
+		{#if spinning}
+			<button type="button" class="pack-skip" bind:this={skipButton} onclick={skipSpin}>
+				{skipLabel}
+			</button>
+		{:else if stageAction}
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
 				<span class="pack-again-shine" aria-hidden="true"></span>
 				{againLabel}
+				<!-- Copied from the page's own buy button, rendered by the server -->
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{#if priceHtml}{@html priceHtml}{/if}
 			</button>
 		{/if}
 	</div>
 </div>
 
-<!-- After the stage, at the end of the page, so it never covers the footer -->
-<button type="button" class="pack-sound" aria-pressed={!muted}
-	onclick={() => { muted = !muted; saveMuted(muted); }}>
-	{muted ? soundOffLabel : soundOnLabel}
-</button>
+<!-- After the stage, at the end of the page, so they never cover the footer.
+     Their names stay, pressed tells whether the sound and animations are on. -->
+<div class="pack-switches">
+	<button type="button" class="pack-switch" aria-pressed={!muted}
+		onclick={() => { muted = !muted; saveMuted(muted); }}>
+		<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="none" stroke="currentColor"
+			stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M4 9v6h4l5 4V5L8 9H4Z" />
+			{#if muted}
+				<path d="m17 9 4 6M21 9l-4 6" />
+			{:else}
+				<path d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12" />
+			{/if}
+		</svg>
+		{soundLabel}
+	</button>
+	<button type="button" class="pack-switch" aria-pressed={!still}
+		onclick={() => { still = !still; saveStill(still); }}>
+		<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" fill="currentColor">
+			{#if still}
+				<path d="M8 5v14l11-7Z" />
+			{:else}
+				<path d="M7 5h4v14H7zM13 5h4v14h-4z" />
+			{/if}
+		</svg>
+		{motionLabel}
+	</button>
+</div>
 
 <style>
-	/* Sound switch, in the corner of the screen while the cards spin. It
-		sticks to the bottom of the page, and stops above the footer. */
-	.pack-sound {
+	/* Sound and animation switches, in the corner of the screen while the
+		cards spin. They stick to the bottom of the page, and stop above the
+		footer. */
+	.pack-switches {
 		position: sticky;
 		bottom: calc(1rem + env(safe-area-inset-bottom));
 		z-index: 30;
 		align-self: flex-end;
 		display: flex;
-		align-items: center;
 		gap: 0.5rem;
-		padding: 0.35rem 0.6rem;
+	}
+
+	.pack-switch {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+		min-height: 2.25rem;
+		padding: 0.35rem 0.7rem;
 		border-radius: 999px;
 		background: color-mix(in srgb, var(--color-bg-2) 85%, transparent);
 		color: var(--color-text);
-		border: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+		border: 1px solid var(--color-border-control);
 		backdrop-filter: blur(6px);
 		font-size: 0.85rem;
 		cursor: pointer;
 	}
 
-	.pack-sound[aria-pressed="false"] {
-		opacity: 0.6;
+	/* Off: the icon is crossed out or shows play, the label muted, not
+		dimmed with opacity, so it stays readable */
+	.pack-switch[aria-pressed="false"] {
+		color: var(--color-text-muted);
+	}
+
+	/* Discreet beside the reels, only for whoever wants the cards now */
+	.pack-skip {
+		align-self: center;
+		padding: 0.5rem 1.4rem;
+		border-radius: 999px;
+		background: color-mix(in srgb, var(--color-bg-2) 85%, transparent);
+		color: var(--color-text);
+		border: 1px solid color-mix(in srgb, var(--color-text) 25%, transparent);
+		backdrop-filter: blur(6px);
+		font-size: 1rem;
+		font-weight: 600;
+		cursor: pointer;
+
+		&:hover {
+			background: var(--color-bg-2);
+		}
 	}
 	.pack-reels {
 		--pack-scale: 0.5;

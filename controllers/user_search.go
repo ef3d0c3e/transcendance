@@ -5,7 +5,6 @@ import (
 	"net/http"
 	"net/url"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -229,9 +228,7 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 		Query: strings.TrimSpace(c.Query("q")),
 		Page:  1,
 	}
-	if page, err := strconv.Atoi(c.Query("p")); err == nil && page > 1 {
-		v.Page = page
-	}
+	v.Page = PageParam(c.Query("p"))
 	if joined := c.Query("joined"); slices.Contains(userJoinedFilters, joined) {
 		v.Joined = joined
 	}
@@ -246,8 +243,10 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 
 	if err := sc.searchUsers(c, v); err != nil {
 		log.Printf("WARN user search failed for term '%s': %s", v.Query, err)
-		c.JSON(http.StatusInternalServerError, gin.H{
-			"message": sc.Renderer.T(c, "search-user-error-internal"),
+		sc.Renderer.RenderError(c, views.ErrorPage{
+			User:       GetAuthenticatedUser(c),
+			StatusCode: http.StatusInternalServerError,
+			Message:    sc.Renderer.T(c, "search-user-error-internal"),
 		})
 		return
 	}
@@ -341,10 +340,6 @@ func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView, t string) 
 	if params := v.params(); len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   totalPages,
-		"Url":     paginatorUrl,
-	})
+	content.AddPaginator(v.Page, totalPages, paginatorUrl)
 	sc.Renderer.Render(c, &builder)
 }

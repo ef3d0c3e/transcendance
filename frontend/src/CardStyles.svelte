@@ -108,6 +108,10 @@
 	}
 
 	/* Card components */
+
+	/* The rarity's color darkened: opaque, so the white text reaches at
+		least 5:1 whatever the card and the theme (legendary yellow is the
+		lightest: 5.0:1 to 7.0:1) */
 	:global(span.card-badge) {
 		z-index: 12;
 		position: absolute;
@@ -120,24 +124,13 @@
 		letter-spacing: 0.1ch;
 		font-weight: 800;
 		color: white;
-		text-shadow: 0 0 2px color-mix(in srgb, var(--badge-color), black 50%);
 
 		border-radius: 10ch;
 		background: linear-gradient(
 			160deg,
-			color-mix(
-				in srgb,
-				color-mix(in srgb, var(--badge-color), transparent 50%),
-				black 20%
-			),
-			color-mix(
-				in srgb,
-				color-mix(in srgb, var(--badge-color), transparent 50%),
-				white 50%
-			)
+			color-mix(in srgb, var(--badge-color), black 60%),
+			color-mix(in srgb, var(--badge-color), black 50%)
 		);
-
-		backdrop-filter: blur(1px);
 	}
 
 	:global(.card img.card-image) {
@@ -168,18 +161,31 @@
 		flex: 0 0 auto;
 	}
 
+	/* Full text color: over the darkest cards of the light theme, a lighter
+		one drops under 4.5:1 */
 	:global(p.card-description) {
 		z-index: 10;
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow: hidden;
-		margin: 1ch 1ch;
+		margin: 1ch 0.7ch;
+		padding: 0 0.3ch;
 
 		text-align: justify;
 		line-height: 1.1;
-		color: color-mix(in srgb, var(--color-text) 75%, transparent);
+		color: var(--color-text);
 	}
 
+	/* The light theme darkens the card towards its bottom corner, where the
+		dark text would fall to 3:1 on the darkest collections: a veil of the
+		page's background keeps it above 6:1 */
+	:global(:root[theme="light"] p.card-description) {
+		background: color-mix(in srgb, var(--color-bg-1) 40%, transparent);
+		border-radius: 0.3rem;
+	}
+
+	/* A band of the page's background behind the collection and the
+		number: the card's colors are darkest in this corner */
 	:global(div.card-footer) {
 		z-index: 10;
 		position: static;
@@ -187,7 +193,10 @@
 		display: inline-flex;
 		width: 90%;
 		margin: 0 auto 0.4ch;
+		padding: 0 0.5ch;
 		border-top: 1px solid rgba(127, 127, 127, 0.5);
+		border-radius: 0 0 0.3rem 0.3rem;
+		background: color-mix(in srgb, var(--color-bg-1) 80%, transparent);
 	}
 
 	:global(a.card-collection) {
@@ -199,9 +208,10 @@
 		color: var(--color-text);
 	}
 
+	/* Over the footer's band: 6.8:1 (light) and 9.1:1 (dark) at worst */
 	:global(span.card-number) {
 		z-index: 10;
-		color: color-mix(in srgb, var(--color-text) 30%, transparent);
+		color: color-mix(in srgb, var(--color-text) 80%, transparent);
 	}
 
 	/* Collections */
@@ -360,5 +370,33 @@
 		opacity: 0.9;
 
 		display: inline-flex;
+	}
+
+	/* Pile of default boosters */
+	:global(.booster-pile-packs) {
+		z-index: 11;
+		flex: 0 0 40%;
+		height: 40%;
+
+		display: flex;
+		align-items: center;
+		justify-content: center;
+	}
+
+	:global(.booster-pile-packs svg) {
+		width: 100%;
+		height: 100%;
+	}
+
+	:global(.booster-pile-packs rect) {
+		fill: rgba(255, 255, 255, 0.16);
+		stroke: rgba(255, 255, 255, 0.55);
+		stroke-width: 2;
+	}
+
+	/* An empty pile fades out, its pills stay readable */
+	:global(.booster-pile-art.booster-pile-empty) {
+		filter: saturate(0);
+		opacity: 0.55;
 	}
 </style>

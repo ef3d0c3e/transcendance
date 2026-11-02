@@ -2,6 +2,7 @@ register-title = Créer un compte
 register-username = Nom d'utilisateur
 register-password = Mot de passe
 register-password-confirm = Confirmer votre mot de passe
+register-password-hint = 8 à 72 caractères.
 register-tos = J'ai lu et j'accepte les
 register-tos-link = Conditions d'Utilisation
 register-submit = Créer un compte
@@ -25,7 +26,14 @@ login-error-username = Nom d'utilisateur invalide
 login-error-password = Mot de passe invalide
 login-error-invalid = Identifiants de connexion invalides
 login-error-internal = Échec de la connexion
+login-error-rate-limited = Trop de tentatives échouées, réessayez dans { $seconds ->
+    [one] { $seconds } seconde
+    *[other] { $seconds } secondes
+}.
 login-success = Bienvenu, { $username }
+login-popup-loading = Chargement du formulaire…
+login-popup-error = Impossible de charger le formulaire. Vérifiez votre connexion et réessayez.
+login-popup-close = Fermer
 
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
@@ -53,9 +61,10 @@ friends-empty-sent = Vous n'avez envoyé aucune demande d'ami
 friends-empty-received = Vous n'avez reçu aucune demande d'ami
 
 account-delete-error-generic = Echec de la suppression du compte
+account-delete-error-last-admin = Vous êtes le seul administrateur : nommez un autre administrateur avant de supprimer votre compte.
 account-delete-title = Supprimer le compte
 account-email = Adresse e-mail
-account-error-email = Une adresse e-mail est requise (254 octets maximum)
+account-error-email = Une adresse e-mail valide est requise, par exemple nom@example.org (254 caractères maximum)
 account-error-email-taken = Adresse e-mail déjà utilisée
 
 search-user-title = Rechercher des utilisateurs
@@ -89,22 +98,28 @@ user-status-offline = Hors ligne
 user-status-last-seen = Dernière activité :
 
 navbar-label-toggle = Afficher/masquer le menu
+navbar-label-close = Fermer le menu
 navbar-label-main = Navigation principale
+navbar-skip = Aller au contenu
 navbar-users = Utilisateurs
 navbar-inventory = Inventaire
 navbar-profile = Votre profil
 navbar-friends = Amis
+navbar-admin = Comptes
 navbar-logout = Se déconnecter
+header-balance = Solde : { $amount }
 
 theme-switcher-light = Theme clair
 theme-switcher-dark = Theme sombre
 
 language-switcher = Choisissez un langage
+language-switcher-current = Langue : français
 
 cards-error-not-found = Carte non trouvée
 cards-error-collection-not-found = Collection non trouvée
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bas de la liste
 paginator-label-previous = Page précédente
 paginator-label-next = Page suivante
 
@@ -113,6 +128,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
 
 card-search-placeholder = Rechercher des cartes
+card-filter-placeholder = Filtrer par nom de carte ou de collection
+card-filter-no-match = Aucune carte ne correspond à ce filtre
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echec de la recherche
@@ -158,10 +175,12 @@ profile-error-passwords-do-not-match = Les mots de passe ne correspondent pas
 profile-error-password-missing = Ce champ est requis pour changer de mot de passe
 profile-empty-field = Non renseigné
 profile-submit = Enregistrer
+profile-saved = Profil enregistré
 profile-error-network = Impossible de contacter le serveur
 
 error-unexpected = Une erreur est survenue
 error-unauthorized = Vous devez être connecté pour accéder à cette ressource
+error-not-found = Cette page n'existe pas
 
 error-title = Erreur
 
@@ -176,15 +195,47 @@ profile-avatar-delete-title = Supprimer la photo de profil ?
 profile-avatar-delete-description = La photo de ce profil sera supprimée et remplacée par l’avatar par défaut.
 profile-avatar-cancel = Annuler
 profile-inventory = Voir l’inventaire
+profile-message = Envoyer un message
 
 profile-rank = Rôle
 profile-rank-user = Utilisateur
 profile-rank-moderator = Modérateur
 profile-rank-admin = Administrateur
 profile-error-rank = Le rôle doit être 0, 1 ou 2.
+profile-error-rank-self = Vous ne pouvez pas changer votre propre rôle.
 account-delete-profile-text = Supprimer définitivement { $username } et toutes les données associées. Cette action est irréversible.
 account-delete-profile-confirm = Supprimer définitivement { $username } et toutes les données associées ?
 account-delete-profile-submit = Supprimer le compte
+
+admin-users-title = Gérer les comptes
+admin-users-caption = Les comptes, leur rôle et les actions possibles
+admin-users-search = Nom d'utilisateur ou e-mail
+admin-users-role = Rôle
+admin-users-role-all = Tous les rôles
+admin-users-apply = Appliquer
+admin-users-col-user = Utilisateur
+admin-users-col-joined = Inscription
+admin-users-col-cards = Cartes
+admin-users-col-actions = Actions
+admin-users-online = en ligne
+admin-users-own = Votre compte, à gérer depuis votre profil
+admin-users-rank-of = Rôle de { $username }
+admin-users-rank-submit = Changer le rôle
+admin-users-delete = Supprimer…
+admin-users-done-rank = Le rôle a été changé.
+admin-users-done-delete = Le compte a été supprimé.
+admin-users-done-password = Le mot de passe a été changé, l'utilisateur a été déconnecté partout.
+admin-users-password = Nouveau mot de passe…
+admin-users-password-new = Nouveau mot de passe
+admin-users-password-confirm = Confirmez le mot de passe
+admin-users-password-hint = Transmettez-le en privé : ses sessions prennent fin et il se connecte avec.
+admin-users-password-submit = Changer le mot de passe
+admin-users-error-password = Le mot de passe doit faire entre 8 et 72 caractères.
+admin-users-error-password-match = Les mots de passe ne correspondent pas.
+admin-users-error-rank = Ce rôle n'existe pas.
+admin-users-error-self = Gérez votre propre compte depuis votre profil.
+admin-users-error-missing = Ce compte n'existe plus.
+admin-users-error-internal = L'action a échoué, réessayez.
 
 notification-title = Notifications
 notification-unread = non lues
@@ -208,6 +259,15 @@ notification-friend-accepted-title = Demande d'ami acceptée
 notification-friend-accepted-desc = { $username } a accepté votre demande d'ami
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-trade-title = Offre d’échange
+notification-trade-desc = { $username } vous a envoyé une offre d’échange
+notification-trade-counter-title = Offre d’échange contre-proposée
+notification-trade-counter-desc = { $username } a contre-proposé votre offre d’échange
+notification-private-message-title = { $count ->
+    [one] Nouveau message de { $username }
+   *[other] { $count } nouveaux messages de { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Catalogue de cartes
 catalog-collection-count = { $count ->
@@ -235,6 +295,30 @@ inventory-search-submit = Rechercher
 inventory-search-clear = Effacer la recherche
 inventory-card-acquired = Obtenue le
 inventory-card-close = Fermer
+inventory-card-value = Valeur
+inventory-card-sell = Vendre
+inventory-sell-quantity = Quantité
+inventory-sell-total = Total
+inventory-sell-confirm = Confirmer la vente
+inventory-sold = { $count ->
+    [one] Vous avez vendu { $count } carte pour { $amount } pièces
+   *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
+}
+inventory-sell-error-card = Cette carte ne peut pas être vendue
+inventory-sell-error-quantity = Choisissez une quantité d’au moins 1
+inventory-sell-error-missing = Vous n’avez pas autant d’exemplaires à vendre
+inventory-sell-error-locked = Certains de ces exemplaires sont dans des échanges
+inventory-sell-error-none = Vous n’avez aucune carte en double à vendre
+inventory-sell-error-internal = Échec de la vente de vos cartes
+inventory-sell-duplicates = Vendre les doublons
+inventory-sell-duplicates-title = Vendre les cartes en double
+inventory-sell-duplicates-text = { $count ->
+    [one] Vendre { $count } carte en double pour { $amount } pièces ?
+   *[other] Vendre { $count } cartes en double pour { $amount } pièces ?
+}
+inventory-sell-duplicates-note = Un exemplaire de chaque carte est conservé, pour chaque version foil. Les exemplaires dans des échanges ne sont ni vendus ni comptés comme l’exemplaire conservé.
+inventory-sell-duplicates-confirm = Vendre pour { $amount } pièces
+inventory-sell-cancel = Annuler
 inventory-card-acquired-first = Première obtenue le
 inventory-card-acquired-last = Dernière obtenue le
 inventory-card-copies = Exemplaires
@@ -247,6 +331,8 @@ inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
 inventory-filter-effect-foil = Holographique
+inventory-filter-collection = Collection
+inventory-filter-collection-all = Toutes les collections
 inventory-sort = Trier par
 inventory-sort-relevance = Pertinence
 inventory-sort-recent = Dernière obtention
@@ -255,10 +341,12 @@ inventory-sort-rarity = Rareté
 inventory-sort-count = Nombre
 inventory-sort-name = Nom (A-Z)
 inventory-sort-name-desc = Nom (Z-A)
+inventory-filters-apply = Appliquer
 inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Améliorer
 inventory-message-no-boosters = Aucun booster pour l'instant
 inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
@@ -273,6 +361,22 @@ inventory-search-count = { $count ->
     [one] { $count } carte trouvée
     *[other] { $count } cartes trouvées
 }
+inventory-locked-badge = { $count } dans des échanges
+
+booster-pile-title = Booster par défaut
+booster-pile-desc = { $count } cartes aléatoires de toutes les collections
+daily-streak-title = Série quotidienne
+daily-streak-meter = { $tier } · { $amount }
+daily-streak-count = Série { $days }
+daily-streak-best = Record : { $best }
+daily-streak-best-current = en cours
+daily-streak-none = —
+daily-streak-claim = Réclamer { $amount } pièces
+daily-streak-claimed = Disponible dans
+daily-streak-claimed-notice = { $amount } pièces ont été ajoutées à votre solde
+daily-streak-claim-ready = Réclamer vos pièces
+countdown-done = Prêt
+countdown-refresh = Actualiser pour récupérer
 
 pack-opening-title = Ouverture de booster
 pack-opening-open = Ouvrir le booster
@@ -287,15 +391,21 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters restants
 }
 pack-opening-error-booster = Ce booster n'est pas dans votre inventaire
+pack-opening-error-pile = Aucun booster par défaut disponible
 pack-opening-buy = Ouvrir à nouveau
 pack-opening-buy-label = Ouvrir à nouveau pour { $price }
-pack-opening-sound-on = Son activé
-pack-opening-sound-off = Son coupé
+pack-opening-sound = Son
+pack-opening-motion = Animations
 pack-opening-odds-title = Taux d'obtention
 pack-opening-odds-foil = Holographique
 pack-opening-odds-note = Chaque carte du booster est tirée séparément.
 pack-opening-progress-title = Progression de la collection
 pack-opening-progress-note = Cartes différentes de cette collection que vous possédez.
+pack-opening-summary = Cartes tirées : { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, holographique)
+pack-opening-spinning = Ouverture du paquet…
+pack-opening-skip = Passer
 
 shop-balance = Solde
 shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
@@ -306,6 +416,7 @@ shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effect
 shop-topup-error-unconfirmed = Impossible de confirmer l’ajout de pièces. Actualisez la page pour vérifier votre solde avant de réessayer.
 shop-topup-price = { $euros },{ $cents } €
 shop-topup-open = Acheter des pièces
+shop-topup-buy = Acheter { $amount } pour { $price }
 shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
 shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
 shop-error-pack = Paquet de pièces inconnu
@@ -316,8 +427,10 @@ shop-buy-close = Fermer
 shop-buy-quantity = Quantité
 shop-buy-total = Total
 shop-coins = pièces
+shop-coins-locked = { $amount } dans des échanges
 
 index-title = Transcendance, collectionnez des cartes
+meta-description = Transcendance est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
 index-heading = Collectionnez, troquez et exposez vos cartes
 index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
 index-stat-cards = { $count ->
@@ -391,17 +504,17 @@ legal-privacy-text = L'équipe de développement est responsable du traitement d
 legal-data-title = Données collectées
 legal-data-account = Compte : votre nom d’utilisateur, votre adresse e-mail, votre mot de passe (stocké uniquement sous forme de hash bcrypt) et votre date d’inscription. Votre adresse e-mail n’est pas publique : elle est visible par vous et par les utilisateurs de rôle strictement supérieur. Vous et les administrateurs pouvez la modifier.
 legal-data-profile = Profil : votre bio, date de naissance, contact et avatar, uniquement si vous les renseignez. Ils sont publics.
-legal-data-activity = Activité : vos sessions de connexion, pièces, cartes, boosters et notifications.
+legal-data-activity = Activité : vos sessions de connexion, pièces, cartes, boosters, offres d'échange, série quotidienne, notifications, vos amis, les utilisateurs que vous bloquez ou ignorez, et vos messages, publics dans le chat et privés. Les autres utilisateurs voient si vous êtes en ligne (actif dans les 5 dernières minutes), et les personnes avec qui vous échangez voient combien de pièces vous pouvez engager dans l'échange.
 legal-data-logs = Journaux techniques : le serveur enregistre chaque requête avec votre adresse IP.
 legal-purpose-title = Utilisation
 legal-purpose-text = Ces données servent uniquement à fournir le service (votre compte, votre collection et votre profil) et à le sécuriser. Votre adresse e-mail sert uniquement d’identifiant de connexion. Elle n’est pas vérifiée et aucun e-mail n’est envoyé, y compris pour la publicité ou la récupération du mot de passe. Le traitement repose sur l’exécution des conditions acceptées à l’inscription et sur notre intérêt légitime à protéger le site. Les données ne sont jamais vendues, utilisées à des fins publicitaires ni partagées avec des tiers.
 legal-thirdparty-text = Le site ne charge aucune ressource externe : les polices et scripts sont servis par notre propre serveur, aucun tiers n'est donc informé de votre visite.
 legal-retention-title = Durée de conservation
-legal-retention-text = Les données de compte, de profil et d'activité sont conservées jusqu'à la suppression de votre compte. Les sessions de connexion expirent après 3 jours. Les journaux techniques ne sont conservés que le temps nécessaire à l'analyse des incidents.
+legal-retention-text = Les données de compte, de profil et d'activité sont conservées jusqu'à la suppression de votre compte. Les sessions de connexion expirent après 3 jours. Les journaux techniques sont conservés 2 ans, comme la loi française l'impose aux hébergeurs, puis supprimés ; leurs sauvegardes quotidiennes sont gardées 30 jours de plus. Les modérateurs peuvent supprimer des messages du chat et y rendre muet un utilisateur pendant une semaine au plus.
 legal-rights-title = Vos droits
 legal-rights-text = Vous disposez d'un droit d'accès, de rectification, d'effacement et de portabilité de vos données, ainsi que d'un droit d'opposition et de limitation de leur traitement.
 legal-rights-edit = Votre profil est modifiable à tout moment :
-legal-rights-delete = Supprimer votre compte depuis votre profil efface définitivement votre compte, profil, avatar, sessions, cartes, boosters, pièces et notifications.
+legal-rights-delete = Supprimer votre compte depuis votre profil efface définitivement votre compte, profil, avatar, sessions, cartes, boosters, pièces, offres d'échange, amis, messages et notifications.
 legal-rights-other = Pour toute autre demande, contactez l'équipe :
 legal-rights-complaint = Si vous estimez que vos droits ne sont pas respectés, vous pouvez adresser une réclamation à la CNIL :
 legal-cookies-title = Cookies
@@ -425,3 +538,123 @@ contact-team-title = L'équipe
 contact-team-text = Vous pouvez aussi contacter directement un membre de l'équipe via son profil GitHub :
 contact-privacy-title = Demandes relatives à vos données
 contact-privacy-text = Pour une demande concernant vos données personnelles, contactez un membre de l'équipe en privé plutôt que d'ouvrir une issue publique. Vous pouvez supprimer votre compte à tout moment depuis votre profil.
+
+inventory-trade = Proposer un échange
+inventory-trades = Vos échanges
+inventory-trades-incoming = { $count ->
+    [one] { $count } offre attend votre réponse
+   *[other] { $count } offres attendent votre réponse
+}
+
+trades-title = Échanges
+trade-menu-title = Échanger avec { $username }
+trade-you-give = Vous donnez
+trade-you-get = Vous recevez
+trade-coins = Pièces
+trade-send = Envoyer l’offre
+trade-counter-send = Envoyer la contre-offre
+trade-back = Retour aux échanges
+trade-accept = Accepter
+trade-decline = Refuser
+trade-counter = Contre-proposer
+trade-cancel = Annuler
+trade-incoming = Offres reçues
+trade-outgoing = Offres envoyées
+trade-history = Échanges passés
+trade-state-accepted = Accepté
+trade-state-declined = Refusé
+trade-state-cancelled = Annulé
+trade-none-incoming = Aucune offre reçue
+trade-none-outgoing = Aucune offre en attente
+trade-none-history = Aucun échange passé
+trade-stack = { $count }× { $title }
+trade-menu-empty = Rien à échanger ici
+trade-menu-loading = Chargement…
+trade-menu-increase = Ajouter un exemplaire
+trade-menu-decrease = Retirer un exemplaire
+trade-menu-error-network = Impossible de contacter le serveur
+trade-menu-noscript = Préparer une offre d'échange nécessite JavaScript, pour choisir les cartes des deux inventaires. Sans lui, vous pouvez toujours accepter, refuser ou annuler vos offres depuis vos échanges.
+trade-error-settle = Cette offre d’échange ne peut plus être complétée
+trade-error-invalid = Offre d’échange invalide
+trade-error-internal = Échec de l’enregistrement de l’offre
+trade-error-not-found = Offre d’échange introuvable
+trade-error-user = Utilisateur introuvable
+trade-error-self = Vous ne pouvez pas échanger avec vous-même
+trade-error-too-many = Vous avez trop d'offres en attente de réponse : attendez-les, ou annulez-en.
+trade-error-empty-give = Proposez au moins une carte ou des pièces
+trade-error-empty-want = Demandez au moins une carte ou des pièces
+trade-error-count = Nombre de cartes invalide
+trade-error-items = Trop de piles de cartes dans l’offre
+trade-error-card = Carte inconnue
+trade-error-duplicate = La même pile de cartes apparaît deux fois
+trade-error-owned = Pas assez d’exemplaires d’une carte
+trade-error-locked = Certains exemplaires d’une carte sont dans un autre échange
+trade-error-coins = Pas assez de pièces
+trade-error-locked-coins = Certaines pièces sont dans un autre échange
+trade-error-want-coins = L’autre utilisateur n’a pas autant de pièces
+trade-error-state = Cette offre d’échange n’est plus en attente
+trade-error-forbidden = Cette offre d’échange ne vous appartient pas
+trade-error-blocked = Vous ne pouvez pas échanger avec cet utilisateur
+shoutbox-title = Discussion
+shoutbox-unread = nouveaux messages
+shoutbox-close = Fermer
+shoutbox-connected = En direct
+shoutbox-connecting = Connexion...
+shoutbox-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-placeholder = Écrire un message
+shoutbox-send = Envoyer
+shoutbox-error-empty = Votre message est vide
+shoutbox-error-too-long = Votre message est trop long, 500 caractères maximum
+shoutbox-error-rate-limited = Vous envoyez des messages trop vite, patientez un instant
+shoutbox-error-internal = Votre message n'a pas pu être envoyé, réessayez
+shoutbox-closed-unauthorized = Votre session a expiré, reconnectez-vous pour discuter
+shoutbox-closed-too-many = La shoutbox est ouverte dans trop d'onglets, fermez-en et rechargez la page
+shoutbox-closed-error = Déconnecté de la shoutbox, rechargez la page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Écrire un message privé
+shoutbox-conversation-empty = Aucun message pour le moment, dites bonjour !
+shoutbox-conversations-empty = Aucune conversation pour le moment
+shoutbox-start = Démarrer une conversation avec un utilisateur
+shoutbox-start-placeholder = Nom d'utilisateur
+shoutbox-start-button = Ouvrir
+shoutbox-back = Retour aux conversations
+shoutbox-you = Vous
+shoutbox-user-menu = Actions sur l'utilisateur
+shoutbox-message-user = Envoyer un message privé
+shoutbox-view-profile = Voir le profil
+shoutbox-ignore-hour = Ignorer pendant 1 heure
+shoutbox-ignore-day = Ignorer pendant 1 jour
+shoutbox-ignore-week = Ignorer pendant 1 semaine
+shoutbox-unignore = Ne plus ignorer
+shoutbox-delete-message = Supprimer le message
+shoutbox-mute-hour = Rendre muet dans le chat pendant une heure
+shoutbox-mute-day = Rendre muet dans le chat pendant un jour
+shoutbox-mute-week = Rendre muet dans le chat pendant une semaine
+shoutbox-unmute = Lui rendre la parole
+shoutbox-ignored-title = Utilisateurs ignorés
+shoutbox-ignored-until = Jusqu'au
+shoutbox-ignoring-notice = Vous ignorez cet utilisateur : ses messages de la shoutbox sont masqués et il ne peut pas vous écrire.
+shoutbox-error-user-not-found = Cet utilisateur n'existe pas
+shoutbox-error-self = Vous ne pouvez pas vous écrire à vous-même
+shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le moment
+shoutbox-error-forbidden = Seuls les modérateurs peuvent faire cela
+shoutbox-error-muted = Un modérateur vous a rendu muet dans le chat pour le moment
+shoutbox-error-message-not-found = Ce message n'existe plus
+
+tradeup-rules = Combinez { $count } cartes de la même rareté pour obtenir une carte aléatoire de la rareté supérieure. Les chances de chaque collection suivent le nombre de cartes qui en viennent.
+tradeup-empty = Aucune carte ici ne peut être améliorée
+tradeup-slots = Emplacements de l’amélioration
+tradeup-remove = Retirer
+tradeup-slot-empty = Emplacement vide
+tradeup-clear = Réinitialiser
+tradeup-submit = Améliorer
+tradeup-result = Vous avez obtenu
+tradeup-result-close = Fermer
+tradeup-error-count = Une amélioration nécessite exactement { $count } cartes
+tradeup-error-rarity = Toutes les cartes d’une amélioration doivent avoir la même rareté
+tradeup-error-tier = Ces cartes ne peuvent pas être améliorées
+tradeup-error-missing = Vous ne possédez pas assez de ces cartes
+tradeup-error-locked = Certaines de ces cartes sont dans des échanges
+tradeup-error-empty = Aucune de ces collections ne contient de carte de la rareté supérieure
+tradeup-error-internal = Échec de l’amélioration

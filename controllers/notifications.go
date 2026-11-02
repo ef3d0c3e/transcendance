@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"errors"
 	"net/http"
 	"net/url"
@@ -26,6 +27,12 @@ const (
 func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (string, string) {
 	args := make([]any, 0, len(notif.Data)*2)
 	for key, value := range notif.Data {
+		// Numbers are read back as `json.Number`, which isn't one for plurals
+		if number, ok := value.(json.Number); ok {
+			if f, err := number.Float64(); err == nil {
+				value = f
+			}
+		}
 		args = append(args, key, value)
 	}
 	title := nc.Renderer.T(c, "notification-"+notif.Type+"-title", args...)
@@ -43,7 +50,7 @@ func (nc *Controller) find(c *gin.Context, userID uint) (*models.Notification, b
 		return nil, false
 	}
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return nil, false
 	}
 	return &notif, true
@@ -61,14 +68,11 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 	if filter != notificationFilterUnread {
 		filter = ""
 	}
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page < 1 {
-		page = 1
-	}
+	page := PageParam(c.Query("p"))
 
 	list, err := nc.list(c, user.ID, filter, page, notificationPageSize)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return
 	}
 	// The last page can empty out after dismissing or reading notifications
@@ -78,7 +82,7 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 	}
 	var all int64
 	if err := nc.DB.Model(&models.Notification{}).Where("user_id = ?", user.ID).Count(&all).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return
 	}
 
@@ -97,11 +101,7 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 		"Redirect":      current,
 	})
 	if list.Pages > 1 {
-		content.Add("paginator", "Paginator", map[string]any{
-			"Current": page,
-			"Total":   int(list.Pages),
-			"Url":     "?filter=" + filter + "&p=",
-		})
+		content.AddPaginator(page, int(list.Pages), "?filter="+filter+"&p=")
 	}
 	nc.Renderer.Render(c, &builder)
 }
@@ -120,7 +120,7 @@ func (nc *Controller) NotificationGet(c *gin.Context) {
 	}
 	if notif.ReadAt == nil {
 		if err := nc.DB.Model(notif).Update("read_at", time.Now()).Error; err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			InternalError(c, nc.Renderer, err)
 			return
 		}
 	}
@@ -189,11 +189,21 @@ func (nc *Controller) list(c *gin.Context, userID uint, filter string, page int,
 // Respond to a successful action: go back to the `redirect` form value if it is a local page, nothing otherwise
 func respondAction(c *gin.Context) {
 	target := c.PostForm("redirect")
-	if strings.HasPrefix(target, "/") && !strings.HasPrefix(target, "//") && !strings.HasPrefix(target, "/\\") {
+	if localPath(target) {
 		c.Redirect(http.StatusSeeOther, target)
 		return
 	}
 	c.Status(http.StatusNoContent)
+}
+
+// localPath reports whether a redirect target stays on the site. Browsers ignore tabs and line breaks in URLs
+// and read backslashes as slashes, so "/\t/evil.example" or "/\\evil.example" would lead to another site.
+func localPath(target string) bool {
+	if !strings.HasPrefix(target, "/") || strings.ContainsAny(target, "\\\t\r\n") || strings.HasPrefix(target, "//") {
+		return false
+	}
+	u, err := url.Parse(target)
+	return err == nil && u.Scheme == "" && u.Host == ""
 }
 
 // /api/notifications GET: a page of the user's notifications, newest first
@@ -206,10 +216,7 @@ func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.DefaultQuery("page", "1"))
-	if err != nil || page < 1 {
-		page = 1
-	}
+	page := PageParam(c.Query("page"))
 	limit, err := strconv.Atoi(c.DefaultQuery("limit", strconv.Itoa(notificationPageSize)))
 	if err != nil || limit < 1 {
 		limit = notificationPageSize
@@ -218,7 +225,7 @@ func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 
 	list, err := nc.list(c, user.ID, c.Query("filter"), page, limit)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{
@@ -250,7 +257,7 @@ func (nc *Controller) setRead(c *gin.Context, read bool) {
 			readAt = &now
 		}
 		if err := nc.DB.Model(notif).Update("read_at", readAt).Error; err != nil {
-			c.String(http.StatusInternalServerError, err.Error())
+			InternalError(c, nc.Renderer, err)
 			return
 		}
 	}
@@ -280,7 +287,7 @@ func (nc *Controller) ApiNotificationDeletePost(c *gin.Context) {
 		return
 	}
 	if err := nc.DB.Delete(notif).Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return
 	}
 	respondAction(c)
@@ -298,17 +305,21 @@ func (nc *Controller) ApiNotificationsReadAllPost(c *gin.Context) {
 		Where("user_id = ? AND read_at IS NULL", user.ID).
 		Update("read_at", time.Now()).
 		Error; err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		InternalError(c, nc.Renderer, err)
 		return
 	}
 	respondAction(c)
 }
 
-// /add_notification GET: debug page to send a notification to yourself
+// /add_notification GET: debug page for admins to send a notification to themselves
 func (nc *Controller) AddNotificationGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
 		c.Redirect(http.StatusSeeOther, "/login")
+		return
+	}
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
 		return
 	}
 
@@ -324,8 +335,8 @@ func (nc *Controller) AddNotificationGet(c *gin.Context) {
 // /add_notification POST: send a notification to yourself, then show the notifications
 func (nc *Controller) AddNotificationPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
-	if user == nil {
-		c.String(http.StatusForbidden, "You must be authenticated")
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
 		return
 	}
 

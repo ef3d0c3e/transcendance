@@ -1,0 +1,2 @@
+title = Lutécium
+description = Le lutécium (ou lutétium) est un élément chimique de symbole Lu et de numéro atomique 71. C'est le dernier élément de la famille des lanthanides et il est compté parmi les terres rares. Le lutécium est un métal gris argenté, mou et ductile. Ses applications sont limitées en raison de sa rareté et de son prix élevé. La production de cet élément demande en effet de le séparer des autres terres rares avec lesquelles il est toujours présent.

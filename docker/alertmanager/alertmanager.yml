@@ -1,5 +1,6 @@
-# Alerts are not sent anywhere: the stack cannot reach a mail server.
-# Admins see them in Grafana (Alerts dashboard) and here, where they can be silenced.
+# Admins see the alerts in Grafana (Alerts dashboard) and here, where they can be silenced. They are also sent to
+# the webhook and Discord channel of ALERT_WEBHOOK_URL and ALERT_DISCORD_WEBHOOK_URL when set, see start.sh, which
+# adds them to the receiver below: it must stay the last entry of this file.
 route:
   receiver: admins
   group_by: [alertname]

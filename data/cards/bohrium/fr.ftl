@@ -1,0 +1,2 @@
+title = Bohrium
+description = Le bohrium est l'élément chimique de numéro atomique 107, de symbole Bh, nommé en l'honneur du physicien danois Niels Bohr. Il a été synthétisé pour la première fois en 1981 au centre de recherche sur les ions lourds (GSI) de Darmstadt, en Allemagne, en bombardant du bismuth avec des noyaux de chrome. Tous ses isotopes sont très radioactifs et ne vivent que quelques minutes au plus.

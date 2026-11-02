@@ -1,0 +1,2 @@
+title = Plutonium
+description = Le plutonium est l'élément chimique de numéro atomique 94, de symbole Pu. C'est un métal radioactif transuranien de la famille des actinides, gris argenté, qui se ternit à l'air. Produit dans les réacteurs nucléaires à partir de l'uranium, son isotope 239 est fissile et sert de combustible nucléaire et de matière pour les armes atomiques. Il doit son nom à la planète naine Pluton.

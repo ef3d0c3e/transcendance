@@ -1,0 +1,2 @@
+title = Rhodochrosite
+description = Rhodochrosite is a manganese carbonate mineral with chemical composition MnCO3. In its pure form (rare), it is typically a rose-red colour, but it can also be shades of pink to pale brown. It streaks white, and its Mohs hardness varies between 3.5 and 4.5. Its specific gravity is between 3.45 and 3.6. The crystal system of rhodochrosite is trigonal, with a structure and cleavage in the carbonate rhombohedral system.

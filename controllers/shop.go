@@ -1,11 +1,16 @@
 package controllers
 
 import (
+	"crypto/hmac"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -27,6 +32,28 @@ var boosterPrices = map[int]uint{}
 // maxBuyQuantity is the most boosters of one collection a single checkout
 // sells. The buy popup advertises it so its stepper cannot exceed it.
 const maxBuyQuantity = 10
+
+// boosterPileCap is how many default boosters a pile holds at most.
+const boosterPileCap = 5
+
+// boosterPileInterval is the time between two default boosters of a pile
+// that is not full.
+const boosterPileInterval = 10 * time.Minute
+
+// dailyStreakRewards is the coin reward of each day of the connection
+// streak, day 1 first. Days past the last entry keep paying the last amount.
+var dailyStreakRewards = []uint{200, 300, 500, 700, 1000}
+
+// dailyStreakReward returns the coins a streak day pays.
+func dailyStreakReward(day uint) uint {
+	if day < 1 {
+		day = 1
+	}
+	if int(day) > len(dailyStreakRewards) {
+		return dailyStreakRewards[len(dailyStreakRewards)-1]
+	}
+	return dailyStreakRewards[day-1]
+}
 
 // MaxBuyQuantity is maxBuyQuantity, for the pages selling boosters
 const MaxBuyQuantity = maxBuyQuantity
@@ -107,12 +134,47 @@ type ShopNotice struct {
 	LinkLabel string
 }
 
-// notice builds the notice shown after a shop round-trip, if any.
-// GetShopNotice reads the outcome of a purchase from the query
+// Secret signing the success notices of redirects, new on every start: a notice link lasts until then
+var noticeSecret = func() []byte {
+	secret := make([]byte, 32)
+	_, _ = rand.Read(secret)
+	return secret
+}()
+
+// Signature of a success notice for a user: a link made by someone else, or for someone else, shows nothing
+func noticeSignature(userID uint, notice string) string {
+	mac := hmac.New(sha256.New, noticeSecret)
+	_, _ = fmt.Fprintf(mac, "%d:%s", userID, notice)
+	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil)[:16])
+}
+
+// signedNotice is the query of a success notice for the user, with its signature
+func signedNotice(c *gin.Context, notice string) string {
+	user := GetAuthenticatedUser(c)
+	if user == nil {
+		return notice
+	}
+	return notice + "&sig=" + noticeSignature(user.ID, notice)
+}
+
+// Whether the query holds the signature of the notice for the user, as signedNotice made it
+func noticeSigned(c *gin.Context, notice string) bool {
+	user := GetAuthenticatedUser(c)
+	return user != nil && hmac.Equal([]byte(c.Query("sig")), []byte(noticeSignature(user.ID, notice)))
+}
+
+// GetShopNotice reads the outcome of a purchase or a sale from the query. Successes are only shown when the
+// action signed them, errors claim nothing and need no signature.
 func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopNotice {
-	if packID := c.Query("topup"); packID != "" {
+	if packID := c.Query("topup"); packID != "" && noticeSigned(c, "topup="+packID) {
 		if amount, ok := topupAmount(packID); ok {
 			return ShopNotice{Message: renderer.T(c, "shop-topup-success", "amount", amount)}
+		}
+	}
+	if sold, err := strconv.Atoi(c.Query("sold")); err == nil && sold > 0 {
+		coins, err := strconv.Atoi(c.Query("coins"))
+		if err == nil && coins >= 0 && noticeSigned(c, "sold="+c.Query("sold")+"&coins="+c.Query("coins")) {
+			return ShopNotice{Message: renderer.T(c, "inventory-sold", "count", sold, "amount", coins)}
 		}
 	}
 
@@ -129,6 +191,11 @@ func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopN
 		return ShopNotice{Message: renderer.T(c, "shop-error-funds"), Error: true}
 	case "quantity":
 		return ShopNotice{Message: renderer.T(c, "shop-error-quantity", "max", maxBuyQuantity), Error: true}
+	case "opening":
+		return ShopNotice{Message: renderer.T(c, "pack-opening-error-internal"), Error: true}
+	case "sell-card", "sell-quantity", "sell-missing", "sell-locked", "sell-none", "sell-internal":
+		code := strings.TrimPrefix(reason, "sell-")
+		return ShopNotice{Message: renderer.T(c, "inventory-sell-error-"+code), Error: true}
 	default:
 		return ShopNotice{Message: renderer.T(c, "shop-error-internal"), Error: true}
 	}
@@ -190,10 +257,20 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	}
 
 	err = sc.DB.Transaction(func(tx *gorm.DB) error {
-		// Debit only when the balance covers the total, so concurrent
+		// Locked, so no offer can commit coins between the check and the debit
+		if err := LockUsers(tx, user.ID); err != nil {
+			return err
+		}
+		// Coins up in pending trades leave with those trades, so they cannot
+		// pay for a booster here
+		locked, err := TradeCommittedCoins(tx, user.ID)
+		if err != nil {
+			return err
+		}
+		// Debit only when the free balance covers the total, so concurrent
 		// purchases cannot overdraw.
 		result := tx.Model(&models.User{}).
-			Where("id = ? AND coins >= ?", user.ID, total).
+			Where("id = ? AND coins >= ?", user.ID, total+locked).
 			Update("coins", gorm.Expr("coins - ?", total))
 		if result.Error != nil {
 			return result.Error
@@ -246,7 +323,17 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 			Update("coins", gorm.Expr("coins + ?", amount)).Error; err != nil {
 			return err
 		}
-		return tx.Model(&models.User{}).Where("id = ?", user.ID).Pluck("coins", &coins).Error
+		if err := tx.Model(&models.User{}).Where("id = ?", user.ID).Pluck("coins", &coins).Error; err != nil {
+			return err
+		}
+		// The pages compare the balance to their prices: coins up in pending
+		// trades cannot pay, so they are left out
+		locked, err := TradeCommittedCoins(tx, user.ID)
+		if err != nil {
+			return err
+		}
+		coins = FreeCoins(coins, locked)
+		return nil
 	})
 	if err != nil {
 		log.Printf("WARN failed to credit %d coins to user %d: %s", amount, user.ID, err)
@@ -262,9 +349,10 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
 			"coins":      coins,
 			"coinsLabel": sc.Renderer.T(c, "shop-price", "amount", coins),
+			"navBalance": sc.Renderer.T(c, "header-balance", "amount", coins),
 		})
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, "/inventory?topup="+packID)
+	c.Redirect(http.StatusSeeOther, "/inventory?"+signedNotice(c, "topup="+packID))
 }

@@ -69,8 +69,8 @@ func TestSearchUsersFiltersAndSorts(t *testing.T) {
 		"fltb": now.Add(-3 * 24 * time.Hour),
 		"fltc": now.Add(-2 * 365 * 24 * time.Hour),
 	})
-	giveCards(t, "fltb", cardTungsten, 12)
-	giveCards(t, "fltc", cardTungsten, 3)
+	giveCards(t, "fltb", cardRosetta, 12)
+	giveCards(t, "fltc", cardRosetta, 3)
 
 	for target, expected := range map[string][]string{
 		"/search?q=flt":                {"flta", "fltb", "fltc"},
@@ -98,7 +98,7 @@ func TestSearchUsersFiltersAndSorts(t *testing.T) {
 	require.Contains(t, body, `<a href="/inventory?tab=cards&amp;u=fltb">12</a>`)
 	body = getInventory(t, router, cookie, "/inventory?tab=cards&u=fltb")
 	require.Contains(t, body, `<a class="inventory-tab-cards" href="/inventory?tab=cards&amp;u=fltb" aria-current="page">`)
-	require.Contains(t, body, `<h2 class="card-title">Tungsten</h2>`)
+	require.Contains(t, body, `<h2 class="card-title">Rosetta Stone</h2>`)
 }
 
 func TestSearchUsersEmpty(t *testing.T) {

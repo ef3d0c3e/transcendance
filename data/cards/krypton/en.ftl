@@ -1,0 +1,2 @@
+title = Krypton
+description = Krypton (from Ancient Greek: κρυπτός, romanized: kryptos 'the hidden one') is a chemical element; it has symbol Kr and atomic number 36. It is a colorless, odorless noble gas that occurs in trace amounts in the atmosphere and is often used with other rare gases in fluorescent lamps. Krypton is chemically inert. Krypton, like the other noble gases, is used in lighting and photography.

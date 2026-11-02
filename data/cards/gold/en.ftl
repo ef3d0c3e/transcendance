@@ -1,0 +1,2 @@
+title = Native Gold
+description = Native gold is the naturally occurring mineral form of the element gold, usually alloyed with some silver. It forms nuggets, grains, flakes, wires and rare octahedral crystals in quartz veins and in alluvial deposits, where its density lets it settle in riverbeds. Being nearly unreactive, it keeps its bright yellow lustre indefinitely, and it has been prized as a precious metal since prehistory.

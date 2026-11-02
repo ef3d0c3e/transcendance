@@ -1,0 +1,2 @@
+title = Seaborgium
+description = Le seaborgium est l'élément chimique de numéro atomique 106, de symbole Sg, nommé en l'honneur du chimiste américain Glenn T. Seaborg, l'un des rares éléments baptisés du nom d'une personne vivante. Élément synthétique très radioactif, il n'est produit qu'en quelques atomes dans les accélérateurs de particules, et ses isotopes les plus stables ont des demi-vies de quelques minutes.

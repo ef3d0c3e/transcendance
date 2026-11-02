@@ -1,0 +1,2 @@
+title = Oxygène
+description = L'oxygène est l'élément chimique de numéro atomique 8, de symbole O. C'est la tête de file du groupe des chalcogènes, souvent appelé groupe de l'oxygène. Découvert indépendamment en 1772 par le Suédois Carl Wilhelm Scheele à Uppsala, et en 1774 par Pierre Bayen à Châlons-en-Champagne ainsi que par le Britannique Joseph Priestley dans le Wiltshire en 1775, l'oxygène a été nommé ainsi en 1777 par le Français Antoine Lavoisier.

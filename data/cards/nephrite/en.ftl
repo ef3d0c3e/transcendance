@@ -1,0 +1,2 @@
+title = Nephrite
+description = Nephrite is a variety of the calcium, magnesium, and iron-rich amphibole minerals tremolite, actinolite or ferro-actinolite (aggregates of which also make up one form of asbestos). The chemical formula for nephrite is Ca2(Mg, Fe)5Si8O22(OH)2. It is one of two different mineral species called jade. The other mineral species known as jade is jadeite, which is a variety of pyroxene.

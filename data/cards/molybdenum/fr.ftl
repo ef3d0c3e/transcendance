@@ -1,0 +1,2 @@
+title = Molybdène
+description = Le molybdène est l'élément chimique de numéro atomique 42, de symbole Mo. C'est un métal de transition gris argenté au point de fusion très élevé, qui n'existe pas à l'état natif. Son nom vient du grec molybdos, « plomb », car son minerai, la molybdénite, était confondu avec celui du plomb. Il sert surtout à durcir les aciers et c'est un oligo-élément indispensable à la plupart des êtres vivants.

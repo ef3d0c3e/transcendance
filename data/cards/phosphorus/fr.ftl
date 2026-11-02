@@ -1,0 +1,2 @@
+title = Phosphore
+description = Le phosphore (du grec ancien φωσφόρος / phōsphóros, « porteur de lumière », par allusion à la chimiluminescence émanant du phosphore blanc, visible dans l'obscurité quand il est exposé à de l'oxygène) est l'élément chimique de numéro atomique 15, de symbole P. Dans le tableau périodique, il se trouve dans le cinquième groupe principal, ou 15e groupe IUPAC ou groupe azote. C'est un membre du groupe des pnictogènes.

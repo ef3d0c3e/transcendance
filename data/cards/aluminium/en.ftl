@@ -1,0 +1,2 @@
+title = Aluminium
+description = Aluminium (the Commonwealth and preferred IUPAC name) or aluminum (North American English) is a chemical element; it has symbol Al and atomic number 13. It has a density lower than other common metals, about one-third that of steel. Aluminium has a great affinity toward oxygen, forming a protective layer of oxide on the surface when exposed to air. It visually resembles silver, both in its color and in its great ability to reflect light.

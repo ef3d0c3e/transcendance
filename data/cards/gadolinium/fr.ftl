@@ -1,0 +1,2 @@
+title = Gadolinium
+description = Le gadolinium, de symbole Gd, est l'élément chimique de numéro atomique 64. Il fait partie du groupe des lanthanides. Il doit son nom à Johan Gadolin, chimiste finlandais. L'oxyde de gadolinium a été isolé en 1880 par Jean Charles Galissard de Marignac, et Paul-Émile Lecoq de Boisbaudran prépara le métal pur en 1886. Le gadolinium sous forme ionique (Gd3+) est hautement toxique.

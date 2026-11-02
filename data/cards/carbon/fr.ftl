@@ -1,0 +1,2 @@
+title = Carbone
+description = Le carbone est l'élément chimique de numéro atomique 6, de symbole C. C'est l'élément le plus léger du groupe 14 du tableau périodique. Le carbone est le 4e élément le plus abondant dans l'univers et le 15e le plus abondant dans la croûte terrestre. Il est présent sur Terre à l'état de corps simple (charbon et diamants), de composés inorganiques (CO2) et de composés organiques (biomasse, pétrole et gaz naturel).
