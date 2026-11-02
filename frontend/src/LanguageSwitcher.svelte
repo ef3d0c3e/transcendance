@@ -7,7 +7,6 @@
 	const languages = [
 		{ code: "fr", label: "Français", flag: "🇫🇷" },
 		{ code: "en", label: "English", flag: "🇬🇧" },
-		{ code: "es", label: "Español", flag: "🇪🇸" },
 	];
 
 	const defaultLanguage = "en";
@@ -31,7 +30,6 @@
 		);
 	}
 
-	// The language the server rendered the page in
 	const pageCode = normalizeCode(document.documentElement.lang);
 	const selectedCode = supportsLanguage(pageCode) ? pageCode : defaultLanguage;
 	const currentLanguage =
@@ -48,7 +46,6 @@
 			`lang=${encodeURIComponent(languageCode)}; ` +
 			`Path=/; Max-Age=31536000; SameSite=Lax${secure}`;
 
-		// Reload the current URL after setting the cookie.
 		window.location.reload();
 	}
 

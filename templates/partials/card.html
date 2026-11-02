@@ -9,6 +9,7 @@
 		<img class="card-image" src="{{ .Data.CardArtwork }}" alt="" draggable="false" decoding="async"
 			{{ if not .Data.CardEager }}loading="lazy"{{ end }}>
 		<span class="card-badge">{{ .Data.CardBadge }}</span>
+		{{ with .Data.CardNew }}<span class="card-new">{{ . }}</span>{{ end }}
 		<h2 class="card-title">{{ .Data.CardTitle }}</h2>
 		<p class="card-description">{{ .Data.CardDescription }}</p>
 		<div class="card-footer">

@@ -12,7 +12,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"transcendance/controllers"
 	"transcendance/models"
@@ -23,27 +22,25 @@ import (
 
 // Foil roulette odds of one rarity, in basis points (1/100 of a percent)
 type foilOdds struct {
-	// Chance of a card of this rarity to come out foil on its own
+	// Chance of the rolled card on its own
 	Base int `json:"base"`
 	// Chance a sacrificed card of this rarity adds
 	Bonus int `json:"bonus"`
 }
 
-// Foil roulette odds of each rarity
 var foilRouletteOdds = map[string]foilOdds{
 	"common":    {Base: 100, Bonus: 50},
 	"rare":      {Base: 200, Bonus: 100},
 	"legendary": {Base: 500, Bonus: 200},
 }
 
-// Highest chance a roll can reach, sacrifices or not, in basis points
+// Highest chance a roll can reach, in basis points
 const foilRouletteCap = 5000
 
-// Rolls out of which the chance is drawn: 100% in basis points
+// 100% in basis points
 const foilRouletteScale = 10000
 
-// The most cards a roll can sacrifice. Plain commons on a common reach the
-// cap with 98, anything past that is sent by hand.
+// Plain commons on a common reach the cap with 98, anything past that is sent by hand
 const foilRouletteMaxSacrifices = 100
 
 var (
@@ -53,9 +50,8 @@ var (
 	errFoilLocked = errors.New("foil roulette cards are up in trades")
 )
 
-// foilRouletteChance returns the chance, in basis points, for a card of
-// `rarity` to come out foil when the cards of `sacrificed` rarities are given
-// up for it, capped at foilRouletteCap. False when a rarity has no odds.
+// foilRouletteChance is in basis points, capped at foilRouletteCap. False when
+// a rarity has no odds
 func foilRouletteChance(rarity string, sacrificed []string) (int, bool) {
 	odds, ok := foilRouletteOdds[rarity]
 	if !ok {
@@ -72,8 +68,7 @@ func foilRouletteChance(rarity string, sacrificed []string) (int, bool) {
 	return min(chance, foilRouletteCap), true
 }
 
-// rollFoilRoulette draws a roll at `chance` basis points, the foil pattern
-// won or "" when the roll is lost
+// rollFoilRoulette returns the foil pattern won, "" when the roll is lost
 func rollFoilRoulette(rnd *rand.Rand, chance int) string {
 	if rnd.N(foilRouletteScale) >= chance {
 		return ""
@@ -81,7 +76,6 @@ func rollFoilRoulette(rnd *rand.Rand, chance int) string {
 	return foilPatterns[rnd.N(len(foilPatterns))].Name
 }
 
-// One (card, foil) stack a roll takes copies of
 type foilTake struct {
 	CardID uint
 	Foil   string
@@ -91,15 +85,15 @@ type foilTake struct {
 func parseFoilTake(value string) (foilTake, bool) {
 	idPart, foil, _ := strings.Cut(value, ":")
 	id, err := strconv.ParseUint(idPart, 10, 32)
-	if err != nil || id == 0 {
+	// Exactly a known foil, as on every other endpoint taking cards
+	if err != nil || id == 0 || !models.ValidFoil(foil) {
 		return foilTake{}, false
 	}
 	return foilTake{CardID: uint(id), Foil: foil}, true
 }
 
-// /foil POST: roll a plain card for a foil, sacrificing cards for better
-// odds. Won, the card turns foil with a random pattern; lost, it is
-// destroyed. The sacrifices are spent either way.
+// /foil POST: roll a plain card for a foil, sacrificing cards for better odds.
+// Lost, the card is destroyed. The sacrifices are spent either way
 func (dc *DataController) FoilRoulettePost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	if user == nil {
@@ -156,15 +150,10 @@ func (dc *DataController) FoilRoulettePost(c *gin.Context) {
 		return
 	}
 
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
-	won := rollFoilRoulette(rnd, chance)
+	won := rollFoilRoulette(newRand(), chance)
 
-	// Take the cards and settle the roll at once. Deleting with the owner
-	// check means the same card can't be spent twice, even when the request
-	// is sent twice.
+	// The conditional delete keeps a card from being spent twice, even when the
+	// request is sent twice
 	err := dc.DB.Transaction(func(tx *gorm.DB) error {
 		// Locked, so no offer can put up the cards while they are spent
 		if err := controllers.LockUsers(tx, user.ID); err != nil {
@@ -231,19 +220,19 @@ func (dc *DataController) FoilRoulettePost(c *gin.Context) {
 		return
 	}
 
-	params := url.Values{
-		"tab":    {inventoryTabFoil},
-		"result": {strconv.FormatUint(uint64(target.CardID), 10)},
-	}
-	if won != "" {
-		params.Set("foil", won)
-	} else {
-		params.Set("lost", "1")
-	}
-	c.Redirect(http.StatusSeeOther, "/inventory?"+params.Encode())
+	// Signed, so a link cannot show a roll that never happened
+	c.Redirect(http.StatusSeeOther, "/inventory?tab="+inventoryTabFoil+"&"+controllers.SignedNotice(c, foilResultNotice(
+		strconv.FormatUint(uint64(target.CardID), 10), won, won == "")))
 }
 
-// Message for a foil roulette error code, "" when the code is unknown
+// Built the same way to sign the notice and to check it
+func foilResultNotice(card string, foil string, lost bool) string {
+	if lost {
+		return "result=" + card + "&lost=1"
+	}
+	return "result=" + card + "&foil=" + url.QueryEscape(foil)
+}
+
 func (dc *DataController) foilErrorMessage(c *gin.Context, code string) string {
 	switch code {
 	case "count":
@@ -254,8 +243,7 @@ func (dc *DataController) foilErrorMessage(c *gin.Context, code string) string {
 	return ""
 }
 
-// Sorts the foil roulette grid offers, applied in the page. The grid comes in
-// collection order.
+// Applied in the page, the grid comes in collection order
 var foilSorts = []string{
 	catalogSortNumber,
 	inventorySortName,
@@ -264,9 +252,7 @@ var foilSorts = []string{
 	inventorySortCount,
 }
 
-// Fill the view with every card that can be rolled or sacrificed, and the
-// outcome of the last roll if one just happened. Copies up in pending trades
-// cannot be spent, so they are left out.
+// Copies up in pending trades cannot be spent, so they are left out
 func (dc *DataController) inventoryFoil(c *gin.Context, userID uint, v *inventoryView) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
@@ -346,8 +332,9 @@ func (dc *DataController) inventoryFoil(c *gin.Context, userID uint, v *inventor
 		})
 	}
 
-	// The card the last roll was for: foil when won, destroyed when lost
-	if id, err := strconv.Atoi(c.Query("result")); err == nil {
+	// The card the last roll was for, if signed: foil when won, destroyed when lost
+	if id, err := strconv.Atoi(c.Query("result")); err == nil &&
+		controllers.NoticeSigned(c, foilResultNotice(c.Query("result"), c.Query("foil"), c.Query("lost") != "")) {
 		card, collection := dc.Data.GetCard(id)
 		foil := getFoilPattern(c.Query("foil"))
 		lost := c.Query("lost") != ""
@@ -367,8 +354,7 @@ func (dc *DataController) inventoryFoil(c *gin.Context, userID uint, v *inventor
 	return nil
 }
 
-// Fill the foil roulette fields of the inventory page: its rarity and sort
-// filters, and the odds the page counts the chance with
+// foilFields sends the odds too, the page counts the chance itself
 func (dc *DataController) foilFields(c *gin.Context, v *inventoryView, fields map[string]any) {
 	fields["FoilCollections"] = v.Collections
 	fields["FoilRarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), "", func(value string) string {

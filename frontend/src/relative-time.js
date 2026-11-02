@@ -18,7 +18,6 @@ function daysFromToday(date) {
 	return Math.round((startOfDay(date) - startOfDay(new Date())) / (1000 * 60 * 60 * 24));
 }
 
-// Format a date relative to now, e.g "5 minutes ago", in the given locale
 export function relativeTime(date, locale) {
 	const format = new Intl.RelativeTimeFormat(locale || undefined, { numeric: 'auto' });
 	const elapsed = (new Date(date).getTime() - Date.now()) / 1000;
@@ -32,7 +31,6 @@ export function relativeTime(date, locale) {
 	return format.format(0, 'second');
 }
 
-// Full date and time, e.g for tooltips
 export function fullDate(date, locale) {
 	return new Intl.DateTimeFormat(locale || undefined, { dateStyle: 'full', timeStyle: 'short' }).format(new Date(date));
 }
@@ -54,7 +52,7 @@ export function dayLabel(date, locale) {
 	return label.charAt(0).toLocaleUpperCase(locale || undefined) + label.slice(1);
 }
 
-// Format the times of a server rendered notification list and group its items by day
+// Makes the times relative and groups the items under day headings
 export function enhanceNotificationList(list) {
 	const { locale } = list.dataset;
 	let previous = '';
@@ -78,7 +76,6 @@ export function enhanceNotificationList(list) {
 	}
 }
 
-// Format the times of a server rendered list relative to now, e.g user join dates
 export function enhanceRelativeTimes(list) {
 	const { locale } = list.dataset;
 	for (const time of list.querySelectorAll('time')) {

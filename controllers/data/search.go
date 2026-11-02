@@ -39,25 +39,22 @@ type IndexableCollection struct {
 	Tags        []string
 }
 
-// Search set for cards, documents are keyed by the card's global ID
+// Documents are keyed by the card's global ID
 type CardSearchSet struct {
 	locale string
 	idx    bleve.Index
 	byID   map[string]CardPair
 }
 
-// Search set for collections
 type CollectionSearchSet struct {
 	locale string
 	idx    bleve.Index
 	byName map[string]*data.Collection
 }
 
-// Build IndexableCard for a (card, collection) pair
 func (dc *DataController) toIndexableCard(locale string, card *data.Card, collection *data.Collection) (*IndexableCard, error) {
-	tagsLoc := dc.Data.Tags[locale]
+	tagsLoc := dc.Data.TagLocale(locale)
 
-	// Card data
 	name, err := card.Translate(locale, "title")
 	if err != nil {
 		return nil, err
@@ -67,7 +64,6 @@ func (dc *DataController) toIndexableCard(locale string, card *data.Card, collec
 		return nil, err
 	}
 
-	// Tags
 	tags := make([]string, 0)
 	for _, tag := range card.Tags {
 		tagMsg, _ := tagsLoc.Message(tag)
@@ -78,7 +74,6 @@ func (dc *DataController) toIndexableCard(locale string, card *data.Card, collec
 		tags = append(tags, tagString)
 	}
 
-	// Collection data
 	collectionName, err := collection.Translate(locale, "title")
 	if err != nil {
 		return nil, err
@@ -88,7 +83,6 @@ func (dc *DataController) toIndexableCard(locale string, card *data.Card, collec
 		return nil, err
 	}
 
-	// Tags
 	collectionTags := make([]string, 0)
 	for _, tag := range collection.Tags {
 		tagMsg, _ := tagsLoc.Message(tag)
@@ -115,9 +109,8 @@ func (dc *DataController) toIndexableCard(locale string, card *data.Card, collec
 	}, nil
 }
 
-// Build IndexableCollection for a collection
 func (dc *DataController) toIndexableCollection(locale string, collection *data.Collection) (*IndexableCollection, error) {
-	tagsLoc := dc.Data.Tags[locale]
+	tagsLoc := dc.Data.TagLocale(locale)
 
 	name, err := collection.Translate(locale, "title")
 	if err != nil {
@@ -128,7 +121,6 @@ func (dc *DataController) toIndexableCollection(locale string, collection *data.
 		return nil, err
 	}
 
-	// Tags
 	tags := make([]string, 0)
 	for _, tag := range collection.Tags {
 		tagMsg, _ := tagsLoc.Message(tag)
@@ -146,7 +138,6 @@ func (dc *DataController) toIndexableCollection(locale string, collection *data.
 	}, nil
 }
 
-// search mapping for cards
 func buildCardMapping() (*mapping.IndexMappingImpl, error) {
 	im := bleve.NewIndexMapping()
 	im.DefaultAnalyzer = "standard"
@@ -182,7 +173,6 @@ func buildCardMapping() (*mapping.IndexMappingImpl, error) {
 	return im, nil
 }
 
-// search mapping for collections
 func buildCollectionMapping() (*mapping.IndexMappingImpl, error) {
 
 	im := bleve.NewIndexMapping()
@@ -215,7 +205,6 @@ func buildCollectionMapping() (*mapping.IndexMappingImpl, error) {
 	return im, nil
 }
 
-// Build the search set for cards
 func (dc *DataController) BuildCardSearchSet(locale string) (*CardSearchSet, error) {
 	im, err := buildCardMapping()
 	if err != nil {
@@ -260,7 +249,6 @@ func (dc *DataController) BuildCardSearchSet(locale string) (*CardSearchSet, err
 	return ss, nil
 }
 
-// Build the search set for collections
 func (dc *DataController) BuildCollectionSearchSet(locale string) (*CollectionSearchSet, error) {
 	im, err := buildCollectionMapping()
 	if err != nil {
@@ -296,7 +284,7 @@ func (dc *DataController) BuildCollectionSearchSet(locale string) (*CollectionSe
 	return ss, nil
 }
 
-// Build the text query for cards, every term must match at least one field
+// Every term must match at least one field
 func cardTextQuery(search string) query.Query {
 	terms := strings.Fields(search)
 	if len(terms) == 0 {
@@ -345,7 +333,6 @@ func cardTextQuery(search string) query.Query {
 	)
 }
 
-// Search function for cards
 func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPair, uint64, error) {
 	req := bleve.NewSearchRequestOptions(cardTextQuery(search), limit, offset, false)
 
@@ -363,7 +350,7 @@ func (ss *CardSearchSet) Search(search string, limit int, offset int) ([]CardPai
 	return cards, result.Total, nil
 }
 
-// Search among a set of global card IDs, returns every matching ID ordered by score
+// SearchWithin returns every matching ID, ordered by score
 func (ss *CardSearchSet) SearchWithin(search string, ids []uint) ([]uint, error) {
 	if len(ids) == 0 {
 		return []uint{}, nil
@@ -393,7 +380,6 @@ func (ss *CardSearchSet) SearchWithin(search string, ids []uint) ([]uint, error)
 	return matches, nil
 }
 
-// Search function for collections
 func (ss *CollectionSearchSet) Search(search string, limit int, offset int) ([]*data.Collection, uint64, error) {
 	terms := strings.Fields(search)
 	if len(terms) == 0 {

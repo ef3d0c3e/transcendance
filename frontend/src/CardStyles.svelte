@@ -1,10 +1,6 @@
 <!--
-    Global styles for the card layout
-
-    Backend still needs to provide per cards:
-     * --c1 (Primary color)
-     * --c2 (Secondary color)
-     * --badge-color (Badge color)
+    Global styles of the cards. Each card sets --c1 and --c2, its primary and
+    secondary colors, and --badge-color (templates/partials/card.html).
 -->
 
 <style>
@@ -77,7 +73,6 @@
 		box-sizing: border-box;
 		overflow: hidden;
 
-		/* For styles */
 		isolation: isolate;
 
 		border-radius: var(--card-border-radius);
@@ -107,8 +102,6 @@
 			var(--color-bg-1);
 	}
 
-	/* Card components */
-
 	/* The rarity's color darkened: opaque, so the white text reaches at
 		least 5:1 whatever the card and the theme (legendary yellow is the
 		lightest: 5.0:1 to 7.0:1) */
@@ -131,6 +124,32 @@
 			color-mix(in srgb, var(--badge-color), black 60%),
 			color-mix(in srgb, var(--badge-color), black 50%)
 		);
+	}
+
+	/* First copy of a card their owner had none of, marked on the opening
+		reels, opposite the rarity badge */
+	:global(span.card-new) {
+		z-index: 12;
+		position: absolute;
+		top: 0.5em;
+		right: 1ch;
+		align-self: flex-start;
+		padding: 0.5ch 0.8ch;
+
+		/* The opening reels scale their cards down, the pill stays readable */
+		font-size: max(0.7rem, calc(0.45rem / var(--pack-scale, 1)));
+		letter-spacing: 0.1ch;
+		font-weight: 800;
+		text-transform: uppercase;
+		/* Loud lime gradient, clear of the blue/red/gold rarity badges */
+		color: #08240e;
+		background: linear-gradient(160deg, #c8ff3c, #2ee06a);
+		border-radius: 10ch;
+		box-shadow:
+			0 2px 6px var(--color-shadow),
+			0 0 12px color-mix(in srgb, #6cf05a, transparent 45%);
+
+		pointer-events: none;
 	}
 
 	:global(.card img.card-image) {

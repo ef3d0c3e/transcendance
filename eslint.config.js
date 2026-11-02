@@ -48,7 +48,6 @@ export default [
 		},
 
 		rules: {
-			// Keep individual functions small.
 			'max-lines-per-function': [
 				'error',
 				{
@@ -67,19 +66,14 @@ export default [
 				},
 			],
 
-			// Cyclomatic complexity.
 			complexity: ['error', 10],
 
-			// Don't build the pyramid of doom.
 			'max-depth': ['error', 3],
 
-			// Functions requiring too many things are usually doing too much.
 			'max-params': ['error', 4],
 
-			// Limit procedural blobs.
 			'max-statements': ['error', 20],
 
-			// Don't bury callbacks inside callbacks.
 			'max-nested-callbacks': ['error', 3],
 
 			// Control flow
@@ -143,10 +137,8 @@ export default [
 				},
 			],
 
-			// Functions
 			'func-style': ['error', 'declaration', { allowArrowFunctions: true }],
 
-			// Naming / readability
 			'id-length': [
 				'error',
 				{
@@ -163,7 +155,6 @@ export default [
 				},
 			],
 
-			// Imports / architecture
 			'import-x/no-duplicates': 'error',
 			'import-x/no-named-as-default': 'error',
 			'import-x/no-named-as-default-member': 'error',
@@ -192,7 +183,6 @@ export default [
 				},
 			],
 
-			// Comments / TODOs
 			'no-warning-comments': [
 				'error',
 				{
@@ -203,10 +193,9 @@ export default [
 		},
 	},
 
-	// Svelte components: the plugin's recommended rules (valid markup, keyed
-	// each blocks, no stray DOM manipulation or {@html}), plus the
-	// correctness rules of the JS helpers. Not consistent-return: onMount
-	// returns early without a cleanup function on pages missing its target.
+	// Svelte components: the plugin's recommended rules plus the correctness
+	// rules of the JS helpers. Not consistent-return: onMount returns early,
+	// without a cleanup function, on pages missing its target.
 	...svelte.configs.recommended,
 
 	{

@@ -23,7 +23,6 @@ func chatSendPrivate(t *testing.T, conn *websocket.Conn, to string, body string)
 	chatRequest(t, conn, map[string]string{"type": "send", "to": to, "body": body})
 }
 
-// Read events until one of the given type, skipping others
 func chatReadUntil(t *testing.T, conn *websocket.Conn, kind string) shoutboxEvent {
 	for {
 		event := shoutboxRead(t, conn)
@@ -33,7 +32,6 @@ func chatReadUntil(t *testing.T, conn *websocket.Conn, kind string) shoutboxEven
 	}
 }
 
-// Create users and connect each of them
 func chatUsers(t *testing.T, router *gin.Engine, server *httptest.Server, names ...string) ([]*http.Cookie, []*websocket.Conn) {
 	cookies := make([]*http.Cookie, len(names))
 	conns := make([]*websocket.Conn, len(names))
@@ -45,7 +43,6 @@ func chatUsers(t *testing.T, router *gin.Engine, server *httptest.Server, names 
 	return cookies, conns
 }
 
-// The history sent on a new connection
 func chatHistory(t *testing.T, server *httptest.Server, cookie *http.Cookie) shoutboxEvent {
 	conn, _, err := shoutboxDial(t, server, cookie, "")
 	require.NoError(t, err)

@@ -16,7 +16,7 @@ const (
 	indexCards       = 4
 )
 
-// / GET: homepage, presents the site and showcases collections and cards
+// / GET: homepage
 func (dc *DataController) IndexGet(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 	loc := dc.Renderer.Localizer.GetLocale(c)

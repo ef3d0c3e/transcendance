@@ -26,7 +26,6 @@ const (
 	friendBlockedBy = "block"
 )
 
-// Actions of `/friendaction`
 var friendActions = []string{"add", "cancel", "accept", "deny", "unfriend", "block", "unblock"}
 
 // The relation of a user to others, by ID. A block takes precedence over anything else.
@@ -77,7 +76,6 @@ func relationOf(db *gorm.DB, userID uint, otherID uint) (string, error) {
 	return relations[otherID], err
 }
 
-// Delete the relations from a user to another, of the given types
 func deleteRelations(tx *gorm.DB, userID uint, targetID uint, types ...string) error {
 	return tx.Where("user_id = ? AND target_id = ? AND type IN ?", userID, targetID, types).Delete(&models.Relation{}).Error
 }
@@ -88,7 +86,6 @@ func createRelation(tx *gorm.DB, userID uint, targetID uint, kind string) error 
 		Error
 }
 
-// Notify a user of something another user did, linking to the other user's profile
 func notifyFriend(tx *gorm.DB, userID uint, fromID uint, fromUsername string, kind string) error {
 	return tx.Create(&models.Notification{
 		UserID: userID,
@@ -98,14 +95,13 @@ func notifyFriend(tx *gorm.DB, userID uint, fromID uint, fromUsername string, ki
 	}).Error
 }
 
-// The unread friend request notifications a user got from another
 func friendRequestNotifications(tx *gorm.DB, userID uint, senderID uint) *gorm.DB {
 	return tx.Model(&models.Notification{}).
 		Where("user_id = ? AND type = ?", userID, models.NotificationFriendRequest).
 		Where("JSON_VALUE(data, '$.sender') = ?", senderID)
 }
 
-// Become friends with a user who sent a request, which is then read
+// acceptFriend also reads the request's notification
 func acceptFriend(tx *gorm.DB, user *AuthenticatedUser, target *models.User) error {
 	if err := deleteRelations(tx, target.ID, user.ID, models.RelationPending); err != nil {
 		return err

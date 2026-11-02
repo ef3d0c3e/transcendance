@@ -8,6 +8,7 @@
 
 <script>
 	import { onMount, tick } from "svelte";
+	import { postSale, applySale, focusNotice } from "./sell.js";
 	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
@@ -29,6 +30,8 @@
 	let sellOwned = $state(0);
 	let selling = $state(false);
 	let quantity = $state(1);
+	let error = $state("");
+	let pending = $state(false);
 
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
 	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
@@ -41,6 +44,7 @@
 	const labelTotal = $derived(target.dataset.labelTotal ?? "");
 	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
 	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	const labelError = $derived(target.dataset.labelError ?? "");
 	const labelFoil = $derived(target.dataset.labelFoil ?? "");
 	const sellAction = $derived(target.dataset.sellAction ?? "");
 	// The popup offers to sell only where the card carries a price and the
@@ -72,6 +76,7 @@
 		sellOwned = Number(card.dataset.sellOwned ?? 0);
 		selling = false;
 		quantity = 1;
+		error = "";
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -106,6 +111,32 @@
 		pressedBackdrop = false;
 	}
 
+	// Closes on the sale: the page behind gets the coins, the copies and the
+	// message. The confirm button is only marked busy meanwhile: disabled, it
+	// would drop the focus, which stays on it when the sale fails.
+	async function onSellSubmit(e) {
+		e.preventDefault();
+		if (pending) return;
+		pending = true;
+		error = "";
+
+		const result = await postSale(e.currentTarget);
+		pending = false;
+		if (result.error) {
+			error = result.error;
+			return;
+		}
+
+		const tile = returnFocus;
+		// The copies sold are those of a card the page lists
+		applySale(result, { sold: Number(quantity), inView: true });
+		close();
+		// Selling the last copy took the card, and the focus, out of the page
+		if (tile && !document.contains(tile)) {
+			focusNotice();
+		}
+	}
+
 	onMount(() => {
 		let press = null;
 
@@ -138,7 +169,6 @@
 			show(card);
 		}
 
-		// Cards open a dialog, make them reachable and announced as buttons
 		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
 			makeCardButton(card, { foil: labelFoil, copies: labelCopies });
 			card.setAttribute("aria-haspopup", "dialog");
@@ -187,7 +217,8 @@
 			{/if}
 		</dl>
 		{#if sellable && selling}
-			<form class="inventory-sell-form" method="post" action={sellAction}>
+			<form class="inventory-sell-form" method="post" action={sellAction}
+				data-label-error={labelError} onsubmit={onSellSubmit}>
 				<input type="hidden" name="card" value={sellId} />
 				<input type="hidden" name="foil" value={sellFoil} />
 				<input type="hidden" name="quantity" value={quantity} />
@@ -199,9 +230,12 @@
 					</label>
 				{/if}
 				<p class="inventory-sell-total">{labelTotal}: {numberFormat.format(total)} {labelCoins}</p>
+				{#if error}
+					<p class="section-error" role="alert">{error}</p>
+				{/if}
 				<div class="inventory-popup-actions">
 					<button type="button" class="inventory-popup-neutral" onclick={close}>{labelClose}</button>
-					<button type="submit">{labelConfirm}</button>
+					<button type="submit" aria-disabled={pending ? "true" : undefined}>{labelConfirm}</button>
 				</div>
 			</form>
 		{:else}
