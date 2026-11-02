@@ -50,7 +50,7 @@
 	let visible = $state(document.visibilityState === 'visible');
 
 	// Draft of each composer: `shout`, or `@<username>` for a conversation
-	let drafts = $state({});
+	const drafts = $state({});
 	// Requests waiting for their answer, in order: `{ kind, key }`
 	let waiting = $state([]);
 	let error = $state('');
@@ -68,7 +68,13 @@
 	// Conversation the server was last told is shown
 	let sentView;
 
-	const composerKey = $derived(tab === 'shout' ? 'shout' : active ? `@${active}` : '');
+	// Key of the shown composer's draft, none on the conversation list
+	const composerKey = $derived.by(() => {
+		if (tab === 'shout') {
+			return 'shout';
+		}
+		return active ? `@${active}` : '';
+	});
 	const draft = $derived(drafts[composerKey] ?? '');
 	const length = $derived([...draft.trim()].length);
 	const tooLong = $derived(length > MAX_LENGTH);

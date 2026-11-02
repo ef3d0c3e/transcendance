@@ -1,4 +1,5 @@
 // Coin top-up popup shared by the pages selling with coins (templates/partials/topup-popup.html)
+import { apiFetch } from './api.js';
 
 // Called with the new balance once a pack is bought without leaving the page,
 // for the popup opened last. Without one the form posts as usual.
@@ -19,7 +20,7 @@ export function updateNavBalance(label) {
 // an empty result otherwise
 async function postTopup(form) {
 	try {
-		const response = await fetch(form.action, {
+		const response = await apiFetch(form.action, {
 			method: 'POST',
 			headers: { Accept: 'application/json' },
 			body: new URLSearchParams(new FormData(form)),

@@ -22,7 +22,8 @@
 	const QUANTITY_PRESETS = [1, 5, 10];
 
 	let dialog;
-	let preview;
+	// The clicked booster, its tile is shown at the top of the popup
+	let previewSource = $state(null);
 	let title = $state("");
 	let collection = $state("");
 	let price = $state(0);
@@ -52,10 +53,7 @@
 		collection = booster.dataset.collection ?? "";
 		price = Number(booster.dataset.price ?? 0);
 		quantity = 1;
-
-		preview.replaceChildren();
-		const display = booster.querySelector(DISPLAY_SELECTOR);
-		if (display) preview.append(display.cloneNode(true));
+		previewSource = booster;
 
 		returnFocus = booster;
 		dialog.showModal();
@@ -83,8 +81,15 @@
 		});
 	}
 
+	// A copy of the booster's tile and price, gone with the popup
+	function showPreview(node) {
+		const display = previewSource?.querySelector(DISPLAY_SELECTOR);
+		if (display) node.append(display.cloneNode(true));
+		return () => node.replaceChildren();
+	}
+
 	function onDialogClose() {
-		preview.replaceChildren();
+		previewSource = null;
 		returnFocus?.focus();
 		returnFocus = null;
 	}
@@ -152,7 +157,7 @@
 	onclose={onDialogClose}
 >
 	<div class="shop-buy-popup-content">
-		<div class="shop-buy-preview" bind:this={preview}></div>
+		<div class="shop-buy-preview" {@attach showPreview}></div>
 		<h3 id="shop-buy-popup-title">{title}</h3>
 		{#if coins === undefined}
 			<p class="shop-buy-note">{labelLoginHint}</p>
@@ -165,7 +170,7 @@
 			<div class="shop-buy-quantity">
 				<span class="shop-buy-quantity-label" id="shop-buy-quantity-label">{labelQuantity}</span>
 				<div class="shop-buy-presets" role="group" aria-labelledby="shop-buy-quantity-label">
-					{#each QUANTITY_PRESETS as preset}
+					{#each QUANTITY_PRESETS as preset (preset)}
 						<button
 							type="button"
 							class="shop-buy-preset"

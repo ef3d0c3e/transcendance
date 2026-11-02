@@ -188,7 +188,9 @@
 
 			try {
 				card.releasePointerCapture(e.pointerId);
-			} catch {}
+			} catch {
+				// Already released, e.g. by a pointercancel
+			}
 			delete card.dataset.dragging;
 
 			// If the pointer was released outside the card, clear hover state.

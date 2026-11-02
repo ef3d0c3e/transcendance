@@ -55,6 +55,7 @@
 
 <script>
 	import { onMount } from "svelte";
+	import { apiFetch } from "./api.js";
 
 	let { dataset } = $props();
 
@@ -136,7 +137,7 @@
 				}
 				field.classList.remove("modified");
 			}
-			if (form.querySelectorAll(".modified").length == 0) {
+			if (form.querySelectorAll(".modified").length === 0) {
 				safelyHide(button);
 			} else {
 				button.hidden = false;
@@ -155,18 +156,14 @@
 			result.textContent = "";
 
 			try {
-				const response = await fetch(form.action, {
+				// The profile endpoint always answers JSON, it never redirects
+				const response = await apiFetch(form.action, {
 					method: form.method,
 					body: formData,
 					headers: {
-						'Accept': 'application/json'
-					}
+						Accept: "application/json",
+					},
 				});
-
-				if (response.redirected) {
-					window.location.assign(response.url);
-					return;
-				}
 
 				// Server errors may not be JSON
 				const data = await response.json().catch(() => null);
@@ -183,7 +180,7 @@
 				result.textContent = "";
 				for (const [fieldName, errorMsg] of Object.entries(data.message)) {
 					for (const field of errorFields) {
-						if (field.id == `profile-error-${fieldName}`) {
+						if (field.id === `profile-error-${fieldName}`) {
 							field.hidden = !errorMsg;
 							field.textContent = errorMsg
 							break;

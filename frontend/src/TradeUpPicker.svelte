@@ -39,9 +39,11 @@
 	// Copies put into the contract, in the order they were added
 	let selection = $state([]);
 	// Rarity of the contract so far, "" while it is still empty
-	let rarity = $derived(selection[0]?.rarity ?? "");
-	let filled = $derived(selection.length);
-	let ready = $derived(filled === cost);
+	const rarity = $derived(selection[0]?.rarity ?? "");
+	const filled = $derived(selection.length);
+	const ready = $derived(filled === cost);
+	// One slot per card of the contract
+	const slots = $derived(Array.from({ length: cost }, (_, index) => index));
 
 	function cardOf(tile) {
 		return {
@@ -217,7 +219,7 @@
 	</p>
 
 	<div class="tradeup-slots" role="group" aria-label={labelSlots}>
-		{#each Array(cost) as _, i}
+		{#each slots as i (i)}
 			{#if i < filled}
 				<button
 					type="button"

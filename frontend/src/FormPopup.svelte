@@ -1,6 +1,7 @@
 <script>
 	import { onMount, tick, mount } from "svelte";
 	import FormEnhancement from "./FormEnhancement.svelte";
+	import { apiFetch } from "./api.js";
 
 	let { url, target, formSelector, enhancementSelector } = $props();
 
@@ -33,12 +34,14 @@
 		loading = true;
 
 		try {
-			const response = await fetch(url + "?fragment=1");
+			const response = await apiFetch(`${url}?fragment=1`);
 
 			if (!response.ok) {
 				throw new Error(`HTTP ${response.status}`);
 			}
 
+			// Same-origin fragment rendered by html/template, so escaped
+			// eslint-disable-next-line svelte/no-dom-manipulating
 			content.innerHTML = await response.text();
 
 			const enhancementTarget =
@@ -58,8 +61,8 @@
 
 			await tick();
 			popup?.focus();
-		} catch (error) {
-			console.error(error);
+		} catch {
+			// eslint-disable-next-line svelte/no-dom-manipulating
 			content.textContent = "Unable to load form.";
 		} finally {
 			loading = false;

@@ -36,6 +36,8 @@
 		<div class="tradeup-result-stage">
 			<div class="tradeup-result-flash" aria-hidden="true"></div>
 			<div class="tradeup-result-card">
+				<!-- The server-rendered card of the page's <template> -->
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				<div class="tradeup-result-inner">{@html cardHtml}</div>
 			</div>
 		</div>

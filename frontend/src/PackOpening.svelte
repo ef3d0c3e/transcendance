@@ -1,6 +1,7 @@
 <script>
 	import { onMount, tick } from "svelte";
 	import { openTopup, updateNavBalance } from "./topup.js";
+	import { apiFetch } from "./api.js";
 	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
 
 	let {
@@ -58,8 +59,8 @@
 	let pageForm;
 	let openButton;
 	let buyButton;
-	// Balance, kept up to date by every purchase
-	let coins = initialCoins;
+	// Balance, the page's on mount, then kept up to date by every purchase
+	let coins = 0;
 	let timers = [];
 
 	// Slot machine: five vertical reels side by side. Each drops past its
@@ -346,11 +347,11 @@
 	// Opens the booster of the form, or buys one of the collection with coins
 	async function requestPack(buy) {
 		const response = buy
-			? await fetch(BUY_URL, {
+			? await apiFetch(BUY_URL, {
 				method: "POST",
 				body: new URLSearchParams({ collection: buyButton.dataset.collection }),
 			})
-			: await fetch(pageForm.action, {
+			: await apiFetch(pageForm.action, {
 				method: pageForm.method,
 				body: new FormData(pageForm),
 			});
@@ -556,7 +557,12 @@
 
 			// The won cards stay on the stage, its button opens the next one
 			priceHtml = buyable ? (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "") : "";
-			stageAction = chained ? "open" : (buyable ? "buy" : null);
+			stageAction = null;
+			if (chained) {
+				stageAction = "open";
+			} else if (buyable) {
+				stageAction = "buy";
+			}
 			await tick();
 			againButton?.focus();
 		} catch (error) {
@@ -663,6 +669,7 @@
 			return;
 		}
 		pageForm = form;
+		coins = initialCoins;
 		openButton = form.querySelector("button[type=submit]");
 		buyButton = form.querySelector(".pack-buy");
 
@@ -705,16 +712,19 @@
 	{#if reels.length > 0}
 		<div class="pack-reels" class:is-spinning={spinning} class:is-settled={settled}
 			style="--c1: {colors.primary}; --c2: {colors.secondary}; --pack-count: {reels.length}; --pack-peek: {reelPeek}px; {reelScale ? `--pack-scale: ${reelScale}` : ''}">
-			{#each reels as reel}
+			{#each reels as reel, reelIndex (reelIndex)}
 				<div class="pack-reel" class:is-landed={reel.landed} data-rarity={reel.rarity} style={reel.sway}>
 					<div class="pack-rays" aria-hidden="true"></div>
 					<div class="pack-window">
 						<div class="pack-strip">
-							{#each reel.slots as cell}
+							{#each reel.slots as cell, cellIndex (cellIndex)}
 								<!-- Only the won card, once landed, is reachable: the rest are decoys -->
 								<div class="pack-cell" data-rarity={cell.rarity} data-win={cell.win}
 									inert={!(cell.win && reel.landed)} aria-hidden={cell.win && reel.landed ? undefined : "true"}>
 									<div class="pack-cell-inner">
+										<!-- Card markup rendered by the server's html/template from
+										     the static card data, never from user input -->
+										<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 										{@html cell.html}
 									</div>
 								</div>
@@ -738,6 +748,8 @@
 			<button type="button" class="pack-again" bind:this={againButton} onclick={openAgain}>
 				<span class="pack-again-shine" aria-hidden="true"></span>
 				{againLabel}
+				<!-- Copied from the page's own buy button, rendered by the server -->
+				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				{#if priceHtml}{@html priceHtml}{/if}
 			</button>
 		{/if}

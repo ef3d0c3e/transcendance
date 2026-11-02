@@ -21,7 +21,8 @@ jobs:
             frontend/package-lock.json
 
       - name: Install frontend deps
-        run: npm install vite svelte @sveltejs/vite-plugin-svelte
+        working-directory: frontend
+        run: npm ci
 
       - name: Build frontend
         run: make frontend

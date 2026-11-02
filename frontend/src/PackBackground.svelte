@@ -85,8 +85,8 @@
 		const shader = gl.createShader(type);
 		gl.shaderSource(shader, source);
 		gl.compileShader(shader);
+		// A driver refusing the shader gets the CSS fallback, quietly
 		if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-			console.warn("pack background:", gl.getShaderInfoLog(shader));
 			return null;
 		}
 		return shader;
@@ -109,8 +109,8 @@
 		}
 
 		const gl = canvas.getContext("webgl", { antialias: false, depth: false, alpha: false });
+		// WebGL unavailable (disabled, no GPU): the CSS gradient drifts instead
 		if (!gl) {
-			console.warn("pack background: WebGL unavailable, using the CSS fallback");
 			fallback();
 			return;
 		}
