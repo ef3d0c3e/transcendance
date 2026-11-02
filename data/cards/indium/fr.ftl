@@ -1,0 +1,2 @@
+title = Indium
+description = L'indium est l'élément chimique de numéro atomique 49, de symbole In. Cet élément monoisotopique stable appartient au bloc p, au groupe 13 et à la période 5 et au groupe IIIA dit du bore du tableau périodique ainsi qu'à la famille des métaux pauvres. Le rayon atomique de l'indium avoisine 150 pm (1,50 Å). Le corps simple indium In est un métal gris brillant, à bas point de fusion à peine supérieur à 156 °C, résistant à la corrosion atmosphérique.

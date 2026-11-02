@@ -1,0 +1,2 @@
+title = Avelia Euroduplex
+description = L'Avelia Euroduplex ou TGV Euroduplex, TGV 2N2, ou encore RGV 2N, est la 3e génération de TGV Duplex. Fabriqué entre 2011 et 2022, par Alstom à Belfort et Aytré (près de La Rochelle), il est entré en service commercial de la Société nationale des chemins de fer français (SNCF) le 11 décembre 2011[6]. Une partie des rames de l'entreprise publique française, au nombre de cinquante-cinq, sont également appelées L'Océane.

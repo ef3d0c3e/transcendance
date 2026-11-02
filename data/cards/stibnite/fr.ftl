@@ -1,0 +1,2 @@
+title = Stibine
+description = La stibine ou stibnite est une espèce minérale composée de sulfure d'antimoine de formule idéale Sb2S3 avec des traces de As; Tl; Fe; Pb; Cu; Zn; Co; Ag; Au; Bi. La stibnite forme une série avec la bismuthinite. À l'état de poudre de Sb ou de divers composés purifiés, elle a longtemps été utilisée dans les mascaras et peut donner un effet de scintillement aux feux d'artifice.

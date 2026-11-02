@@ -2,9 +2,12 @@ package config
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/fs"
 	"log"
 	"os"
+	"strings"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
@@ -12,20 +15,34 @@ import (
 	"gorm.io/gorm"
 )
 
-const testDatabase = "main_test"
+// Database the tests recreate, MYSQL_TEST_DATABASE when set: test runs sharing a database server need one each
+const defaultTestDatabase = "main_test"
 
 func ConnectTestDatabase() (*gorm.DB, func(), error) {
-	if err := godotenv.Load(); err != nil {
+	// The environment may come from CI instead of a .env file
+	if err := godotenv.Load(); err != nil && !errors.Is(err, fs.ErrNotExist) {
 		return nil, nil, fmt.Errorf("load .env: %w", err)
+	}
+	testDatabase := os.Getenv("MYSQL_TEST_DATABASE")
+	if testDatabase == "" {
+		testDatabase = defaultTestDatabase
+	}
+	if strings.ContainsAny(testDatabase, "`\\") {
+		return nil, nil, fmt.Errorf("invalid MYSQL_TEST_DATABASE %q", testDatabase)
 	}
 
 	user := os.Getenv("MYSQL_USER")
 	password := os.Getenv("MYSQL_PASSWORD")
+	address := os.Getenv("MYSQL_ADDRESS")
+	if address == "" {
+		address = "127.0.0.1:3306"
+	}
 
 	serverDSN := fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s)/?charset=utf8mb4&parseTime=True&loc=Local",
 		user,
 		password,
+		address,
 	)
 
 	// Connect without selecting a database so we can recreate the test DB.
@@ -47,9 +64,10 @@ func ConnectTestDatabase() (*gorm.DB, func(), error) {
 	}
 
 	dsn := fmt.Sprintf(
-		"%s:%s@tcp(127.0.0.1:3306)/%s?charset=utf8mb4&parseTime=True&loc=Local",
+		"%s:%s@tcp(%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		user,
 		password,
+		address,
 		testDatabase,
 	)
 

@@ -1,15 +1,21 @@
 {{ define "login" }}
 <section>
-<h1>{{ .T "login-title" }}</h1>
+<h1 id="login-title">{{ .T "login-title" }}</h1>
 {{ if .Data.User }}
-<h3>{{ .T "login-error-authenticated" }}</h3>
+<p>{{ .T "login-error-authenticated" }}</p>
 {{ else }}
+{{/* Ids are prefixed: the register form can be on the page too, in the
+header's popup. Both fields are shown without JavaScript, which then only
+shows the one of the chosen login type. */}}
 <form
 	class="auth-form"
 	id="login-form"
 	action="/login"
-	method="post">
-	<div id="form-result"></div>
+	method="post"
+	data-label-error="{{ .T "error-unexpected" }}"
+	data-label-network="{{ .T "profile-error-network" }}">
+	{{/* Live regions, present while empty so what is written in is announced */}}
+	<div class="form-result" id="login-result"><p class="section-error" role="alert"></p><p class="section-success" role="status"></p></div>
 	<fieldset class="login-type-switch">
 		<legend>{{ .T "login-type" }}</legend>
 		<label class="login-type-option">
@@ -22,24 +28,27 @@
 		</label>
 	</fieldset>
 	<div data-login-field="username">
-		<label for="username">{{ .T "login-username" }}</label>
-		<input type="text" id="username" name="username" autocomplete="username" required minlength="3" maxlength="16" pattern="[a-zA-Z0-9_]{3,16}" title="{{ .T "profile-username-hint" }}">
+		<label for="login-username">{{ .T "login-username" }}</label>
+		<input type="text" id="login-username" name="username" autocomplete="username" minlength="3" maxlength="16" pattern="[a-zA-Z0-9_]{3,16}" title="{{ .T "profile-username-hint" }}">
 	</div>
-	<div data-login-field="email" hidden>
-		<label for="email">{{ .T "account-email" }}</label>
-		<input type="text" inputmode="email" id="email" name="email" autocomplete="email" maxlength="254" disabled>
+	<div data-login-field="email">
+		<label for="login-email">{{ .T "account-email" }}</label>
+		<input type="email" id="login-email" name="email" autocomplete="email" maxlength="254">
 	</div>
-	<label for="password">{{ .T "login-password" }}</label>
+	<label for="login-password">{{ .T "login-password" }}</label>
 	<input
 		type="password"
-		id="password"
+		id="login-password"
 		name="password"
 		autocomplete="current-password"
-		required>
+		required
+		maxlength="72">
 
 	<button type="submit">{{ .T "login-submit" }}</button>
 </form>
+{{ end }}
 </section>
+{{ if not .Data.User }}
 <div id="login-enhancement"></div>
 {{ end }}
 {{ end }}

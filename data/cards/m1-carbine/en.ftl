@@ -1,0 +1,2 @@
+title = M1 Carbine
+description = The M1 Carbine is a lightweight semi-automatic rifle chambered in the .30 carbine (7.62×33mm) cartridge that was issued to the U.S. military during World War II, the Korean War, and the Vietnam War. The M1 Carbine was produced in several variants and was widely used by military, paramilitary, and police forces around the world after World War II, most notably by the armed forces of South Korea and South Vietnam.

@@ -1,0 +1,2 @@
+title = Aventurine
+description = Aventurine is a form of quartzite, characterised by its translucency and the presence of platy mineral inclusions that give it a shimmering or glistening effect termed aventurescence.

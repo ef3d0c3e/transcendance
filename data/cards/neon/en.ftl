@@ -1,0 +1,2 @@
+title = Neon
+description = Neon is a chemical element; it has the symbol Ne and the atomic number 10. It is the second noble gas in the periodic table. Neon is a colorless, odorless, inert monatomic gas under standard conditions, with approximately two-thirds the density of air. Neon was discovered in 1898 alongside krypton and xenon, identified as one of the three remaining rare inert elements in dry air after the removal of nitrogen, oxygen, argon, and carbon dioxide.

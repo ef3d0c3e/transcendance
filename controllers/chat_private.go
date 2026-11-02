@@ -157,7 +157,11 @@ func (sc *ShoutboxController) sendPrivate(ctx context.Context, client *shoutboxC
 	if !ok {
 		return
 	}
+	// Ignored for a while in the chat, or blocked from the profile either way
 	blocked, err := sc.ignores(ctx, recipient.ID, client.userID)
+	if err == nil && !blocked {
+		blocked, err = TradeBlocked(sc.DB.WithContext(ctx), recipient.ID, client.userID)
+	}
 	if err != nil {
 		log.Printf("Shoutbox: failed to check ignores: %s", err)
 		queueShoutboxEvent(client, shoutboxEvent{Type: "error", Error: shoutboxErrorInternal})

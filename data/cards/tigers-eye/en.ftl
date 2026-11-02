@@ -1,0 +1,2 @@
+title = Tiger's Eye
+description = Tiger's eye is a chatoyant gemstone that is usually a metamorphic rock with a golden to red-brown colour and a silky lustre. As members of the quartz group, tiger's eye and the related blue-coloured mineral hawk's eye gain their silky, lustrous appearance from the parallel intergrowth of quartz crystals and altered amphibole fibres that have mostly turned into limonite.

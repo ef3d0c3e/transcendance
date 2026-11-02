@@ -604,10 +604,7 @@ func (dc *DataController) OpeningBuyPost(c *gin.Context) {
 // Replies with the reels to animate.
 func (dc *DataController) openPack(c *gin.Context, user *controllers.AuthenticatedUser, collection *data.Collection, size uint, pay func(tx *gorm.DB) error) {
 	// Draw before paying, an empty collection costs nothing
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
+	rnd := newRand()
 	byRarity := groupByRarity(dc.Data.Cards, collection)
 	pack := drawPack(rnd, byRarity, int(size))
 	if pack == nil {
@@ -713,10 +710,7 @@ var (
 // cards are added to the inventory
 func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.AuthenticatedUser) {
 	// Draw before touching the pile, an empty catalog keeps the booster
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
+	rnd := newRand()
 	pool := dc.allCardsPool()
 	pack := drawDefaultPack(rnd, pool, defaultBoosterSize)
 	if pack == nil {
@@ -829,6 +823,10 @@ func (dc *DataController) AddBoosterGet(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		// Debug page, not localized
@@ -844,8 +842,8 @@ func (dc *DataController) AddBoosterGet(c *gin.Context) {
 // /add_booster POST: add a booster of a collection, then show the boosters
 func (dc *DataController) AddBoosterPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
-	if user == nil {
-		c.String(http.StatusForbidden, "You must be authenticated")
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
 		return
 	}
 

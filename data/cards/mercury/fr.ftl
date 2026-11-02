@@ -1,0 +1,2 @@
+title = Mercure
+description = Le mercure est l'élément chimique de numéro atomique 80, de symbole Hg. Le corps simple mercure est un métal, liquide et peu visqueux dans les conditions normales de température et de pression, dit vif-argent jusqu'au début du XIXe siècle. Le mercure (métallique) a longtemps été utilisé dans divers médicaments, dans les thermomètres et les batteries, avant d'être interdit (en France en 1999) car trop toxique.

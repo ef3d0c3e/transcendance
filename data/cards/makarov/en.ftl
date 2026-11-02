@@ -1,0 +1,2 @@
+title = Makarov Pistol
+description = The Makarov Pistol, commonly known simply as the PM or Makarov, is a single action, semi-automatic pistol manufactured by the Russian company Kalashnikov Concern. The PM was designed by Nikolay Makarov to replace the TT pistol, becoming the standard service pistol of the Soviet Armed Forces and the Militsiya in 1951. It is chambered in the 9×18mm Makarov round which is unofficially named for the pistol.

@@ -43,7 +43,8 @@ services:
       - certificates:/etc/nginx/certs
     # Upstreams are looked up per request, the gateway starts without them
     networks:
-      - backend
+      - edge
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -65,7 +66,7 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - edge
     mem_limit: 64m
     logging: *logging
 
@@ -89,7 +90,9 @@ services:
       mariadb:
         condition: service_healthy
     networks:
-      - backend
+      - edge
+      - data
+      - metrics
     mem_limit: 256m
     logging: *logging
 
@@ -113,7 +116,7 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - data
     mem_limit: 384m
     logging: *logging
 
@@ -133,8 +136,11 @@ services:
       ingest.geoip.downloader.enabled: "false"
       # Avoids needing vm.max_map_count on the host
       node.store.allow_mmap: "false"
+      # Snapshots archiving the logs, see elasticsearch/setup.sh
+      path.repo: /usr/share/elasticsearch/snapshots
     volumes:
       - ${DATA_DIR:-./data}/elasticsearch:/usr/share/elasticsearch/data
+      - ${DATA_DIR:-./data}/log-archive:/usr/share/elasticsearch/snapshots
     healthcheck:
       test: ["CMD-SHELL", "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health' | grep -qE '\"status\":\"(green|yellow)\"'"]
       interval: 15s
@@ -145,7 +151,7 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 1280m
     logging: *logging
 
@@ -163,13 +169,14 @@ services:
       GRAFANA_ES_PASSWORD: ${GRAFANA_ES_PASSWORD:?}
       LOG_RETENTION_DAYS: ${LOG_RETENTION_DAYS:-730}
       LOG_COMPRESS_AFTER_DAYS: ${LOG_COMPRESS_AFTER_DAYS:-14}
+      LOG_ARCHIVE_DAYS: ${LOG_ARCHIVE_DAYS:-30}
     volumes:
       - ./elasticsearch/setup.sh:/setup.sh:ro
     depends_on:
       elasticsearch:
         condition: service_healthy
     networks:
-      - backend
+      - admin
     mem_limit: 128m
     logging: *logging
 
@@ -199,7 +206,7 @@ services:
       elasticsearch-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 1g
     logging: *logging
 
@@ -217,7 +224,7 @@ services:
       kibana:
         condition: service_healthy
     networks:
-      - backend
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -243,7 +250,7 @@ services:
       elasticsearch-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 640m
     logging: *logging
 
@@ -272,7 +279,8 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
+      - metrics
     mem_limit: 384m
     logging: *logging
 
@@ -285,7 +293,7 @@ services:
     volumes:
       - /:/host:ro
     networks:
-      - backend
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -306,7 +314,7 @@ services:
       - /sys:/sys:ro
       - /dev/disk:/dev/disk:ro
     networks:
-      - backend
+      - admin
     mem_limit: 192m
     logging: *logging
 
@@ -324,7 +332,7 @@ services:
       mariadb:
         condition: service_healthy
     networks:
-      - backend
+      - data
     mem_limit: 64m
     logging: *logging
 
@@ -340,7 +348,8 @@ services:
       mariadb-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - data
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -350,7 +359,7 @@ services:
     command:
       - --nginx.scrape-uri=http://gateway:8081/stub_status
     networks:
-      - backend
+      - admin
     mem_limit: 32m
     logging: *logging
 
@@ -366,7 +375,7 @@ services:
       elasticsearch-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -378,7 +387,8 @@ services:
     volumes:
       - ./prometheus/blackbox.yml:/etc/blackbox/blackbox.yml:ro
     networks:
-      - backend
+      - admin
+      - edge
     mem_limit: 32m
     logging: *logging
 
@@ -423,7 +433,7 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 320m
     logging: *logging
 
@@ -431,8 +441,12 @@ services:
   alertmanager:
     image: prom/alertmanager:v0.34.1
     restart: unless-stopped
+    # Adds the receivers of the environment to alertmanager.yml
+    entrypoint: ["/bin/sh", "/etc/alertmanager/start.sh"]
+    environment:
+      ALERT_WEBHOOK_URL: ${ALERT_WEBHOOK_URL:-}
+      ALERT_DISCORD_WEBHOOK_URL: ${ALERT_DISCORD_WEBHOOK_URL:-}
     command:
-      - --config.file=/etc/alertmanager/alertmanager.yml
       - --storage.path=/alertmanager
       # Links in the alerts
       - --web.external-url=https://${DOMAIN:-transcendance.pundalik.org}:${HTTPS_PORT:-8443}/alertmanager/
@@ -441,6 +455,7 @@ services:
       - --cluster.listen-address=
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/start.sh:/etc/alertmanager/start.sh:ro
       - ${DATA_DIR:-./data}/alertmanager:/alertmanager
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9093/alertmanager/-/healthy"]
@@ -451,7 +466,7 @@ services:
       data-setup:
         condition: service_completed_successfully
     networks:
-      - backend
+      - admin
     mem_limit: 64m
     logging: *logging
 
@@ -459,5 +474,14 @@ volumes:
   certificates:
   card_images:
 
+# The site and the admin tools are kept apart: the app, the only service handling visitors' input, cannot reach
+# the admin tools (Grafana trusts the gateway's Remote-User header, Prometheus and Alertmanager have no login)
 networks:
-  backend:
+  # Gateway, app and admin sign-in
+  edge:
+  # The app's database
+  data:
+  # Prometheus scraping the app's metrics
+  metrics:
+  # Logs, monitoring and their admin tools, behind the gateway
+  admin:

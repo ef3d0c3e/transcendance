@@ -1,0 +1,2 @@
+title = Indium
+description = Indium is a chemical element; its symbol is In and its atomic number is 49. It is a silvery-white post-transition metal and one of the softest elements. Chemically, indium is similar to gallium and thallium, and its properties are largely intermediate between the two. It was discovered in 1863 by Ferdinand Reich and Hieronymous Theodor Richter by spectroscopic methods and named for the indigo blue line in its spectrum.

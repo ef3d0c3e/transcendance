@@ -1,0 +1,2 @@
+title = Gadolinium
+description = Gadolinium is a chemical element; it has symbol Gd and atomic number 64. It is a silvery-white metal when oxidation is removed. Gadolinium is a ductile and malleable rare-earth element. It reacts with atmospheric oxygen or moisture slowly to form a black oxide coating. Gadolinium below its Curie point of 20 °C (68 °F) is ferromagnetic, with an attraction to a magnetic field higher than that of nickel.

@@ -1,0 +1,2 @@
+title = Calcium
+description = Le calcium est l'élément chimique de numéro atomique 20, de symbole Ca. C'est un métal alcalino-terreux gris-blanc et plutôt dur. Il n'existe pas à l'état de corps simple dans la nature. C'est le cinquième élément le plus abondant de la croûte terrestre (plus de 3 %). Il est vital pour de nombreuses espèces : formation des os, des dents et des coquilles (il compose 1 à 2 % du poids du corps humain d'un adulte).

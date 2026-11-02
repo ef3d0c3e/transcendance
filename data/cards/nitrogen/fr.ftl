@@ -1,0 +1,2 @@
+title = Azote
+description = L'azote est l'élément chimique de numéro atomique 7, de symbole N (du latin nitrogenium). C'est la tête de file du groupe des pnictogènes. Dans la langue courante on appelle « azote » le corps simple N2 (diazote), constituant majoritaire de l'atmosphère terrestre, représentant presque les 4/5e de l'air (78,06 %, en volume). Dans la croûte terrestre, l'azote est le 34e élément constituant par ordre d'abondance.

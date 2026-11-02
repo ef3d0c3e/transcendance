@@ -1,0 +1,2 @@
+title = Neodymium
+description = Neodymium is a chemical element with the symbol Nd and atomic number 60. It is a silvery-white metal belonging to the lanthanide series and is one of the rare-earth elements. The metal tarnishes in air and reacts with water. Its compounds predominantly contain neodymium in the +3 oxidation state, although +2 and +4 compounds are also known. Natural neodymium contains seven isotopes, two of which are radioactive with extremely long half-lives.

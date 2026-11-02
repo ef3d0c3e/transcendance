@@ -1,0 +1,2 @@
+title = Tantale
+description = Le tantale est l'élément chimique de numéro atomique 73, de symbole Ta. Le corps simple tantale est un métal de transition gris-bleu, lourd, dur mais ductile, très résistant à la corrosion des acides, et bon conducteur de la chaleur et de l'électricité. On le trouve dans le minéral appelé tantalite et dans certains minerais complexes sous forme d'oxyde, associé au niobium, notamment dans le coltan, de couleur noire.

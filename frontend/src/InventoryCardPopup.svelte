@@ -7,8 +7,9 @@
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { postSale, applySale, focusNotice } from "./sell.js";
+	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
 
@@ -44,6 +45,7 @@
 	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
 	const labelCoins = $derived(target.dataset.labelCoins ?? "");
 	const labelError = $derived(target.dataset.labelError ?? "");
+	const labelFoil = $derived(target.dataset.labelFoil ?? "");
 	const sellAction = $derived(target.dataset.sellAction ?? "");
 	// The popup offers to sell only where the card carries a price and the
 	// owner has copies of it that are not up in trades
@@ -83,14 +85,30 @@
 		dialog.close();
 	}
 
+	// The sell button is replaced by the form: the focus goes to its first
+	// control instead of falling to the dialog
+	async function startSelling() {
+		selling = true;
+		await tick();
+		dialog.querySelector(".inventory-sell-form input[type=range], .inventory-sell-form button[type=submit]")?.focus();
+	}
+
 	function onDialogClose() {
 		returnFocus?.focus();
 		returnFocus = null;
 	}
 
-	// Clicking the backdrop targets the dialog itself
+	// Clicking the backdrop targets the dialog itself. Pressed inside (the
+	// quantity slider) and released over the backdrop isn't one.
+	let pressedBackdrop = false;
+
+	function onDialogPointerdown(e) {
+		pressedBackdrop = e.target === dialog;
+	}
+
 	function onDialogClick(e) {
-		if (e.target === dialog) close();
+		if (e.target === dialog && pressedBackdrop) close();
+		pressedBackdrop = false;
 	}
 
 	// Sell the copies picked without reloading, then close on the sale: the
@@ -152,10 +170,8 @@
 
 		// Cards open a dialog, make them reachable and announced as buttons
 		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
-			card.tabIndex = 0;
-			card.setAttribute("role", "button");
+			makeCardButton(card, { foil: labelFoil, copies: labelCopies });
 			card.setAttribute("aria-haspopup", "dialog");
-			card.setAttribute("aria-label", card.querySelector(".card-title")?.textContent ?? "");
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
@@ -171,14 +187,15 @@
 </script>
 
 <dialog
-	class="inventory-popup"
+	class="popup inventory-popup"
 	aria-labelledby="inventory-popup-title"
 	bind:this={dialog}
+	onpointerdown={onDialogPointerdown}
 	onclick={onDialogClick}
 	onclose={onDialogClose}
 >
 	<div class="inventory-popup-content">
-		<h3 id="inventory-popup-title">{title}</h3>
+		<h2 id="inventory-popup-title">{title}</h2>
 		<dl>
 			{#if copies > 1}
 				<div>
@@ -224,7 +241,7 @@
 		{:else}
 			<div class="inventory-popup-actions">
 				{#if sellable}
-					<button type="button" onclick={() => (selling = true)}>{labelSell}</button>
+					<button type="button" onclick={startSelling}>{labelSell}</button>
 				{/if}
 				<button type="button" class:inventory-popup-neutral={sellable} onclick={close}>{labelClose}</button>
 			</div>
@@ -233,24 +250,9 @@
 </dialog>
 
 <style>
+	/* Frame, backdrop and bottom sheet: the shared .popup of theme.css */
 	.inventory-popup {
-		width: min(100% - 2rem, 22rem);
-		padding: 0;
-
-		color: var(--color-text);
-		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
-		border-radius: 1rem;
-		box-shadow: 0 10px 30px var(--color-shadow);
-	}
-
-	.inventory-popup::backdrop {
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
-	}
-
-	.inventory-popup[open] {
-		animation: popup-in 150ms ease;
+		--popup-width: 22rem;
 	}
 
 	.inventory-popup-content {
@@ -261,7 +263,7 @@
 		padding: 1.25rem 1.25rem 1rem;
 	}
 
-	h3 {
+	h2 {
 		margin: 0;
 
 		font-size: 1.25rem;
@@ -338,24 +340,7 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	@keyframes popup-in {
-		from {
-			opacity: 0;
-			transform: translateY(0.5rem) scale(0.98);
-		}
-	}
-
-	/* Small screens: bottom sheet, like the other popups */
 	@media (max-width: 480px) {
-		.inventory-popup {
-			width: 100%;
-			max-width: 100%;
-			margin: auto 0 0;
-
-			border-radius: 1rem 1rem 0 0;
-			border-bottom: 0;
-		}
-
 		.inventory-popup-content {
 			padding-bottom: max(1rem, env(safe-area-inset-bottom));
 		}
@@ -365,9 +350,4 @@
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.inventory-popup[open] {
-			animation: none;
-		}
-	}
 </style>

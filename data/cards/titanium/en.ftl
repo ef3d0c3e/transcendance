@@ -1,0 +1,2 @@
+title = Titanium
+description = Titanium is a chemical element; it has symbol Ti and atomic number 22. Found in nature only as an oxide, it can be reduced to produce a lustrous transition metal with a silver color, low density, and high strength that is resistant to corrosion in sea water, aqua regia, and chlorine. Titanium was discovered in Cornwall, Great Britain, by William Gregor in 1791 and was named by Martin Heinrich Klaproth after the Titans of Greek mythology.
