@@ -331,7 +331,8 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 
 	// Nothing to open: the buy button shows instead, and nothing starts on its own
 	require.Regexp(t, `<button type="submit" class="pack-open" hidden>`, body)
-	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" aria-label="Open again for 250 coins"\s+>`, body)
+	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" data-retry-aria="Open another pack for 250 coins"\s+aria-label="Open pack for 250 coins"\s+>`, body)
+	require.Contains(t, body, `<span class="pack-buy-label">Open pack</span>`)
 	require.NotContains(t, body, `data-autostart`)
 	require.Contains(t, body, `<div class="pack-page">`)
 	require.Contains(t, body, `<span id="pack-coins">0 coins</span>`)
