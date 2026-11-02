@@ -161,35 +161,25 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Login popup
+// Login and register popups: the header's links to their pages open the
+// form in a popup instead, except on the page that shows it already
 {
-	const target = document.querySelector('#login-popup');
+	for (const kind of ['login', 'register']) {
+		const target = document.querySelector(`#${kind}-popup`);
+		if (!target || document.querySelector(`#${kind}-form`)) {
+			continue;
+		}
 
-	if (target) {
+		target.replaceChildren();
 		mount(Popup, {
 			target,
 			props: {
-				url: '/login',
-				target,
-				formSelector: '#login-form',
-				enhancementSelector: '#login-enhancement',
-			},
-		});
-	}
-}
-
-// Register popup
-{
-	const target = document.querySelector('#register-popup');
-
-	if (target) {
-		mount(Popup, {
-			target,
-			props: {
-				url: '/register',
-				target,
-				formSelector: '#register-form',
-				enhancementSelector: '#register-enhancement',
+				url: `/${kind}`,
+				kind,
+				label: target.dataset.label,
+				labelLoading: target.dataset.labelLoading,
+				labelError: target.dataset.labelError,
+				labelClose: target.dataset.labelClose,
 			},
 		});
 	}

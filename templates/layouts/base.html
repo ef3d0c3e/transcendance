@@ -127,8 +127,16 @@
 					</a>
 					<button type="button" class="nav-logout" data-logout="/api/logout">{{ $.T "navbar-logout" }}</button>
 					{{ else }}
-					<span id="login-popup" data-label="{{ .T "login-title" }}"></span>
-					<span id="register-popup" data-label="{{ .T "register-title" }}"></span>
+					{{/* Links to the pages, which JavaScript turns into buttons
+					opening the form in a popup */}}
+					<span id="login-popup" data-label="{{ .T "login-title" }}"
+						data-label-loading="{{ .T "login-popup-loading" }}"
+						data-label-error="{{ .T "login-popup-error" }}"
+						data-label-close="{{ .T "login-popup-close" }}"><a class="nav-auth" href="/login"{{ if eq .Path "/login" }} aria-current="page"{{ end }}>{{ .T "login-title" }}</a></span>
+					<span id="register-popup" data-label="{{ .T "register-title" }}"
+						data-label-loading="{{ .T "login-popup-loading" }}"
+						data-label-error="{{ .T "login-popup-error" }}"
+						data-label-close="{{ .T "login-popup-close" }}"><a class="nav-auth" href="/register"{{ if eq .Path "/register" }} aria-current="page"{{ end }}>{{ .T "register-title" }}</a></span>
 					{{ end }}
 				</div>
 			</div>

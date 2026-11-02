@@ -2,6 +2,7 @@ register-title = Créer un compte
 register-username = Nom d'utilisateur
 register-password = Mot de passe
 register-password-confirm = Confirmer votre mot de passe
+register-password-hint = 8 à 72 caractères.
 register-tos = J'ai lu et j'accepte les
 register-tos-link = Conditions d'Utilisation
 register-submit = Créer un compte
@@ -30,6 +31,9 @@ login-error-rate-limited = Trop de tentatives échouées, réessayez dans { $sec
     *[other] { $seconds } secondes
 }.
 login-success = Bienvenu, { $username }
+login-popup-loading = Chargement du formulaire…
+login-popup-error = Impossible de charger le formulaire. Vérifiez votre connexion et réessayez.
+login-popup-close = Fermer
 
 logout-unauthenticated = Vous n'êtes pas connecté
 logout-success = Vous avez été déconnecté
@@ -169,6 +173,7 @@ profile-error-passwords-do-not-match = Les mots de passe ne correspondent pas
 profile-error-password-missing = Ce champ est requis pour changer de mot de passe
 profile-empty-field = Non renseigné
 profile-submit = Enregistrer
+profile-saved = Profil enregistré
 profile-error-network = Impossible de contacter le serveur
 
 error-unexpected = Une erreur est survenue
