@@ -2,6 +2,7 @@ register-title = Create account
 register-username = Username
 register-password = Password
 register-password-confirm = Confirm password
+register-password-hint = 8 to 72 characters.
 register-tos = I have read and agree to the
 register-tos-link = Terms of Service
 register-submit = Create account
@@ -30,6 +31,9 @@ login-error-rate-limited = Too many failed attempts, try again in { $seconds ->
     *[other] { $seconds } seconds
 }.
 login-success = Welcome back, { $username }
+login-popup-loading = Loading the form…
+login-popup-error = Unable to load the form. Check your connection and try again.
+login-popup-close = Close
 
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
@@ -169,6 +173,7 @@ profile-error-passwords-do-not-match = Passwords do not match
 profile-error-password-missing = Must provide this field to change password
 profile-empty-field = Not specified
 profile-submit = Save
+profile-saved = Profile saved
 profile-error-network = Unable to contact the server
 
 error-unexpected = An error occurred

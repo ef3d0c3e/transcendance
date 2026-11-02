@@ -1,227 +1,200 @@
+<!--
+    Login or register form in a modal <dialog>, opened from the header. The
+    form is the server's page fragment (`url` with `?fragment=1`), loaded on
+    the first opening and submitted by FormEnhancement. `kind` ("login" or
+    "register") prefixes the ids of the fragment: `#<kind>-form`,
+    `#<kind>-enhancement`.
+
+    A successful login reloads the page, whose header then shows the user.
+    A successful registration keeps its message on screen until the popup
+    is closed; the next opening loads a fresh form.
+-->
+
 <script>
-	import { onMount, tick, mount } from "svelte";
+	import { mount, tick, unmount } from "svelte";
 	import FormEnhancement from "./FormEnhancement.svelte";
 	import { apiFetch } from "./api.js";
 
-	let { url, target, formSelector, enhancementSelector } = $props();
+	// `labelLoading`, `labelError` and `labelClose` are the popup's own texts
+	let { url, kind, label, labelLoading, labelError, labelClose } = $props();
 
-	let label = $state("");
-	let open = $state(false);
-	let loading = $state(false);
-	let loaded = $state(false);
-
+	let dialog;
+	let trigger;
 	let content;
-	let popup;
+	// "idle", "loading", "loaded" or "failed"
+	let status = $state("idle");
+	// The fragment, rendered by the server
+	let html = $state("");
+	let enhancement = null;
+	// The form went through: the next opening starts over
+	let done = false;
 
-	let closeTimer;
+	// First field of the form, else the close button
+	function focusStart() {
+		const field = content?.querySelector(
+			"form input:not([type=hidden]):not([type=radio]):not(:disabled)",
+		);
+		(field ?? dialog.querySelector(".form-popup-close"))?.focus();
+	}
 
-	onMount(() => {
-		if (target) {
-			label = target.dataset.label ?? "";
+	function handleSuccess() {
+		done = true;
+		if (kind === "login") {
+			// The header shows the logged in user
+			globalThis.location.reload();
 		}
-	});
+	}
 
-	async function openpopup() {
-		clearTimeout(closeTimer);
-		open = true;
-
-		if (loaded || loading) {
-			await tick();
-			popup?.focus();
-			return;
-		}
-
-		loading = true;
-
+	async function load() {
+		status = "loading";
 		try {
 			const response = await apiFetch(`${url}?fragment=1`);
-
 			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}`);
+				status = "failed";
+				return;
 			}
+			html = await response.text();
+			status = "loaded";
+			await tick();
 
-			// Same-origin fragment rendered by html/template, so escaped
-			// eslint-disable-next-line svelte/no-dom-manipulating
-			content.innerHTML = await response.text();
-
-			const enhancementTarget =
-				content.querySelector(enhancementSelector);
-
-			if (enhancementTarget) {
-				mount(FormEnhancement, {
-					target: enhancementTarget,
+			const target = content.querySelector(`#${kind}-enhancement`);
+			if (target) {
+				enhancement = mount(FormEnhancement, {
+					target,
 					props: {
-						formSelector,
-						onSuccess: handleFormSuccess,
+						formSelector: `#${kind}-form`,
+						onSuccess: handleSuccess,
 					},
 				});
 			}
-
-			loaded = true;
-
-			await tick();
-			popup?.focus();
 		} catch {
-			// eslint-disable-next-line svelte/no-dom-manipulating
-			content.textContent = "Unable to load form.";
-		} finally {
-			loading = false;
+			status = "failed";
 		}
 	}
 
-	function closepopup() {
-		clearTimeout(closeTimer);
-		open = false;
-	}
-
-	function handleFormSuccess() {
-		clearTimeout(closeTimer);
-
-		closeTimer = setTimeout(() => {
-			closepopup();
-			// The header shows the logged in user
-			if (url === "/login") {
-				window.location.reload();
-			}
-		}, 800);
-	}
-
-	function handleBackdropClick(event) {
-		if (event.target === event.currentTarget) {
-			closepopup();
+	async function open() {
+		dialog.showModal();
+		if (status === "idle" || status === "failed") {
+			await load();
 		}
+		focusStart();
 	}
 
-	function handleKeydown(event) {
-		if (event.key === "Escape" && open) {
-			event.preventDefault();
-			closepopup();
+	function close() {
+		dialog.close();
+	}
+
+	// Escape, the close button or the backdrop: back to the header's button
+	async function handleClose() {
+		trigger?.focus();
+		if (!done) {
+			return;
+		}
+		done = false;
+		if (enhancement) {
+			await unmount(enhancement);
+			enhancement = null;
+		}
+		html = "";
+		status = "idle";
+	}
+
+	// Clicking the backdrop targets the dialog itself
+	function handleClick(event) {
+		if (event.target === dialog) {
+			close();
 		}
 	}
 </script>
 
 <button
 	type="button"
+	bind:this={trigger}
 	aria-haspopup="dialog"
-	aria-expanded={open}
-	onclick={open ? closepopup : openpopup}
+	onclick={open}
 >
 	{label}
 </button>
 
-<div
-	class="backdrop"
-	class:open
-	role="presentation"
-	aria-hidden={!open}
-	onclick={handleBackdropClick}
+<dialog
+	class="popup form-popup"
+	aria-label={label}
+	bind:this={dialog}
+	onclick={handleClick}
+	onclose={handleClose}
 >
-	<div
-		class="popup"
-		role="dialog"
-		aria-modal="true"
-		aria-label={label}
-		tabindex="-1"
-		bind:this={popup}
-	>
-		{#if loading}
-			<p>Loading...</p>
+	<button type="button" class="form-popup-close" aria-label={labelClose} title={labelClose} onclick={close}>
+		<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+			<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none" />
+		</svg>
+	</button>
+
+	<div class="form-popup-content" bind:this={content} aria-busy={status === "loading"}>
+		{#if status === "loading"}
+			<p class="form-popup-status" role="status">{labelLoading}</p>
+		{:else if status === "failed"}
+			<p class="section-error" role="alert">{labelError}</p>
+		{:else if status === "loaded"}
+			<!-- Same-origin fragment rendered by the server's html/template,
+			     so everything user-provided in it is escaped -->
+			<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+			{@html html}
 		{/if}
-
-		<div bind:this={content}></div>
 	</div>
-</div>
-
-<svelte:window onkeydown={handleKeydown} />
+</dialog>
 
 <style>
-	.backdrop {
-		position: fixed;
-		inset: 0;
-		z-index: 1000;
+	.form-popup {
+		--popup-width: 30rem;
+	}
 
-		display: flex;
+	/* The close button sits in the top corner, over the form's own padding */
+	.form-popup-close {
+		position: absolute;
+		top: 0.5rem;
+		right: 0.5rem;
+		z-index: 1;
+
+		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 
-		/* Respect notches */
-		padding: max(1rem, env(safe-area-inset-top))
-			max(1rem, env(safe-area-inset-right))
-			max(1rem, env(safe-area-inset-bottom))
-			max(1rem, env(safe-area-inset-left));
+		min-width: 2.5rem;
+		min-height: 2.5rem;
+		padding: 0.25rem;
 
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
+		color: var(--color-text-muted);
+		background: transparent;
+		border: 0;
+		border-radius: 0.5rem;
 
-		visibility: hidden;
-		opacity: 0;
-		pointer-events: none;
-
-		transition:
-			opacity 150ms ease,
-			visibility 150ms ease;
-	}
-
-	.backdrop.open {
-		visibility: visible;
-		opacity: 1;
-		pointer-events: auto;
-	}
-
-	.popup {
-		position: relative;
-
-		margin: 1rem;
-		width: min(100%, 24rem);
-
-		max-height: 100dvh;
-
-		overflow: auto;
-
-		overscroll-behavior: contain;
-
-		/* Makes focus outlines easier to see */
-		outline: none;
-
-		transform: translateY(0) scale(1);
-
-		transition:
-			transform 150ms ease,
-			opacity 150ms ease;
-	}
-
-	.backdrop:not(.open) .popup {
-		transform: translateY(0.5rem) scale(0.98);
-		opacity: 0;
-	}
-
-	.backdrop.open .popup {
-		transform: translateY(0) scale(1);
-		opacity: 1;
-	}
-
-	/* Small screens */
-	@media (max-width: 480px) {
-		.backdrop {
-			align-items: flex-end;
-			padding: 0;
-		}
-
-		.popup {
-			width: 100%;
-			max-height: min(90dvh, 42rem);
-		}
-
-		.backdrop:not(.open) .popup {
-			transform: translateY(1rem);
+		&:hover {
+			color: var(--color-text);
+			background: var(--color-bg-4);
 		}
 	}
 
-	/* Reduced motion */
-	@media (prefers-reduced-motion: reduce) {
-		.backdrop,
-		.popup {
-			transition: none;
-		}
+	.form-popup-content {
+		padding: 1.25rem;
+	}
+
+	.form-popup-status {
+		margin: 0;
+		color: var(--color-text-muted);
+	}
+
+	/* The fragment's section is the page's card: the popup is the card here */
+	.form-popup-content :global(section) {
+		margin: 0;
+		padding: 0;
+
+		background: none;
+		border: 0;
+		box-shadow: none;
+	}
+
+	/* Room for the close button beside the title */
+	.form-popup-content :global(h1) {
+		padding-inline: 2.5rem;
 	}
 </style>

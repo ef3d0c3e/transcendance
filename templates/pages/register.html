@@ -1,50 +1,61 @@
 {{ define "register" }}
 <section>
-<h1>{{ .T "register-title" }}</h1>
+<h1 id="register-title">{{ .T "register-title" }}</h1>
 {{ if .Data.User }}
-<h3>{{ .T "login-error-authenticated" }}</h3>
+<p>{{ .T "login-error-authenticated" }}</p>
 {{ else }}
+{{/* Ids are prefixed: the login form can be on the page too, in the
+header's popup */}}
 <form
-    class="auth-form"
+	class="auth-form"
 	id="register-form"
 	action="/register"
-	method="post">
-	<div id="form-result"></div>
-	<label for="username">{{ .T "register-username" }}</label>
+	method="post"
+	data-label-error="{{ .T "error-unexpected" }}"
+	data-label-network="{{ .T "profile-error-network" }}"
+	data-label-mismatch="{{ .T "register-error-passwords-do-not-match" }}">
+	{{/* Live regions, present while empty so what is written in is announced */}}
+	<div class="form-result" id="register-result"><p class="section-error" role="alert"></p><p class="section-success" role="status"></p></div>
+	<label for="register-username">{{ .T "register-username" }}</label>
 	<input
 		type="text"
-		id="username"
+		id="register-username"
 		name="username"
 		autocomplete="username"
 		required
 		minlength="3"
 		maxlength="16"
 		pattern="[a-zA-Z0-9_]{3,16}"
-		title="3–16 chars, letters/digits/underscore">
-	<label for="email">{{ .T "account-email" }}</label>
-	<input type="text" inputmode="email" id="email" name="email" autocomplete="email" required maxlength="254">
-	<label for="password">{{ .T "register-password" }}</label>
+		title="{{ .T "profile-username-hint" }}"
+		aria-describedby="register-username-hint">
+	<p class="form-hint" id="register-username-hint">{{ .T "profile-username-hint" }}</p>
+	<label for="register-email">{{ .T "account-email" }}</label>
+	<input type="email" id="register-email" name="email" autocomplete="email" required maxlength="254">
+	<label for="register-password">{{ .T "register-password" }}</label>
 	<input
 		type="password"
-		id="password"
+		id="register-password"
 		name="password"
 		autocomplete="new-password"
 		required
-		minlength="8">
-	<label for="password_confirm">{{ .T "register-password-confirm" }}</label>
+		minlength="8"
+		maxlength="72"
+		aria-describedby="register-password-hint">
+	<p class="form-hint" id="register-password-hint">{{ .T "register-password-hint" }}</p>
+	<label for="register-password-confirm">{{ .T "register-password-confirm" }}</label>
 	<input
 		type="password"
-		id="password_confirm"
+		id="register-password-confirm"
 		name="password_confirm"
 		autocomplete="new-password"
 		required
-		minlength="8">
-	
-	<label for="tos_agree">
-		<input type="checkbox" id="tos_agree" name="tos_agree" value="on">
+		minlength="8"
+		maxlength="72">
+
+	<label for="register-tos" class="auth-form-consent">
+		<input type="checkbox" id="register-tos" name="tos_agree" value="on" required>
 		{{ .T "register-tos" }} <a href="/terms" target="_blank" rel="noopener">{{ .T "register-tos-link" }}</a>
 	</label>
-	<br>
 
 	<button type="submit">{{ .T "register-submit" }}</button>
 </form>
