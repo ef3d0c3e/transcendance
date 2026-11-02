@@ -225,3 +225,13 @@ func rankOf(t *testing.T, username string) uint {
 	require.NoError(t, tests.DB.Select("rank").Where("username = ?", username).First(&user).Error)
 	return user.Rank
 }
+
+// The school's network shares one address: failures on other accounts from it never block a login
+func TestLoginNotLimitedPerAddress(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "sharedip1", "foo-bar-baz-qux", 0)
+	for i := range 30 {
+		require.Equal(t, http.StatusBadRequest, postLogin(router, fmt.Sprintf("someone%d", i), "wrong-password", nil).Code)
+	}
+	require.Equal(t, http.StatusOK, postLogin(router, "sharedip1", "foo-bar-baz-qux", nil).Code)
+}
