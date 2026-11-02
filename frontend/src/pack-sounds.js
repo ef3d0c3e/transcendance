@@ -1,7 +1,6 @@
 // Sound effects of the pack opening, synthesised with the Web Audio API so no
-// file has to be downloaded: a tick as the cards roll past the payline, a
-// power-up when a reel lands (by rarity), and a cue when another opening is
-// started.
+// file is downloaded: a tick as the cards roll past the payline, a power-up
+// when a reel lands (by rarity), a cue when another opening starts.
 
 // Not the former selector's key, its "off" would mute the sound for good
 const storageKey = 'pack-sound';
@@ -79,7 +78,6 @@ function getContext(shouldCreate = false) {
 	return audio.context;
 }
 
-// White noise, looped by the sounds using it
 function noiseBuffer() {
 	if (!audio.noise) {
 		const { context } = audio;
@@ -210,10 +208,9 @@ export async function soundsAllowed() {
 	return context.state === 'running';
 }
 
-// Opening straight from the inventory starts without a click on this page.
-// Where the browser tells audio may start already, the context is created
-// now; otherwise on the first interaction, which every one after retries
-// until the sounds play.
+// Opening straight from the inventory starts without a click on this page:
+// the context is created now where the browser tells audio may start, else
+// on the first interaction, retried by every one after until the sounds play
 export function unlockSounds() {
 	const unlock = async (event) => {
 		// A touch only counts as an interaction once it ends
@@ -257,7 +254,7 @@ export function saveMuted(isMuted) {
 	}
 }
 
-// Plays the opening's sounds, doing nothing when muted or without audio
+// Does nothing when muted or without audio
 export function packSounds(isMuted) {
 	// Sounds wait for a running context, they would pile up and burst out on
 	// resume otherwise. The start cue follows a click, which resumes it.

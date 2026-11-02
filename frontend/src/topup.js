@@ -8,7 +8,6 @@ const popup = {
 	isListening: false,
 };
 
-// Show a new balance in the navbar, e.g after a purchase without reloading
 export function updateNavBalance(label) {
 	const amount = document.querySelector('.nav-balance-amount');
 	if (amount && label) {
@@ -16,8 +15,7 @@ export function updateNavBalance(label) {
 	}
 }
 
-// Post a top-up form in the background: the new balance if it went through,
-// an empty result otherwise
+// The new balance if it went through, an empty result otherwise
 async function postTopup(form) {
 	try {
 		const response = await apiFetch(form.action, {
@@ -32,7 +30,6 @@ async function postTopup(form) {
 	}
 }
 
-// Buy a pack in the background
 async function creditInPlace(event) {
 	const callback = popup.onCredited;
 	if (!callback) {
@@ -63,9 +60,8 @@ async function creditInPlace(event) {
 	callback(result);
 }
 
-// Open the top-up popup. Packs crediting less than `missing` coins are grayed
-// out, they wouldn't cover what the user is after. With credited, a bought
-// pack is credited without reloading the page and the new balance handed to
+// Packs crediting less than `missing` coins are grayed out. With `credited`,
+// a bought pack is credited without reloading and the new balance handed to
 // it. Returns false when the page has no popup.
 export function openTopup(missing, credited) {
 	const dialog = document.querySelector('#shop-topup-popup');

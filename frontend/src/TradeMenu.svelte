@@ -1,14 +1,13 @@
 <!--
     Side by side panel to build a trade offer: the cards and coins the user
-    gives on one side, the cards they want from the partner on the other
-
-    The mount point must provide `data-target`, `data-stacks-url` and
+    gives on one side, the cards they want from the partner on the other.
+    The mount point provides `data-target`, `data-stacks-url` and
     `data-submit-url`, optionally `data-counter-id`, `data-prefill-give-coins`
-    and `data-prefill-want-coins`, and the `data-label-*` strings
+    and `data-prefill-want-coins`, and the `data-label-*` strings.
 
-    Each side's inventory comes one page at a time from the stacks API, the
-    next page is asked for as its picker is scrolled down. The filter runs on
-    the server too, so it covers the whole inventory and not the pages loaded
+    Each side's inventory comes a page at a time from the stacks API, the
+    next one asked for as its picker is scrolled down. The filter runs on the
+    server, so it covers the whole inventory, not only the pages loaded.
 -->
 
 <script>
@@ -45,7 +44,7 @@
 		legendary: target.dataset.labelRarityLegendary ?? "",
 	});
 
-	// Delay between the last key typed in a filter and the search it runs
+	// Ms between the last key typed in a filter and its search
 	const searchDelay = 250;
 
 	// The inventory of one side, as far as its pages are loaded
@@ -73,7 +72,7 @@
 			return this.stacks.length < this.total;
 		}
 
-		// Take in a page of the stacks API, the first one replacing the list
+		// The first page replaces the list
 		receive(body, page) {
 			const stacks = body[this.api] ?? [];
 			this.stacks = page === 1 ? stacks : [...this.stacks, ...stacks];
@@ -100,11 +99,9 @@
 	// out of their sight
 	let results = $state("");
 
-	// Width of a picker column and of the fixed 30ch card box, in pixels. The
-	// cards are scaled to the column so a tile never overflows it, whatever
-	// the viewport.
-	// Content box of the first picker, without the padding the rings of
-	// the tiles show in
+	// Widths of a picker's content box (without the padding the tiles' rings
+	// show in) and of the fixed 30ch card box, in pixels: the cards are scaled
+	// to the column so a tile never overflows it, whatever the viewport
 	let pickerRect = $state();
 	const pickerWidth = $derived(pickerRect?.width ?? 0);
 	let cardWidth = $state(0);
@@ -118,8 +115,7 @@
 	const givePicked = $derived(Object.values(give));
 	const wantPicked = $derived(Object.values(want));
 
-	// Ask the stacks API for the next page of a side, or for the first one
-	// again when the filter changed
+	// The next page of a side, or the first one again when the filter changed
 	async function load(name, reset) {
 		const side = sides[name];
 		if (!reset && (side.loading || !side.more)) {
@@ -390,8 +386,6 @@
 </script>
 
 <div class="trade-menu">
-	<!-- Invisible ruler: the card markup is a fixed 30ch box, this is the
-	     width the tiles are scaled from -->
 	<span class="trade-menu-probe" bind:clientWidth={cardWidth}></span>
 	<!-- Present from the start, so the end of the loading is announced -->
 	<p class="trade-menu-status" role="status">{loading ? labelLoading : ""}</p>
@@ -487,8 +481,7 @@
 							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
 							onkeydown={(e) => pickKey(e, "want", stack)}>
-							<!-- The stack's card, rendered by the server's html/template from the
-							     static card data, never from user input -->
+							<!-- Server-rendered from the static card data, as on the give side -->
 							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
@@ -526,8 +519,7 @@
 		width: 100%;
 	}
 
-	/* Measures 30ch, the fixed card width the tiles are scaled from. Fixed so
-	   the ruler can never widen the page */
+	/* Fixed, so the ruler can never widen the page */
 	.trade-menu-probe {
 		position: fixed;
 		top: 0;
@@ -547,9 +539,8 @@
 		margin: 0;
 	}
 
-	/* The two sides of the offer, one section split down the middle.
-	   The generic `section` card look is reset on purpose: its `margin: auto`
-	   would shrink the halves instead of letting them fill their column */
+	/* The two sides of the offer, one section split down the middle. The
+	   generic `section` look is reset: its `margin: auto` would shrink the halves */
 	.trade-menu-sides {
 		display: grid;
 		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -578,7 +569,6 @@
 		box-shadow: none;
 	}
 
-	/* The line separating the two halves */
 	.trade-menu-side + .trade-menu-side {
 		border-left: 1px solid var(--color-border-1);
 	}
@@ -726,7 +716,6 @@
 		margin: 0;
 	}
 
-	/* Filters the inventory below by card or collection name */
 	.trade-menu-search {
 		width: 100%;
 		padding: 0.45rem 0.65rem;

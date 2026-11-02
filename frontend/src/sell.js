@@ -1,15 +1,13 @@
-// Selling inventory cards without reloading the page: the card popup
-// (InventoryCardPopup.svelte) and the duplicates dialog of
-// templates/pages/inventory.html both post their sale here, then apply what
-// it changed to the page behind them.
+// Sales without reloading, from the card popup (InventoryCardPopup.svelte)
+// and the duplicates dialog of templates/pages/inventory.html, applied to the
+// page behind them
 
 import { apiFetch } from './api.js';
 import { refreshCardName } from './card-name.js';
 import { updateNavBalance } from './topup.js';
 
-// Post a sale form in the background: what the sale did if it went through,
-// why it failed otherwise. A sale that can't be made (the copies went in
-// another tab) is an expected failure, kept out of the console.
+// What the sale did, or why it failed. A sale that can't be made (the copies
+// went in another tab) is an expected failure, kept out of the console.
 export async function postSale(form) {
 	try {
 		const response = await apiFetch(form.action, {
@@ -53,10 +51,9 @@ function countText(count, labels) {
 	return pattern.replace(/\d+/, () => number);
 }
 
-// The counts of the page lose the copies sold: the cards tab's, and the one
-// next to the title. That one only counts the cards the filters keep: copies
-// sold from the whole inventory can't be told apart there. Returns whether
-// it went stale for that reason.
+// The cards tab's count and the one next to the title lose the copies sold.
+// The latter only counts the cards the filters keep, where copies sold from
+// the whole inventory can't be told apart: returns whether it went stale.
 function updateCounts({ sold, inView }, labels) {
 	const tab = document.querySelector('.inventory-tab-cards .inventory-tab-count');
 	const total = Number(tab?.textContent);
@@ -80,9 +77,8 @@ function updateCounts({ sold, inView }, labels) {
 	return false;
 }
 
-// Say what the sale did in the page's notice, in a live region that was
-// there from the start, so screen readers announce it. `hint` follows on a
-// line of its own.
+// The notice is a live region present from the start, so screen readers
+// announce it. `hint` follows on a line of its own.
 function showNotice(message, hint) {
 	const notice = document.querySelector('[data-inventory-notice]');
 	if (!notice || !message) {
@@ -117,10 +113,9 @@ function showEmptyPage(labels) {
 	grid.replaceWith(message);
 }
 
-// Show a sale's outcome in the page that made it: the balance, the stacks it
-// took copies from, the counts and what selling the duplicates left would
-// pay. `sale` says how many copies were `sold`, and whether they were all
-// `inView`, among the cards the page lists.
+// The balance, the stacks, the counts and what selling the duplicates left
+// would pay. `sale` gives how many copies were `sold`, and whether they were
+// all `inView` among the cards the page lists.
 export function applySale(result, sale) {
 	updateNavBalance(result.navBalance);
 
@@ -149,9 +144,8 @@ export function focusNotice() {
 	}
 }
 
-// Update one stack the sale took copies from: what the card popup reads off
-// its tile, the copy badge and the name telling them, or the whole tile when
-// its last copy went
+// What the card popup reads off the tile, the copy badge and the name
+// telling them, or the whole tile once its last copy went
 function updateStack({ card, foil, copies, owned, acquiredLast }, labels) {
 	const selector = `.inventory-cards .card-container[data-sell-id="${CSS.escape(String(card))}"]`;
 	for (const tile of document.querySelectorAll(selector)) {
@@ -220,9 +214,7 @@ function setBusy(form, isBusy) {
 	}
 }
 
-// Sell the duplicates of an inventory from the dialog of
-// templates/pages/inventory.html, the page staying put. A sale takes every
-// duplicate at once, so the dialog and its button go away with them.
+// The dialog of templates/pages/inventory.html, selling every duplicate at once
 export function enhanceSellDuplicates(form) {
 	const dialog = form.closest('dialog');
 
@@ -246,9 +238,8 @@ export function enhanceSellDuplicates(form) {
 
 		dialog.close();
 		applySale(result, { sold, inView: false });
-		// The button that opened the dialog goes away with the last of the
-		// duplicates, taking the focus the dialog gives back: the message
-		// saying what the sale paid gets it instead
+		// The button that opened the dialog, which the focus would go back
+		// to, went away with the duplicates
 		focusNotice();
 	}
 

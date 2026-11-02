@@ -284,7 +284,6 @@
 
 	let fadeFrame = 0;
 
-	// Follow the cards while the reels turn
 	function startFading() {
 		cancelAnimationFrame(fadeFrame);
 		const step = () => {
@@ -495,7 +494,6 @@
 		(againButton ?? visible ?? pageForm?.querySelector(".pack-back"))?.focus();
 	}
 
-	// Disable both buttons while a pack is opening
 	function setButtonsDisabled(disabled) {
 		for (const button of [openButton, buyButton]) {
 			if (button) {
@@ -660,7 +658,6 @@
 		element.classList.add("is-updated");
 	}
 
-	// Refresh the stack and collection progress shown on the page
 	function updatePageInfo(result) {
 		const left = document.querySelector("#pack-remaining");
 		if (left && result.remainingLabel) {
@@ -785,8 +782,7 @@
 	</div>
 </div>
 
-<!-- After the stage, at the end of the page, so they never cover the footer.
-     Their names stay, pressed tells whether the sound and animations are on. -->
+<!-- After the stage, at the end of the page, so they never cover the footer -->
 <div class="pack-switches">
 	<button type="button" class="pack-switch" aria-pressed={!muted}
 		onclick={() => { muted = !muted; saveMuted(muted); }}>
@@ -815,9 +811,8 @@
 </div>
 
 <style>
-	/* Sound and animation switches, in the corner of the screen while the
-		cards spin. They stick to the bottom of the page, and stop above the
-		footer. */
+	/* In the corner of the screen while the cards spin, stopping above the
+		footer */
 	.pack-switches {
 		position: sticky;
 		bottom: calc(1rem + env(safe-area-inset-bottom));
@@ -1134,7 +1129,6 @@
 		backdrop-filter: none;
 	}
 
-	/* The single payline every reel stops against */
 	.pack-payline {
 		position: absolute;
 		left: 0;

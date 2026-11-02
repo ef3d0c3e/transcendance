@@ -5,7 +5,6 @@
     "register") prefixes the ids of the fragment: `#<kind>-form`,
     `#<kind>-enhancement`.
 
-    A successful login reloads the page, whose header then shows the user.
     A successful registration keeps its message on screen until the popup
     is closed; the next opening loads a fresh form.
 -->
@@ -23,7 +22,6 @@
 	let content;
 	// "idle", "loading", "loaded" or "failed"
 	let status = $state("idle");
-	// The fragment, rendered by the server
 	let html = $state("");
 	let enhancement = null;
 	// The form went through: the next opening starts over

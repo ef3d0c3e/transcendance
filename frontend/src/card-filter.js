@@ -1,34 +1,27 @@
 /*
- * Filters, sorts and pages a grid of card tiles in the page, without
- * navigating, so a selection built in a picker survives. Shared by the
- * tradeup and foil roulette pickers.
+ * Filters, sorts and pages a grid of card tiles without navigating, so the
+ * selection of a picker (tradeup, foil roulette) survives.
  *
  * Every control is optional:
  *  - `search`: text input, keeps the tiles whose name or collection holds it
- *  - `collection`: select of collection IDs, '' for all of them
- *  - `rarity`: select of rarities, '' for all of them
+ *  - `collection`, `rarity`: selects of collection IDs and rarities, '' for all
  *  - `sort`: select of `number`, `name`, `name-desc`, `rarity`, `count` or
  *    `grouped`
- *  - `noMatch`: element shown when the filters hide every tile
+ *  - `noMatch`: shown when the filters hide every tile
  *  - `status`: live region telling screen readers what a filter change
  *    kept, from its `data-label-results` (`{count}` is replaced) or the
  *    `noMatch` text
- *  - `pagers`: elements the page links are drawn in, above and below the
- *    grid. Each provides `data-page-size`, `data-label-nav`,
- *    `data-label-previous` and `data-label-next`. Without them every tile
- *    shows at once.
+ *  - `pagers`: where the page links are drawn, above and below the grid, each
+ *    with `data-page-size`, `data-label-nav`, `data-label-previous` and
+ *    `data-label-next`. Without them every tile shows at once.
  *
- * `read(tile)` gives what a tile is filtered and sorted on:
- * `{ title, collection, collectionId, rarity, number, count, order }`, where
- * `order` is the tile's place in an alternative order of the page's own, the
- * one the `grouped` sort brings back (the tradeup's collection-and-rarity).
+ * `read(tile)` gives `{ title, collection, collectionId, rarity, number,
+ * count, order }`, `order` being the page's own alternative order that the
+ * `grouped` sort brings back (the tradeup's collection-and-rarity).
  *
- * Paging happens here too, not by navigating: a picker's selection would not
- * survive a new page. Changing a filter goes back to the first page.
- *
- * The filters and page are mirrored in the URL (`q`, `collection`, `rarity`,
- * `sort`, `p`), so a refresh or a shared link lands on them. Returns a
- * cleanup function.
+ * Changing a filter goes back to the first page. The filters and page are
+ * mirrored in the URL (`q`, `collection`, `rarity`, `sort`, `p`) so a refresh
+ * or a shared link lands on them. Returns a cleanup function.
  */
 
 // Highest rarity first, unknown rarities last
@@ -101,8 +94,8 @@ function matchesFilters(info, filters) {
 		&& (filters.folded === '' || fold(`${info.title} ${info.collection}`).includes(filters.folded));
 }
 
-// The element of one entry of the page links: the current page, a link, or a
-// disabled arrow, drawn like templates/partials/paginator.html draws them
+// The current page, a link or a disabled arrow, drawn like
+// templates/partials/paginator.html draws them
 function pageElement(state, target, label) {
 	if (!label && target === state.page) {
 		const current = document.createElement('span');
@@ -230,7 +223,6 @@ function announce(state) {
 	}, ANNOUNCE_DELAY);
 }
 
-// Back to the top of the grid when it scrolled out of view
 function scrollToGrid(state) {
 	const [anchor] = state.pagers;
 	if (!anchor || anchor.getBoundingClientRect().top >= 0) {
