@@ -1,0 +1,13 @@
+# Development database only, the server runs on the host (see docs/DEV.md).
+# The deployment stack is docker/docker-compose.yml, started with `make`.
+services:
+  mariadb:
+    image: mariadb:11.8
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?}
+      MYSQL_USER: ${MYSQL_USER:?}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:?}
+    # Reachable from this machine only
+    ports:
+      - "127.0.0.1:3306:3306"

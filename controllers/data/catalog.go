@@ -286,11 +286,7 @@ func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Colle
 
 // Page number from the query, 1 when missing or invalid
 func catalogPage(c *gin.Context) int {
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page < 1 {
-		return 1
-	}
-	return page
+	return controllers.PageParam(c.Query("p"))
 }
 
 // cards/search: every card, or the ones matching the search and filters

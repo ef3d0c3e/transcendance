@@ -33,12 +33,34 @@ const audio = {
 	master: undefined,
 	noise: undefined,
 	lastTick: 0,
+	// Whether the page got a click, a tap or a key press, for browsers that
+	// don't tell (navigator.userActivation)
+	isActivated: false,
 };
 
-// Browsers keep a context suspended until the page got a click or a key
-// press, a suspended one resumes on the next. It is created on load, or by
-// the start cue with shouldCreate set.
+// Browsers only let audio start after an interaction with the page: a context
+// created or resumed any earlier stays suspended, and the console warns about
+// it. Firefox can tell beforehand when audio may start without one.
+function mayStart() {
+	return navigator.getAutoplayPolicy?.('audiocontext') === 'allowed'
+		|| (navigator.userActivation?.hasBeenActive ?? audio.isActivated);
+}
+
+// Resume a suspended context, which a browser still blocking audio refuses
+async function resume(context) {
+	try {
+		await context.resume();
+	} catch {
+		// Still blocked, the next interaction tries again
+	}
+}
+
+// The page's audio context, created with shouldCreate set, and resumed if
+// it was suspended. Nothing is created or resumed before audio may start.
 function getContext(shouldCreate = false) {
+	if (!mayStart()) {
+		return audio.context;
+	}
 	const AudioContext = globalThis.AudioContext ?? globalThis.webkitAudioContext;
 	if (shouldCreate && AudioContext && !audio.context) {
 		audio.context = new AudioContext();
@@ -52,7 +74,7 @@ function getContext(shouldCreate = false) {
 		audio.master.connect(limiter);
 	}
 	if (audio.context?.state === 'suspended') {
-		audio.context.resume();
+		resume(audio.context);
 	}
 	return audio.context;
 }
@@ -172,21 +194,15 @@ const sounds = {
 
 // Whether the sounds play now, without waiting for a click on this page
 export async function soundsAllowed() {
+	if (!mayStart()) {
+		return false;
+	}
 	const context = getContext(true);
 	if (!context || context.state === 'running') {
 		return true;
 	}
-	if (navigator.getAutoplayPolicy?.('audiocontext') === 'disallowed') {
-		return false;
-	}
 	// A blocked resume neither resolves nor fails until the click
-	const resumed = (async () => {
-		try {
-			await context.resume();
-		} catch {
-			// Blocked for good, the state tells
-		}
-	})();
+	const resumed = resume(context);
 	const timeout = new Promise((resolve) => {
 		setTimeout(resolve, allowedWaitMs);
 	});
@@ -195,17 +211,21 @@ export async function soundsAllowed() {
 }
 
 // Opening straight from the inventory starts without a click on this page.
-// Chromium browsers let it play right away, the click that led here counting;
-// others wait for one here, every interaction tries until the sounds play.
+// Where the browser tells audio may start already, the context is created
+// now; otherwise on the first interaction, which every one after retries
+// until the sounds play.
 export function unlockSounds() {
-	getContext(true);
-	const unlock = async () => {
-		try {
-			await getContext(true)?.resume();
-		} catch {
-			// Still blocked, the next interaction tries again
+	const unlock = async (event) => {
+		// A touch only counts as an interaction once it ends
+		if (event.type !== 'pointerdown' || event.pointerType === 'mouse') {
+			audio.isActivated = true;
 		}
-		if (audio.context?.state !== 'running') {
+		const context = getContext(true);
+		if (!context) {
+			return;
+		}
+		await resume(context);
+		if (context.state !== 'running') {
 			return;
 		}
 		for (const type of unlockEvents) {
@@ -214,6 +234,9 @@ export function unlockSounds() {
 	};
 	for (const type of unlockEvents) {
 		addEventListener(type, unlock);
+	}
+	if (mayStart()) {
+		getContext(true);
 	}
 }
 

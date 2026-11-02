@@ -67,4 +67,5 @@ jobs:
         run: go test -count=1 ./data/
 
       - name: Run Go tests
-        run: go test ./... -v -race -coverprofile=coverage.out
+        # Above the 10 minute default, which -race on the whole suite can reach
+        run: go test ./... -v -race -timeout 30m -coverprofile=coverage.out

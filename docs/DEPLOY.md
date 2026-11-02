@@ -33,7 +33,9 @@ Run `./init-env.sh` from `docker/`. It creates `.env` from `.env.example` and ge
 | `AUTH_SESSION_TTL`    | How long an admin stays signed in, e.g `12h`                                  |
 | `LOG_RETENTION_DAYS`  | Days logs are kept, `730` (2 years) by default                                |
 | `LOG_COMPRESS_AFTER_DAYS` | Days before logs are compressed, `14` by default                          |
+| `LOG_ARCHIVE_DAYS`    | Days the nightly log snapshots in `DATA_DIR/log-archive` are kept, `30` by default   |
 | `METRICS_RETENTION`   | How long metrics are kept, e.g `30d`                                          |
+| `ALERT_WEBHOOK_URL`, `ALERT_DISCORD_WEBHOOK_URL` | Optional: alerts are also sent to this webhook or Discord channel |
 | `DATA_DIR`            | Folder of the database, logs, metrics and admin keys, `./data` by default     |
 | `DOCKER_SOCKET`       | Docker's socket, read for the container metrics. `init-env.sh` asks Docker for it |
 
@@ -41,10 +43,13 @@ The database passwords are only read when the database volume is first created. 
 
 ## First start
 
+From the repository root, a single command creates `docker/.env` when it is missing (generating every secret), then builds and starts the stack and waits until it is healthy:
+
 ```sh
-docker compose up -d --build
-docker compose ps
+make
 ```
+
+`make down` stops it and `make logs` follows the logs. The other commands below run from `docker/`.
 
 Open `https://<host>:8443/`. The certificate is self-signed, so the browser shows a warning the first time; accept it to continue.
 

@@ -1,4 +1,9 @@
 tmp/
 node_modules/
+coverage.out
+# Credentials stay local, see .env.example and docker/.env.example
+.env
 docker/.env
 docker/data/
+# Local tooling configuration
+.mcp.json

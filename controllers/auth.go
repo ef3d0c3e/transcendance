@@ -5,8 +5,11 @@ import (
 	"encoding/base64"
 	"errors"
 	"log"
+	"math"
 	"net/http"
+	"net/mail"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -23,10 +26,37 @@ import (
 // lower it, hashing at the default cost is slow under the race detector
 var PasswordHashCost = bcrypt.DefaultCost
 
+// Lifetime of a session
+const sessionDuration = 3 * 24 * time.Hour
+
+// Failed logins allowed in a row per client address and per account, then one more every refill period
+const (
+	loginBurstPerAddress  = 20
+	loginRefillPerAddress = 30 * time.Second
+	loginBurstPerAccount  = 5
+	loginRefillPerAccount = time.Minute
+)
+
+// LoginLimits slows down password guessing, see LoginPost
+type LoginLimits struct {
+	addresses *AttemptLimiter
+	accounts  *AttemptLimiter
+}
+
+func NewLoginLimits() *LoginLimits {
+	return &LoginLimits{
+		addresses: NewAttemptLimiter(loginBurstPerAddress, loginRefillPerAddress),
+		accounts:  NewAttemptLimiter(loginBurstPerAccount, loginRefillPerAccount),
+	}
+}
+
+// Compared against when the account does not exist, so that answering takes as long as for a wrong password
+var dummyPasswordHash, _ = bcrypt.GenerateFromPassword([]byte("not a password of any account"), bcrypt.DefaultCost)
+
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
-	// 2: Admin, 1: Moderator, 0: User
+	// One of the ranks, e.g models.RankAdmin
 	Rank uint
 	// In-shop currency balance
 	Coins uint
@@ -39,36 +69,53 @@ func (u *AuthenticatedUser) FreeCoins() uint {
 	return FreeCoins(u.Coins, u.LockedCoins)
 }
 
+// IsModerator reports whether the user can moderate the chat, which admins can too
+func (u *AuthenticatedUser) IsModerator() bool {
+	return u != nil && u.Rank >= models.RankModerator
+}
+
+// IsAdmin reports whether the user can manage accounts and roles
+func (u *AuthenticatedUser) IsAdmin() bool {
+	return u != nil && u.Rank >= models.RankAdmin
+}
+
+// Files served as they are, which don't need to know the user
+func staticPath(path string) bool {
+	for _, prefix := range []string{"/static/", "/frontend/", "/cards/assets/"} {
+		if strings.HasPrefix(path, prefix) {
+			return true
+		}
+	}
+	if (strings.HasPrefix(path, "/cards/") || strings.HasPrefix(path, "/collections/")) &&
+		(strings.HasSuffix(path, "/thumbnail") || strings.HasSuffix(path, "/artwork")) {
+		return true
+	}
+	return path == "/favicon.ico" || path == "/robots.txt"
+}
+
 func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		token, err := c.Cookie("session_token")
 
-		if err != nil || token == "" {
+		if err != nil || token == "" || staticPath(c.Request.URL.Path) {
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
 		}
 
-		var session models.UserSession
-		err = db.
-			Where("token = ? AND expires_at > ?", token, time.Now()).
-			First(&session).
-			Error
-
-		if err != nil {
-			// Invalid/expired token = unauthenticated.
-			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
-			c.Next()
-			return
-		}
-
+		// Invalid or expired tokens are unauthenticated
 		var user models.User
-		err = db.Select("id", "username", "rank", "coins", "last_seen_at").
-			Where("id = ?", session.UserID).
-			First(&user).
+		err = db.Model(&models.User{}).
+			Select("users.id", "users.username", "users.rank", "users.coins", "users.last_seen_at").
+			Joins("JOIN user_sessions ON user_sessions.user_id = users.id").
+			Where("user_sessions.token = ? AND user_sessions.expires_at > ?", models.HashSessionToken(token), time.Now()).
+			Take(&user).
 			Error
 
 		if err != nil {
+			if !errors.Is(err, gorm.ErrRecordNotFound) {
+				log.Printf("WARN failed to look up a session: %s", err)
+			}
 			c.Set("authenticatedUser", (*AuthenticatedUser)(nil))
 			c.Next()
 			return
@@ -88,7 +135,7 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 		}
 
 		c.Set("authenticatedUser", &AuthenticatedUser{
-			ID:          session.UserID,
+			ID:          user.ID,
 			Username:    user.Username,
 			Rank:        user.Rank,
 			Coins:       user.Coins,
@@ -120,7 +167,7 @@ func (ac *Controller) RegisterGet(c *gin.Context) {
 	}
 
 	builder := views.PageBuilder("base", map[string]any{
-		"Title": "Register",
+		"Title": ac.Renderer.T(c, "register-title"),
 		"User":  user,
 	})
 	builder.Add("register", "Content", map[string]any{
@@ -129,23 +176,33 @@ func (ac *Controller) RegisterGet(c *gin.Context) {
 	ac.Renderer.Render(c, &builder)
 }
 
-var is_alphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+var isAlphanumeric = regexp.MustCompile(`^[a-zA-Z0-9_]+$`)
+
+// validEmail reports whether an address is a plain e-mail address, e.g "name@example.org", as browsers check
+// <input type="email">
+func validEmail(email string) bool {
+	if email == "" || len(email) > 254 {
+		return false
+	}
+	address, err := mail.ParseAddress(email)
+	return err == nil && address.Name == "" && address.Address == email
+}
 
 func (ac *Controller) RegisterPost(c *gin.Context) {
 	username := c.PostForm("username")
-	email := c.PostForm("email")
+	email := strings.TrimSpace(c.PostForm("email"))
 	password := c.PostForm("password")
 	passwordConfirm := c.PostForm("password_confirm")
 	tosAgree := c.PostForm("tos_agree")
 
-	if username == "" || len(username) < 3 || len(username) > 16 || !is_alphanumeric.MatchString(username) {
+	if username == "" || len(username) < 3 || len(username) > 16 || !isAlphanumeric.MatchString(username) {
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "register-error-username"),
 		})
 		return
 	}
 
-	if email == "" || len(email) > 254 {
+	if !validEmail(email) {
 		c.JSON(http.StatusBadRequest, gin.H{"message": ac.Renderer.T(c, "account-error-email")})
 		return
 	}
@@ -261,7 +318,7 @@ func (ac *Controller) LoginGet(c *gin.Context) {
 	}
 
 	builder := views.PageBuilder("base", map[string]any{
-		"Title": "Login",
+		"Title": ac.Renderer.T(c, "login-title"),
 		"User":  user,
 	})
 	builder.Add("login", "Content", map[string]any{
@@ -279,12 +336,12 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 	switch column {
 	case "username":
 		identifier = c.PostForm("username")
-		if len(identifier) < 3 || len(identifier) > 16 || !is_alphanumeric.MatchString(identifier) {
+		if len(identifier) < 3 || len(identifier) > 16 || !isAlphanumeric.MatchString(identifier) {
 			c.JSON(http.StatusBadRequest, gin.H{"message": ac.Renderer.T(c, "login-error-username")})
 			return
 		}
 	case "email":
-		identifier = c.PostForm("email")
+		identifier = strings.TrimSpace(c.PostForm("email"))
 		if identifier == "" || len(identifier) > 254 {
 			c.JSON(http.StatusBadRequest, gin.H{"message": ac.Renderer.T(c, "account-error-email")})
 			return
@@ -299,19 +356,38 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		return
 	}
 
+	// Too many failed attempts from this address or on this account: wait before guessing again
+	address, account := c.ClientIP(), column+":"+strings.ToLower(identifier)
+	blocked, wait := ac.Logins.addresses.Blocked(address)
+	if accountBlocked, accountWait := ac.Logins.accounts.Blocked(account); accountBlocked {
+		blocked, wait = true, max(wait, accountWait)
+	}
+	if blocked {
+		seconds := int(math.Ceil(wait.Seconds()))
+		c.Header("Retry-After", strconv.Itoa(seconds))
+		c.JSON(http.StatusTooManyRequests, gin.H{
+			"message": ac.Renderer.T(c, "login-error-rate-limited", "seconds", seconds),
+		})
+		return
+	}
+
 	var user models.User
 	err := ac.DB.Omit("avatar").
 		Where(column+" = ?", identifier).
 		First(&user).
 		Error
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"message": ac.Renderer.T(c, "login-error-invalid"),
-		})
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		log.Printf("WARN failed to look up an account to log in: %s", err)
+		c.JSON(http.StatusInternalServerError, gin.H{"message": ac.Renderer.T(c, "login-error-internal")})
 		return
 	}
-
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
+	hash := dummyPasswordHash
+	if err == nil {
+		hash = []byte(user.PasswordHash)
+	}
+	if bcrypt.CompareHashAndPassword(hash, []byte(password)) != nil || err != nil {
+		ac.Logins.addresses.Fail(address)
+		ac.Logins.accounts.Fail(account)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-invalid"),
 		})
@@ -332,9 +408,9 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 	now := time.Now()
 	session := models.UserSession{
 		UserID:    user.ID,
-		Token:     token,
+		Token:     models.HashSessionToken(token),
 		CreatedAt: now,
-		ExpiresAt: now.AddDate(0, 0, 3),
+		ExpiresAt: now.Add(sessionDuration),
 	}
 
 	if err := ac.DB.Create(&session).Error; err != nil {
@@ -343,19 +419,39 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		})
 		return
 	}
+	// Expired sessions of every user are cleared along the way, the expiry is indexed
+	if err := ac.DB.Where("expires_at <= ?", now).Delete(&models.UserSession{}).Error; err != nil {
+		log.Printf("WARN failed to clear expired sessions: %s", err)
+	}
 
-	// Not sent along cross-site requests, so other sites cannot act as the user
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("session_token", token, 3600*24*3, "/", "", false, true)
+	setSessionCookie(c, token, int(sessionDuration.Seconds()))
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "login-success", "username", user.Username),
 	})
 }
 
-func (ac *Controller) LogoutGet(c *gin.Context) {
+// Secure when the browser reached the site over HTTPS, through the gateway in production
+func secureRequest(c *gin.Context) bool {
+	return c.Request.TLS != nil || c.GetHeader("X-Forwarded-Proto") == "https"
+}
+
+// Set the session cookie, cleared with an empty value and a negative age. It is not sent along cross-site
+// requests, so other sites cannot act as the user, nor over plain HTTP once the site was reached over HTTPS.
+func setSessionCookie(c *gin.Context, value string, maxAge int) {
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("session_token", value, maxAge, "/", "", secureRequest(c), true)
+}
+
+// /api/logout POST: end the session, or every session of the user with `all=yes`. Pages get JSON, plain form
+// submissions are sent back home.
+func (ac *Controller) LogoutPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 
 	if user == nil {
+		if !wantsJSON(c) {
+			c.Redirect(http.StatusSeeOther, "/")
+			return
+		}
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "logout-unauthenticated"),
 		})
@@ -369,7 +465,7 @@ func (ac *Controller) LogoutGet(c *gin.Context) {
 			Where("user_id = ?", user.ID).
 			Delete(ctx)
 		if err != nil {
-			c.JSON(http.StatusOK, gin.H{
+			c.JSON(http.StatusInternalServerError, gin.H{
 				"message": ac.Renderer.T(c, "logout-error-all"),
 			})
 			return
@@ -381,12 +477,16 @@ func (ac *Controller) LogoutGet(c *gin.Context) {
 			ctx := c.Request.Context()
 			// Silently fail, since the user's cookie is cleared anyway, that just means keeping data in the DB a little longer
 			_, _ = gorm.G[models.UserSession](ac.DB).
-				Where("user_id = ? and token = ?", user.ID, token).
+				Where("user_id = ? and token = ?", user.ID, models.HashSessionToken(token)).
 				Delete(ctx)
 		}
 	}
 
-	c.SetCookie("session_token", "", -1, "/", "", false, true)
+	setSessionCookie(c, "", -1)
+	if !wantsJSON(c) {
+		c.Redirect(http.StatusSeeOther, "/")
+		return
+	}
 	c.JSON(http.StatusOK, gin.H{
 		"message": ac.Renderer.T(c, "logout-success"),
 	})
