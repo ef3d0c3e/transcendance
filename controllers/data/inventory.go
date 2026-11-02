@@ -25,7 +25,7 @@ const (
 	inventoryPageSize = 20
 )
 
-// /add POST: debug tool adding the card `id` to the authenticated admin's inventory
+// /add POST: debug tool adding the card `id` to the admin's inventory
 func (dc *DataController) InventoryAddPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 
@@ -61,10 +61,12 @@ func (dc *DataController) InventoryAddPost(c *gin.Context) {
 const (
 	inventoryTabCards    = "cards"
 	inventoryTabBoosters = "boosters"
-	// Every collection, with how much of it the user collected
+	// Every collection, with the user's progress
 	inventoryTabCollections = "collections"
-	// One's own cards, to trade some up for a card of the next rarity
+	// One's own cards, to trade up for the next rarity
 	inventoryTabTradeup = "tradeup"
+	// One's own cards, to roll one for a foil
+	inventoryTabFoil = "foil"
 )
 
 // Effect filter values, "" shows every card
@@ -75,7 +77,7 @@ const (
 
 var inventoryEffects = []string{inventoryEffectNone, inventoryEffectFoil}
 
-// Cards tab toggle value listing every card of the catalog, "" lists the owned cards
+// "show" value listing every card of the catalog, "" lists the owned ones
 const inventoryShowAll = "all"
 
 // Card sorts, relevance is only available when searching
@@ -99,10 +101,8 @@ var inventorySorts = []string{
 	inventorySortNameDesc,
 }
 
-// Rarities offered by the rarity filter, lowest first
 var inventoryRarities = []string{"common", "rare", "legendary"}
 
-// Sort used when none is picked: search relevance, or newest cards
 func defaultInventorySort(query string) string {
 	if strings.TrimSpace(query) != "" {
 		return inventorySortRelevance
@@ -110,7 +110,6 @@ func defaultInventorySort(query string) string {
 	return inventorySortRecent
 }
 
-// Sorts offered on the cards tab, the catalog's ones when listing every card
 func (v *inventoryView) sorts() []string {
 	if v.All {
 		return append(slices.Clone(catalogSorts), catalogSortMissing)
@@ -118,7 +117,6 @@ func (v *inventoryView) sorts() []string {
 	return inventorySorts
 }
 
-// Sort used when none is picked on the cards tab
 func (v *inventoryView) defaultSort() string {
 	if v.All {
 		return defaultCatalogSort(v.Query)
@@ -126,9 +124,8 @@ func (v *inventoryView) defaultSort() string {
 	return defaultInventorySort(v.Query)
 }
 
-// Everything needed to render the inventory page
 type inventoryView struct {
-	// Displayed tab, cards or boosters
+	// Displayed tab, one of the inventoryTab constants
 	Tab string
 	// Viewed user
 	Username string
@@ -142,7 +139,7 @@ type inventoryView struct {
 	Sort string
 	// Error or empty state message
 	Message string
-	// Rendered cards or boosters
+	// Rendered items of the page
 	Items []map[string]any
 	Page  int
 	// Number of items to paginate (card stacks, or booster stacks)
@@ -157,8 +154,7 @@ type inventoryView struct {
 	Streak *streakTile
 	// Pile of default boosters, shown on one's own boosters tab
 	Pile *pileTile
-	// Whether the viewed user can be offered a trade: someone else, neither
-	// side blocking the other
+	// Someone else, with neither side blocking the other
 	Tradable bool
 	// Pending offers made to the user, on their own inventory
 	IncomingTrades int64
@@ -166,8 +162,10 @@ type inventoryView struct {
 	Duplicates *controllers.DuplicateSale
 	// Collections the tradeup grid holds, for its filter
 	Collections []controllers.SelectOption
-	// Card the last tradeup awarded, nil until one completes
+	// Card the last tradeup awarded or foil roll was for, nil until one completes
 	Result map[string]any
+	// Whether the last foil roll was lost, destroying the card
+	ResultLost bool
 }
 
 func (dc *DataController) renderInventory(c *gin.Context, user *controllers.AuthenticatedUser, v *inventoryView) {
@@ -198,11 +196,13 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			}
 		case v.Tab == inventoryTabTradeup:
 			v.Message = dc.Renderer.T(c, "tradeup-empty")
+		case v.Tab == inventoryTabFoil:
+			v.Message = dc.Renderer.T(c, "foil-empty")
 		default:
 			v.Message = dc.Renderer.T(c, "inventory-message-empty")
 		}
 	}
-	// Number of items in the tab, or matching the search
+
 	count := ""
 	if v.Count > 0 {
 		switch {
@@ -234,7 +234,7 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		return "/inventory?" + params.Encode()
 	}
-	// The cards tab, listing the owned cards or all of them
+
 	cardsUrl := func(all bool) string {
 		params := url.Values{"tab": {inventoryTabCards}}
 		if viewed != "" {
@@ -253,10 +253,11 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if viewed == "" {
 		sellAction = "/shop/sell"
 	}
-	// Trading up spends the cards, only one's own
-	tradeupUrl := ""
+
+	tradeupUrl, foilUrl := "", ""
 	if viewed == "" {
 		tradeupUrl = tabUrl(inventoryTabTradeup)
+		foilUrl = tabUrl(inventoryTabFoil)
 	}
 	fields := map[string]any{
 		"Title":          title,
@@ -288,17 +289,21 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TradeupCost":        tradeupCost,
 		"TradeupResult":      v.Result,
 		"TradeupCollections": v.Collections,
-		"Tradable":           v.Tradable,
-		"IncomingTrades":     v.IncomingTrades,
-		"Pages":              int(totalPages),
-		"Locale":             dc.Renderer.Localizer.GetLocale(c),
+		// The tradeup and foil grids are paged client-side, keeping the selection
+		"PickerPageSize": inventoryPageSize,
+		"TabFoilUrl":     foilUrl,
+		"FoilResult":     v.Result,
+		"FoilResultLost": v.ResultLost,
+		"Tradable":       v.Tradable,
+		"IncomingTrades": v.IncomingTrades,
+		"Pages":          int(totalPages),
+		"Locale":         dc.Renderer.Localizer.GetLocale(c),
 		// Outcome of buying boosters or coins, which land here
 		"Notice": controllers.GetShopNotice(c, dc.Renderer, dc.Data),
 	}
-	// Boosters and coins are bought from the user's own boosters tab
+
 	if v.Tab == inventoryTabBoosters && viewed == "" {
-		// The balance shows what is free to spend: coins up in pending trades
-		// are left out and said apart
+		// Coins up in pending trades are left out of the balance and said apart
 		coins := user.FreeCoins()
 		fields["Coins"] = coins
 		fields["CoinsLabel"] = dc.Renderer.T(c, "shop-price", "amount", coins)
@@ -307,6 +312,9 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		}
 		fields["MaxQuantity"] = controllers.MaxBuyQuantity
 		fields["Topups"] = controllers.TopupChoices(c, dc.Renderer)
+	}
+	if v.Tab == inventoryTabFoil {
+		dc.foilFields(c, v, fields)
 	}
 	if v.Tab == inventoryTabCards {
 		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, inventoryRarities...), v.Rarity, func(value string) string {
@@ -342,6 +350,27 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			}
 		}
 		fields["SortOptions"] = sortOptions
+	}
+	if v.Tab == inventoryTabTradeup {
+		// Only the rarities a tradeup can hold
+		rarities := make([]string, 0, len(inventoryRarities))
+		for _, rarity := range inventoryRarities {
+			if tierAbove(rarity) != "" {
+				rarities = append(rarities, rarity)
+			}
+		}
+		fields["RarityOptions"] = controllers.SelectOptions(append([]string{""}, rarities...), "", func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-filter-rarity-all")
+			}
+			return dc.Renderer.T(c, "card-rarity-"+value)
+		})
+		fields["SortOptions"] = controllers.SelectOptions([]string{"", tradeupSortGrouped}, "", func(value string) string {
+			if value == "" {
+				return dc.Renderer.T(c, "inventory-sort-count")
+			}
+			return dc.Renderer.T(c, "tradeup-sort-grouped")
+		})
 	}
 	content := builder.Add("inventory", "Content", fields)
 	params := url.Values{}
@@ -402,6 +431,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Tab = inventoryTabCollections
 	} else if c.Query("tab") == inventoryTabTradeup {
 		v.Tab = inventoryTabTradeup
+	} else if c.Query("tab") == inventoryTabFoil {
+		v.Tab = inventoryTabFoil
 	} else if cardsAsked {
 		v.Tab = inventoryTabCards
 		v.All = c.Query("show") == inventoryShowAll
@@ -426,7 +457,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	if strings.EqualFold(v.Username, user.Username) {
 		v.Username = user.Username
 	} else {
-		// Fetch
+		// Someone else's inventory
 		var otherUser models.User
 		if err := dc.DB.Omit("avatar").Where("username = ?", v.Username).First(&otherUser).Error; err != nil {
 			v.Message = dc.Renderer.T(c, "inventory-message-user-not-found")
@@ -434,8 +465,9 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			return
 		}
 		userID = otherUser.ID
-		// Trading up spends the cards, so it only opens on one's own inventory
-		if v.Tab == inventoryTabTradeup {
+		// Trading up and rolling for foils spend the cards, so they only open
+		// on one's own inventory
+		if v.Tab == inventoryTabTradeup || v.Tab == inventoryTabFoil {
 			v.Tab = inventoryTabBoosters
 		}
 		blocked, err := controllers.TradeBlocked(dc.DB, user.ID, userID)
@@ -452,7 +484,6 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		dc.renderInventory(c, user, v)
 	}
 
-	// Tab counts
 	if v.TotalCards, v.TotalBoosters, err = dc.inventoryCounts(userID); err != nil {
 		fail("counts", err)
 		return
@@ -462,7 +493,7 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	// The daily streak section shows on one's own inventory, on every tab
 	own := v.Username == user.Username
 	if own {
-		// The link to the trades page says how many offers wait for an answer
+		// Counted on the link to the trades page
 		if err := dc.DB.Model(&models.Trade{}).
 			Where("to_id = ? AND state = ?", userID, models.TradePending).
 			Count(&v.IncomingTrades).Error; err != nil {
@@ -478,8 +509,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		v.Streak = dc.streakTileData(c, &state, v.Tab)
 	}
 
-	// The pile of default boosters tops itself up over time, and only belongs
-	// to one's own inventory. It counts in the boosters tab from every tab
+	// The pile of default boosters tops itself up over time. It counts in the
+	// boosters tab from every tab
 	var pile *models.BoosterPile
 	if own {
 		accrued, err := controllers.AccrueBoosterPile(dc.DB, userID)
@@ -499,6 +530,11 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	} else if v.Tab == inventoryTabTradeup {
 		if err := dc.inventoryTradeup(c, userID, v); err != nil {
 			fail("tradeup", err)
+			return
+		}
+	} else if v.Tab == inventoryTabFoil {
+		if err := dc.inventoryFoil(c, userID, v); err != nil {
+			fail("foil", err)
 			return
 		}
 	} else if v.Tab == inventoryTabBoosters {
@@ -552,7 +588,7 @@ type cardStack struct {
 	collection *data.Collection
 }
 
-// Order card stacks with the given sort, newest stacks first on ties
+// sortCardStacks breaks ties with the newest stacks first
 func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[uint]int) {
 	var titles map[uint]string
 	var collator *collate.Collator
@@ -600,9 +636,7 @@ func sortCardStacks(stacks []cardStack, sort string, loc string, relevance map[u
 	})
 }
 
-// Fill the view with the user's cards folded by card and foil, restricted to
-// the search and filters if any. The committed stacks mark the copies up in
-// pending trades, they are shown on one's own cards only
+// committed marks the copies up in pending trades, nil on someone else's cards
 func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *inventoryView, committed *controllers.TradeCommitments) error {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
@@ -673,8 +707,7 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 			if locked > 0 {
 				data["CardLocked"] = dc.Renderer.T(c, "inventory-locked-badge", "count", int(locked))
 			}
-			// What the owner's popup needs to sell copies of this stack: the
-			// copies up in trades cannot be
+			// The owner's popup sells copies of the stack, except those up in trades
 			if price := controllers.SellPrice(stack.card.Rarity, stack.Foil); price > 0 {
 				data["CardSellID"] = stack.CardID
 				data["CardSellFoil"] = stack.Foil
@@ -691,7 +724,6 @@ func (dc *DataController) inventoryCards(c *gin.Context, userID uint, v *invento
 	return nil
 }
 
-// Fill the view with every card of the catalog, graying out the ones the user is missing
 func (dc *DataController) inventoryAllCards(c *gin.Context, userID uint, v *inventoryView) error {
 	var owned []cardStack
 	if err := dc.DB.
@@ -733,9 +765,8 @@ type boosterStack struct {
 	BoosterID uint
 }
 
-// Fill the view with the user's boosters, stacked by collection and size.
-// On the user's own inventory, collections without boosters are listed too,
-// to buy some.
+// On one's own inventory, collections without boosters are listed too, to
+// buy some
 func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own bool, v *inventoryView) error {
 	var stacks []boosterStack
 	if err := dc.DB.
@@ -805,7 +836,6 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 	return nil
 }
 
-// Number of cards and boosters a user owns, shown in the inventory tabs
 func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters int64, err error) {
 	if err = dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&cards).Error; err != nil {
 		return
@@ -814,7 +844,6 @@ func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters in
 	return
 }
 
-// Fill the view with every collection, and how many of its cards the user owns
 func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *inventoryView) error {
 	// Distinct cards owned, by collection
 	var rows []struct {
@@ -869,7 +898,6 @@ func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *i
 	return nil
 }
 
-// Global IDs of the cards a user owns, once each
 func (dc *DataController) ownedCardIDs(userID uint) ([]uint, error) {
 	var owned []uint
 	err := dc.DB.
@@ -881,7 +909,6 @@ func (dc *DataController) ownedCardIDs(userID uint) ([]uint, error) {
 	return owned, err
 }
 
-// Get the global IDs of cards owned by a user that match a search
 func (dc *DataController) searchInventory(c *gin.Context, userID uint, query string) ([]uint, error) {
 	owned, err := dc.ownedCardIDs(userID)
 	if err != nil {

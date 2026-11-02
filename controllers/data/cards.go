@@ -17,7 +17,6 @@ const (
 	pageSize = 20
 )
 
-// Get template data for a card
 func GetCardData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection, card *data.Card) (map[string]any, error) {
 	rarity := renderer.T(c, "card-rarity-"+card.Rarity)
 	var rarity_color string
@@ -103,7 +102,6 @@ func (dc *DataController) CardsGet(c *gin.Context) {
 	}
 }
 
-// Get template data for a collection
 func getCollectionData(c *gin.Context, loc string, renderer *views.Renderer, collection *data.Collection) (map[string]any, error) {
 	title, err := collection.Translate(loc, "title")
 	if err != nil {
@@ -154,7 +152,6 @@ func (dc *DataController) CollectionsGet(c *gin.Context) {
 		return
 	}
 
-	// Show cards in collection
 	if second == "/" || second == "" {
 		dc.collectionCards(c, collection)
 		return

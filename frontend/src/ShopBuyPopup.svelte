@@ -129,8 +129,7 @@
 			show(booster);
 		}
 
-		// Boosters open a dialog, make them reachable and announced as buttons,
-		// named with their price as their content is presentational
+		// Named with their price, as a button's content is presentational
 		for (const booster of document.querySelectorAll(BOOSTER_SELECTOR)) {
 			const pill = booster.querySelector(".shop-price-pill")?.textContent.trim();
 			booster.tabIndex = 0;

@@ -1,9 +1,6 @@
 #!/bin/sh
-# Start Alertmanager with the receivers the environment names, both optional:
-#   ALERT_WEBHOOK_URL          gets every alert as JSON (Alertmanager's webhook format)
-#   ALERT_DISCORD_WEBHOOK_URL  posts them in a Discord channel
-# Without them, alerts are only shown in Grafana and Alertmanager. The URLs are secrets, they are written to
-# files readable by Alertmanager alone instead of its configuration.
+# Adds the optional ALERT_WEBHOOK_URL and ALERT_DISCORD_WEBHOOK_URL receivers. The URLs are secrets: they go
+# to files only Alertmanager reads, not to its configuration
 set -eu
 
 dir=$(mktemp -d)

@@ -1,6 +1,7 @@
 package controllers_test
 
 import (
+	"encoding/json"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -21,7 +22,6 @@ func sell(t *testing.T, router *gin.Engine, cookie *http.Cookie, form url.Values
 	return postForm(t, router, cookie, "/shop/sell", form)
 }
 
-// The `card`, `foil` and `quantity` fields of a sale
 func sellForm(cardID uint, foil string, quantity int) url.Values {
 	return url.Values{
 		"card":     {strconv.FormatUint(uint64(cardID), 10)},
@@ -35,6 +35,46 @@ func sellDuplicates(t *testing.T, router *gin.Engine, cookie *http.Cookie) strin
 	rec := postForm(t, router, cookie, "/shop/sell-duplicates", url.Values{})
 	require.Equal(t, http.StatusSeeOther, rec.Code)
 	return rec.Header().Get("Location")
+}
+
+// sellInPlace sells as the pages that stay put do, getting JSON back
+func sellInPlace(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string, form url.Values) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequest(http.MethodPost, target, strings.NewReader(form.Encode()))
+	req.Header.Set("Accept-Language", "en")
+	req.Header.Set("Accept", "application/json")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	if cookie != nil {
+		req.AddCookie(cookie)
+	}
+	rec := httptest.NewRecorder()
+	router.ServeHTTP(rec, req)
+	return rec
+}
+
+// Mirrors saleOutcome in sell.go
+type saleOutcome struct {
+	Coins      uint   `json:"coins"`
+	CoinsLabel string `json:"coinsLabel"`
+	NavBalance string `json:"navBalance"`
+	Message    string `json:"message"`
+	Stacks     []struct {
+		Card         uint   `json:"card"`
+		Foil         string `json:"foil"`
+		Copies       uint   `json:"copies"`
+		Owned        uint   `json:"owned"`
+		AcquiredLast string `json:"acquiredLast"`
+	} `json:"stacks"`
+	Duplicates struct {
+		Count   uint   `json:"count"`
+		Coins   uint   `json:"coins"`
+		Text    string `json:"text"`
+		Confirm string `json:"confirm"`
+	} `json:"duplicates"`
+}
+
+type saleFailure struct {
+	Error string `json:"error"`
 }
 
 func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
@@ -54,7 +94,6 @@ func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
 	require.Equal(t, uint(50), shopBalance(t, "sell1"))
 	require.Empty(t, ownedCards(t, "sell1"))
 
-	// The page the sale lands on says what it did
 	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
 	require.Contains(t, body, "You sold 3 cards for 30 coins")
 
@@ -132,7 +171,6 @@ func TestSellRejectsBadSales(t *testing.T) {
 		"You do not have that many copies to sell")
 }
 
-// Copies up in a trade leave with it, they cannot be sold meanwhile
 func TestSellKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "sell6", "foo-bar-baz-qux", 0)
@@ -203,4 +241,139 @@ func TestSellDuplicates(t *testing.T) {
 	require.NotContains(t, getInventory(t, router, cookie, "/inventory?tab=cards"), "inventory-sell-duplicates")
 	require.Equal(t, "/inventory?tab=cards&error=sell-none", sellDuplicates(t, router, cookie))
 	require.Equal(t, uint(120), shopBalance(t, "sell8"))
+}
+
+func TestSellInPlaceReportsWhatChanged(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "sell10", "foo-bar-baz-qux", 0)
+	giveCards(t, "sell10", cardRosetta, 3)
+	giveCards(t, "sell10", cardMcMurdo, 2)
+	cookie := login(t, router, "sell10", "foo-bar-baz-qux")
+
+	// Two common cards are worth 20 coins
+	rec := sellInPlace(t, router, cookie, "/shop/sell", sellForm(cardRosetta, "", 2))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var outcome saleOutcome
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &outcome))
+	require.Equal(t, uint(20), outcome.Coins)
+	require.Equal(t, "20 coins", stripIsolation(outcome.CoinsLabel))
+	require.Equal(t, "Balance: 20", stripIsolation(outcome.NavBalance))
+	require.Equal(t, "You sold 2 cards for 20 coins", stripIsolation(outcome.Message))
+	require.Equal(t, uint(20), shopBalance(t, "sell10"))
+
+	// The tile of the stack is left with its one copy
+	require.Len(t, outcome.Stacks, 1)
+	require.Equal(t, uint(cardRosetta), outcome.Stacks[0].Card)
+	require.Empty(t, outcome.Stacks[0].Foil)
+	require.Equal(t, uint(1), outcome.Stacks[0].Copies)
+	require.Equal(t, uint(1), outcome.Stacks[0].Owned)
+	_, err := time.Parse(time.RFC3339, outcome.Stacks[0].AcquiredLast)
+	require.NoError(t, err)
+
+	// The rare duplicate left is still for sale, said by the dialog
+	require.Equal(t, uint(1), outcome.Duplicates.Count)
+	require.Equal(t, uint(50), outcome.Duplicates.Coins)
+	require.Equal(t, "Sell 1 duplicate card for 50 coins?", stripIsolation(outcome.Duplicates.Text))
+	require.Equal(t, "Sell for 50 coins", stripIsolation(outcome.Duplicates.Confirm))
+
+	// Taking the last copy empties the stack
+	rec = sellInPlace(t, router, cookie, "/shop/sell", sellForm(cardRosetta, "", 1))
+	require.Equal(t, http.StatusOK, rec.Code)
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &outcome))
+	require.Equal(t, "You sold 1 card for 10 coins", stripIsolation(outcome.Message))
+	require.Equal(t, uint(30), outcome.Coins)
+	require.Zero(t, outcome.Stacks[0].Copies)
+	require.Zero(t, outcome.Stacks[0].Owned)
+	require.Empty(t, outcome.Stacks[0].AcquiredLast)
+	require.Len(t, ownedCards(t, "sell10"), 2)
+}
+
+func TestSellInPlaceSaysWhyItFailed(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "sell11", "foo-bar-baz-qux", 0)
+	giveCards(t, "sell11", cardRosetta, 3)
+
+	// Logged out, there is nothing to sell
+	rec := sellInPlace(t, router, nil, "/shop/sell", sellForm(cardRosetta, "", 1))
+	require.Equal(t, http.StatusUnauthorized, rec.Code)
+
+	cookie := login(t, router, "sell11", "foo-bar-baz-qux")
+	cases := map[string]url.Values{
+		"Choose a quantity of at least 1":          sellForm(cardRosetta, "", 0),
+		"You do not have that many copies to sell": sellForm(cardRosetta, "", 4),
+		"This card cannot be sold":                 sellForm(9999, "", 1),
+	}
+	for message, form := range cases {
+		rec := sellInPlace(t, router, cookie, "/shop/sell", form)
+		require.Equal(t, http.StatusBadRequest, rec.Code)
+		var failure saleFailure
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &failure))
+		require.Equal(t, message, stripIsolation(failure.Error))
+	}
+	require.Len(t, ownedCards(t, "sell11"), 3)
+	require.Zero(t, shopBalance(t, "sell11"))
+}
+
+// Owned leaves out the copies up in trades, Copies counts them
+func TestSellInPlaceKeepsTheCopiesUpInTrades(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "sell12", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "sell13", "foo-bar-baz-qux", 0)
+	giveCards(t, "sell12", cardRosetta, 3)
+	giveCards(t, "sell13", cardMcMurdo, 1)
+	cookie := login(t, router, "sell12", "foo-bar-baz-qux")
+
+	rec := postJSON(t, router, cookie, "/trades", tradeBody(t, "sell13",
+		[]models.TradeItem{item(cardRosetta, "", 2)}, 0,
+		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+
+	rec = sellInPlace(t, router, cookie, "/shop/sell", sellForm(cardRosetta, "", 1))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var outcome saleOutcome
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &outcome))
+	// The free copy sold left the two of the trade behind
+	require.Equal(t, uint(2), outcome.Stacks[0].Copies)
+	require.Zero(t, outcome.Stacks[0].Owned)
+}
+
+func TestSellDuplicatesInPlace(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "sell14", "foo-bar-baz-qux", 0)
+	// 3 common, 2 rare and 1 foil rare
+	giveCards(t, "sell14", cardRosetta, 3)
+	giveCards(t, "sell14", cardMcMurdo, 2)
+	giveCardAt(t, "sell14", cardMcMurdo, "foil1", time.Now())
+	cookie := login(t, router, "sell14", "foo-bar-baz-qux")
+
+	// 2 commons and 1 rare are the duplicates
+	rec := sellInPlace(t, router, cookie, "/shop/sell-duplicates", url.Values{})
+	require.Equal(t, http.StatusOK, rec.Code)
+	var outcome saleOutcome
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &outcome))
+	require.Equal(t, "You sold 3 cards for 70 coins", stripIsolation(outcome.Message))
+	require.Equal(t, uint(70), outcome.Coins)
+	require.Equal(t, uint(70), shopBalance(t, "sell14"))
+
+	// One copy of each stack is left, worth nothing more to sell
+	require.Len(t, outcome.Stacks, 2)
+	for _, stack := range outcome.Stacks {
+		require.Equal(t, uint(1), stack.Copies)
+		require.Equal(t, uint(1), stack.Owned)
+		if stack.Card == cardMcMurdo {
+			require.Empty(t, stack.Foil)
+		}
+	}
+	require.Zero(t, outcome.Duplicates.Count)
+	require.Equal(t, int64(1), ownedCardCount(t, "sell14", cardRosetta, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "sell14", cardMcMurdo, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "sell14", cardMcMurdo, "foil1"))
+
+	// Nothing left to sell says so without a redirect either
+	rec = sellInPlace(t, router, cookie, "/shop/sell-duplicates", url.Values{})
+	require.Equal(t, http.StatusBadRequest, rec.Code)
+	var failure saleFailure
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &failure))
+	require.Equal(t, "You have no duplicate cards to sell", stripIsolation(failure.Error))
+	require.Equal(t, uint(70), shopBalance(t, "sell14"))
 }

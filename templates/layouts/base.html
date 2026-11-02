@@ -7,20 +7,18 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<meta name="theme-color" content="{{ if eq .Theme "dark" }}#171c1a{{ else }}#fafcfb{{ end }}">
 
-	{{/* Picks the theme on a first visit before anything is painted: kept
-	synchronous and before the stylesheets, and a file rather than an
-	inline script for the Content-Security-Policy (script-src 'self') */}}
+	{{/* Synchronous and before the stylesheets, so the theme is picked before
+	anything is painted; a file for the CSP (static/theme-init.js) */}}
 	<script src="/static/theme-init.js"></script>
 	<link rel="stylesheet" href="/static/base.css">
 	<link rel="stylesheet" href="/static/theme.css" type="text/css">
 
 	<title>{{ .Data.Title }}</title>
-	{{/* The page's own description when its controller gives one */}}
 	{{ $description := .T "meta-description" }}
 	{{- with .Data.Description }}{{ $description = . }}{{ end }}
 	<meta name="description" content="{{ $description }}">
 	<meta property="og:type" content="website">
-	<meta property="og:site_name" content="Transcendance">
+	<meta property="og:site_name" content="AnyCardz">
 	<meta property="og:title" content="{{ .Data.Title }}">
 	<meta property="og:description" content="{{ $description }}">
 
@@ -39,7 +37,7 @@
 	<header>
 		<!-- Not a heading: each page has its own title as its h1 -->
 		<p class="header-title">
-			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
+			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>AnyCardz</a>
 		</p>
 
 		{{/* Shown on narrow screens only, where the navigation becomes a side

@@ -10,6 +10,7 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
 import TradeUpPicker from './TradeUpPicker.svelte';
 import TradeUpResult from './TradeUpResult.svelte';
+import FoilRoulette from './FoilRoulette.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -20,14 +21,13 @@ import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 import { enhanceCountdowns } from './countdown.js';
 import { openTopup } from './topup.js';
+import { enhanceSellDuplicates } from './sell.js';
 import { apiFetch } from './api.js';
 
-// Navbar
 {
 	mount(NavbarEnhancer, { target: document.body });
 }
 
-// Language switcher
 {
 	const target = document.querySelector('#language-switcher');
 
@@ -42,7 +42,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Theme switcher
 {
 	const target = document.querySelector('#theme-switcher');
 	if (target) {
@@ -56,7 +55,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Notifications
 {
 	const target = document.querySelector('#notification');
 
@@ -70,7 +68,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Shoutbox
 {
 	const target = document.querySelector('#shoutbox');
 
@@ -84,7 +81,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Notifications page
 {
 	const target = document.querySelector('#notification-list');
 
@@ -93,14 +89,12 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Relative dates of server rendered lists
 {
 	for (const list of document.querySelectorAll('[data-relative-times]')) {
 		enhanceRelativeTimes(list);
 	}
 }
 
-// Countdown pills, e.g the time left before the next booster
 {
 	enhanceCountdowns();
 }
@@ -132,7 +126,6 @@ import { apiFetch } from './api.js';
 
 // Account deletion, after confirmation, then land on a page visitors can see
 {
-	// Error message of a failed deletion response
 	async function deletionError(response, fallback) {
 		try {
 			const body = await response.json();
@@ -196,7 +189,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Login form
 {
 	const target = document.querySelector('#login-enhancement');
 
@@ -211,7 +203,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Register form
 {
 	const target = document.querySelector('#register-enhancement');
 
@@ -226,7 +217,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Friend buttons
 {
 	for (const target of document.querySelectorAll('.friend-button')) {
 		mount(FriendButton, {
@@ -238,7 +228,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Cards
 {
 	const target = document.querySelector('#card-rendering');
 
@@ -247,7 +236,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Profile form
 {
 	const target = document.querySelector('#profile-enhancement');
 
@@ -261,7 +249,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Inventory card popup
 {
 	const target = document.querySelector('#inventory-card-popup');
 
@@ -316,7 +303,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Tradeup contract picker
 {
 	const target = document.querySelector('#tradeup-picker');
 
@@ -325,7 +311,15 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Tradeup result popup
+{
+	const target = document.querySelector('#foil-roulette');
+
+	if (target) {
+		mount(FoilRoulette, { target, props: { target } });
+	}
+}
+
+// Tradeup and foil roulette result popup
 {
 	const target = document.querySelector('#tradeup-result');
 
@@ -334,7 +328,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Pack opening
 {
 	const target = document.querySelector('#pack-opening');
 
@@ -358,7 +351,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Pack opening animated background
 {
 	const target = document.querySelector('#pack-background');
 
@@ -367,7 +359,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Shop booster buy popup
 {
 	const target = document.querySelector('#shop-buy-popup');
 
@@ -381,7 +372,6 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Trade menu
 {
 	const target = document.querySelector('#trade-menu');
 
@@ -395,7 +385,7 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Confirmation popups opened by a button, e.g selling the duplicate cards
+// Confirmation popups, e.g selling the duplicate cards
 {
 	for (const button of document.querySelectorAll('[data-dialog-open]')) {
 		const dialog = document.querySelector(`#${CSS.escape(button.dataset.dialogOpen)}`);
@@ -404,8 +394,13 @@ import { apiFetch } from './api.js';
 		}
 		button.setAttribute('aria-controls', dialog.id);
 		button.addEventListener('click', () => dialog.showModal());
+		// Unless marked disabled, e.g while the dialog's action is made
 		for (const close of dialog.querySelectorAll('[data-dialog-close]')) {
-			close.addEventListener('click', () => dialog.close());
+			close.addEventListener('click', () => {
+				if (close.getAttribute('aria-disabled') !== 'true') {
+					dialog.close();
+				}
+			});
 		}
 		// Clicking the backdrop targets the dialog itself
 		dialog.addEventListener('click', (event) => {
@@ -418,7 +413,14 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Shop coin top-up popup
+{
+	const form = document.querySelector('#inventory-sell-duplicates-popup form');
+
+	if (form) {
+		enhanceSellDuplicates(form);
+	}
+}
+
 {
 	const dialog = document.querySelector('#shop-topup-popup');
 
@@ -434,7 +436,6 @@ import { apiFetch } from './api.js';
 		for (const button of dialog.querySelectorAll('[data-shop-topup-close]')) {
 			button.addEventListener('click', () => dialog.close());
 		}
-		// Clicking the backdrop targets the dialog itself
 		dialog.addEventListener('click', (event) => {
 			if (event.target === dialog) {
 				dialog.close();

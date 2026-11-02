@@ -2,7 +2,6 @@ package models
 
 import "time"
 
-// A message posted to the global shoutbox
 type ShoutboxMessage struct {
 	ID     uint `gorm:"primaryKey"`
 	UserID uint `gorm:"not null;index"`
@@ -12,7 +11,6 @@ type ShoutboxMessage struct {
 	CreatedAt time.Time `gorm:"not null"`
 }
 
-// A private message between two users
 type PrivateMessage struct {
 	ID          uint `gorm:"primaryKey"`
 	SenderID    uint `gorm:"not null;index:idx_private_sender,priority:1"`

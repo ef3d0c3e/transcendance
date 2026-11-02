@@ -2,23 +2,38 @@ package data
 
 import (
 	"math/rand/v2"
+	"slices"
 	"testing"
 
 	"transcendance/data"
 )
 
-// Size of the packs drawn in tests
 const testPackSize = 5
 
 func testCard(name string, rarity string) *data.Card {
 	return &data.Card{Name: name, Rarity: rarity}
 }
 
-// Collection of every card of the test pools
 var testCollection = &data.Collection{}
 
 func testPoolCard(name string, rarity string) poolCard {
 	return poolCard{card: testCard(name, rarity), collection: testCollection}
+}
+
+func TestFirstCopiesMarksNewCards(t *testing.T) {
+	// The owner already has a copy of 1
+	owned := map[uint]bool{1: true}
+	// 2 is new, 1 is theirs already, 2 again follows its first copy, 3 is new
+	drawn := []uint{2, 1, 2, 3}
+
+	want := []bool{true, false, false, true}
+	if got := firstCopies(owned, drawn); !slices.Equal(got, want) {
+		t.Errorf("firstCopies = %v, want %v", got, want)
+	}
+
+	if got := firstCopies(nil, nil); len(got) != 0 {
+		t.Errorf("firstCopies of an empty pack = %v, want none", got)
+	}
 }
 
 func TestRollRarityDistribution(t *testing.T) {
@@ -30,7 +45,6 @@ func TestRollRarityDistribution(t *testing.T) {
 		counts[rollRarity(rnd)]++
 	}
 
-	// Drop table is common 80%, rare 15%, legendary 5%
 	expected := map[string]float64{
 		"common":    0.80,
 		"rare":      0.15,
@@ -250,18 +264,15 @@ func TestBuildReelPlacesWinnerInWindow(t *testing.T) {
 		}
 	}
 
-	// The won card must survive the trip through the strip
 	if got := strip[reelAbove].Card; got != winner.card {
 		t.Errorf("strip[%d] = %q, want winner %q", reelAbove, got.Name, winner.card.Name)
 	}
 
-	// The cards beneath the winner are the ones that run past as the reel
-	// drops: they have to be there or the spin is too short
+	// The cards beneath the winner make the spin, too few and it is too short
 	if reelBelow < 8 {
 		t.Errorf("reelBelow = %d, want at least 8 cards of spin", reelBelow)
 	}
 
-	// Fillers must come from the collection pool
 	allowed := map[string]bool{"a": true, "b": true, "c": true, "d": true}
 	for i, entry := range strip {
 		if entry.Win {
@@ -355,7 +366,6 @@ func TestDrawDefaultPackRarityOdds(t *testing.T) {
 		}
 	}
 
-	// Drop table is common 80%, rare 15%, legendary 5%
 	expected := map[string]float64{
 		"common":    0.80,
 		"rare":      0.15,
@@ -370,9 +380,7 @@ func TestDrawDefaultPackRarityOdds(t *testing.T) {
 }
 
 func TestDrawDefaultPackIsUniformAcrossCollections(t *testing.T) {
-	// A collection with one card and a collection with three: cards of the
-	// same rarity must be drawn as often as each other, whatever their
-	// collection
+	// A one-card collection and a three-card one: their commons are drawn equally
 	small := &data.Collection{ID: 1}
 	big := &data.Collection{ID: 2}
 	pool := []poolCard{

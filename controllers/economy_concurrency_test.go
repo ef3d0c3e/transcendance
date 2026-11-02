@@ -21,7 +21,6 @@ import (
 // Concurrent requests of the same user, as from several tabs, or a script
 const concurrentRequests = 8
 
-// Send the same form from several goroutines at once, returns the recorded responses
 func raceForm(router *gin.Engine, cookie *http.Cookie, target string, form url.Values, n int) []*httptest.ResponseRecorder {
 	recs := make([]*httptest.ResponseRecorder, n)
 	start := make(chan struct{})
@@ -56,7 +55,6 @@ func TestConcurrentBuysSpendOnce(t *testing.T) {
 	require.Zero(t, shopBalance(t, "racebuy1"))
 }
 
-// A booster opens once, however many openings run at once
 func TestConcurrentOpeningsOpenOnce(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "raceopen1", "foo-bar-baz-qux", 0)
@@ -77,7 +75,6 @@ func TestConcurrentOpeningsOpenOnce(t *testing.T) {
 	require.Len(t, ownedCards(t, "raceopen1"), 5)
 }
 
-// The daily reward is given once a day, however many claims run at once
 func TestConcurrentDailyClaimsRewardOnce(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "raceclaim1", "foo-bar-baz-qux", 0)
@@ -94,7 +91,6 @@ func TestConcurrentDailyClaimsRewardOnce(t *testing.T) {
 	require.Equal(t, len(ownedBoosters(t, "raceclaim2")), len(ownedBoosters(t, "raceclaim1")))
 }
 
-// An offer settles once, however many accepts run at once
 func TestConcurrentAcceptsSettleOnce(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "raceacc1", "foo-bar-baz-qux", 0)
@@ -240,11 +236,13 @@ func TestTradePendingOffersLimit(t *testing.T) {
 func TestHugePageNumbers(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "hugepage1", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "hugepage2", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "hugepage1", "foo-bar-baz-qux")
 
 	huge := "461168601842738792"
 	for _, target := range []string{"/inventory?tab=cards&p=" + huge, "/inventory?tab=boosters&p=" + huge,
-		"/cards/search/?p=" + huge, "/search?p=" + huge, "/notifications?p=" + huge} {
+		"/cards/search/?p=" + huge, "/search?p=" + huge, "/notifications?p=" + huge,
+		"/api/trade/stacks?u=hugepage2&page=" + huge} {
 		req := httptest.NewRequest(http.MethodGet, target, nil)
 		req.AddCookie(cookie)
 		rec := httptest.NewRecorder()

@@ -10,11 +10,9 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// defaultBoosterRef is the ?booster= value that opens a default booster out
-// of the user's pile
+// The ?booster= value opening a default booster out of the user's pile
 const defaultBoosterRef = "default"
 
-// defaultBoosterSize is how many cards one default booster drops
 const defaultBoosterSize = 5
 
 // Gold of the default boosters, matching the coins
@@ -23,8 +21,7 @@ const (
 	defaultBoosterColorSecondary = "#8a5f1a"
 )
 
-// pileTile is the template data of a user's pile of default boosters,
-// consumed by the "booster-pile" partial and the tile around it
+// Template data of the "booster-pile" partial and the tile around it
 type pileTile struct {
 	PileTitle       string
 	PileDescription string
@@ -44,9 +41,8 @@ type pileTile struct {
 	ColorSecondary template.CSS
 }
 
-// pileTileData builds the template data of a user's pile of default boosters
 func (dc *DataController) pileTileData(c *gin.Context, pile *models.BoosterPile) *pileTile {
-	// The countdown of the next booster, hidden while the pile is full
+	// Countdown to the next booster, none while the pile is full
 	timerLabel := ""
 	timerSeconds := 0
 	if pile.NextAt != nil {

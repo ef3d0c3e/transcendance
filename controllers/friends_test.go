@@ -36,7 +36,6 @@ type friendResponse struct {
 	Message  string
 }
 
-// A page as seen by a user
 func getPageAs(t *testing.T, router *gin.Engine, cookie *http.Cookie, target string) string {
 	rec := notificationRequest(t, router, cookie, http.MethodGet, target, nil)
 	require.Equal(t, http.StatusOK, rec.Code)

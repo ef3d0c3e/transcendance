@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -16,12 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The `card` fields of a contract, one per copy taken
 func contract(values ...string) url.Values {
 	return url.Values{"card": values}
 }
 
-// `n` copies of the same card in a contract
 func copies(cardID uint, foil string, n int) []string {
 	id := strconv.FormatUint(uint64(cardID), 10)
 	if foil != "" {
@@ -38,7 +37,6 @@ func tradeup(t *testing.T, router *gin.Engine, cookie *http.Cookie, form url.Val
 	return postForm(t, router, cookie, "/tradeup", form)
 }
 
-// Number of copies of one card owned by a user
 func ownedCopies(t *testing.T, username string, cardID uint) int {
 	n := 0
 	for _, owned := range ownedCards(t, username) {
@@ -47,6 +45,17 @@ func ownedCopies(t *testing.T, username string, cardID uint) int {
 		}
 	}
 	return n
+}
+
+var tradeupOrderRe = regexp.MustCompile(`data-tradeup-order="(\d+)"`)
+
+// Places of the tiles in the collection-and-rarity order, in page order
+func tradeupOrders(body string) []string {
+	var orders []string
+	for _, match := range tradeupOrderRe.FindAllStringSubmatch(body, -1) {
+		orders = append(orders, match[1])
+	}
+	return orders
 }
 
 func TestTradeupConsumesCardsAndAwardsOneTierUp(t *testing.T) {
@@ -59,12 +68,12 @@ func TestTradeupConsumesCardsAndAwardsOneTierUp(t *testing.T) {
 
 	// McMurdo Station is the only rare in the dev collection
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 	require.Zero(t, ownedCopies(t, "tradeup1", cardPythagorean))
 	require.Equal(t, 1, ownedCopies(t, "tradeup1", cardMcMurdo))
 
 	// The page names what came out of it, in a popup the client opens
-	body := getInventory(t, router, cookie, "/inventory?tab=tradeup&result=1003")
+	body := getInventory(t, router, cookie, rec.Header().Get("Location"))
 	require.Contains(t, body, `id="tradeup-result"`)
 	require.Contains(t, body, "You obtained")
 	require.Contains(t, body, `<h2 class="card-title">McMurdo Station</h2>`)
@@ -80,7 +89,7 @@ func TestTradeupAwardsOneTierUpFromRareCards(t *testing.T) {
 
 	// Ford Model T is the only legendary in the dev collection
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1004", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1004", rec.Header().Get("Location"))
 	require.Zero(t, ownedCopies(t, "tradeup2", cardMcMurdo))
 	require.Equal(t, 1, ownedCopies(t, "tradeup2", cardFordT))
 }
@@ -101,7 +110,7 @@ func TestTradeupMixesCollectionsOfOneRarity(t *testing.T) {
 	rec := tradeup(t, router, cookie, form)
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 	// The 10 cards are gone, only the reward is left
 	require.Equal(t, 1, len(ownedCards(t, "tradeup3")))
 	require.Equal(t, 1, ownedCopies(t, "tradeup3", cardMcMurdo))
@@ -198,7 +207,7 @@ func TestTradeupConsumesOnlyTheSelectedFoil(t *testing.T) {
 	rec := tradeup(t, router, cookie, contract(copies(cardPythagorean, "", 10)...))
 
 	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=tradeup&result=1003", rec.Header().Get("Location"))
 
 	foils, plain := 0, 0
 	for _, owned := range ownedCards(t, "tradeup9") {
@@ -296,7 +305,7 @@ func TestTradeupTabCollectionFilter(t *testing.T) {
 	require.Contains(t, body, `id="tradeup-no-match" hidden>No card matches this filter</p>`)
 }
 
-func TestTradeupTabOrdersCardsByCollectionRarityAndCount(t *testing.T) {
+func TestTradeupTabOrdersCardsByHowManyCopiesToSpend(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "tradeup15", "foo-bar-baz-qux", 0)
 	giveCards(t, "tradeup15", cardPythagorean, 30)
@@ -304,12 +313,38 @@ func TestTradeupTabOrdersCardsByCollectionRarityAndCount(t *testing.T) {
 	giveCards(t, "tradeup15", cardRosetta, 2)
 	cookie := login(t, router, "tradeup15", "foo-bar-baz-qux")
 
-	// One collection, so rarity decides first, then how many copies to spend
+	// The biggest stacks to spend come first, whatever their rarity
 	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
-	require.Equal(t, []string{"McMurdo Station", "Pythagorean tiling", "Rosetta Stone"}, cardTitles(body))
+	require.Equal(t, []string{"Pythagorean tiling", "McMurdo Station", "Rosetta Stone"}, cardTitles(body))
+
+	// Each tile keeps its place in the collection-and-rarity order, which the sort
+	// control restores: the rare McMurdo first, then the commons by copies
+	require.Equal(t, []string{"1", "0", "2"}, tradeupOrders(body))
 }
 
-// Copies up in pending trades leave with them, a contract cannot spend them
+func TestTradeupTabSortAndRarityControls(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "tradeup19", "foo-bar-baz-qux", 0)
+	giveCards(t, "tradeup19", cardPythagorean, 2)
+	giveCards(t, "tradeup19", cardMcMurdo, 1)
+	cookie := login(t, router, "tradeup19", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
+
+	// The rarity filter offers what a tradeup can hold, lowest first
+	require.Contains(t, body, `id="tradeup-rarity-filter"`)
+	require.Contains(t, body, `<option value="" selected>All rarities</option>`)
+	require.Contains(t, body, `<option value="common" >Common</option>`)
+	require.Contains(t, body, `<option value="rare" >Rare</option>`)
+	// The highest rarity has no tier above, it never lands on the grid
+	require.NotContains(t, body, `value="legendary"`)
+
+	// The sort defaults to the biggest stacks, the collection-and-rarity order being the alternative
+	require.Contains(t, body, `id="tradeup-sort"`)
+	require.Contains(t, body, `<option value="" selected>Count</option>`)
+	require.Contains(t, body, `<option value="grouped" >Collection and rarity</option>`)
+}
+
 func TestTradeupKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "tradeup16", "foo-bar-baz-qux", 0)

@@ -1,6 +1,5 @@
-// The pack page's switch for its endless animations: the swirling
-// background, the floating booster, the pulsing buttons and bars. Remembered
-// in the browser; the background and the page follow it as it changes.
+// The pack page's switch for its endless animations (swirling background,
+// floating booster, pulsing buttons and bars), remembered in the browser
 
 const storageKey = 'pack-motion';
 const listeners = new Set();
@@ -25,8 +24,7 @@ export function saveStill(isStill) {
 	}
 }
 
-// Calls listener with the new setting on every change, until the returned
-// function is called
+// Returns the function that removes the listener
 export function onStillChange(listener) {
 	listeners.add(listener);
 	return () => listeners.delete(listener);

@@ -234,7 +234,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 				})
 				return
 			}
-			// Not sanitizing current password for backward-compability
+			// Not sanitizing the current password, for backward compatibility
 			if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
 				errorMessages["password"] = pc.Renderer.T(c, "profile-error-password")
 				validRequest = false
@@ -368,7 +368,6 @@ func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*
 	return target, 0
 }
 
-// ProfileDeletePost permanently deletes the account selected by profile ID.
 func (pc *Controller) ProfileDeletePost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -395,7 +394,7 @@ func (pc *Controller) ProfileDeletePost(c *gin.Context) {
 		}
 	}
 
-	// Permanently erase the user, related rows are removed by their ON DELETE CASCADE constraint
+	// Related rows are removed by their ON DELETE CASCADE constraint
 	result := pc.DB.WithContext(c.Request.Context()).Unscoped().Delete(&models.User{}, target.ID)
 	if result.Error != nil || result.RowsAffected != 1 {
 		log.Printf("Failed to delete user `%s'", target.Username)

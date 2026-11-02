@@ -6,13 +6,13 @@
 	onMount(() => initCards());
 
 	const CARD_SELECTOR = ".card-container";
-	const DEFAULT_MAX_TILT = 20; // degrees, overriden by data-tilt-max
+	const DEFAULT_MAX_TILT = 20; // degrees, overridden by data-tilt-max
 	// Mount points whose components add cards after the page loaded (pack
 	// reels, trade menu, trade-up result, shop preview): only they are
 	// watched, not the chat and the rest of the page
 	const DYNAMIC_ROOTS = "#pack-opening, #trade-menu, #tradeup-result, #shop-buy-popup";
 
-	// Data attributes
+	// Data attributes and the CSS variables they set
 	const EFFECT_VARS = {
 		z: "--card-effect-z",
 		opacity: "--card-effect-opacity",
@@ -36,7 +36,6 @@
 
 	const cssUrl = (path) => `url("${String(path).replace(/"/g, "%22")}")`;
 
-	/* Effects */
 	const prepared = new WeakSet();
 
 	function prepareEffect(effect) {
@@ -63,7 +62,6 @@
 		node.querySelectorAll(".card-effect").forEach(prepareEffect);
 	}
 
-	/* Tilt and mouse cursor handing */
 	function setPointer(card, x, y, maxTilt) {
 		const dist = Math.hypot(x / 100 - 0.5, y / 100 - 0.5);
 		const nx = (x - 50) / 50;
@@ -97,8 +95,7 @@
 			const rawX = ((clientX - rect.left) / rect.width) * 100;
 			const rawY = ((clientY - rect.top) / rect.height) * 100;
 
-			// Clamp so dragging past the card edge pins to max tilt
-			// instead of over-rotating.
+			// Clamped: dragging past the card edge pins to max tilt instead of over-rotating
 			const x = Math.max(0, Math.min(100, rawX));
 			const y = Math.max(0, Math.min(100, rawY));
 
@@ -260,6 +257,5 @@
 	}
 </script>
 
-<!-- Inject CSS -->
 <CardStyles />
 <CardEffectStyles />
