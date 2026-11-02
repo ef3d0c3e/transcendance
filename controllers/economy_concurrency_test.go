@@ -100,14 +100,14 @@ func TestConcurrentAcceptsSettleOnce(t *testing.T) {
 	createAccount(t, router, "raceacc1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "raceacc2", "foo-bar-baz-qux", 0)
 	giveCards(t, "raceacc1", cardFordT, 1)
-	giveCards(t, "raceacc2", cardTungsten, 1)
+	giveCards(t, "raceacc2", cardRosetta, 1)
 	setCoins(t, "raceacc1", 100)
 	cookie1 := login(t, router, "raceacc1", "foo-bar-baz-qux")
 	cookie2 := login(t, router, "raceacc2", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie1, "/trades", tradeBody(t, "raceacc2",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 100,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	trade := tradesOf(t, "raceacc1")[0]
 
@@ -115,7 +115,7 @@ func TestConcurrentAcceptsSettleOnce(t *testing.T) {
 
 	require.Equal(t, models.TradeAccepted, tradesOf(t, "raceacc1")[0].State)
 	require.Equal(t, int64(1), ownedCardCount(t, "raceacc2", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "raceacc1", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "raceacc1", cardRosetta, ""))
 	require.Zero(t, ownedCardCount(t, "raceacc1", cardFordT, ""))
 	require.Equal(t, uint(100), shopBalance(t, "raceacc2"))
 	require.Zero(t, shopBalance(t, "raceacc1"))
@@ -127,13 +127,13 @@ func TestConcurrentSellAndAccept(t *testing.T) {
 	createAccount(t, router, "racesell1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "racesell2", "foo-bar-baz-qux", 0)
 	giveCards(t, "racesell1", cardFordT, 1)
-	giveCards(t, "racesell2", cardTungsten, 1)
+	giveCards(t, "racesell2", cardRosetta, 1)
 	cookie1 := login(t, router, "racesell1", "foo-bar-baz-qux")
 	cookie2 := login(t, router, "racesell2", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie1, "/trades", tradeBody(t, "racesell2",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	trade := tradesOf(t, "racesell1")[0]
 
@@ -181,12 +181,12 @@ func TestReservedCardsKeepTheirOffer(t *testing.T) {
 	createAccount(t, router, "reserve1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "reserve2", "foo-bar-baz-qux", 0)
 	giveCards(t, "reserve1", cardFordT, 1)
-	giveCards(t, "reserve2", cardTungsten, 1)
+	giveCards(t, "reserve2", cardRosetta, 1)
 	cookie1 := login(t, router, "reserve1", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie1, "/trades", tradeBody(t, "reserve2",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	sell(t, router, cookie1, sellForm(cardFordT, " ", 1))
@@ -199,7 +199,7 @@ func TestReservedCardsKeepTheirOffer(t *testing.T) {
 	// Unknown foils cannot be offered either
 	rec = postJSON(t, router, cookie1, "/trades", tradeBody(t, "reserve2",
 		[]models.TradeItem{item(cardFordT, "FOIL1", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 }
 
@@ -223,11 +223,11 @@ func TestTradePendingOffersLimit(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "offerlim1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "offerlim2", "foo-bar-baz-qux", 0)
-	giveCards(t, "offerlim2", cardTungsten, 1)
+	giveCards(t, "offerlim2", cardRosetta, 1)
 	setCoins(t, "offerlim1", 100)
 	cookie := login(t, router, "offerlim1", "foo-bar-baz-qux")
 
-	offer := tradeBody(t, "offerlim2", nil, 1, []models.TradeItem{item(cardTungsten, "", 1)}, 0)
+	offer := tradeBody(t, "offerlim2", nil, 1, []models.TradeItem{item(cardRosetta, "", 1)}, 0)
 	for range 5 {
 		require.Equal(t, http.StatusCreated, postJSON(t, router, cookie, "/trades", offer).Code)
 	}
