@@ -72,3 +72,6 @@ tibet = Tibet
 toy = Toy dogs
 working = Working dogs
 zimbabwe = Zimbabwe
+company = Company
+tramway = Tramway
+metro = Metro

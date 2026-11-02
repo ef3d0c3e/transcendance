@@ -1,0 +1,2 @@
+title = Paris Metro
+description = The Paris Metro, short for Métropolitain, is a rapid transit system serving the Paris metropolitan area in Île-de-France, the region of France's capital. A symbol of the city, it is known for its density within the capital's territorial limits, as well as its uniform architecture and historical entrances influenced by Art Nouveau. The system is 245.6 kilometres (152.6 mi) long, mostly underground, as well as its 321 stations of which 61 allow the riders to transfer between the sixteen lines
