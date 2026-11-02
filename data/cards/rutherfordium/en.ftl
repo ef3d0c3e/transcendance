@@ -1,0 +1,2 @@
+title = Rutherfordium
+description = Rutherfordium is a synthetic chemical element; it has symbol Rf and atomic number 104. It is named after physicist Ernest Rutherford. As a synthetic element, it is not found in nature and can only be made in a particle accelerator. It is radioactive; the most stable known isotope, 267Rf, has a half-life of about 48 minutes. In the periodic table, it is a d-block element and the second of the fourth-row transition elements.

@@ -1,0 +1,2 @@
+title = Seaborgium
+description = Seaborgium is a synthetic chemical element; it has symbol Sg and atomic number 106. It is named after the American nuclear chemist Glenn T. Seaborg. As a synthetic element, it can be created in a laboratory but is not found in nature. It is also radioactive; the most stable known isotopes have half-lives on the order of several minutes. In the periodic table of the elements, it is a d-block transactinide element.

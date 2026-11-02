@@ -1,0 +1,2 @@
+title = Nickel
+description = Nickel is a chemical element; it has symbol Ni and atomic number 28. It is a silvery-white lustrous metal with a slight golden tinge. Nickel is a hard and ductile transition metal. Pure nickel is chemically reactive, but large pieces are slow to react with air under standard conditions because a passivation layer of nickel oxide that prevents further corrosion forms on the surface.

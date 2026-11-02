@@ -1,0 +1,2 @@
+title = Darmstadtium
+description = Darmstadtium is a synthetic chemical element; it has symbol Ds and atomic number 110. It is extremely radioactive: the most stable known isotope, darmstadtium-281, has a half-life of approximately 14 seconds. Darmstadtium was first created in November 1994 by the GSI Helmholtz Centre for Heavy Ion Research in Darmstadt, Germany, after which it was named. In the periodic table, it is a d-block transactinide element.

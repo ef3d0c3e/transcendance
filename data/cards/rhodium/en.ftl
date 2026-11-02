@@ -1,0 +1,2 @@
+title = Rhodium
+description = Rhodium is a chemical element; it has symbol Rh and atomic number 45. It is a very rare, dark silvery-white, hard, corrosion-resistant transition metal. It is a noble metal and a member of the platinum group. It has only one naturally occurring isotope, which is 103Rh. Naturally occurring rhodium is usually found as a free metal or as an alloy with similar metals and rarely as a chemical compound in minerals such as bowieite and rhodplumsite.

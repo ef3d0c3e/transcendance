@@ -1,0 +1,2 @@
+title = Thallium
+description = Le thallium, de symbole Tl, est l'élément chimique de numéro atomique 81. Il appartient au groupe 13 du tableau périodique ainsi qu'à la famille des métaux pauvres. Son corps simple est un métal gris argenté, assez mou pour être coupé au couteau. Le thallium est un élément « non essentiel » (il n'a aucune utilité biologique connue), en revanche il est hautement toxique, plus même que le mercure, le plomb et le cadmium.

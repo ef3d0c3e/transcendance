@@ -1,0 +1,2 @@
+title = Tungsten
+description = Tungsten is a chemical element; it has symbol W (from German: Wolfram) and atomic number 74. It is a metal found naturally on Earth almost exclusively in compounds with other elements. It was identified as a distinct element in 1781 and first isolated as a metal in 1783. Its important ores include scheelite and wolframite, the latter lending the element its alternative name.

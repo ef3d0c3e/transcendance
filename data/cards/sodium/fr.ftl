@@ -1,0 +1,2 @@
+title = Sodium
+description = Le sodium est l'élément chimique de numéro atomique 11, de symbole Na (du latin natrium). Il fait partie du premier groupe du tableau périodique et plus particulièrement des métaux alcalins. Sur Terre et dans les autres corps telluriques il est généralement lié à d'autres éléments au sein de nombreux minéraux. Il est abondant dans l'eau de mer (avec une teneur d'environ 10,8 g/kg), sous la forme d'ions libres.

@@ -1,0 +1,2 @@
+title = Europium
+description = Europium is a chemical element; it has symbol Eu and atomic number 63. It is a soft, silvery-white lanthanide metal that tarnishes rapidly in air and is the most chemically reactive of the lanthanides. Europium has an unusually low density and large atomic volume for a lanthanide because the metal is effectively divalent, unlike the predominantly trivalent neighbouring elements.
