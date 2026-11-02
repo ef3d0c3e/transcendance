@@ -262,6 +262,9 @@ func TestChatNotifications(t *testing.T) {
 
 	// A new one once closed, or once the previous one was read
 	chatRequest(t, recipient, map[string]string{"type": "view", "with": ""})
+	// Closing has no reply: the echo of a later shoutbox message shows it was handled, before the sender writes
+	shoutboxSend(t, recipient, "closed")
+	chatReadUntil(t, recipient, "message")
 	send(sender, "notif_b", "five")
 	notifications = chatNotifications(t, router, cookies[1])
 	require.Len(t, notifications, 2)
