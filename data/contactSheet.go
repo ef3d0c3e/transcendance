@@ -80,7 +80,6 @@ func generateCollectionSheet(
 		}
 	}
 
-	// Calculate the crop-aware layout
 	canvas := image.NewRGBA(image.Rect(0, 0, sheetWidth, sheetHeight))
 	stdDraw.Draw(
 		canvas,
@@ -97,7 +96,6 @@ func generateCollectionSheet(
 		return "", fmt.Errorf("generate tile layout: %w", err)
 	}
 
-	// Each source has exactly one assigned rectangle
 	boundsByImage := make([]image.Rectangle, len(sources))
 	for _, tile := range tiles {
 		boundsByImage[tile.imageIndex] = tile.bounds
@@ -113,7 +111,6 @@ func generateCollectionSheet(
 		drawCover(canvas, img, boundsByImage[i])
 	}
 
-	// Return the path of a generated PNG
 	file, err := os.Create(path)
 	if err != nil {
 		return "", fmt.Errorf("create output file: %w", err)
@@ -133,13 +130,12 @@ func generateCollectionSheet(
 	return path, nil
 }
 
-// inspectImage reads dimensions without decoding all image pixels
 func inspectImage(path string) (image.Config, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return image.Config{}, err
 	}
-	defer func() { _ = file.Close(); }();
+	defer func() { _ = file.Close() }()
 
 	if strings.EqualFold(filepath.Ext(path), ".webp") {
 		return webp.DecodeConfig(file)
@@ -149,13 +145,12 @@ func inspectImage(path string) (image.Config, error) {
 	return cfg, err
 }
 
-// decodeImage supports WebP, PNG, and JPEG
 func decodeImage(path string) (image.Image, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err
 	}
-	defer func() { _ = file.Close(); }();
+	defer func() { _ = file.Close() }()
 
 	if strings.EqualFold(filepath.Ext(path), ".webp") {
 		return webp.Decode(file)
@@ -205,10 +200,8 @@ func (l *sheetLayout) generate(
 	return tiles, nil
 }
 
-// Split recursively partitions the canvas
-//
-// Each child receives an area proportional to its number of images
-// Candidate cuts are scored by estimating their crop loss and tile shapes
+// split cuts the canvas recursively, giving each side an area proportional
+// to its number of images, and keeps the cut with the lowest groupCost
 func (l *sheetLayout) split(
 	bounds image.Rectangle,
 	start, count int,
@@ -226,7 +219,6 @@ func (l *sheetLayout) split(
 	bestK := 0
 	var bestA, bestB image.Rectangle
 
-	// Examine every possible split point, in both orientations
 	for k := 1; k < count; k++ {
 		// Vertical cut: first k images on the left
 		x := bounds.Min.X + bounds.Dx()*k/count
@@ -312,7 +304,6 @@ func (l *sheetLayout) groupCost(
 	n := float64(count)
 	best := math.Inf(1)
 
-	// Estimate the cell aspect ratio for each possible column count
 	for columns := 1; columns <= count; columns++ {
 		c := float64(columns)
 		cellAR := regionAR * n / (c * c)
@@ -340,9 +331,8 @@ func (l *sheetLayout) groupCost(
 	return best
 }
 
-// drawCover applies a uniform scale and centers the image in the target tile
-// Excess content is clipped by the tile boundaries; neither axis is scaled
-// independently
+// drawCover scales the image uniformly to cover the tile, centered, clipping
+// the excess
 func drawCover(
 	dst *image.RGBA,
 	src image.Image,
@@ -369,13 +359,11 @@ func drawCover(
 		stdDraw.Src,
 	)
 
-	// Uniform scaling: cover the tile without distorting the source
 	scale := math.Max(
 		float64(w)/float64(sb.Dx()),
 		float64(h)/float64(sb.Dy()),
 	)
 
-	// Map the center of the source image to the center of the tile
 	srcCX := float64(sb.Min.X) + float64(sb.Dx())/2
 	srcCY := float64(sb.Min.Y) + float64(sb.Dy())/2
 
@@ -387,7 +375,6 @@ func drawCover(
 		0, scale, ty,
 	}
 
-	// The transform is clipped by tile.Bounds(), not the whole sheet
 	xdraw.CatmullRom.Transform(
 		tile,
 		transform,
@@ -397,8 +384,6 @@ func drawCover(
 		nil,
 	)
 
-	// The temporary tile is exactly w×h, so the copy cannot overlap
-	// any neighboring tile
 	stdDraw.Draw(
 		dst,
 		bounds,
