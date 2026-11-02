@@ -144,7 +144,9 @@ services:
       test: ["CMD-SHELL", "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health' | grep -qE '\"status\":\"(green|yellow)\"'"]
       interval: 15s
       timeout: 5s
-      start_period: 60s
+      # A first boot creates the system indices, slow on a small host; a healthy check ends it early
+      start_period: 300s
+      start_interval: 5s
       retries: 10
     depends_on:
       data-setup:
@@ -199,7 +201,9 @@ services:
       test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/kibana/api/status | grep -qE '^(200|401)$$'"]
       interval: 15s
       timeout: 5s
-      start_period: 120s
+      # A first boot migrates every saved object index, an interrupted one fails the next start
+      start_period: 600s
+      start_interval: 5s
       retries: 10
     depends_on:
       elasticsearch-setup:
