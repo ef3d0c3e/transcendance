@@ -7,7 +7,6 @@
 	const languages = [
 		{ code: "fr", label: "Français", flag: "🇫🇷" },
 		{ code: "en", label: "English", flag: "🇬🇧" },
-		{ code: "es", label: "Español", flag: "🇪🇸" },
 	];
 
 	const defaultLanguage = "en";
