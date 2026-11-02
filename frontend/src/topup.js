@@ -42,13 +42,20 @@ async function creditInPlace(event) {
 
 	const form = event.currentTarget;
 	const dialog = form.closest('dialog');
-	for (const button of dialog.querySelectorAll('button[type=submit]')) {
+	const buttons = [...dialog.querySelectorAll('button[type=submit]')];
+	// The packs too small for the page stay disabled after a failure
+	const enabled = buttons.filter((button) => !button.disabled);
+	for (const button of buttons) {
 		button.disabled = true;
 	}
 
 	const result = await postTopup(form);
 	if (typeof result?.coins !== 'number') {
 		dialog.querySelector('[data-shop-topup-error]').hidden = false;
+		for (const button of enabled) {
+			button.disabled = false;
+		}
+		form.querySelector('button[type=submit]')?.focus();
 		return;
 	}
 	dialog.close();

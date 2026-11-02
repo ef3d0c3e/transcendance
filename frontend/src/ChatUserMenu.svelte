@@ -1,6 +1,10 @@
-<script>
-	import { onMount } from 'svelte';
+<!--
+    Actions on a chat user, behind their name: a disclosure (a button with
+    aria-expanded) showing plain buttons and a link, which Tab goes through.
+    Escape closes it and gives the focus back to the name.
+-->
 
+<script>
 	// `onMessage` is left out where a conversation with the user is already shown
 	let { username, labels, ignored, onMessage, onIgnore, onUnignore, class: className = '' } = $props();
 
@@ -18,6 +22,8 @@
 	let up = $state(false);
 	let root = $state(undefined);
 	let trigger = $state(undefined);
+	// Unique per menu: one per message of the chat
+	const menuId = $props.id();
 
 	function toggle() {
 		open = !open;
@@ -42,9 +48,13 @@
 		}
 	}
 
-	onMount(() => {
+	// Listens to the page only while open: there is a menu per chat message
+	$effect(() => {
+		if (!open) {
+			return undefined;
+		}
 		function handleOutsidePointer(event) {
-			if (open && !root?.contains(event.target)) {
+			if (!root?.contains(event.target)) {
 				open = false;
 			}
 		}
@@ -58,8 +68,8 @@
 		bind:this={trigger}
 		type="button"
 		class="chat-user-trigger {className}"
-		aria-haspopup="menu"
 		aria-expanded={open}
+		aria-controls={menuId}
 		title={labels.labelUserMenu}
 		onclick={toggle}
 	>
@@ -67,16 +77,16 @@
 	</button>
 
 	{#if open}
-		<span class="chat-user-menu" class:is-up={up} role="menu" aria-label={username}>
+		<span class="chat-user-menu" class:is-up={up} id={menuId} role="group" aria-label={username}>
 			{#if onMessage}
-				<button type="button" role="menuitem" onclick={() => pick(onMessage)}>{labels.labelMessageUser}</button>
+				<button type="button" onclick={() => pick(onMessage)}>{labels.labelMessageUser}</button>
 			{/if}
-			<a role="menuitem" href="/profile/{encodeURIComponent(username)}">{labels.labelViewProfile}</a>
+			<a href="/profile/{encodeURIComponent(username)}">{labels.labelViewProfile}</a>
 			{#if ignored}
-				<button type="button" role="menuitem" onclick={() => pick(onUnignore)}>{labels.labelUnignore}</button>
+				<button type="button" onclick={() => pick(onUnignore)}>{labels.labelUnignore}</button>
 			{:else}
 				{#each DURATIONS as [duration, label] (duration)}
-					<button type="button" role="menuitem" class="is-danger" onclick={() => pick(() => onIgnore(duration))}>
+					<button type="button" class="is-danger" onclick={() => pick(() => onIgnore(duration))}>
 						{labels[label]}
 					</button>
 				{/each}

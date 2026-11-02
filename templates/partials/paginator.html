@@ -4,7 +4,7 @@
 	{{ if gt .Data.Current 1 }}
 	<li><a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}" aria-label={{ .T "paginator-label-previous" }} rel="prev">‹</a></li>
 	{{ else }}
-	<li><span aria-disabled="true">‹</span></li>
+	<li><span class="is-disabled" aria-hidden="true">‹</span></li>
 	{{ end }}
 	{{ if gt .Data.Current 2 }}
 		<li><a href="{{ .Data.Url }}{{ sub .Data.Current 2 }}">{{ sub .Data.Current 2 }}</a></li>
@@ -12,7 +12,7 @@
 	{{ if gt .Data.Current 1 }}
 		<li><a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}">{{ sub .Data.Current 1 }}</a></li>
 	{{ end }}
-		<li><span class="is-current">{{ .Data.Current }}</span></li>
+		<li><span class="is-current" aria-current="page">{{ .Data.Current }}</span></li>
 	{{ if le .Data.Current (sub .Data.Total 1) }}
 		<li><a href="{{ .Data.Url }}{{ add .Data.Current 1 }}">{{ add .Data.Current 1 }}</a></li>
 	{{ end }}
@@ -22,7 +22,7 @@
 	{{ if lt .Data.Current .Data.Total }}
 		<li><a href="{{ .Data.Url }}{{ add .Data.Current 1 }}" aria-label={{ .T "paginator-label-next" }} rel="next">›</a></li>
 	{{ else }}
-		<li><span aria-disabled="true">›</span></li>
+		<li><span class="is-disabled" aria-hidden="true">›</span></li>
 	{{ end }}
 	</ul>
 </nav>
