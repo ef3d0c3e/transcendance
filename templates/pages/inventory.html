@@ -38,9 +38,8 @@
 
 	{{ template "inventory-tabs" . }}
 
-	<!-- Sales made without reloading say what they did here (frontend/src/sell.js).
-	     The live region is in the page from the start, the message shown in it
-	     is announced -->
+	<!-- A live region from the start, so what a sale made without reloading
+	     writes in (frontend/src/sell.js) is announced -->
 	<div role="status">
 		<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}"
 			data-inventory-notice tabindex="-1"{{ if not .Data.Notice.Message }} hidden{{ end }}>{{ .Data.Notice.Message }}</p>
