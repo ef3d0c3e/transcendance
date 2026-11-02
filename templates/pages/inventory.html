@@ -168,11 +168,19 @@
 	{{ end }}
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
+		{{/* Boosters to open are links to their opening, which works without
+		JavaScript; it only keeps a drag to tilt them from following them */}}
 		{{ with .Data.Pile }}
-		<div class="inventory-booster"{{ if not .PileEmpty }} data-booster-open="{{ .PileOpen }}"
-			data-booster-label="{{ .PileLabel }}"{{ end }}>
+		{{ if .PileEmpty }}
+		<div class="inventory-booster">
 			{{ template "booster-pile" . }}
 		</div>
+		{{ else }}
+		<a class="inventory-booster" href="{{ .PileOpen }}" draggable="false" data-booster-open="{{ .PileOpen }}"
+			data-booster-label="{{ .PileLabel }}" aria-label="{{ .PileLabel }}, {{ .PileCountLabel }}">
+			{{ template "booster-pile" . }}
+		</a>
+		{{ end }}
 		{{ end }}
 		{{ range $val := .Data.Items }}
 		{{ if $val.Empty }}
@@ -185,10 +193,11 @@
 			</div>
 		</div>
 		{{ else if eq (len $.Data.Viewed) 0 }}
-		<div class="inventory-booster" data-booster-open="/opening?booster={{ $val.BoosterID }}"
-			data-booster-label="{{ $val.Label }}">
+		<a class="inventory-booster" href="/opening?booster={{ $val.BoosterID }}" draggable="false"
+			data-booster-open="/opening?booster={{ $val.BoosterID }}" data-booster-label="{{ $val.Label }}"
+			aria-label="{{ $val.Label }}, {{ $.T "inventory-booster-count" "count" $val.Data.CollectionStack }}">
 			{{ template "collection" $val }}
-		</div>
+		</a>
 		{{ else }}
 		<div class="inventory-booster">
 			{{ template "collection" $val }}

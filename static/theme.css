@@ -481,13 +481,24 @@ header nav {
     }
 }
 
-/* Logging out is the neutral action */
+/* Logging out is the neutral action, a form posting to /api/logout */
+.nav-logout-form {
+    display: flex;
+    margin: 0;
+}
+
+header.is-compact .nav-logout-form .nav-logout {
+    flex: 1;
+}
+
 .nav-logout {
     color: var(--color-text);
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--color-border-2);
 
-    &:hover {
+    &:hover,
+    &:active {
+        color: var(--color-text);
         background: var(--color-bg-4);
     }
 }
@@ -2252,11 +2263,18 @@ section {
     }
 }
 
-/* Booster tile, clicking it asks to open the booster */
+/* Booster tile, a link opening the booster when it has some */
 .inventory-booster {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+        color: inherit;
+    }
 
     .card-container {
         cursor: pointer;
@@ -2278,7 +2296,7 @@ section {
     }
 
     &:focus-visible {
-        outline: 2px solid var(--color-accent-primary);
+        outline: 3px solid var(--color-accent-secondary);
         outline-offset: 4px;
         border-radius: 1rem;
     }

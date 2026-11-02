@@ -421,6 +421,7 @@ shop-coins = coins
 shop-coins-locked = { $amount } up in trades
 
 index-title = Transcendance, collect trading cards
+meta-description = Transcendance is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
 index-heading = Collect, trade and show off your cards
 index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
 index-stat-cards = { $count ->
@@ -563,7 +564,7 @@ trade-menu-loading = Loading…
 trade-menu-increase = Add one
 trade-menu-decrease = Remove one
 trade-menu-error-network = Unable to contact the server
-trade-menu-noscript = The trade menu needs JavaScript
+trade-menu-noscript = Building a trade offer needs JavaScript, to pick the cards of both inventories. Without it, you can still accept, decline or cancel your offers from your trades.
 trade-error-settle = This trade offer cannot be completed anymore
 trade-error-invalid = Invalid trade offer
 trade-error-internal = Failed to save the trade offer

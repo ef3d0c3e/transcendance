@@ -421,6 +421,7 @@ shop-coins = pièces
 shop-coins-locked = { $amount } dans des échanges
 
 index-title = Transcendance, collectionnez des cartes
+meta-description = Transcendance est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
 index-heading = Collectionnez, troquez et exposez vos cartes
 index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
 index-stat-cards = { $count ->
@@ -563,7 +564,7 @@ trade-menu-loading = Chargement…
 trade-menu-increase = Ajouter un exemplaire
 trade-menu-decrease = Retirer un exemplaire
 trade-menu-error-network = Impossible de contacter le serveur
-trade-menu-noscript = Le menu d’échange nécessite JavaScript
+trade-menu-noscript = Préparer une offre d'échange nécessite JavaScript, pour choisir les cartes des deux inventaires. Sans lui, vous pouvez toujours accepter, refuser ou annuler vos offres depuis vos échanges.
 trade-error-settle = Cette offre d’échange ne peut plus être complétée
 trade-error-invalid = Offre d’échange invalide
 trade-error-internal = Échec de l’enregistrement de l’offre
