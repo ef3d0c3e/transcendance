@@ -143,7 +143,6 @@ func RegisterRoutes(
 	// shop.go
 	router.GET("/shop", controller.ShopGet)
 	router.POST("/shop/topup", controller.ShopTopupPost)
-	router.POST("/shop/buy", controller.ShopBuyPost)
 	router.POST("/shop/sell", controller.ShopSellPost)
 	router.POST("/shop/sell-duplicates", controller.ShopSellDuplicatesPost)
 }

@@ -148,7 +148,6 @@ type inventoryView struct {
 	Count int64
 	// Count shown in each tab
 	TotalCards       int64
-	TotalBoosters    int64
 	TotalCollections int64
 	// Daily streak section, shown on one's own inventory
 	Streak *streakTile
@@ -208,8 +207,6 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		switch {
 		case searching:
 			count = dc.Renderer.T(c, "inventory-search-count", "count", int(v.Count))
-		case v.Tab == inventoryTabBoosters:
-			count = dc.Renderer.T(c, "inventory-booster-count", "count", int(v.Count))
 		case v.Tab == inventoryTabCollections:
 			count = dc.Renderer.T(c, "catalog-collection-count", "count", int(v.Count))
 		default:
@@ -267,7 +264,6 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"TabCardsUrl":    tabUrl(inventoryTabCards),
 		"TabBoostersUrl": tabUrl(inventoryTabBoosters),
 		"TotalCards":     v.TotalCards,
-		"TotalBoosters":  v.TotalBoosters,
 		"Streak":         v.Streak,
 		"Pile":           v.Pile,
 		// Collections are part of the catalog: the same for every user
@@ -305,12 +301,10 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if v.Tab == inventoryTabBoosters && viewed == "" {
 		// Coins up in pending trades are left out of the balance and said apart
 		coins := user.FreeCoins()
-		fields["Coins"] = coins
 		fields["CoinsLabel"] = dc.Renderer.T(c, "shop-price", "amount", coins)
 		if locked := user.Coins - coins; locked > 0 {
 			fields["CoinsLockedLabel"] = dc.Renderer.T(c, "shop-coins-locked", "amount", int(locked))
 		}
-		fields["MaxQuantity"] = controllers.MaxBuyQuantity
 		fields["Topups"] = controllers.TopupChoices(c, dc.Renderer)
 	}
 	if v.Tab == inventoryTabFoil {
@@ -484,7 +478,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		dc.renderInventory(c, user, v)
 	}
 
-	if v.TotalCards, v.TotalBoosters, err = dc.inventoryCounts(userID); err != nil {
+	// Tab counts
+	if v.TotalCards, err = dc.countCards(userID); err != nil {
 		fail("counts", err)
 		return
 	}
@@ -519,7 +514,6 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			return
 		}
 		pile = &accrued
-		v.TotalBoosters += int64(pile.Count)
 	}
 
 	if v.Tab == inventoryTabCollections {
@@ -779,7 +773,6 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 		Error; err != nil {
 		return err
 	}
-	v.Count = v.TotalBoosters
 
 	byCollection := make(map[uint][]boosterStack)
 	for _, stack := range stacks {
@@ -788,6 +781,12 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 			continue
 		}
 		byCollection[stack.CollectionID] = append(byCollection[stack.CollectionID], stack)
+	}
+
+	// The collection's progress shown under each tile
+	collected, err := dc.collectedCards(userID)
+	if err != nil {
+		return err
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
@@ -801,18 +800,21 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 		if err != nil {
 			return fmt.Errorf("collection %d: %w", collection.ID, err)
 		}
-
-		// None left: a grayed tile selling the shop's booster
+		total := len(collection.Cards)
+		percent := 0
+		if total > 0 {
+			percent = collected[collection.ID] * 100 / total
+		}
+		// None left: the tile leads to the pack opening page, where some
+		// are bought
 		if len(collectionStacks) == 0 {
-			data["CollectionEmpty"] = true
-			price := controllers.BoosterPrice(collection.ID)
 			items = append(items, map[string]any{
-				"Data":         data,
-				"Empty":        true,
-				"CollectionID": collection.ID,
-				"Title":        data["CollectionTitle"],
-				"Price":        price,
-				"PriceLabel":   dc.Renderer.T(c, "shop-price", "amount", price),
+				"Data":    data,
+				"Open":    fmt.Sprintf("/opening?collection=%d", collection.ID),
+				"Label":   dc.Renderer.T(c, "inventory-booster-buy", "name", data["CollectionTitle"]),
+				"Owned":   collected[collection.ID],
+				"Total":   total,
+				"Percent": percent,
 			})
 			continue
 		}
@@ -821,11 +823,15 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 			stackData := maps.Clone(data)
 			// The booster keeps the size it was acquired with
 			stackData["CollectionDescription"] = dc.Renderer.T(c, "collection-booster", "count", int(stack.Size))
+			// Said in the tile's accessible name, no longer displayed
 			stackData["CollectionStack"] = stack.Count
 			items = append(items, map[string]any{
-				"Data":      stackData,
-				"BoosterID": stack.BoosterID,
-				"Label":     dc.Renderer.T(c, "inventory-booster-open", "name", data["CollectionTitle"]),
+				"Data":    stackData,
+				"Open":    fmt.Sprintf("/opening?booster=%d", stack.BoosterID),
+				"Label":   dc.Renderer.T(c, "inventory-booster-open", "name", data["CollectionTitle"]),
+				"Owned":   collected[collection.ID],
+				"Total":   total,
+				"Percent": percent,
 			})
 		}
 	}
@@ -836,32 +842,17 @@ func (dc *DataController) inventoryBoosters(c *gin.Context, userID uint, own boo
 	return nil
 }
 
-func (dc *DataController) inventoryCounts(userID uint) (cards int64, boosters int64, err error) {
-	if err = dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&cards).Error; err != nil {
-		return
-	}
-	err = dc.DB.Model(&models.Booster{}).Where("owner_id = ?", userID).Count(&boosters).Error
-	return
+// Number of cards a user owns, shown in the inventory tabs
+func (dc *DataController) countCards(userID uint) (int64, error) {
+	var count int64
+	err := dc.DB.Model(&models.Card{}).Where("owner_id = ?", userID).Count(&count).Error
+	return count, err
 }
 
 func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *inventoryView) error {
-	// Distinct cards owned, by collection
-	var rows []struct {
-		CollectionID int
-		Owned        int
-	}
-	if err := dc.DB.
-		Model(&models.Card{}).
-		Select("FLOOR(card_id / 1000) AS collection_id, COUNT(DISTINCT card_id) AS owned").
-		Where("owner_id = ?", userID).
-		Group("FLOOR(card_id / 1000)").
-		Scan(&rows).
-		Error; err != nil {
+	owned, err := dc.collectedCards(userID)
+	if err != nil {
 		return err
-	}
-	owned := make(map[int]int, len(rows))
-	for _, row := range rows {
-		owned[row.CollectionID] = row.Owned
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
@@ -898,6 +889,29 @@ func (dc *DataController) inventoryCollections(c *gin.Context, userID uint, v *i
 	return nil
 }
 
+// Distinct cards owned, by collection id
+func (dc *DataController) collectedCards(userID uint) (map[int]int, error) {
+	var rows []struct {
+		CollectionID int
+		Owned        int
+	}
+	if err := dc.DB.
+		Model(&models.Card{}).
+		Select("FLOOR(card_id / 1000) AS collection_id, COUNT(DISTINCT card_id) AS owned").
+		Where("owner_id = ?", userID).
+		Group("FLOOR(card_id / 1000)").
+		Scan(&rows).
+		Error; err != nil {
+		return nil, err
+	}
+	collected := make(map[int]int, len(rows))
+	for _, row := range rows {
+		collected[row.CollectionID] = row.Owned
+	}
+	return collected, nil
+}
+
+// Global IDs of the cards a user owns, once each
 func (dc *DataController) ownedCardIDs(userID uint) ([]uint, error) {
 	var owned []uint
 	err := dc.DB.

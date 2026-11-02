@@ -2,7 +2,7 @@
 	import { onMount, tick } from "svelte";
 	import { openTopup, updateNavBalance } from "./topup.js";
 	import { apiFetch } from "./api.js";
-	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
+	import { loadMuted, packSounds, saveMuted, unlockSounds } from "./pack-sounds.js";
 	import { loadStill, saveStill } from "./pack-motion.js";
 
 	let {
@@ -12,7 +12,6 @@
 		errorLabel,
 		againLabel,
 		coins: initialCoins = 0,
-		autostart = false,
 		// Names of the sound and animation switches, which tell their state
 		// with aria-pressed and an icon
 		soundLabel = "Sound",
@@ -571,13 +570,20 @@
 			// Updated once the cards are revealed, not to spoil them
 			updatePageInfo(result);
 			revealPage();
-			// Its light stays, only its label changes
-			openButton.querySelector(".pack-open-label").textContent = retryLabel ?? openLabel;
+			// Their light stays, only their labels change
+			const label = retryLabel ?? openLabel;
+			openButton.querySelector(".pack-open-label").textContent = label;
 			openButton.hidden = !chained;
 			// Default boosters have none to buy: the page ends with the pile
 			const buyable = !chained && Boolean(buyButton);
 			if (buyButton) {
 				buyButton.hidden = chained;
+				// One was opened: the buy button says so too, its accessible
+				// name keeping the price
+				buyButton.querySelector(".pack-buy-label").textContent = label;
+				if (buyButton.dataset.retryAria) {
+					buyButton.setAttribute("aria-label", buyButton.dataset.retryAria);
+				}
 			}
 			// Calls for the next opening, until it is clicked
 			const next = chained ? openButton : buyButton;
@@ -598,20 +604,6 @@
 			busy = false;
 			setButtonsDisabled(false);
 			focusNext();
-		}
-	}
-
-	// Open right away when the browser lets the sounds play. Otherwise they
-	// would miss the spin: the page shows, its button calling for the click.
-	async function openOnArrival(open) {
-		if (open && (muted || (await soundsAllowed()))) {
-			openPack();
-			return;
-		}
-		revealPage();
-		if (open) {
-			openButton?.classList.add("is-ready");
-			openButton?.focus();
 		}
 	}
 
@@ -708,8 +700,8 @@
 		unlockSounds();
 		buyButton?.addEventListener("click", buyOrTopUp);
 
-		// Coming from the inventory's open button: open the owned booster
-		openOnArrival(autostart);
+		// The page shows, its button calling for the click
+		revealPage();
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);

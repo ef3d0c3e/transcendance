@@ -2267,11 +2267,12 @@ section {
     }
 }
 
-/* Booster tile, a link opening the booster when it has some */
+/* Booster tile, a link to its pack opening page */
 .inventory-booster {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 0.75rem;
 
     color: inherit;
     text-decoration: none;
@@ -2283,32 +2284,6 @@ section {
     .card-container {
         cursor: pointer;
     }
-}
-
-/* No booster of this collection left: grayed, clicking buys some */
-.inventory-booster.is-empty {
-    cursor: pointer;
-
-    .card-container {
-        filter: grayscale(0.85) opacity(0.6);
-        transition: filter 200ms ease;
-    }
-
-    &:hover .card-container,
-    &:focus-visible .card-container {
-        filter: grayscale(0.3) opacity(0.9);
-    }
-
-    &:focus-visible {
-        outline: 3px solid var(--color-accent-secondary);
-        outline-offset: 4px;
-        border-radius: 1rem;
-    }
-}
-
-.collection-stack.collection-stack-empty {
-    color: var(--color-text-muted);
-    background: var(--color-bg-4);
 }
 
 /* Balance and coin top-up, above the boosters */
@@ -2340,29 +2315,6 @@ section {
         width: 1.2em;
         height: 1.2em;
     }
-}
-
-.shop-booster-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.65rem;
-}
-
-.shop-price-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.35em;
-
-    padding: 0.35em 0.9em;
-
-    font-weight: 650;
-    color: var(--color-text);
-
-    background: var(--color-bg-2);
-    border: 1px solid var(--color-border-1);
-    border-radius: 999px;
-    box-shadow: 0 4px 12px var(--color-shadow);
 }
 
 /* Outcome of buying boosters or coins */

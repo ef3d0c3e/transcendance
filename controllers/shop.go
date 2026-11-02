@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -26,9 +25,7 @@ const defaultBoosterPrice = 250
 // boosterPrices overrides defaultBoosterPrice per collection ID.
 var boosterPrices = map[int]uint{}
 
-// maxBuyQuantity caps the boosters of one checkout, and the stepper of the buy popup.
-const maxBuyQuantity = 10
-
+// boosterPileCap is how many default boosters a pile holds at most.
 const boosterPileCap = 5
 
 const boosterPileInterval = 10 * time.Minute
@@ -46,8 +43,7 @@ func dailyStreakReward(day uint) uint {
 	return dailyStreakRewards[day-1]
 }
 
-const MaxBuyQuantity = maxBuyQuantity
-
+// boosterPrice returns the coin price of one booster of a collection.
 func boosterPrice(collectionID int) uint {
 	if price, ok := boosterPrices[collectionID]; ok {
 		return price
@@ -167,8 +163,6 @@ func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopN
 		return ShopNotice{Message: renderer.T(c, "collection-error-not-found"), Error: true}
 	case "funds":
 		return ShopNotice{Message: renderer.T(c, "shop-error-funds"), Error: true}
-	case "quantity":
-		return ShopNotice{Message: renderer.T(c, "shop-error-quantity", "max", maxBuyQuantity), Error: true}
 	case "opening":
 		return ShopNotice{Message: renderer.T(c, "pack-opening-error-internal"), Error: true}
 	case "sell-card", "sell-quantity", "sell-missing", "sell-locked", "sell-none", "sell-internal":
@@ -188,85 +182,8 @@ func (sc *Controller) ShopGet(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, target)
 }
 
-var errInsufficientFunds = errors.New("insufficient funds")
-
-// ShopBuyPost redirects, so refreshing the shop cannot buy twice.
-func (sc *Controller) ShopBuyPost(c *gin.Context) {
-	user := GetAuthenticatedUser(c)
-	if user == nil {
-		c.Redirect(http.StatusSeeOther, "/login")
-		return
-	}
-
-	id, err := strconv.Atoi(c.PostForm("collection"))
-	if err != nil {
-		c.Redirect(http.StatusSeeOther, "/inventory?error=collection")
-		return
-	}
-	collection := sc.Data.GetCollection(id)
-	if collection == nil {
-		c.Redirect(http.StatusSeeOther, "/inventory?error=collection")
-		return
-	}
-
-	quantity := 1
-	if raw := c.PostForm("quantity"); raw != "" {
-		n, err := strconv.Atoi(raw)
-		if err != nil || n < 1 || n > maxBuyQuantity {
-			c.Redirect(http.StatusSeeOther, "/inventory?error=quantity")
-			return
-		}
-		quantity = n
-	}
-
-	total := boosterPrice(collection.ID) * uint(quantity)
-	now := time.Now()
-	boosters := make([]models.Booster, quantity)
-	for i := range boosters {
-		boosters[i] = models.Booster{
-			CollectionID: uint(collection.ID),
-			Size:         uint(collection.BoosterSize),
-			Acquired:     now,
-			OwnerID:      user.ID,
-		}
-	}
-
-	err = sc.DB.Transaction(func(tx *gorm.DB) error {
-		// Locked, so no offer can commit coins between the check and the debit
-		if err := LockUsers(tx, user.ID); err != nil {
-			return err
-		}
-		// Coins up in pending trades cannot pay for a booster
-		locked, err := TradeCommittedCoins(tx, user.ID)
-		if err != nil {
-			return err
-		}
-		// Conditional debit, so concurrent purchases cannot overdraw
-		result := tx.Model(&models.User{}).
-			Where("id = ? AND coins >= ?", user.ID, total+locked).
-			Update("coins", gorm.Expr("coins - ?", total))
-		if result.Error != nil {
-			return result.Error
-		}
-		if result.RowsAffected == 0 {
-			return errInsufficientFunds
-		}
-		return tx.Create(&boosters).Error
-	})
-
-	switch {
-	case errors.Is(err, errInsufficientFunds):
-		c.Redirect(http.StatusSeeOther, "/inventory?error=funds")
-	case err != nil:
-		log.Printf("WARN failed to sell %d boosters of collection %d to user %d: %s", quantity, collection.ID, user.ID, err)
-		c.Redirect(http.StatusSeeOther, "/inventory?error=internal")
-	default:
-		// Straight to opening the first one, the page goes on with the rest
-		c.Redirect(http.StatusSeeOther, "/opening?booster="+strconv.FormatUint(uint64(boosters[0].ID), 10))
-	}
-}
-
-// ShopTopupPost redirects, so refreshing the shop cannot credit a pack twice.
+// ShopTopupPost credits the coins of a pack to the logged in account.
+// The reply is a redirect so refreshing the shop cannot credit a pack twice.
 func (sc *Controller) ShopTopupPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {

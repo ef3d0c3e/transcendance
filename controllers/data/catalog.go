@@ -137,7 +137,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	}
 	// Keep the viewed inventory's tabs and counts over its collection cards.
 	if v.Scope != nil && v.OwnerID != 0 {
-		cards, boosters, err := dc.inventoryCounts(v.OwnerID)
+		cards, err := dc.countCards(v.OwnerID)
 		if err != nil {
 			log.Printf("WARN failed to count the inventory of user %d: %s", v.OwnerID, err)
 		} else {
@@ -159,7 +159,6 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 			fields["TabBoostersUrl"] = tabURL(inventoryTabBoosters)
 			fields["TabCollectionsUrl"] = tabURL(inventoryTabCollections)
 			fields["TotalCards"] = cards
-			fields["TotalBoosters"] = boosters
 			fields["TotalCollections"] = len(dc.Data.Collections)
 		}
 	}

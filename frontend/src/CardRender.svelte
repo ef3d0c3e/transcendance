@@ -8,9 +8,9 @@
 	const CARD_SELECTOR = ".card-container";
 	const DEFAULT_MAX_TILT = 20; // degrees, overridden by data-tilt-max
 	// Mount points whose components add cards after the page loaded (pack
-	// reels, trade menu, trade-up result, shop preview): only they are
-	// watched, not the chat and the rest of the page
-	const DYNAMIC_ROOTS = "#pack-opening, #trade-menu, #tradeup-result, #shop-buy-popup";
+	// reels, trade menu, trade-up result): only they are watched, not the
+	// chat and the rest of the page
+	const DYNAMIC_ROOTS = "#pack-opening, #trade-menu, #tradeup-result";
 
 	// Data attributes and the CSS variables they set
 	const EFFECT_VARS = {

@@ -9,3 +9,5 @@ docker/.env
 docker/data/
 # Local tooling configuration
 .mcp.json
+package-lock.json
+package.json

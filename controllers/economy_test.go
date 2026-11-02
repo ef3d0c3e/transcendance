@@ -317,7 +317,7 @@ func TestBoosterPileFull(t *testing.T) {
 	require.NotContains(t, body, "booster-pile-empty")
 }
 
-func TestBoosterPileCountedInTotals(t *testing.T) {
+func TestBoosterPileAmongStacks(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "pile3", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "pile3", "foo-bar-baz-qux")
@@ -326,15 +326,14 @@ func TestBoosterPileCountedInTotals(t *testing.T) {
 	setBoosterPile(t, "pile3", 3, &nextAt)
 
 	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
+	// The pile holds its count on its tile, next to the collection stacks
 	require.Contains(t, body, `<span class="booster-pile-count">×3</span>`)
-	// The pile counts as boosters, next to the collection stacks
-	require.Contains(t, body, `<p class="inventory-count">5 boosters</p>`)
-	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
-	// The pile and one stack to open, the other collections are only on sale
-	require.Equal(t, 2, strings.Count(body, `data-booster-label=`))
-
-	body = getInventory(t, router, cookie, "/inventory?tab=cards")
-	require.Contains(t, body, `<span class="inventory-tab-count">5</span>`)
+	// No count sums them up, not on the tab nor next to the title
+	require.NotContains(t, body, `<p class="inventory-count">`)
+	require.NotContains(t, body, `Boosters <span`)
+	// The pile and one stack to open, the other tiles lead to buy some
+	require.Equal(t, 2, strings.Count(body, `data-booster-label="Open booster `))
+	require.Equal(t, len(tests.Data.Collections)-1, strings.Count(body, `data-booster-label="Buy booster `))
 }
 
 func TestBoosterPileOfOtherUser(t *testing.T) {
