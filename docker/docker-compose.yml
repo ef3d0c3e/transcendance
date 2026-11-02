@@ -455,6 +455,7 @@ services:
       - --cluster.listen-address=
     volumes:
       - ./alertmanager/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/start.sh:/etc/alertmanager/start.sh:ro
       - ${DATA_DIR:-./data}/alertmanager:/alertmanager
     healthcheck:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9093/alertmanager/-/healthy"]
