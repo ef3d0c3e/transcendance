@@ -259,7 +259,7 @@ func TestOpenBoosterFoilCardsNotNew(t *testing.T) {
 	cookie := login(t, router, "packnew2", "foo-bar-baz-qux")
 
 	// One foil copy of every card of the dev collection
-	for _, id := range []uint{cardPythagorean, cardFlyingScotsman, cardMcMurdo, cardFordT, cardTungsten} {
+	for _, id := range []uint{cardPythagorean, cardFlyingScotsman, cardMcMurdo, cardFordT, cardRosetta} {
 		giveCardAt(t, "packnew2", id, "foil1", time.Now())
 	}
 
