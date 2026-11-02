@@ -11,7 +11,14 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"golang.org/x/text/language"
+	"golang.org/x/text/message"
 )
+
+// Format a count as the English pages render it, digits grouped by thousands
+func englishCount(n int) string {
+	return message.NewPrinter(language.English).Sprintf("%d", n)
+}
 
 // Get a page as a visitor, without bidi isolation marks
 func getPage(t *testing.T, router *gin.Engine, target string) string {
@@ -31,7 +38,7 @@ func TestCatalogListsEveryCard(t *testing.T) {
 	require.Equal(t, []string{
 		"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Rosetta Stone",
 	}, cardTitles(body)[:5])
-	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d cards</p>`, len(tests.Data.Cards)))
+	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%s cards</p>`, englishCount(len(tests.Data.Cards))))
 	// Only cards: collections are in the inventory
 	require.NotContains(t, body, "inventory-tab")
 	require.NotContains(t, body, "/collections/search/")
