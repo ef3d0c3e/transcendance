@@ -24,9 +24,6 @@ const (
 	cardRosetta        = 1005
 )
 
-// Global ID of Tungsten, a card of the elements collection
-const cardTungsten = 8074
-
 func giveCards(t *testing.T, username string, cardID uint, count int) {
 	var user models.User
 	require.NoError(t, tests.DB.Where("username = ?", username).First(&user).Error)
