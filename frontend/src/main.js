@@ -282,6 +282,20 @@ import { apiFetch } from './api.js';
 	}
 }
 
+// On phones the inventory tabs scroll sideways (static/theme.css): the
+// current one is brought into view, without scrolling the page itself
+for (const tabs of document.querySelectorAll('.inventory-tabs')) {
+	const current = tabs.querySelector('[aria-current="page"]');
+	if (!current || tabs.scrollWidth <= tabs.clientWidth) {
+		continue;
+	}
+	const tabsBox = tabs.getBoundingClientRect();
+	const box = current.getBoundingClientRect();
+	if (box.left < tabsBox.left || box.right > tabsBox.right) {
+		tabs.scrollLeft += box.left - tabsBox.left - ((tabsBox.width - box.width) / 2);
+	}
+}
+
 // Inventory boosters are links to their opening: dragging one to tilt it
 // isn't a click on it
 {

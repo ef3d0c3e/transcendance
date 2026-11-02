@@ -190,7 +190,8 @@
 		margin: 1ch 0.7ch;
 		padding: 0 0.3ch;
 
-		text-align: justify;
+		/* Justified, the narrow card stretches its few words apart */
+		text-align: start;
 		line-height: 1.1;
 		color: var(--color-text);
 	}
