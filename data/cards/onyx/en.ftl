@@ -1,0 +1,2 @@
+title = Onyx
+description = Onyx is a typically black-and-white banded variety of agate, a silicate mineral. The bands can also be monochromatic with alternating light and dark bands. Sardonyx is a variety with red to brown bands alternated with black or white bands. The name "onyx" is also frequently used for level-banded (parallel-banded) agates, but in proper usage it refers to color pattern not band structure.

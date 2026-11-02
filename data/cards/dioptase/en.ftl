@@ -1,0 +1,2 @@
+title = Dioptase
+description = Dioptase is an intense emerald-green to bluish-green mineral that is cyclosilicate of copper. It is transparent to translucent. Its luster is vitreous to sub-adamantine. Its formula is Cu6Si6O18·6H2O, also reported as CuSiO2(OH)2. It has a Mohs hardness of 5, the same as tooth enamel. Its specific gravity is 3.28–3.35, and it has two perfect and one very good cleavage directions.

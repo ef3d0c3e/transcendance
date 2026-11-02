@@ -1,0 +1,2 @@
+title = Red Beryl
+description = Red beryl, formerly known as bixbite and marketed as red emerald or scarlet emerald, is an extremely rare variety of beryl as well as one of the rarest minerals on Earth. The gem gets its red color from manganese ions incorporated within the beryl crystal structure. The color of red beryl is stable up to 1,000 °C (1,830 °F). Red beryl can come in various tints like strawberry, bright ruby, cherry, and orange.

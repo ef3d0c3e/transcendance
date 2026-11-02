@@ -1,0 +1,2 @@
+title = Turquoise
+description = La turquoise est une espèce minérale composée de phosphate hydraté de cuivre et d'aluminium dont la composition chimique est CuAl6(PO4)4(OH)8·4H2O. Elle est rare et, pour ses éléments de meilleure qualité, possède de la valeur. Elle a été appréciée comme gemme et pierre ornementale depuis des millénaires, aussi bien en Égypte, en Perse, en Chine, en Mésoamérique, en Amérique du Nord et en Europe.

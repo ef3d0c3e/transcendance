@@ -1,0 +1,2 @@
+title = Zircon
+description = Zircon is a mineral belonging to the group of nesosilicates and is a source of the metal zirconium. Its chemical name is zirconium(IV) silicate, and its corresponding chemical formula is ZrSiO4. An empirical formula showing some of the range of substitution in zircon is (Zr1–y, REEy)(SiO4)1–x(OH)4x–y. Zircon precipitates from silicate melts and has relatively high concentrations of high field strength incompatible elements.

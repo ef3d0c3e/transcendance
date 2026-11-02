@@ -1,0 +1,2 @@
+title = Disthène
+description = Le disthène (agréé par l'Association internationale de minéralogie sous le nom de terme anglais de « kyanite ») est une espèce minérale du groupe des silicates, et du sous-groupe des nésosubsilicates, typique des roches métamorphiques. C'est la phase de basse température / haute pression des polymorphes de Al2SiO5. Dans le cas du disthène avec des traces de Se; Cr; Fe; Mg; Ca; K.

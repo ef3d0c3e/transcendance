@@ -1,0 +1,2 @@
+title = Gypsum
+description = Gypsum is a soft sulfate mineral composed of calcium sulfate dihydrate, with the chemical formula CaSO4·2H2O. It is widely mined and is used as a fertilizer and as the main constituent in many forms of plaster, drywall and blackboard or sidewalk chalk. Gypsum also crystallizes as translucent crystals of selenite. It forms as an evaporite mineral and as a hydration product of anhydrite.
