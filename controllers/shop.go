@@ -21,30 +21,21 @@ import (
 	"transcendance/views"
 )
 
-// defaultBoosterPrice is the coin price of one booster, for collections
-// without an entry in boosterPrices.
 const defaultBoosterPrice = 250
 
-// boosterPrices sets the coin price of one booster per collection ID.
-// Collections without an entry fall back to defaultBoosterPrice.
+// boosterPrices overrides defaultBoosterPrice per collection ID.
 var boosterPrices = map[int]uint{}
 
-// maxBuyQuantity is the most boosters of one collection a single checkout
-// sells. The buy popup advertises it so its stepper cannot exceed it.
+// maxBuyQuantity caps the boosters of one checkout, and the stepper of the buy popup.
 const maxBuyQuantity = 10
 
-// boosterPileCap is how many default boosters a pile holds at most.
 const boosterPileCap = 5
 
-// boosterPileInterval is the time between two default boosters of a pile
-// that is not full.
 const boosterPileInterval = 10 * time.Minute
 
-// dailyStreakRewards is the coin reward of each day of the connection
-// streak, day 1 first. Days past the last entry keep paying the last amount.
+// dailyStreakRewards starts at day 1. Days past the last entry keep paying the last amount.
 var dailyStreakRewards = []uint{200, 300, 500, 700, 1000}
 
-// dailyStreakReward returns the coins a streak day pays.
 func dailyStreakReward(day uint) uint {
 	if day < 1 {
 		day = 1
@@ -55,10 +46,8 @@ func dailyStreakReward(day uint) uint {
 	return dailyStreakRewards[day-1]
 }
 
-// MaxBuyQuantity is maxBuyQuantity, for the pages selling boosters
 const MaxBuyQuantity = maxBuyQuantity
 
-// boosterPrice returns the coin price of one booster of a collection.
 func boosterPrice(collectionID int) uint {
 	if price, ok := boosterPrices[collectionID]; ok {
 		return price
@@ -66,13 +55,10 @@ func boosterPrice(collectionID int) uint {
 	return defaultBoosterPrice
 }
 
-// BoosterPrice returns the coin price of one booster of a collection, as sold
-// by the shop.
 func BoosterPrice(collectionID int) uint {
 	return boosterPrice(collectionID)
 }
 
-// topupPack is one bundle of coins sold by the shop's checkout.
 type topupPack struct {
 	ID     string
 	Amount uint
@@ -80,8 +66,6 @@ type topupPack struct {
 	PriceCents uint
 }
 
-// Coins sold by the demo checkout. Crediting a pack takes no real payment:
-// see shop-topup-note.
 var topupPacks = []topupPack{
 	{ID: "small", Amount: 100, PriceCents: 99},
 	{ID: "medium", Amount: 500, PriceCents: 449},
@@ -90,7 +74,6 @@ var topupPacks = []topupPack{
 	{ID: "xxlarge", Amount: 10000, PriceCents: 4999},
 }
 
-// topupAmount returns the coins a pack credits, if the pack is on sale.
 func topupAmount(id string) (uint, bool) {
 	for _, pack := range topupPacks {
 		if pack.ID == id {
@@ -100,7 +83,6 @@ func topupAmount(id string) (uint, bool) {
 	return 0, false
 }
 
-// One coin pack on sale in the top-up popup
 type TopupChoice struct {
 	ID string
 	// Coins credited, lets the page gray out packs that fall short
@@ -109,7 +91,6 @@ type TopupChoice struct {
 	Price  string
 }
 
-// TopupChoices returns the coin packs of the top-up popup, with their labels
 func TopupChoices(c *gin.Context, renderer *views.Renderer) []TopupChoice {
 	topups := make([]TopupChoice, 0, len(topupPacks))
 	for _, pack := range topupPacks {
@@ -126,7 +107,6 @@ func TopupChoices(c *gin.Context, renderer *views.Renderer) []TopupChoice {
 	return topups
 }
 
-// ShopNotice is the message shown after buying coins or a failed purchase, if any
 type ShopNotice struct {
 	Message   string
 	Error     bool
@@ -148,7 +128,6 @@ func noticeSignature(userID uint, notice string) string {
 	return base64.RawURLEncoding.EncodeToString(mac.Sum(nil)[:16])
 }
 
-// SignedNotice is the query of a success notice for the user, with its signature
 func SignedNotice(c *gin.Context, notice string) string {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -157,14 +136,13 @@ func SignedNotice(c *gin.Context, notice string) string {
 	return notice + "&sig=" + noticeSignature(user.ID, notice)
 }
 
-// NoticeSigned reports whether the query holds the signature of the notice for the user, as SignedNotice made it
 func NoticeSigned(c *gin.Context, notice string) bool {
 	user := GetAuthenticatedUser(c)
 	return user != nil && hmac.Equal([]byte(c.Query("sig")), []byte(noticeSignature(user.ID, notice)))
 }
 
-// GetShopNotice reads the outcome of a purchase or a sale from the query. Successes are only shown when the
-// action signed them, errors claim nothing and need no signature.
+// GetShopNotice shows successes only when the action signed them: errors claim
+// nothing and need no signature.
 func GetShopNotice(c *gin.Context, renderer *views.Renderer, d *data.Data) ShopNotice {
 	if packID := c.Query("topup"); packID != "" && NoticeSigned(c, "topup="+packID) {
 		if amount, ok := topupAmount(packID); ok {
@@ -210,11 +188,9 @@ func (sc *Controller) ShopGet(c *gin.Context) {
 	c.Redirect(http.StatusSeeOther, target)
 }
 
-// errInsufficientFunds is returned when the balance does not cover the price.
 var errInsufficientFunds = errors.New("insufficient funds")
 
-// ShopBuyPost spends coins on boosters of a collection and adds them to the
-// inventory. The reply is a redirect so refreshing the shop cannot buy twice.
+// ShopBuyPost redirects, so refreshing the shop cannot buy twice.
 func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -233,7 +209,6 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 		return
 	}
 
-	// A caller that does not ask for a bulk buy gets a single booster.
 	quantity := 1
 	if raw := c.PostForm("quantity"); raw != "" {
 		n, err := strconv.Atoi(raw)
@@ -261,14 +236,12 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 		if err := LockUsers(tx, user.ID); err != nil {
 			return err
 		}
-		// Coins up in pending trades leave with those trades, so they cannot
-		// pay for a booster here
+		// Coins up in pending trades cannot pay for a booster
 		locked, err := TradeCommittedCoins(tx, user.ID)
 		if err != nil {
 			return err
 		}
-		// Debit only when the free balance covers the total, so concurrent
-		// purchases cannot overdraw.
+		// Conditional debit, so concurrent purchases cannot overdraw
 		result := tx.Model(&models.User{}).
 			Where("id = ? AND coins >= ?", user.ID, total+locked).
 			Update("coins", gorm.Expr("coins - ?", total))
@@ -293,8 +266,7 @@ func (sc *Controller) ShopBuyPost(c *gin.Context) {
 	}
 }
 
-// ShopTopupPost credits the coins of a pack to the logged in account.
-// The reply is a redirect so refreshing the shop cannot credit a pack twice.
+// ShopTopupPost redirects, so refreshing the shop cannot credit a pack twice.
 func (sc *Controller) ShopTopupPost(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -326,8 +298,8 @@ func (sc *Controller) ShopTopupPost(c *gin.Context) {
 		if err := tx.Model(&models.User{}).Where("id = ?", user.ID).Pluck("coins", &coins).Error; err != nil {
 			return err
 		}
-		// The pages compare the balance to their prices: coins up in pending
-		// trades cannot pay, so they are left out
+		// The pages compare the balance to their prices, so leave out the coins up in
+		// pending trades
 		locked, err := TradeCommittedCoins(tx, user.ID)
 		if err != nil {
 			return err

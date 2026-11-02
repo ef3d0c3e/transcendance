@@ -106,7 +106,6 @@ func TestShoutboxHubDropsSlowClients(t *testing.T) {
 	require.Contains(t, hub.users[2], fast)
 }
 
-// Pending payloads of a client
 func drain(client *shoutboxClient) []byte {
 	var got []byte
 	for {

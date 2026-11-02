@@ -38,7 +38,6 @@ type openingResponse struct {
 var cardTitleRe = regexp.MustCompile(`<h2 class="card-title">([^<]*)</h2>`)
 var cardArtworkRe = regexp.MustCompile(`/cards/([0-9]+)/thumbnail`)
 
-// One card an opening reel landed on: its global ID and the new mark it shows
 type wonCard struct {
 	ID  uint
 	New bool
@@ -84,7 +83,6 @@ func ownedCards(t *testing.T, username string) []models.Card {
 	return cards
 }
 
-// Titles of the cards each reel landed on
 func winnerTitles(t *testing.T, resp openingResponse) []string {
 	titles := make([]string, 0, len(resp.Reels))
 	for _, reel := range resp.Reels {
@@ -104,7 +102,6 @@ func winnerTitles(t *testing.T, resp openingResponse) []string {
 	return titles
 }
 
-// Titles of owned cards, which must all be in the dev collection
 func ownedTitles(t *testing.T, cards []models.Card) []string {
 	titles := make([]string, 0, len(cards))
 	for _, owned := range cards {
@@ -120,7 +117,6 @@ func ownedTitles(t *testing.T, cards []models.Card) []string {
 	return titles
 }
 
-// The cards the reels landed on, in reel order
 func wonCards(t *testing.T, reels [][]openingSlot) []wonCard {
 	t.Helper()
 	won := make([]wonCard, 0, len(reels))
@@ -145,7 +141,6 @@ func wonCards(t *testing.T, reels [][]openingSlot) []wonCard {
 	return won
 }
 
-// Global IDs of every card an account owns
 func ownedIDs(t *testing.T, username string) map[uint]bool {
 	t.Helper()
 	ids := make(map[uint]bool)
@@ -155,10 +150,8 @@ func ownedIDs(t *testing.T, username string) map[uint]bool {
 	return ids
 }
 
-// requireNewFlags checks the new marks of an opening against the copies the
-// account held before it: a card is new when it had none, where the copies
-// won before it in the same pack already count as its own. Returns how many
-// winners were marked new.
+// requireNewFlags returns how many winners were marked new: a card is new when
+// the account had no copy before, counting the ones won earlier in the same pack.
 func requireNewFlags(t *testing.T, reels [][]openingSlot, summary string, owned map[uint]bool) int {
 	t.Helper()
 	have := make(map[uint]bool, len(owned))
@@ -229,8 +222,6 @@ func TestOpenBoosterAwardsCards(t *testing.T) {
 	}
 }
 
-// The cards an account wins before it owns any are new to it, marked until
-// its own copies arrive
 func TestOpenBoosterMarksNewCards(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "packnew1", "foo-bar-baz-qux", 0)
@@ -250,8 +241,6 @@ func TestOpenBoosterMarksNewCards(t *testing.T) {
 	requireNewFlags(t, resp.Reels, resp.Summary, owned)
 }
 
-// A foil copy is a copy: the cards an account holds a foil of already are
-// not new to it
 func TestOpenBoosterFoilCardsNotNew(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "packnew2", "foo-bar-baz-qux", 0)
@@ -519,7 +508,6 @@ func TestAddBooster(t *testing.T) {
 	boosters := ownedBoosters(t, "packadd1")
 	require.Len(t, boosters, 1)
 	require.Equal(t, uint(collectionDev), boosters[0].CollectionID)
-	// Size of the collection's boosters
 	require.Equal(t, uint(5), boosters[0].Size)
 
 	rec = postForm(t, router, cookie, "/add_booster", url.Values{"collection": {"999"}})

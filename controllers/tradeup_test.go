@@ -17,12 +17,10 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// The `card` fields of a contract, one per copy taken
 func contract(values ...string) url.Values {
 	return url.Values{"card": values}
 }
 
-// `n` copies of the same card in a contract
 func copies(cardID uint, foil string, n int) []string {
 	id := strconv.FormatUint(uint64(cardID), 10)
 	if foil != "" {
@@ -39,7 +37,6 @@ func tradeup(t *testing.T, router *gin.Engine, cookie *http.Cookie, form url.Val
 	return postForm(t, router, cookie, "/tradeup", form)
 }
 
-// Number of copies of one card owned by a user
 func ownedCopies(t *testing.T, username string, cardID uint) int {
 	n := 0
 	for _, owned := range ownedCards(t, username) {
@@ -52,8 +49,7 @@ func ownedCopies(t *testing.T, username string, cardID uint) int {
 
 var tradeupOrderRe = regexp.MustCompile(`data-tradeup-order="(\d+)"`)
 
-// Places of the displayed tiles in the collection-and-rarity order, in the
-// order the tiles stand on the page
+// Places of the tiles in the collection-and-rarity order, in page order
 func tradeupOrders(body string) []string {
 	var orders []string
 	for _, match := range tradeupOrderRe.FindAllStringSubmatch(body, -1) {
@@ -321,9 +317,8 @@ func TestTradeupTabOrdersCardsByHowManyCopiesToSpend(t *testing.T) {
 	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
 	require.Equal(t, []string{"Pythagorean tiling", "McMurdo Station", "Rosetta Stone"}, cardTitles(body))
 
-	// Each tile keeps its place in the collection-and-rarity order, the one
-	// the sort control restores: the rare McMurdo first, then the commons by
-	// how many copies there are
+	// Each tile keeps its place in the collection-and-rarity order, which the sort
+	// control restores: the rare McMurdo first, then the commons by copies
 	require.Equal(t, []string{"1", "0", "2"}, tradeupOrders(body))
 }
 
@@ -344,14 +339,12 @@ func TestTradeupTabSortAndRarityControls(t *testing.T) {
 	// The highest rarity has no tier above, it never lands on the grid
 	require.NotContains(t, body, `value="legendary"`)
 
-	// The sort lists the biggest stacks first by default, the
-	// collection-and-rarity order as the alternative
+	// The sort defaults to the biggest stacks, the collection-and-rarity order being the alternative
 	require.Contains(t, body, `id="tradeup-sort"`)
 	require.Contains(t, body, `<option value="" selected>Count</option>`)
 	require.Contains(t, body, `<option value="grouped" >Collection and rarity</option>`)
 }
 
-// Copies up in pending trades leave with them, a contract cannot spend them
 func TestTradeupKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "tradeup16", "foo-bar-baz-qux", 0)

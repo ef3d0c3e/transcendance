@@ -20,7 +20,6 @@ func foilRoll(t *testing.T, router *gin.Engine, cookie *http.Cookie, target stri
 	return postForm(t, router, cookie, "/foil", url.Values{"target": {target}, "card": sacrifices})
 }
 
-// Copies of one card owned by a user, by foil ("" for plain copies)
 func ownedFoils(t *testing.T, username string, cardID uint) map[string]int {
 	foils := make(map[string]int)
 	for _, owned := range ownedCards(t, username) {
@@ -31,8 +30,8 @@ func ownedFoils(t *testing.T, username string, cardID uint) map[string]int {
 	return foils
 }
 
-// A roll is won or lost; the sacrifices go either way, the rolled card turns
-// foil or is destroyed. Rolled at the 50% cap until both outcomes were seen.
+// The sacrifices are spent either way, the rolled card turns foil or is
+// destroyed. Rolled at the 50% cap until both outcomes were seen.
 func TestFoilRouletteWinsOrDestroys(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil1", "foo-bar-baz-qux", 0)
@@ -149,7 +148,6 @@ func TestFoilRouletteLimitsSacrifices(t *testing.T) {
 	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=foil&error=count"), "A roll can sacrifice at most 100 cards")
 }
 
-// Copies up in pending trades leave with them, a roll cannot spend them
 func TestFoilRouletteKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil6", "foo-bar-baz-qux", 0)
@@ -249,7 +247,6 @@ func TestFoilRouletteTabIsNotOfferedOnOtherInventories(t *testing.T) {
 	require.Contains(t, body, `class="inventory-tab-boosters" href="/inventory?u=foil10" aria-current="page"`)
 }
 
-// A link cannot show the outcome of a roll or a contract that never happened
 func TestForgedResultLinksShowNothing(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "forged1", "foo-bar-baz-qux", 0)
@@ -264,7 +261,6 @@ func TestForgedResultLinksShowNothing(t *testing.T) {
 	require.NotContains(t, body, `id="tradeup-result"`)
 }
 
-// Rolls sent at once spend the rolled copy once
 func TestConcurrentFoilRollsSettleOnce(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "racefoil1", "foo-bar-baz-qux", 0)

@@ -21,7 +21,6 @@ import (
 )
 
 const (
-	// Time allowed to write a frame to a client
 	shoutboxWriteTimeout = 10 * time.Second
 	// Clients are pinged and their session checked this often
 	shoutboxPingInterval = 30 * time.Second
@@ -54,7 +53,6 @@ func NewShoutboxController(db *gorm.DB, renderer *views.Renderer) *ShoutboxContr
 	}
 }
 
-// Message as sent to clients
 type shoutboxMessage struct {
 	ID        uint   `json:"id"`
 	Username  string `json:"username"`
@@ -62,20 +60,17 @@ type shoutboxMessage struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-// Server to client frame
-//
-// Types:
-//   - `history`: the latest shoutbox `messages`, oldest first, the user's `conversations`, latest first, the users
-//     they `ignored`, their `locale`, and whether they are a `moderator`, sent on connection
-//   - `message`: a new shoutbox `message` was posted
-//   - `private`: a `private` message was sent to or by the user
-//   - `conversation`: the latest `privates` exchanged `with` a user, oldest first, in reply to `view`
+// Server to client frame, by type:
+//   - `history`: on connection, the latest shoutbox `messages` (oldest first), the user's `conversations`
+//     (latest first), the users they `ignored`, their `locale`, and whether they are a `moderator`
+//   - `message`: a new shoutbox `message`
+//   - `private`: a `private` message sent to or by the user
+//   - `conversation`: in reply to `view`, the latest `privates` exchanged `with` a user, oldest first
 //   - `read`: the conversation `with` a user was read in another tab
 //   - `ignored`: the users the user now `ignored`
 //   - `deleted`: a moderator deleted the shoutbox message `id`
-//   - `ack`: the client's last request succeeded
-//   - `error`: the client's last request was rejected, with the `error` code and `retryAfter` in milliseconds
-//     when rate limited
+//   - `ack`: the last request succeeded
+//   - `error`: the last request was rejected with the `error` code, and `retryAfter` in milliseconds when rate limited
 type shoutboxEvent struct {
 	Type          string               `json:"type"`
 	Locale        string               `json:"locale,omitempty"`
@@ -92,18 +87,16 @@ type shoutboxEvent struct {
 	Moderator     bool                 `json:"moderator,omitempty"`
 }
 
-// Client to server frame
-//
-// Types:
+// Client to server frame, by type:
 //   - `send`: post `body` to the shoutbox, or privately `to` a user
-//   - `view`: show the conversation `with` a user, which is marked read and returned, or none when empty. New
-//     messages of a shown conversation are read right away and don't notify.
+//   - `view`: show the conversation `with` a user, marked read and returned (none when empty). New messages of a
+//     shown conversation are read right away and don't notify
 //   - `ignore`: ignore a user (`username`) for a `duration`: `hour`, `day` or `week`
 //   - `unignore`: stop ignoring a user (`username`)
 //
 // Moderators only:
-//   - `delete`: delete the shoutbox message `id`, for everyone
-//   - `mute`: refuse the shoutbox messages of a user (`username`) for a `duration`: `hour`, `day` or `week`
+//   - `delete`: delete the shoutbox message `id` for everyone
+//   - `mute`: refuse the shoutbox messages of a user (`username`) for a `duration`, as for `ignore`
 //   - `unmute`: let a muted user (`username`) post again
 type shoutboxRequest struct {
 	Type     string  `json:"type"`
@@ -115,7 +108,7 @@ type shoutboxRequest struct {
 	ID       *uint   `json:"id"`
 }
 
-// Decode a client frame, which must be exactly one valid request with only the fields of its type
+// decodeShoutboxRequest accepts exactly one valid request with only the fields of its type
 func decodeShoutboxRequest(data []byte) (shoutboxRequest, bool) {
 	var req shoutboxRequest
 	dec := json.NewDecoder(bytes.NewReader(data))
@@ -193,7 +186,6 @@ func (sc *ShoutboxController) history(ctx context.Context, userID uint) ([]shout
 	return messages, nil
 }
 
-// The `history` event sent on connection
 func (sc *ShoutboxController) historyEvent(ctx context.Context, c *gin.Context, user *AuthenticatedUser, ignored []chatIgnoredUser) ([]byte, error) {
 	history, err := sc.history(ctx, user.ID)
 	if err != nil {
@@ -213,8 +205,8 @@ func (sc *ShoutboxController) historyEvent(ctx context.Context, c *gin.Context, 
 	})
 }
 
-// The user of the session the client connected with as it is now, false once the session is no longer valid.
-// Read again on every request: a rename or a change of rank applies to open connections too.
+// The session's user as it is now, false once the session is invalid. Read again on every request, so renames
+// and rank changes apply to open connections too
 func (sc *ShoutboxController) sessionUser(ctx context.Context, token string) (*AuthenticatedUser, bool) {
 	var user models.User
 	err := sc.DB.WithContext(ctx).
@@ -239,7 +231,6 @@ func writeShoutboxEvent(ctx context.Context, conn *websocket.Conn, payload []byt
 	return conn.Write(ctx, websocket.MessageText, payload)
 }
 
-// Queue an event for a single client
 func queueShoutboxEvent(client *shoutboxClient, event shoutboxEvent) {
 	payload, err := json.Marshal(event)
 	if err != nil {
@@ -249,8 +240,7 @@ func queueShoutboxEvent(client *shoutboxClient, event shoutboxEvent) {
 	client.queue(payload)
 }
 
-// Check a message can be posted, queues the error for the client otherwise. Returns the sanitized body, or ""
-// when it can't be posted.
+// prepare returns the sanitized body, or "" after queueing the error for the client
 func (sc *ShoutboxController) prepare(client *shoutboxClient, raw string) string {
 	body, code := sanitizeShoutboxMessage(raw)
 	if code != "" {
@@ -268,7 +258,6 @@ func (sc *ShoutboxController) prepare(client *shoutboxClient, raw string) string
 	return body
 }
 
-// How long a user stays muted in the shoutbox, 0 when they are not
 func (sc *ShoutboxController) mutedFor(ctx context.Context, userID uint) (time.Duration, error) {
 	var mute models.ShoutboxMute
 	err := sc.DB.WithContext(ctx).Where("user_id = ? AND until > ?", userID, time.Now()).Take(&mute).Error
@@ -281,7 +270,6 @@ func (sc *ShoutboxController) mutedFor(ctx context.Context, userID uint) (time.D
 	return time.Until(mute.Until), nil
 }
 
-// Save and broadcast a shoutbox message
 func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, username string, body string) {
 	sc.postMu.Lock()
 	defer sc.postMu.Unlock()
@@ -310,7 +298,7 @@ func (sc *ShoutboxController) post(ctx context.Context, client *shoutboxClient, 
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
 }
 
-// Handle a client request, returns false if the client must be disconnected
+// handle returns false if the client must be disconnected
 func (sc *ShoutboxController) handle(ctx context.Context, client *shoutboxClient, token string, req shoutboxRequest) bool {
 	// Logging out doesn't close other tabs' connections
 	user, ok := sc.sessionUser(ctx, token)
@@ -359,7 +347,6 @@ func (sc *ShoutboxController) handle(ctx context.Context, client *shoutboxClient
 	return true
 }
 
-// Delete a shoutbox message, then tell every client
 func (sc *ShoutboxController) deleteMessage(ctx context.Context, client *shoutboxClient, id uint) {
 	// Under the posting lock, so the deletion is never broadcast before the message
 	sc.postMu.Lock()
@@ -381,8 +368,7 @@ func (sc *ShoutboxController) deleteMessage(ctx context.Context, client *shoutbo
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
 }
 
-// Mute a user in the shoutbox for a duration, or let them post again when 0. Moderators cannot mute their peers
-// or admins.
+// mute lets the user post again when duration is 0. Moderators cannot mute their peers or admins
 func (sc *ShoutboxController) mute(ctx context.Context, client *shoutboxClient, moderator *AuthenticatedUser, username string, duration time.Duration) {
 	target, ok := sc.findPartner(ctx, client, username)
 	if !ok {
@@ -412,7 +398,6 @@ func (sc *ShoutboxController) mute(ctx context.Context, client *shoutboxClient, 
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
 }
 
-// Send queued events and keep the connection alive, until the context is cancelled or the connection fails
 func (sc *ShoutboxController) writeLoop(ctx context.Context, conn *websocket.Conn, client *shoutboxClient, token string) {
 	ticker := time.NewTicker(shoutboxPingInterval)
 	defer ticker.Stop()
@@ -443,9 +428,7 @@ func (sc *ShoutboxController) writeLoop(ctx context.Context, conn *websocket.Con
 	}
 }
 
-// /api/shoutbox GET: websocket connection to the shoutbox
-//
-// See `shoutboxEvent` and `shoutboxRequest` for the protocol
+// /api/shoutbox GET: the shoutbox WebSocket, see shoutboxEvent and shoutboxRequest for the protocol
 func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -454,8 +437,8 @@ func (sc *ShoutboxController) ApiShoutboxGet(c *gin.Context) {
 	}
 	token, _ := c.Cookie("session_token")
 
-	// Checks the origin matches the host, so other sites can't connect with the user's cookie.
-	// Ports are not compared, the gateway forwards the host without the port
+	// The origin must match the host, so other sites can't connect with the user's cookie. Ports are not
+	// compared: the gateway forwards the host without the port
 	host := (&url.URL{Host: c.Request.Host}).Hostname()
 	conn, err := websocket.Accept(c.Writer, c.Request, &websocket.AcceptOptions{
 		OriginPatterns: []string{host + ":*"},
