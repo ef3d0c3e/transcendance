@@ -1,0 +1,2 @@
+title = Quartz fumé
+description = Le quartz fumé est une variété de quartz qui doit sa teinte à une irradiation naturelle d'impuretés d'aluminium par des minéraux radioactifs, phénomène qui s'exagère dans le quartz morion. La couleur du quartz fumé peut varier du brun au noir. Ce changement de teinte variant selon sa durée d'exposition au rayonnement dû au granite environnant, il livre des indices sur la vitesse de surrection du terrain dans lequel on le trouve.

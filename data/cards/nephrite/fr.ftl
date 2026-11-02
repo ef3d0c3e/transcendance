@@ -1,0 +1,2 @@
+title = Néphrite
+description = La néphrite est une roche métamorphique composée essentiellement d'actinote, une variété d'amphibole de formule chimique Ca2(Mg,Fe)5Si8O22(OH)2. C'est l'une des deux roches appelées jade, l'autre étant la jadéitite, composée essentiellement de jadéite, une variété de pyroxène. La néphrite est une pierre ornementale, utilisée dans une grande variété de bijoux ou d'objets décoratifs.

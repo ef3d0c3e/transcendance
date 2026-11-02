@@ -1,0 +1,2 @@
+title = Lapis Lazuli
+description = Lapis lazuli is a deep-blue metamorphic rock used as a semi-precious stone that has been prized since antiquity for its intense color. Its name originates from the Persian word for the gem, lāžward, and serves as the root for the word for "blue" in several languages, including Spanish and Portuguese azul and English azure. Lapis lazuli is a rock composed primarily of the minerals lazurite, pyrite, diopside, and calcite.

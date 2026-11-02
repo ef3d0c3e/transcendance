@@ -1,0 +1,2 @@
+title = Muscovite
+description = La muscovite est un minéral du groupe des silicates (sous-groupe des phyllosilicates). C'est un silicate hydroxylé d'aluminium et de potassium, de composition KAl2(AlSi3O10)(OH,F)2 avec des traces de Cr, Li, Fe, V, Mn, Na, Cs, Rb, Ca, Mg et H2O. C'est le minéral le plus commun du groupe des micas; Il forme une série avec la céladonite d'une part et avec la paragonite d'autre part. Des cristaux géants peuvent atteindre 4,5 m et 77 t.
