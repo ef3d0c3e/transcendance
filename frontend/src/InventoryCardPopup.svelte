@@ -8,6 +8,7 @@
 
 <script>
 	import { onMount } from "svelte";
+	import { postSale, applySale, focusNotice } from "./sell.js";
 
 	let { target } = $props();
 
@@ -28,6 +29,8 @@
 	let sellOwned = $state(0);
 	let selling = $state(false);
 	let quantity = $state(1);
+	let error = $state("");
+	let pending = $state(false);
 
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
 	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
@@ -40,6 +43,7 @@
 	const labelTotal = $derived(target.dataset.labelTotal ?? "");
 	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
 	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	const labelError = $derived(target.dataset.labelError ?? "");
 	const sellAction = $derived(target.dataset.sellAction ?? "");
 	// The popup offers to sell only where the card carries a price and the
 	// owner has copies of it that are not up in trades
@@ -70,6 +74,7 @@
 		sellOwned = Number(card.dataset.sellOwned ?? 0);
 		selling = false;
 		quantity = 1;
+		error = "";
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -86,6 +91,31 @@
 	// Clicking the backdrop targets the dialog itself
 	function onDialogClick(e) {
 		if (e.target === dialog) close();
+	}
+
+	// Sell the copies picked without reloading, then close on the sale: the
+	// page behind the popup gets the coins, the copies and the message
+	async function onSellSubmit(e) {
+		e.preventDefault();
+		if (pending) return;
+		pending = true;
+		error = "";
+
+		const result = await postSale(e.currentTarget);
+		pending = false;
+		if (result.error) {
+			error = result.error;
+			return;
+		}
+
+		const tile = returnFocus;
+		applySale(result);
+		close();
+		// Selling the last copy takes the card out of the page, and the focus
+		// with it: the sale's message gets the focus instead
+		if (tile && !document.contains(tile)) {
+			focusNotice();
+		}
 	}
 
 	onMount(() => {
@@ -170,7 +200,8 @@
 			{/if}
 		</dl>
 		{#if sellable && selling}
-			<form class="inventory-sell-form" method="post" action={sellAction}>
+			<form class="inventory-sell-form" method="post" action={sellAction}
+				data-label-error={labelError} onsubmit={onSellSubmit}>
 				<input type="hidden" name="card" value={sellId} />
 				<input type="hidden" name="foil" value={sellFoil} />
 				<input type="hidden" name="quantity" value={quantity} />
@@ -182,9 +213,12 @@
 					</label>
 				{/if}
 				<p class="inventory-sell-total">{labelTotal}: {numberFormat.format(total)} {labelCoins}</p>
+				{#if error}
+					<p class="section-error" role="alert">{error}</p>
+				{/if}
 				<div class="inventory-popup-actions">
 					<button type="button" class="inventory-popup-neutral" onclick={close}>{labelClose}</button>
-					<button type="submit">{labelConfirm}</button>
+					<button type="submit" disabled={pending}>{labelConfirm}</button>
 				</div>
 			</form>
 		{:else}
