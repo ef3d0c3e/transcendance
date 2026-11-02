@@ -1,2 +1,2 @@
 title = Citadis 302
-description = Le Citadis est un tramway à plancher bas produit par Alstom. Au total, plus de 2 300 rames de ce modèle ont été vendues, à près de 65 villes dans le monde. Le Citadis 302, un tram moderne conçu par Alstom en 2011 long de 32 mètres pour une largeur de 2.4 mètres, utilise une voie de 1435 mm, ce qui en fait un choix pertinent pour optimiser la circulation dans les villes
+description = Le Citadis est un tramway à plancher bas produit par Alstom. Au total, plus de 2 300 rames de ce modèle ont été vendues, à près de 65 villes dans le monde. Le Citadis 302 est un tram moderne conçu par Alstom en 2011 long de 32 mètres pour une largeur de 2.4 mètres.

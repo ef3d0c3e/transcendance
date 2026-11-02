@@ -75,3 +75,4 @@ zimbabwe = Zimbabwe
 company = Company
 tramway = Tramway
 metro = Metro
+paris = Paris
