@@ -67,6 +67,20 @@
 							</select>
 							<button type="submit">{{ $.T "admin-users-rank-submit" }}<span class="sr-only"> {{ .Username }}</span></button>
 						</form>
+						<details class="admin-users-password">
+							<summary>{{ $.T "admin-users-password" }}<span class="sr-only"> {{ .Username }}</span></summary>
+							<form method="post" action="/admin/users/{{ .ID }}/password">
+								<input type="hidden" name="redirect" value="{{ $.Data.Redirect }}">
+								<label for="password-{{ .ID }}">{{ $.T "admin-users-password-new" }}</label>
+								<input type="password" id="password-{{ .ID }}" name="password" autocomplete="new-password"
+									required minlength="8" maxlength="72">
+								<label for="confirm-{{ .ID }}">{{ $.T "admin-users-password-confirm" }}</label>
+								<input type="password" id="confirm-{{ .ID }}" name="confirm" autocomplete="new-password"
+									required minlength="8" maxlength="72">
+								<p>{{ $.T "admin-users-password-hint" }}</p>
+								<button type="submit">{{ $.T "admin-users-password-submit" }}</button>
+							</form>
+						</details>
 						<details class="admin-users-delete">
 							<summary>{{ $.T "admin-users-delete" }}<span class="sr-only"> {{ .Username }}</span></summary>
 							<form method="post" action="/admin/users/{{ .ID }}/delete">

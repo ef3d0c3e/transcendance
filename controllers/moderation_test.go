@@ -166,3 +166,32 @@ func TestAdminUsersPage(t *testing.T) {
 	require.NoError(t, tests.DB.Model(&models.User{}).Where("username = ?", "adminlist2").Count(&count).Error)
 	require.Zero(t, count)
 }
+
+// Admins give a new password to a user who lost theirs, who is logged out everywhere
+func TestAdminResetsPassword(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "adminpw1", "foo-bar-baz-qux", 2)
+	createAccount(t, router, "adminpw2", "foo-bar-baz-qux", 0)
+	admin := login(t, router, "adminpw1", "foo-bar-baz-qux")
+	old := login(t, router, "adminpw2", "foo-bar-baz-qux")
+	target := fmt.Sprintf("/admin/users/%d/password", userID(t, "adminpw2"))
+
+	rec := postForm(t, router, admin, target, url.Values{"password": {"short"}, "confirm": {"short"}})
+	require.Contains(t, rec.Header().Get("Location"), "error=password")
+	rec = postForm(t, router, admin, target, url.Values{"password": {"new-pass-word"}, "confirm": {"other-pass-word"}})
+	require.Contains(t, rec.Header().Get("Location"), "error=password-match")
+
+	// Users cannot reset each other's password
+	rec = postForm(t, router, old, fmt.Sprintf("/admin/users/%d/password", userID(t, "adminpw1")),
+		url.Values{"password": {"new-pass-word"}, "confirm": {"new-pass-word"}})
+	require.Equal(t, http.StatusForbidden, rec.Code)
+
+	rec = postForm(t, router, admin, target, url.Values{"password": {"new-pass-word"}, "confirm": {"new-pass-word"}})
+	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Contains(t, rec.Header().Get("Location"), "done=password")
+
+	var sessions int64
+	require.NoError(t, tests.DB.Model(&models.UserSession{}).Where("user_id = ?", userID(t, "adminpw2")).Count(&sessions).Error)
+	require.Zero(t, sessions)
+	login(t, router, "adminpw2", "new-pass-word")
+}

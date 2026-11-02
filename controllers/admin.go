@@ -14,6 +14,7 @@ import (
 	"transcendance/views"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -136,11 +137,11 @@ func (ac *Controller) AdminUsersGet(c *gin.Context) {
 
 	notice := ""
 	switch c.Query("done") {
-	case "rank", "delete":
+	case "rank", "delete", "password":
 		notice = ac.Renderer.T(c, "admin-users-done-"+c.Query("done"))
 	}
 	errorMessage := ""
-	if code := c.Query("error"); slices.Contains([]string{"rank", "self", "missing", "internal"}, code) {
+	if code := c.Query("error"); slices.Contains([]string{"rank", "self", "missing", "internal", "password", "password-match"}, code) {
 		errorMessage = ac.Renderer.T(c, "admin-users-error-"+code)
 	}
 
@@ -233,6 +234,46 @@ func (ac *Controller) AdminUserRankPost(c *gin.Context) {
 	}
 	log.Printf("INFO admin %s gave %s rank %d", admin.Username, target.Username, rank)
 	adminBack(c, "done=rank")
+}
+
+// /admin/users/:id/password POST: give another account a new password, `password` confirmed by `confirm`, for a
+// user who lost theirs. Their sessions end, they log in again with it.
+func (ac *Controller) AdminUserPasswordPost(c *gin.Context) {
+	admin, ok := ac.requireAdmin(c)
+	if !ok {
+		return
+	}
+	target, ok := ac.adminTarget(c, admin)
+	if !ok {
+		return
+	}
+	password := c.PostForm("password")
+	if len(password) < 8 || len(password) > 72 {
+		adminBack(c, "error=password")
+		return
+	}
+	if password != c.PostForm("confirm") {
+		adminBack(c, "error=password-match")
+		return
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), PasswordHashCost)
+	if err != nil {
+		adminBack(c, "error=internal")
+		return
+	}
+	err = ac.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.User{}).Where("id = ?", target.ID).Update("password_hash", hash).Error; err != nil {
+			return err
+		}
+		return tx.Where("user_id = ?", target.ID).Delete(&models.UserSession{}).Error
+	})
+	if err != nil {
+		log.Printf("WARN failed to reset the password of %s: %s", target.Username, err)
+		adminBack(c, "error=internal")
+		return
+	}
+	log.Printf("INFO admin %s reset the password of %s", admin.Username, target.Username)
+	adminBack(c, "done=password")
 }
 
 // /admin/users/:id/delete POST: permanently delete another account
