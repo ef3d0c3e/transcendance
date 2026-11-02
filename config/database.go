@@ -71,6 +71,13 @@ func MigrateDatabase(db *gorm.DB) error {
 			return err
 		}
 	}
+	// Sessions are stored hashed since their token got an index: the older plain tokens can never match, and
+	// expired sessions are useless
+	if db.Migrator().HasTable(&models.UserSession{}) {
+		if err := db.Exec("DELETE FROM user_sessions WHERE CHAR_LENGTH(token) <> 64 OR expires_at <= NOW()").Error; err != nil {
+			return err
+		}
+	}
 	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Relation{}, &models.Notification{}, &models.ShoutboxMessage{}, &models.PrivateMessage{}, &models.UserIgnore{}, &models.Card{}, &models.Booster{}, &models.BoosterPile{}, &models.DailyStreak{}, &models.Trade{}); err != nil {
 		return err
 	}

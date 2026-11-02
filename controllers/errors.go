@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"log"
 	"net/http"
 
 	"transcendance/views"
@@ -15,4 +16,11 @@ func (ctrl *Controller) NotFound(c *gin.Context) {
 		StatusCode: http.StatusNotFound,
 		Message:    ctrl.Renderer.T(c, "error-not-found"),
 	})
+}
+
+// InternalError logs an unexpected error and answers a generic message: database errors name tables and columns,
+// which clients have no use for
+func InternalError(c *gin.Context, renderer *views.Renderer, err error) {
+	log.Printf("ERROR %s %s: %s", c.Request.Method, c.Request.URL.Path, err)
+	c.String(http.StatusInternalServerError, renderer.T(c, "error-unexpected"))
 }

@@ -20,7 +20,13 @@ func RegisterRoutes(
 		DB:       db,
 		Renderer: renderer,
 		Data:     data,
+		Logins:   controllers.NewLoginLimits(),
 	}
+
+	// Before the routes, so every route gets it
+	router.Use(controllers.SoftErrors())
+	// Debug tools are for admins, and never part of a release build
+	debug := gin.Mode() != gin.ReleaseMode
 
 	// Static data
 	router.Static("/frontend", "./frontend/dist")
@@ -38,7 +44,7 @@ func RegisterRoutes(
 	router.POST("/register", controller.RegisterPost)
 	router.GET("/login", controller.LoginGet)
 	router.POST("/login", controller.LoginPost)
-	router.GET("/api/logout", controller.LogoutGet)
+	router.POST("/api/logout", controller.LogoutPost)
 
 	// profile.go
 	router.GET("/profile", controller.ProfileGet)
@@ -70,9 +76,11 @@ func RegisterRoutes(
 	router.POST("/api/notifications/:ID/unread", controller.ApiNotificationUnreadPost)
 	router.POST("/api/notifications/:ID/delete", controller.ApiNotificationDeletePost)
 
-	// DEBUG: send a notification to the authenticated user
-	router.GET("/add_notification", controller.AddNotificationGet)
-	router.POST("/add_notification", controller.AddNotificationPost)
+	// Debug: send a notification to the authenticated admin
+	if debug {
+		router.GET("/add_notification", controller.AddNotificationGet)
+		router.POST("/add_notification", controller.AddNotificationPost)
+	}
 
 	// shoutbox.go
 	shoutboxController := controllers.NewShoutboxController(db, renderer)
@@ -93,7 +101,10 @@ func RegisterRoutes(
 
 	router.GET("/inventory", dataController.InventoryGet)
 	router.POST("/inventory/claim", dataController.InventoryClaimPost)
-	router.GET("/add", dataController.InventoryAddGet)
+	// Debug: add a card to the authenticated admin's inventory
+	if debug {
+		router.POST("/add", dataController.InventoryAddPost)
+	}
 
 	router.GET("/opening", dataController.OpeningGet)
 	router.POST("/opening", dataController.OpeningPost)
@@ -102,9 +113,11 @@ func RegisterRoutes(
 	// tradeup.go
 	router.POST("/tradeup", dataController.TradeupPost)
 
-	// Debug: add a booster to the authenticated user's inventory
-	router.GET("/add_booster", dataController.AddBoosterGet)
-	router.POST("/add_booster", dataController.AddBoosterPost)
+	// Debug: add a booster to the authenticated admin's inventory
+	if debug {
+		router.GET("/add_booster", dataController.AddBoosterGet)
+		router.POST("/add_booster", dataController.AddBoosterPost)
+	}
 
 	// trade.go
 	router.GET("/trades", controller.TradesGet)

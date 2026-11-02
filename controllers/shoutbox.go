@@ -199,7 +199,7 @@ func (sc *ShoutboxController) sessionValid(ctx context.Context, token string) bo
 	err := sc.DB.WithContext(ctx).
 		Model(&models.UserSession{}).
 		Joins("JOIN users ON users.id = user_sessions.user_id AND users.deleted_at IS NULL").
-		Where("user_sessions.token = ? AND user_sessions.expires_at > ?", token, time.Now()).
+		Where("user_sessions.token = ? AND user_sessions.expires_at > ?", models.HashSessionToken(token), time.Now()).
 		Count(&count).
 		Error
 	if err != nil {

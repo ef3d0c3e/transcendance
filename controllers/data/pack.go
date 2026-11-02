@@ -829,6 +829,10 @@ func (dc *DataController) AddBoosterGet(c *gin.Context) {
 		c.Redirect(http.StatusSeeOther, "/login")
 		return
 	}
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
+		return
+	}
 
 	builder := views.PageBuilder("base", map[string]any{
 		// Debug page, not localized
@@ -844,8 +848,8 @@ func (dc *DataController) AddBoosterGet(c *gin.Context) {
 // /add_booster POST: add a booster of a collection, then show the boosters
 func (dc *DataController) AddBoosterPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
-	if user == nil {
-		c.String(http.StatusForbidden, "You must be authenticated")
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
 		return
 	}
 
