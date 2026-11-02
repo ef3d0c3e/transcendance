@@ -11,6 +11,11 @@
 			{{ end }}
 			{{ if .Data.Tradable }}
 			<a class="inventory-trade" href="/trades/new?u={{ .Data.Viewed }}">{{ .T "inventory-trade" }}</a>
+			{{ else if eq (len .Data.Viewed) 0 }}
+			<!-- One's own offers, with how many wait for an answer -->
+			<a class="inventory-trade" href="/trades">{{ .T "inventory-trades" }}
+				{{- with .Data.IncomingTrades }} <span class="inventory-trade-count" aria-hidden="true">{{ . }}</span>
+				<span class="sr-only">{{ $.T "inventory-trades-incoming" "count" . }}</span>{{ end }}</a>
 			{{ end }}
 		</div>
 		{{ if eq .Data.Tab "cards" }}
@@ -106,7 +111,51 @@
 	</div>
 	{{ end }}
 
-	{{ if or (ne (len .Data.Items) 0) .Data.Pile }}
+	{{ if eq .Data.Tab "tradeup" }}
+	{{ with .Data.TradeupResult }}
+	<div id="tradeup-result" data-label-title="{{ $.T "tradeup-result" }}"
+		data-label-close="{{ $.T "tradeup-result-close" }}">
+		<template>{{ template "card" . }}</template>
+	</div>
+	{{ end }}
+	{{ if ne (len .Data.Items) 0 }}
+	<p class="tradeup-rules">{{ .T "tradeup-rules" "count" .Data.TradeupCost }}</p>
+	<div class="tradeup-layout">
+		<e-cluster class="inventory-cards tradeup-cards" justify="center">
+			{{ range $val := .Data.Items }}
+			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
+				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
+				data-tradeup-title="{{ $val.Data.CardTitle }}"
+				data-tradeup-collection-id="{{ $val.Data.CardCollectionID }}"
+				data-tradeup-collection="{{ $val.Data.CardCollectionTitle }}">
+				{{ template "card" $val }}
+			</div>
+			{{ end }}
+			<p class="inventory-message" id="tradeup-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
+		</e-cluster>
+		<div class="tradeup-side">
+			<form class="tradeup-filter" action="/inventory" method="get">
+				<input type="hidden" name="tab" value="tradeup">
+				<input type="search" id="tradeup-search" name="q" placeholder="{{ .T "card-filter-placeholder" }}"
+					aria-label="{{ .T "card-filter-placeholder" }}">
+				<label>
+					<span>{{ .T "inventory-filter-collection" }}</span>
+					<select id="tradeup-collection-filter" name="collection">
+						{{ range .Data.TradeupCollections }}
+						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+			</form>
+			<form class="tradeup-form" action="/tradeup" method="post">
+				<div id="tradeup-picker" data-cost="{{ .Data.TradeupCost }}" data-label-slots="{{ .T "tradeup-slots" }}"
+					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
+					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"></div>
+			</form>
+		</div>
+	</div>
+	{{ end }}
+	{{ else if or (ne (len .Data.Items) 0) .Data.Pile }}
 	{{ if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
 	{{ end }}

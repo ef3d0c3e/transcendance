@@ -61,6 +61,8 @@ const (
 	inventoryTabBoosters = "boosters"
 	// Every collection, with how much of it the user collected
 	inventoryTabCollections = "collections"
+	// One's own cards, to trade some up for a card of the next rarity
+	inventoryTabTradeup = "tradeup"
 )
 
 // Effect filter values, "" shows every card
@@ -156,8 +158,14 @@ type inventoryView struct {
 	// Whether the viewed user can be offered a trade: someone else, neither
 	// side blocking the other
 	Tradable bool
+	// Pending offers made to the user, on their own inventory
+	IncomingTrades int64
 	// What selling the duplicates would take and pay, on one's own cards tab
 	Duplicates *controllers.DuplicateSale
+	// Collections the tradeup grid holds, for its filter
+	Collections []controllers.SelectOption
+	// Card the last tradeup awarded, nil until one completes
+	Result map[string]any
 }
 
 func (dc *DataController) renderInventory(c *gin.Context, user *controllers.AuthenticatedUser, v *inventoryView) {
@@ -186,6 +194,8 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 			if v.Pile == nil || v.Pile.PileEmpty {
 				v.Message = dc.Renderer.T(c, "inventory-message-no-boosters")
 			}
+		case v.Tab == inventoryTabTradeup:
+			v.Message = dc.Renderer.T(c, "tradeup-empty")
 		default:
 			v.Message = dc.Renderer.T(c, "inventory-message-empty")
 		}
@@ -241,6 +251,11 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 	if viewed == "" {
 		sellAction = "/shop/sell"
 	}
+	// Trading up spends the cards, only one's own
+	tradeupUrl := ""
+	if viewed == "" {
+		tradeupUrl = tabUrl(inventoryTabTradeup)
+	}
 	fields := map[string]any{
 		"Title":          title,
 		"Message":        v.Message,
@@ -265,11 +280,16 @@ func (dc *DataController) renderInventory(c *gin.Context, user *controllers.Auth
 		"ClearUrl": cardsUrl(v.All),
 		"Viewed":   viewed,
 		// One's own cards are sold from the card popup, and their duplicates at once
-		"SellAction": sellAction,
-		"Duplicates": v.Duplicates,
-		"Tradable":   v.Tradable,
-		"Pages":      int(totalPages),
-		"Locale":     dc.Renderer.Localizer.GetLocale(c),
+		"SellAction":         sellAction,
+		"Duplicates":         v.Duplicates,
+		"TabTradeupUrl":      tradeupUrl,
+		"TradeupCost":        tradeupCost,
+		"TradeupResult":      v.Result,
+		"TradeupCollections": v.Collections,
+		"Tradable":           v.Tradable,
+		"IncomingTrades":     v.IncomingTrades,
+		"Pages":              int(totalPages),
+		"Locale":             dc.Renderer.Localizer.GetLocale(c),
 		// Outcome of buying boosters or coins, which land here
 		"Notice": controllers.GetShopNotice(c, dc.Renderer, dc.Data),
 	}
@@ -380,6 +400,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	}
 	if c.Query("tab") == inventoryTabCollections {
 		v.Tab = inventoryTabCollections
+	} else if c.Query("tab") == inventoryTabTradeup {
+		v.Tab = inventoryTabTradeup
 	} else if cardsAsked {
 		v.Tab = inventoryTabCards
 		v.All = c.Query("show") == inventoryShowAll
@@ -412,6 +434,10 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 			return
 		}
 		userID = otherUser.ID
+		// Trading up spends the cards, so it only opens on one's own inventory
+		if v.Tab == inventoryTabTradeup {
+			v.Tab = inventoryTabBoosters
+		}
 		blocked, err := controllers.TradeBlocked(dc.DB, user.ID, userID)
 		if err != nil {
 			log.Printf("WARN failed to get the relation of users %d and %d: %s", user.ID, userID, err)
@@ -436,6 +462,14 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	// The daily streak section shows on one's own inventory, on every tab
 	own := v.Username == user.Username
 	if own {
+		// The link to the trades page says how many offers wait for an answer
+		if err := dc.DB.Model(&models.Trade{}).
+			Where("to_id = ? AND state = ?", userID, models.TradePending).
+			Count(&v.IncomingTrades).Error; err != nil {
+			fail("incoming trades", err)
+			return
+		}
+
 		state, err := controllers.DailyStreakState(dc.DB, userID, time.Now())
 		if err != nil {
 			fail("daily streak", err)
@@ -460,6 +494,11 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 	if v.Tab == inventoryTabCollections {
 		if err := dc.inventoryCollections(c, userID, v); err != nil {
 			fail("collections", err)
+			return
+		}
+	} else if v.Tab == inventoryTabTradeup {
+		if err := dc.inventoryTradeup(c, userID, v); err != nil {
+			fail("tradeup", err)
 			return
 		}
 	} else if v.Tab == inventoryTabBoosters {

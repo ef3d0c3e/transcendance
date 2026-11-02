@@ -1981,6 +1981,10 @@ section {
     .inventory-tab-collections {
         --icon: var(--icon-collections);
     }
+
+    .inventory-tab-tradeup {
+        --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5 12 6H9.5v5.5h-3V6H4l4-4.5Z'/%3E%3Cpath d='M2.5 13h11v1.5h-11V13Z'/%3E%3C/svg%3E");
+    }
 }
 
 /* A collection of the inventory, with how much of it is collected */
@@ -2149,7 +2153,8 @@ section {
 /* Number of identical boosters in a stack */
 /* Number of copies of a folded booster or card */
 .collection-stack,
-.card-stack {
+.card-stack,
+.tradeup-taken {
     position: absolute;
     top: -0.6rem;
     right: -0.6rem;
@@ -3864,4 +3869,118 @@ form .notification-action {
     .inventory-confirm[open] {
         animation: none;
     }
+}
+
+/* Copies of a stack a tradeup contract has taken, opposite the copy count */
+.tradeup-taken {
+    right: auto;
+    left: -0.6rem;
+
+    background: var(--color-accent-secondary);
+}
+
+/* Card going into a tradeup contract */
+.tradeup-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Card that can't join the contract: another rarity, no copies left, or a full contract */
+.tradeup-card-blocked {
+    opacity: 0.4;
+    filter: saturate(0.35);
+
+    .card-container {
+        cursor: not-allowed;
+    }
+}
+
+.tradeup-rules {
+    max-width: 36rem;
+    margin: 0 auto 1.25rem;
+
+    text-align: center;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+/* Cards to trade on the left, the filter and the contract they fill on the right */
+.tradeup-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* Stays in view while the card grid scrolls */
+.tradeup-side {
+    position: sticky;
+    top: 1rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Collection filter of the tradeup sidebar, its select takes what the label leaves */
+.tradeup-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    input[type="search"] {
+        width: 100%;
+        min-height: 2.25rem;
+        padding: 0.3rem 0.65rem;
+
+        color: var(--color-text);
+        background: var(--color-bg-4);
+    }
+}
+
+.tradeup-filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.tradeup-filter select {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.65rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+}
+
+@media (max-width: 900px) {
+    .tradeup-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tradeup-side {
+        position: static;
+    }
+}
+
+/* Offers waiting for an answer, on the link to the trades page */
+.inventory-trade-count {
+    min-width: 1.4rem;
+    margin-left: 0.45rem;
+    padding: 0.05rem 0.4rem;
+
+    color: var(--color-accent-secondary);
+    background: var(--color-text-alt);
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
 }

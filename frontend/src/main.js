@@ -8,6 +8,8 @@ import PackOpening from './PackOpening.svelte';
 import PackBackground from './PackBackground.svelte';
 import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
+import TradeUpPicker from './TradeUpPicker.svelte';
+import TradeUpResult from './TradeUpResult.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -315,6 +317,24 @@ import { openTopup } from './topup.js';
 			event.preventDefault();
 			open();
 		});
+	}
+}
+
+// Tradeup contract picker
+{
+	const target = document.querySelector('#tradeup-picker');
+
+	if (target) {
+		mount(TradeUpPicker, { target, props: { target } });
+	}
+}
+
+// Tradeup result popup
+{
+	const target = document.querySelector('#tradeup-result');
+
+	if (target) {
+		mount(TradeUpResult, { target, props: { target } });
 	}
 }
 

@@ -116,6 +116,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendaire
 
 card-search-placeholder = Rechercher des cartes
+card-filter-placeholder = Filtrer par nom de carte ou de collection
+card-filter-no-match = Aucune carte ne correspond à ce filtre
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echec de la recherche
@@ -285,6 +287,8 @@ inventory-filter-effect = Effet
 inventory-filter-effect-all = Tous les effets
 inventory-filter-effect-none = Sans effet
 inventory-filter-effect-foil = Holographique
+inventory-filter-collection = Collection
+inventory-filter-collection-all = Toutes les collections
 inventory-sort = Trier par
 inventory-sort-relevance = Pertinence
 inventory-sort-recent = Dernière obtention
@@ -297,6 +301,7 @@ inventory-tabs-label = Sections de l'inventaire
 inventory-tab-cards = Cartes
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Améliorer
 inventory-message-no-boosters = Aucun booster pour l'instant
 inventory-booster-open = Ouvrir le booster { $name }
 inventory-booster-count = { $count ->
@@ -485,6 +490,11 @@ contact-privacy-title = Demandes relatives à vos données
 contact-privacy-text = Pour une demande concernant vos données personnelles, contactez un membre de l'équipe en privé plutôt que d'ouvrir une issue publique. Vous pouvez supprimer votre compte à tout moment depuis votre profil.
 
 inventory-trade = Proposer un échange
+inventory-trades = Vos échanges
+inventory-trades-incoming = { $count ->
+    [one] { $count } offre attend votre réponse
+   *[other] { $count } offres attendent votre réponse
+}
 
 trades-title = Échanges
 trade-menu-title = Échanger avec { $username }
@@ -572,3 +582,20 @@ shoutbox-ignoring-notice = Vous ignorez cet utilisateur : ses messages de la sho
 shoutbox-error-user-not-found = Cet utilisateur n'existe pas
 shoutbox-error-self = Vous ne pouvez pas vous écrire à vous-même
 shoutbox-error-blocked = Cet utilisateur n'accepte pas vos messages pour le moment
+
+tradeup-rules = Combinez { $count } cartes de la même rareté pour obtenir une carte aléatoire de la rareté supérieure. Les chances de chaque collection suivent le nombre de cartes qui en viennent.
+tradeup-empty = Aucune carte ici ne peut être améliorée
+tradeup-slots = Emplacements de l’amélioration
+tradeup-remove = Retirer
+tradeup-slot-empty = Emplacement vide
+tradeup-clear = Réinitialiser
+tradeup-submit = Améliorer
+tradeup-result = Vous avez obtenu
+tradeup-result-close = Fermer
+tradeup-error-count = Une amélioration nécessite exactement { $count } cartes
+tradeup-error-rarity = Toutes les cartes d’une amélioration doivent avoir la même rareté
+tradeup-error-tier = Ces cartes ne peuvent pas être améliorées
+tradeup-error-missing = Vous ne possédez pas assez de ces cartes
+tradeup-error-locked = Certaines de ces cartes sont dans des échanges
+tradeup-error-empty = Aucune de ces collections ne contient de carte de la rareté supérieure
+tradeup-error-internal = Échec de l’amélioration
