@@ -2123,7 +2123,10 @@ section {
     --icon-collections: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 2.5h5v5H2zM9 2.5h5v5H9zM2 9.5h5v5H2zM9 9.5h5v5H9z' fill='none' stroke='black' stroke-width='1.5'/%3E%3C/svg%3E");
     --icon-booster: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 1h10l-.75 1L13 3v10l-.75 1 .75 1H3l.75-1L3 13V3l.75-1L3 1Zm2 4v1.5h6V5H5Z'/%3E%3C/svg%3E");
 
+    /* The tabs that don't fit the row go on the next one, so every tab
+       stays in sight on phones and zoomed in */
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
 
     padding-bottom: 1rem;
@@ -2136,6 +2139,10 @@ section {
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+
+        /* Whole words: the page's break-word would shrink a tab to a
+           letter per line before wrapping the row */
+        word-break: normal;
 
         min-height: 2.5rem;
         padding: 0.45rem 0.75rem 0.45rem 0.9rem;
@@ -4298,6 +4305,11 @@ form .notification-action {
     /* Room for the action bar, fixed to the bottom of the screen */
     .tradeup-layout {
         padding-bottom: 6rem;
+    }
+
+    /* A card focused at the bottom of the screen scrolls clear of the bar */
+    :root:has(.tradeup-layout) {
+        scroll-padding-bottom: 7rem;
     }
 }
 

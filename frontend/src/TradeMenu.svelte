@@ -12,7 +12,7 @@
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { apiFetch } from "./api.js";
 
 	let { target } = $props();
@@ -36,6 +36,8 @@
 	const labelError = $derived(target.dataset.labelError ?? "");
 	const labelSearch = $derived(target.dataset.labelSearch ?? "");
 	const labelNoMatch = $derived(target.dataset.labelNoMatch ?? "");
+	// "Matching cards: {count}"
+	const labelResults = $derived(target.dataset.labelResults ?? "");
 	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 	const rarityLabels = $derived({
 		common: target.dataset.labelRarityCommon ?? "",
@@ -94,6 +96,9 @@
 	let loading = $state(true);
 	let sending = $state(false);
 	let message = $state("");
+	// What the last search found, told to screen readers: the pickers change
+	// out of their sight
+	let results = $state("");
 
 	// Width of a picker column and of the fixed 30ch card box, in pixels. The
 	// cards are scaled to the column so a tile never overflows it, whatever
@@ -138,6 +143,9 @@
 			const body = await response.json();
 			if (request === side.request) {
 				side.receive(body, page);
+				if (reset) {
+					results = searchResults(side);
+				}
 			}
 		} catch {
 			if (request === side.request) {
@@ -155,6 +163,14 @@
 		const side = sides[name];
 		clearTimeout(side.timer);
 		side.timer = setTimeout(() => load(name, true), searchDelay);
+	}
+
+	// What a search of a side found, as its picker shows it
+	function searchResults(side) {
+		if (side.total > 0) {
+			return labelResults.replaceAll("{count}", String(side.total));
+		}
+		return side.query.trim() ? labelNoMatch : labelEmpty;
 	}
 
 	// Load the next page of a side as the end of its picker comes into view.
@@ -243,6 +259,25 @@
 		sel[key(stack)].count = Math.min(next, stack.count);
 	}
 
+	// The "−" taking a card down to none takes its row out, and the focus
+	// with it: the focus goes to the "−" of the row taking its place, else of
+	// the one before, else to the card's tile in the picker, else its search
+	async function decrease(e, side, stack) {
+		const column = e.currentTarget.closest(".trade-menu-side");
+		const rows = [...column.querySelectorAll(".trade-menu-item")];
+		const index = rows.indexOf(e.currentTarget.closest(".trade-menu-item"));
+		step(side, stack, -1);
+		await tick();
+		// Still there: the card had copies left
+		if (column.contains(document.activeElement)) {
+			return;
+		}
+		const left = column.querySelectorAll(".trade-menu-item");
+		const row = left[index] ?? left[index - 1];
+		const tile = column.querySelector(`.trade-menu-tile[data-key="${CSS.escape(key(stack))}"]`);
+		(row?.querySelector("button") ?? tile ?? column.querySelector(".trade-menu-search"))?.focus();
+	}
+
 	// The free balance is the most that can be put up or asked for: cap the
 	// amount as it is typed, in whole coins. An empty field is left alone so
 	// it can be retyped into.
@@ -319,7 +354,7 @@
 
 	// The first page of both sides comes at once, with the balances and what
 	// a counter starts with
-	onMount(async () => {
+	async function loadFirstPages() {
 		try {
 			const response = await apiFetch(stacksUrl);
 			if (!response.ok) {
@@ -341,6 +376,11 @@
 		} finally {
 			loading = false;
 		}
+	}
+
+	// Not async: the cleanup it returns would be lost in a promise
+	onMount(() => {
+		loadFirstPages();
 		return () => {
 			for (const side of Object.values(sides)) {
 				clearTimeout(side.timer);
@@ -355,6 +395,7 @@
 	<span class="trade-menu-probe" bind:clientWidth={cardWidth}></span>
 	<!-- Present from the start, so the end of the loading is announced -->
 	<p class="trade-menu-status" role="status">{loading ? labelLoading : ""}</p>
+	<p class="sr-only" role="status">{results}</p>
 	{#if !loading}
 		<section class="trade-menu-sides">
 			<section class="trade-menu-side">
@@ -374,7 +415,7 @@
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
-								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("give", stack, -1)}>−</button>
+								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={(e) => decrease(e, "give", stack)}>−</button>
 								<span class="trade-menu-count" aria-live="polite">{count}</span>
 								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("give", stack, 1)}>+</button>
 							</span>
@@ -389,7 +430,7 @@
 					style="--trade-card-scale: {cardScale}">
 					{#each sides.give.stacks as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={Boolean(give[key(stack)])} class:is-locked={!stack.count}
-							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(give[key(stack)])}
+							data-key={key(stack)} role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(give[key(stack)])}
 							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "give", stack)}
 							onkeydown={(e) => pickKey(e, "give", stack)}>
@@ -427,7 +468,7 @@
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
-								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("want", stack, -1)}>−</button>
+								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={(e) => decrease(e, "want", stack)}>−</button>
 								<span class="trade-menu-count" aria-live="polite">{count}</span>
 								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("want", stack, 1)}>+</button>
 							</span>
@@ -442,7 +483,7 @@
 				<div class="trade-menu-picker" style="--trade-card-scale: {cardScale}">
 					{#each sides.want.stacks as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={Boolean(want[key(stack)])} class:is-locked={!stack.count}
-							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(want[key(stack)])}
+							data-key={key(stack)} role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(want[key(stack)])}
 							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
 							onkeydown={(e) => pickKey(e, "want", stack)}>

@@ -10,6 +10,9 @@
  *  - `sort`: select of `number`, `name`, `name-desc`, `rarity`, `count` or
  *    `grouped`
  *  - `noMatch`: element shown when the filters hide every tile
+ *  - `status`: live region telling screen readers what a filter change
+ *    kept, from its `data-label-results` (`{count}` is replaced) or the
+ *    `noMatch` text
  *  - `pagers`: elements the page links are drawn in, above and below the
  *    grid. Each provides `data-page-size`, `data-label-nav`,
  *    `data-label-previous` and `data-label-next`. Without them every tile
@@ -33,6 +36,10 @@ const RARITY_ORDER = ['legendary', 'rare', 'common'];
 
 // Page numbers around the current one, like the server-rendered paginator
 const PAGE_SPREAD = 2;
+
+// Delay (ms) after the last filter change before its results are told, so
+// typing in the search isn't told at every key
+const ANNOUNCE_DELAY = 500;
 
 function rarityRank(rarity) {
 	const index = RARITY_ORDER.indexOf(rarity);
@@ -95,7 +102,7 @@ function matchesFilters(info, filters) {
 }
 
 // The element of one entry of the page links: the current page, a link, or a
-// disabled arrow
+// disabled arrow, drawn like templates/partials/paginator.html draws them
 function pageElement(state, target, label) {
 	if (!label && target === state.page) {
 		const current = document.createElement('span');
@@ -105,9 +112,11 @@ function pageElement(state, target, label) {
 		current.tabIndex = -1;
 		return current;
 	}
+	// No page before or after: only seen, screen readers skip it
 	if (target < 1 || target > state.pages) {
 		const disabled = document.createElement('span');
-		disabled.setAttribute('aria-disabled', 'true');
+		disabled.className = 'is-disabled';
+		disabled.setAttribute('aria-hidden', 'true');
 		return disabled;
 	}
 	// A real link, so it still works as one; a click is caught to stay on the page
@@ -121,7 +130,8 @@ function pageElement(state, target, label) {
 
 function pageItem(state, target, text, label) {
 	const element = pageElement(state, target, label);
-	if (label) {
+	// The arrows' name, on links only: a span can't be named
+	if (label && element instanceof HTMLAnchorElement) {
 		element.setAttribute('aria-label', label);
 	}
 	element.textContent = text;
@@ -184,6 +194,7 @@ function apply(state, shouldKeepPage = false) {
 	// In the order they stand in once sorted, so pages follow the sort
 	const matches = [...document.querySelectorAll(state.selector)]
 		.filter((tile) => matchesFilters(state.read(tile), filters));
+	state.matches = matches.length;
 	if (state.controls.noMatch) {
 		state.controls.noMatch.hidden = matches.length > 0;
 	}
@@ -199,6 +210,24 @@ function apply(state, shouldKeepPage = false) {
 		drawPager(state, pager);
 	}
 	syncUrl(state, filters);
+}
+
+// Tell screen readers what the filters keep, the grid changing out of their
+// sight: how many cards, or that none matches
+function announce(state) {
+	const { status, noMatch } = state.controls;
+	if (!status) {
+		return;
+	}
+	clearTimeout(state.announceTimer);
+	state.announceTimer = setTimeout(() => {
+		if (state.matches === 0) {
+			status.textContent = noMatch?.textContent.trim() ?? '';
+			return;
+		}
+		const count = state.numbers.format(state.matches);
+		status.textContent = (status.dataset.labelResults ?? '').replaceAll('{count}', () => count);
+	}, ANNOUNCE_DELAY);
 }
 
 // Back to the top of the grid when it scrolled out of view
@@ -257,27 +286,33 @@ function restore(state) {
 	}
 }
 
-function createState({ tiles, read, search, collection, rarity, sort, noMatch, pagers }) {
+function createState({ tiles, read, search, collection, rarity, sort, noMatch, status, pagers }) {
 	const all = [...document.querySelectorAll(tiles)];
 	const pagerElements = pagers ? [...document.querySelectorAll(pagers)] : [];
+	const lang = document.documentElement.lang || undefined;
 	return {
 		selector: tiles,
 		read,
 		tiles: all,
 		// The order the page came in, ties fall back to it
 		original: new Map(all.map((tile, index) => [tile, index])),
-		collator: new Intl.Collator(document.documentElement.lang || undefined, { sensitivity: 'base' }),
+		collator: new Intl.Collator(lang, { sensitivity: 'base' }),
+		numbers: new Intl.NumberFormat(lang),
 		controls: {
 			search: find(search),
 			collection: find(collection),
 			rarity: find(rarity),
 			sort: find(sort),
 			noMatch: find(noMatch),
+			status: find(status),
 		},
 		pagers: pagerElements,
 		pageSize: Number(pagerElements[0]?.dataset.pageSize ?? 0),
 		page: 1,
 		pages: 1,
+		// Tiles the filters keep, and the pending announcement of it
+		matches: all.length,
+		announceTimer: undefined,
 	};
 }
 
@@ -292,7 +327,10 @@ export function attachCardFilter(options) {
 	const state = createState(options);
 	const { search, collection, rarity, sort } = state.controls;
 	const selects = [collection, rarity, sort].filter(Boolean);
-	const onChange = () => apply(state);
+	const onChange = () => {
+		apply(state);
+		announce(state);
+	};
 	const onClick = (event) => onPagerClick(state, event);
 
 	search?.addEventListener('input', onChange);
@@ -308,6 +346,7 @@ export function attachCardFilter(options) {
 	apply(state, true);
 
 	return () => {
+		clearTimeout(state.announceTimer);
 		search?.removeEventListener('input', onChange);
 		search?.removeEventListener('keydown', onSearchKeyDown);
 		for (const select of selects) {
