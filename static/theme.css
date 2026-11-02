@@ -3972,7 +3972,9 @@ form .notification-action {
 
 .trade-sides {
     display: grid;
-    flex: 1;
+    /* Next to the partner's name while there is room for both, under it on
+       phones, where the name would take a third of the row */
+    flex: 1 1 18rem;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 0.75rem;
 }
@@ -4085,12 +4087,25 @@ form .notification-action {
         grid-template-columns: minmax(0, 1fr);
     }
 
+    .trade-row {
+        padding: 0.75rem;
+    }
+
     .trade-actions {
         width: 100%;
     }
 
+    /* Accept and decline are buttons in their own forms: the forms share
+       the row, as the counter link does. Each grows from its label's width,
+       which never breaks: a row too tight wraps a whole button instead */
+    .trade-actions form {
+        display: flex;
+        flex: 1 1 auto;
+    }
+
     .trade-button {
-        flex: 1;
+        flex: 1 1 auto;
+        white-space: nowrap;
     }
 }
 /* }}} */
