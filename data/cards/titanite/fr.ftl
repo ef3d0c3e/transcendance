@@ -1,0 +1,2 @@
+title = Titanite
+description = La titanite est une espèce minérale du groupe des silicates sous-groupe des nésosubsilicates, de formule chimique CaTi(SiO5) ou CaTi(SiO4)O. Également connue sous le nom de sphène (du grec sphenos qui signifie en forme de coin), forme des cristaux aplatis en forme de coin, généralement jumelés avec des angles de rentrée proéminents; on trouve également des formes massives, compactes et lamellaires.

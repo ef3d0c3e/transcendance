@@ -22,7 +22,8 @@
 	const QUANTITY_PRESETS = [1, 5, 10];
 
 	let dialog;
-	let preview;
+	// The clicked booster, its tile is shown at the top of the popup
+	let previewSource = $state(null);
 	let title = $state("");
 	let collection = $state("");
 	let price = $state(0);
@@ -52,10 +53,7 @@
 		collection = booster.dataset.collection ?? "";
 		price = Number(booster.dataset.price ?? 0);
 		quantity = 1;
-
-		preview.replaceChildren();
-		const display = booster.querySelector(DISPLAY_SELECTOR);
-		if (display) preview.append(display.cloneNode(true));
+		previewSource = booster;
 
 		returnFocus = booster;
 		dialog.showModal();
@@ -83,8 +81,15 @@
 		});
 	}
 
+	// A copy of the booster's tile and price, gone with the popup
+	function showPreview(node) {
+		const display = previewSource?.querySelector(DISPLAY_SELECTOR);
+		if (display) node.append(display.cloneNode(true));
+		return () => node.replaceChildren();
+	}
+
 	function onDialogClose() {
-		preview.replaceChildren();
+		previewSource = null;
 		returnFocus?.focus();
 		returnFocus = null;
 	}
@@ -124,12 +129,14 @@
 			show(booster);
 		}
 
-		// Boosters open a dialog, make them reachable and announced as buttons
+		// Boosters open a dialog, make them reachable and announced as buttons,
+		// named with their price as their content is presentational
 		for (const booster of document.querySelectorAll(BOOSTER_SELECTOR)) {
+			const pill = booster.querySelector(".shop-price-pill")?.textContent.trim();
 			booster.tabIndex = 0;
 			booster.setAttribute("role", "button");
 			booster.setAttribute("aria-haspopup", "dialog");
-			booster.setAttribute("aria-label", booster.dataset.title ?? "");
+			booster.setAttribute("aria-label", [booster.dataset.title, pill].filter(Boolean).join(", "));
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
@@ -145,15 +152,15 @@
 </script>
 
 <dialog
-	class="shop-buy-popup"
+	class="popup shop-buy-popup"
 	aria-labelledby="shop-buy-popup-title"
 	bind:this={dialog}
 	onclick={onDialogClick}
 	onclose={onDialogClose}
 >
 	<div class="shop-buy-popup-content">
-		<div class="shop-buy-preview" bind:this={preview}></div>
-		<h3 id="shop-buy-popup-title">{title}</h3>
+		<div class="shop-buy-preview" {@attach showPreview}></div>
+		<h2 id="shop-buy-popup-title">{title}</h2>
 		{#if coins === undefined}
 			<p class="shop-buy-note">{labelLoginHint}</p>
 			<div class="shop-buy-actions">
@@ -165,7 +172,7 @@
 			<div class="shop-buy-quantity">
 				<span class="shop-buy-quantity-label" id="shop-buy-quantity-label">{labelQuantity}</span>
 				<div class="shop-buy-presets" role="group" aria-labelledby="shop-buy-quantity-label">
-					{#each QUANTITY_PRESETS as preset}
+					{#each QUANTITY_PRESETS as preset (preset)}
 						<button
 							type="button"
 							class="shop-buy-preset"
@@ -197,28 +204,11 @@
 </dialog>
 
 <style>
+	/* Frame, backdrop and entrance: the shared .popup of theme.css. This one
+	   fits the booster's tile. */
 	.shop-buy-popup {
 		width: fit-content;
 		max-width: min(100% - 2rem, 32rem);
-		max-height: calc(100% - 2rem);
-		padding: 0;
-
-		overflow: auto;
-
-		color: var(--color-text);
-		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
-		border-radius: 1rem;
-		box-shadow: 0 10px 30px var(--color-shadow);
-	}
-
-	.shop-buy-popup::backdrop {
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
-	}
-
-	.shop-buy-popup[open] {
-		animation: shop-buy-popup-in 150ms ease;
 	}
 
 	.shop-buy-popup-content {
@@ -257,7 +247,7 @@
 		box-shadow: 0 4px 12px var(--color-shadow);
 	}
 
-	h3 {
+	h2 {
 		margin: 0;
 
 		font-size: 1.25rem;
@@ -307,9 +297,12 @@
 		opacity: 0.45;
 	}
 
+	/* Thicker and bolder, not only colored */
 	.shop-buy-preset[aria-pressed="true"] {
 		border-color: var(--color-accent-primary);
+		box-shadow: inset 0 0 0 1px var(--color-accent-primary);
 		color: var(--color-accent-primary);
+		font-weight: 700;
 	}
 
 	.shop-buy-total {
@@ -343,22 +336,11 @@
 		color: var(--color-accent-primary);
 	}
 
-	@keyframes shop-buy-popup-in {
-		from {
-			opacity: 0;
-			transform: translateY(0.5rem) scale(0.98);
-		}
-	}
-
-	/* Small screens: bottom sheet, like the other popups */
+	/* Small screens: the full width bottom sheet of the other popups */
 	@media (max-width: 480px) {
 		.shop-buy-popup {
 			width: 100%;
 			max-width: 100%;
-			margin: auto 0 0;
-
-			border-radius: 1rem 1rem 0 0;
-			border-bottom: 0;
 		}
 
 		.shop-buy-popup-content {

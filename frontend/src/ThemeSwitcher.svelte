@@ -1,36 +1,28 @@
 <script>
-	import { onMount } from "svelte";
+	// Color of the browser's bars in each theme, the header's (--color-bg-2)
+	const THEME_COLORS = { light: "#fafcfb", dark: "#171c1a" };
 
-	let theme = "light";
-	let labelLight = "";
-	let labelDark = "";
+	let { labelLight = "", labelDark = "" } = $props();
+
+	let theme = $state(document.documentElement.getAttribute("theme") ?? "light");
+	// The button names what it does: switching to the other theme
+	const label = $derived(theme === "dark" ? labelLight : labelDark);
 
 	function toggleTheme() {
 		theme = theme === "dark" ? "light" : "dark";
 
 		document.documentElement.setAttribute("theme", theme);
 		document.cookie = `theme=${theme}; Path=/; Max-Age=31536000; SameSite=Lax`;
+		// The installed app's and the mobile browser's bars follow
+		document.querySelector('meta[name="theme-color"]')?.setAttribute("content", THEME_COLORS[theme]);
 	}
-
-	onMount(() => {
-		const target = document.querySelector("#theme-switcher");
-
-		if (!target) {
-			return;
-		}
-
-		theme = document.documentElement.getAttribute("theme") ?? "light";
-
-		labelLight = target.dataset.themeLabelLight ?? "";
-		labelDark = target.dataset.themeLabelDark ?? "";
-	});
 </script>
 
 <button
 	type="button"
-	aria-label={theme === "dark" ? labelLight : labelDark}
-	title={theme === "dark" ? labelLight : labelDark}
-	on:click={toggleTheme}
+	aria-label={label}
+	title={label}
+	onclick={toggleTheme}
 >
 	{#if theme === "dark"}
 		<!-- Sun -->

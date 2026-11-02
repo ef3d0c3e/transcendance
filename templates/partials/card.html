@@ -1,9 +1,12 @@
 {{ define "card" }}
 <div class="card-container{{ if .Data.CardMissing }} is-missing{{ end }}" {{ .Data.CardContainerData }} {{ with .Data.CardAcquiredFirst }}data-copies="{{ $.Data.CardCopies }}"
-	data-acquired-first="{{ . }}" data-acquired-last="{{ $.Data.CardAcquiredLast }}"{{ end }}>
+	data-acquired-first="{{ . }}" data-acquired-last="{{ $.Data.CardAcquiredLast }}"{{ end }}
+	{{- with .Data.CardSellID }} data-sell-id="{{ . }}" data-sell-foil="{{ $.Data.CardSellFoil }}"
+	data-sell-price="{{ $.Data.CardSellPrice }}" data-sell-owned="{{ $.Data.CardSellOwned }}"
+	data-sell-locked="{{ $.Data.CardSellLocked }}"{{ end }}>
 	<article class="card"
 		style="--c1: {{ .Data.CardColorPrimary }}; --c2: {{ .Data.CardColorSecondary }}; --badge-color: {{ .Data.CardBadgeColor }}">
-		<img class="card-image" src="{{ .Data.CardArtwork }}" draggable="false" decoding="async"
+		<img class="card-image" src="{{ .Data.CardArtwork }}" alt="" draggable="false" decoding="async"
 			{{ if not .Data.CardEager }}loading="lazy"{{ end }}>
 		<span class="card-badge">{{ .Data.CardBadge }}</span>
 		<h2 class="card-title">{{ .Data.CardTitle }}</h2>
@@ -23,5 +26,8 @@
 	{{ with .Data.CardCopies }}{{ if gt . 1 }}
 	<span class="card-stack">×{{ . }}</span>
 	{{ end }}{{ end }}
+	{{ with .Data.CardLocked }}
+	<span class="card-locked">{{ . }}</span>
+	{{ end }}
 </div>
 {{ end }}

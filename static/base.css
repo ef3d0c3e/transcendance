@@ -1,3 +1,18 @@
 [hidden] {
 	display: none !important;
 }
+
+/* Layout of <e-cluster>, the same as static/vendor/e-layout.min.js gives it
+   once loaded: the page is laid out before, and without, the script */
+e-cluster {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--s1, 1rem);
+	justify-content: flex-start;
+	align-items: flex-start;
+	align-content: flex-start;
+}
+
+e-cluster[justify="center"] {
+	justify-content: center;
+}

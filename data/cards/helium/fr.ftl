@@ -1,0 +1,2 @@
+title = Hélium
+description = L’hélium est l'élément chimique de numéro atomique 2, de symbole He. Pratiquement inerte, c'est le premier de la famille des gaz nobles (ou gaz rares) dans le tableau périodique des éléments. Son point d'ébullition est le plus bas parmi les corps connus, et il n'existe sous forme solide que s'il est soumis à une pression supérieure à 25 atmosphères. L'hélium possède deux isotopes stables : l'hélium 4 (4He), le plus abondant, et l'hélium 3 (3He).

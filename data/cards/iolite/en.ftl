@@ -1,0 +1,2 @@
+title = Iolite
+description = Cordierite (mineralogy) or iolite (gemology) is a magnesium iron aluminium cyclosilicate. Iron is almost always present, and a solid solution exists between Mg-rich cordierite and Fe-rich sekaninaite with a series formula: (Mg,Fe)2Al3(Si5AlO18) to (Fe,Mg)2Al3(Si5AlO18). A high-temperature polymorph exists, indialite, which is isostructural with beryl and has a random distribution of Al in the (Si,Al)6O18 rings.

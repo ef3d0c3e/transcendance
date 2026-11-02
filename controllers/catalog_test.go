@@ -29,7 +29,7 @@ func TestCatalogListsEveryCard(t *testing.T) {
 	body := getPage(t, router, "/cards/search/")
 	// Collections come in order, the dev collection first
 	require.Equal(t, []string{
-		"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Tungsten",
+		"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Rosetta Stone",
 	}, cardTitles(body)[:5])
 	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d cards</p>`, len(tests.Data.Cards)))
 	// Only cards: collections are in the inventory
@@ -44,12 +44,12 @@ func TestCatalogSearchFiltersAndSorts(t *testing.T) {
 
 	// Within the dev collection, other collections have their own cards
 	cases := map[string][]string{
-		"/cards/search/?collection=1&rarity=common":                {"Pythagorean tiling", "Flying Scotsman", "Tungsten"},
-		"/cards/search/?collection=1&rarity=common&sort=name-desc": {"Tungsten", "Pythagorean tiling", "Flying Scotsman"},
-		"/cards/search/?collection=1&sort=rarity":                  {"Ford Model T", "McMurdo Station", "Pythagorean tiling", "Flying Scotsman", "Tungsten"},
-		"/cards/search/?collection=1&sort=name":                    {"Flying Scotsman", "Ford Model T", "McMurdo Station", "Pythagorean tiling", "Tungsten"},
-		"/cards/search/?q=tungsten":                                {"Tungsten"},
-		"/cards/search/?q=tungsten&rarity=rare":                    nil,
+		"/cards/search/?collection=1&rarity=common":                {"Pythagorean tiling", "Flying Scotsman", "Rosetta Stone"},
+		"/cards/search/?collection=1&rarity=common&sort=name-desc": {"Rosetta Stone", "Pythagorean tiling", "Flying Scotsman"},
+		"/cards/search/?collection=1&sort=rarity":                  {"Ford Model T", "McMurdo Station", "Pythagorean tiling", "Flying Scotsman", "Rosetta Stone"},
+		"/cards/search/?collection=1&sort=name":                    {"Flying Scotsman", "Ford Model T", "McMurdo Station", "Pythagorean tiling", "Rosetta Stone"},
+		"/cards/search/?q=rosetta":                                {"Rosetta Stone"},
+		"/cards/search/?q=rosetta&rarity=rare":                    nil,
 		"/cards/search/?collection=1&rarity=rare":                  {"McMurdo Station"},
 		// Unknown filters are ignored
 		"/cards/search/?collection=999&rarity=mythic": cardTitles(getPage(t, router, "/cards/search/")),
@@ -59,10 +59,10 @@ func TestCatalogSearchFiltersAndSorts(t *testing.T) {
 		require.Equal(t, titles, cardTitles(body), target)
 	}
 
-	searched := getPage(t, router, "/cards/search/?q=tungsten")
+	searched := getPage(t, router, "/cards/search/?q=rosetta")
 	require.Contains(t, searched, `<p class="inventory-count">1 card found</p>`)
 
-	empty := getPage(t, router, "/cards/search/?q=tungsten&rarity=rare")
+	empty := getPage(t, router, "/cards/search/?q=rosetta&rarity=rare")
 	require.Contains(t, empty, "No cards found")
 	require.Contains(t, empty, `<a href="/cards/search/">Clear search</a>`)
 }
@@ -79,7 +79,7 @@ func TestCatalogCardsPaginate(t *testing.T) {
 func TestCatalogCollectionsInInventory(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "colinv1", "foo-bar-baz-qux", 0)
-	giveCards(t, "colinv1", cardTungsten, 2)
+	giveCards(t, "colinv1", cardRosetta, 2)
 	giveCards(t, "colinv1", cardFordT, 1)
 	cookie := login(t, router, "colinv1", "foo-bar-baz-qux")
 
@@ -107,17 +107,17 @@ func TestCatalogCollectionsInInventory(t *testing.T) {
 func TestCollectionMissingCards(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "colmiss1", "foo-bar-baz-qux", 0)
-	giveCards(t, "colmiss1", cardTungsten, 1)
+	giveCards(t, "colmiss1", cardRosetta, 1)
 	giveCards(t, "colmiss1", cardFlyingScotsman, 1)
 	cookie := login(t, router, "colmiss1", "foo-bar-baz-qux")
 
 	cases := map[string][]string{
-		"/collections/1/?status=owned":   {"Flying Scotsman", "Tungsten"},
+		"/collections/1/?status=owned":   {"Flying Scotsman", "Rosetta Stone"},
 		"/collections/1/?status=missing": {"Pythagorean tiling", "McMurdo Station", "Ford Model T"},
 		// Combined with the other filters
 		"/collections/1/?status=missing&rarity=common": {"Pythagorean tiling"},
 		// Missing first, each part in collection order
-		"/collections/1/?sort=missing": {"Pythagorean tiling", "McMurdo Station", "Ford Model T", "Flying Scotsman", "Tungsten"},
+		"/collections/1/?sort=missing": {"Pythagorean tiling", "McMurdo Station", "Ford Model T", "Flying Scotsman", "Rosetta Stone"},
 	}
 	for target, titles := range cases {
 		require.Equal(t, titles, cardTitles(getInventory(t, router, cookie, target)), target)
@@ -149,7 +149,7 @@ func TestCollectionMissingCards(t *testing.T) {
 func TestCollectionShowsProgress(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "colprogress1", "foo-bar-baz-qux", 0)
-	giveCards(t, "colprogress1", cardTungsten, 2)
+	giveCards(t, "colprogress1", cardRosetta, 2)
 	giveCards(t, "colprogress1", cardFordT, 1)
 	cookie := login(t, router, "colprogress1", "foo-bar-baz-qux")
 
@@ -176,8 +176,8 @@ func TestCollectionShowsProgress(t *testing.T) {
 	require.Contains(t, body, `<input type="hidden" name="u" value="colprogress1">`)
 	require.Contains(t, body, `Cards <span class="inventory-tab-count">3</span>`)
 	body = getInventory(t, router, viewer, "/collections/1/?u=colprogress1&status=owned")
-	require.ElementsMatch(t, []string{"Tungsten", "Ford Model T"}, cardTitles(body))
-	body = getInventory(t, router, viewer, "/collections/1/?u=colprogress1&q=tungsten&rarity=rare")
+	require.ElementsMatch(t, []string{"Rosetta Stone", "Ford Model T"}, cardTitles(body))
+	body = getInventory(t, router, viewer, "/collections/1/?u=colprogress1&q=rosetta&rarity=rare")
 	require.Contains(t, body, `<a href="/collections/1/?u=colprogress1">Clear search</a>`)
 	body = getInventory(t, router, viewer, "/collections/2/?u=colprogress1")
 	require.Contains(t, body, `?u=colprogress1&amp;p=2`)
@@ -195,10 +195,10 @@ func TestCollectionCardsFilterAndSort(t *testing.T) {
 
 	// The collection's cards, with the catalog filters applied within it
 	cases := map[string][]string{
-		"/collections/1/": {"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Tungsten"},
-		"/collections/1/?rarity=common&sort=name-desc": {"Tungsten", "Pythagorean tiling", "Flying Scotsman"},
+		"/collections/1/": {"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Rosetta Stone"},
+		"/collections/1/?rarity=common&sort=name-desc": {"Rosetta Stone", "Pythagorean tiling", "Flying Scotsman"},
 		"/collections/1/?rarity=rare":                  {"McMurdo Station"},
-		"/collections/1/?q=tungsten":                   {"Tungsten"},
+		"/collections/1/?q=rosetta":                   {"Rosetta Stone"},
 		// The collection can't be swapped through the query
 		"/collections/1/?collection=2&rarity=rare": {"McMurdo Station"},
 	}
@@ -210,7 +210,7 @@ func TestCollectionCardsFilterAndSort(t *testing.T) {
 	body := getPage(t, router, "/collections/1/?rarity=rare")
 	require.Contains(t, body, `action="/collections/1/"`)
 
-	empty := getPage(t, router, "/collections/1/?q=tungsten&rarity=rare")
+	empty := getPage(t, router, "/collections/1/?q=rosetta&rarity=rare")
 	require.Contains(t, empty, `<a href="/collections/1/">Clear search</a>`)
 	require.Contains(t, body, `name="rarity"`)
 	// No tabs or collection picker inside a collection

@@ -3,7 +3,8 @@
 <h1>{{ .T "profile-title" }}</h1>
 {{ if .Data.Edit }}
 <section class="profile-panel">
-	<div class="profile-error" id="profile-result" role="status" aria-live="polite"></div>
+	{{/* Live regions, present while empty so what is written in is announced */}}
+	<div class="form-result" id="profile-result"><p class="section-error" role="alert"></p><p class="section-success" role="status"></p></div>
 	<div class="profile-avatar-editor">
 		<div class="profile-avatar">
 			<a href="/avatars/{{ .Data.Profile.UserID }}" target="_blank" rel="noopener" aria-label="{{ .T "profile-avatar-view" }}" title="{{ .T "profile-avatar-view" }}">
@@ -29,7 +30,10 @@
 		</div>
 		<p class="profile-avatar-help">{{ .T "profile-avatar-help" }}</p>
 		{{ if not .Data.Own }}
-		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+		<div class="profile-links">
+			<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+			<a class="profile-inventory profile-message" href="?chat={{ .Data.Profile.User.Username }}" data-chat-open="{{ .Data.Profile.User.Username }}">{{ .T "profile-message" }}</a>
+		</div>
 		{{ end }}
 	</div>
 	{{ if not .Data.Own }}
@@ -44,7 +48,7 @@
 		{{ end }}
 	</p>
 	{{ end }}
-	<dialog id="avatar-delete-dialog" class="profile-confirm-dialog" aria-labelledby="avatar-delete-title" aria-describedby="avatar-delete-description">
+	<dialog id="avatar-delete-dialog" class="popup profile-confirm-dialog" aria-labelledby="avatar-delete-title" aria-describedby="avatar-delete-description">
 		<h2 id="avatar-delete-title">{{ .T "profile-avatar-delete-title" }}</h2>
 		<p id="avatar-delete-description">{{ .T "profile-avatar-delete-description" }}</p>
 		<form method="dialog" class="profile-confirm-actions">
@@ -64,12 +68,13 @@
 				maxlength="16"
 				pattern="[a-zA-Z0-9_]{3,16}"
 				title="{{ .T "profile-username-hint" }}"
+				aria-describedby="profile-error-username"
 				value="{{ .Data.Profile.User.Username }}">
 			<p class="profile-error" id="profile-error-username" hidden></p>
 		</div>
 		<div class="profile-field profile-field-wide">
 			<label for="email">{{ .T "account-email" }}</label>
-			<input type="text" inputmode="email" id="email" name="email" autocomplete="email" maxlength="254" value="{{ with .Data.Profile.User.Email }}{{ . }}{{ end }}">
+			<input type="email" id="email" name="email" autocomplete="email" maxlength="254" aria-describedby="profile-error-email" value="{{ with .Data.Profile.User.Email }}{{ . }}{{ end }}">
 			<p class="profile-error" id="profile-error-email" hidden></p>
 		</div>
 		<div class="profile-field profile-field-wide">
@@ -79,6 +84,7 @@
 				name="bio"
 				id="bio"
 				maxlength="244"
+				aria-describedby="profile-error-bio"
 				placeholder="{{ .T "profile-empty-field" }}">{{ .Data.Profile.Bio }}</textarea>
 			<p class="profile-error" id="profile-error-bio" hidden></p>
 		</div>
@@ -90,6 +96,7 @@
 				id="birthdate"
 				autocomplete="bday"
 				max="{{ today }}"
+				aria-describedby="profile-error-birthdate"
 				value="{{ if not .Data.Profile.BirthDate.IsZero }}{{ .Data.Profile.BirthDate.Format "2006-01-02" }}{{ end }}">
 			<p class="profile-error" id="profile-error-birthdate" hidden></p>
 		</div>
@@ -99,8 +106,9 @@
 				type="text"
 				name="contact"
 				id="contact"
-				autocomplete="email"
+				autocomplete="off"
 				maxlength="256"
+				aria-describedby="profile-error-contact"
 				placeholder="{{ .T "profile-empty-field" }}"
 				value="{{ .Data.Profile.ContactInfo }}">
 			<p class="profile-error" id="profile-error-contact" hidden></p>
@@ -121,7 +129,9 @@
 				name="new_password"
 				id="new_password"
 				autocomplete="new-password"
-				minlength="8">
+				minlength="8"
+				maxlength="72"
+				aria-describedby="profile-error-new_password">
 				<p class="profile-error" id="profile-error-new_password" hidden></p>
 		</div>
 		<div class="profile-field" hidden>
@@ -133,7 +143,9 @@
 				name="confirm_password"
 				id="confirm_password"
 				autocomplete="new-password"
-				minlength="8">
+				minlength="8"
+				maxlength="72"
+				aria-describedby="profile-error-confirm_password">
 				<p class="profile-error" id="profile-error-confirm_password" hidden></p>
 		</div>
 		<div class="profile-field" hidden>
@@ -145,11 +157,14 @@
 				name="password"
 				id="password"
 				autocomplete="current-password"
+				maxlength="72"
+				aria-describedby="profile-error-password"
 				placeholder="********">
 				<p class="profile-error" id="profile-error-password" hidden></p>
 		</div>
 		{{ end }}
-		<button type="submit" hidden>{{ .T "profile-submit" }}</button>
+		{{/* Shown without JavaScript; hidden by it until a field changes */}}
+		<button type="submit">{{ .T "profile-submit" }}</button>
 	</form>
 </section>
 {{ else }}
@@ -162,9 +177,12 @@
 	<div>
 		<p id="username" class="profile-name">{{ .Data.Profile.User.Username }}</p>
 		{{ if not .Data.Own }}
+		<div class="profile-links">
+			<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
+			<a class="profile-inventory profile-message" href="?chat={{ .Data.Profile.User.Username }}" data-chat-open="{{ .Data.Profile.User.Username }}">{{ .T "profile-message" }}</a>
+		</div>
 		<div class="friend-button" data-id="{{ .Data.Profile.User.ID }}" data-relation="{{ .Data.Relation }}" data-block
 			{{ template "friend-labels" . }}></div>
-		<a class="profile-inventory" href="/inventory?u={{ .Data.Profile.User.Username }}">{{ .T "profile-inventory" }}</a>
 		{{ end }}
 		<p class="user-status{{ if .Data.Online }} is-online{{ end }}" data-relative-times data-locale="{{ .Data.Locale }}">
 			{{ if .Data.Online }}
@@ -206,9 +224,9 @@
 	<div class="profile-detail profile-field-wide">
 		<p id="bio-label" class="profile-label">{{ .T "profile-bio" }}</p>
 		{{ if .Data.Profile.Bio }}
-		<p id="bio" aria-labelledby="bio-label">{{ .Data.Profile.Bio }}</p>
+		<p id="bio">{{ .Data.Profile.Bio }}</p>
 		{{ else }}
-		<p id="bio" aria-labelledby="bio-label">{{ .T "profile-empty-field" }}</p>
+		<p id="bio">{{ .T "profile-empty-field" }}</p>
 		{{ end }}
 	</div>
 </section>
@@ -225,7 +243,9 @@
 {{ end }}
 {{ if .Data.Edit }}
 <div id="profile-enhancement" data-label-network-error="{{ .T "profile-error-network" }}"
-	data-label-unexpected-error="{{ .T "error-unexpected" }}"></div>
+	data-label-unexpected-error="{{ .T "error-unexpected" }}"
+	data-label-saved="{{ .T "profile-saved" }}"
+	data-label-mismatch="{{ .T "profile-error-passwords-do-not-match" }}"></div>
 {{ end }}
 </div>
 {{ end }}
@@ -233,7 +253,7 @@
 {{ define "profile-rank-field" }}
 <div class="profile-field">
 	<label for="rank">{{ .T "profile-rank" }}</label>
-	<select id="rank" name="rank" required>
+	<select id="rank" name="rank" required aria-describedby="profile-error-rank">
 		<option value="0" {{ if eq .Data.Profile.User.Rank 0 }}selected{{ end }}>{{ .T "profile-rank-user" }}</option>
 		<option value="1" {{ if eq .Data.Profile.User.Rank 1 }}selected{{ end }}>{{ .T "profile-rank-moderator" }}</option>
 		<option value="2" {{ if eq .Data.Profile.User.Rank 2 }}selected{{ end }}>{{ .T "profile-rank-admin" }}</option>

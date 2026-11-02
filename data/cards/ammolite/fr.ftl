@@ -1,0 +1,2 @@
+title = Ammolite
+description = L'ammolite est une pierre ornementale d'origine biogénique, d'aspect rouge-verdâtre et irisé. Elle provient exclusivement de l'est des Montagnes Rocheuses, au Canada et aux États-Unis. Elle est issue de fossiles d'ammonites, des Placenticeras de la formation géologique de Bearpaw Shale. Ces fossiles contiennent de l'aragonite, soit le composant principal de la nacre.

@@ -1,0 +1,2 @@
+title = Béryl rouge
+description = Le béryl rouge est une variété de béryl rouge groseille riche en manganèse. Si le terme « bixbite » est encore usité en français il doit être remplacé par celui de « béryl rouge », du fait de la confusion entre cette variété et l’espèce bixbyite qui elle est agréée par l’IMA. Cette recommandation émane à la fois de l’IMA et de la Confédération Internationale de la Bijouterie, Joaillerie et Orfèvrerie.

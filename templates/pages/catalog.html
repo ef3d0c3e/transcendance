@@ -2,7 +2,7 @@
 <div class="inventory catalog">
 	<div class="inventory-header">
 		<div class="inventory-heading">
-			<h2 class="inventory-title">{{ .Data.Title }}</h2>
+			<h1 class="inventory-title">{{ .Data.Title }}</h1>
 			{{ with .Data.ViewedTitle }}<p class="inventory-count">{{ . }}</p>{{ end }}
 			{{ if ne (len .Data.Items) 0 }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
@@ -10,8 +10,9 @@
 		</div>
 		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Action }}" method="get">
 			{{ with .Data.Viewed }}<input type="hidden" name="u" value="{{ . }}">{{ end }}
+			{{/* The placeholder goes away once typed in: the label stays */}}
 			<input type="text" id="q" name="q" placeholder="{{ .T "card-search-placeholder" }}"
-				value="{{ .Data.Query }}">
+				aria-label="{{ .T "card-search-placeholder" }}" value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "card-search-submit" }}></button>
 		</form>
 	</div>
@@ -34,7 +35,7 @@
 	<div class="inventory-filters">
 		<label>
 			<span>{{ .T "inventory-filter-rarity" }}</span>
-			<select name="rarity" form="search-form" data-autosubmit>
+			<select name="rarity" form="search-form" data-filter>
 				{{ range .Data.RarityOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -43,7 +44,7 @@
 		{{ if not .Data.Scoped }}
 		<label>
 			<span>{{ .T "catalog-filter-collection" }}</span>
-			<select name="collection" form="search-form" data-autosubmit>
+			<select name="collection" form="search-form" data-filter>
 				{{ range .Data.CollectionOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -53,7 +54,7 @@
 		{{ if .Data.StatusOptions }}
 		<label>
 			<span>{{ .T "catalog-filter-status" }}</span>
-			<select name="status" form="search-form" data-autosubmit>
+			<select name="status" form="search-form" data-filter>
 				{{ range .Data.StatusOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -62,12 +63,13 @@
 		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
-			<select name="sort" form="search-form" data-autosubmit>
+			<select name="sort" form="search-form" data-filter>
 				{{ range .Data.SortOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
 			</select>
 		</label>
+		<button type="submit" form="search-form" class="inventory-filters-apply">{{ .T "inventory-filters-apply" }}</button>
 	</div>
 
 	{{ if .Data.Message }}
@@ -83,11 +85,19 @@
 	{{ .Children.Paginator }}
 	<e-cluster class="inventory-cards" justify="center">
 		{{ range $val := .Data.Items }}
+		{{ if $val.Data.CardMissing }}
+		{{/* Not collected yet: said in words, not only grayed out */}}
+		<div class="catalog-missing">
+			{{ template "card" $val }}
+			<span class="catalog-missing-pill">{{ $.T "catalog-filter-status-missing" }}</span>
+		</div>
+		{{ else }}
 		{{ template "card" $val }}
+		{{ end }}
 		{{ end }}
 	</e-cluster>
 	{{ if gt .Data.Pages 1 }}
-	{{ .Children.Paginator }}
+	{{ .Children.PaginatorBottom }}
 	{{ end }}
 	{{ end }}
 </div>

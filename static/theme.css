@@ -65,6 +65,9 @@
 
     --color-border-1: #d0dcd6;
     --color-border-2: #b9c8c1;
+    /* Edges of the fields, checkboxes and selects: 3:1 at least on every
+       background (3.10 on bg-4, 3.55 on bg-2) */
+    --color-border-control: #7b8983;
 
     --color-success-1: #e7f3ec;
     --color-success-2: #a1d8b6;
@@ -75,12 +78,16 @@
     --color-error-3: #b42318;
 
     --color-shadow: rgb(24 32 29 / 10%);
+
+    /* Tints a pill on an accent away from the text on it, keeping it readable */
+    --color-accent-tint: rgb(0 0 0 / 18%);
 }
 
 :root[theme="dark"] {
     --color-text: #e3e8e6;
     --color-text-muted: #a6b2ad;
-    --color-text-alt: #ffffff;
+    /* The dark theme's accents are light, white text on them is unreadable */
+    --color-text-alt: #0d1110;
 
     --color-bg-1: #0d1110;
     --color-bg-2: #171c1a;
@@ -103,6 +110,8 @@
 
     --color-border-1: #3d4842;
     --color-border-2: #536159;
+    /* 3.14:1 on bg-4, 3.79 on bg-2 */
+    --color-border-control: #6c7972;
 
     --color-success-1: #1d2b24;
     --color-success-2: #2f7048;
@@ -113,6 +122,8 @@
     --color-error-3: #ff8580;
 
     --color-shadow: rgb(24 32 29 / 10%);
+
+    --color-accent-tint: rgb(255 255 255 / 22%);
 }
 
 /* Base */
@@ -166,7 +177,8 @@ button {
     cursor: pointer;
 }
 
-button:disabled {
+button:disabled,
+button[aria-disabled="true"] {
     cursor: not-allowed;
     opacity: 0.6;
 }
@@ -177,6 +189,56 @@ a {
 
 a:hover {
     color: var(--color-accent-secondary-dark);
+}
+
+/* Keyboard focus, for whatever has no ring of its own */
+:focus-visible {
+    outline: 3px solid var(--color-accent-secondary);
+    outline-offset: 2px;
+}
+
+/* Target of the skip link, focused to move the reading position only */
+#main:focus {
+    outline: none;
+}
+
+/* First thing the keyboard reaches: jumps over the header */
+.skip-link {
+    position: absolute;
+    top: 0.5rem;
+    left: 0.5rem;
+    z-index: 1000;
+
+    padding: 0.6rem 1rem;
+    border-radius: 0.6rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    font-weight: 650;
+    text-decoration: none;
+
+    transform: translateY(-200%);
+
+    &:focus-visible {
+        transform: none;
+    }
+
+    &:hover {
+        color: var(--color-text-alt);
+    }
+}
+
+/* Read by screen readers, not shown */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
 }
 
 ::selection {
@@ -230,6 +292,11 @@ header>span {
     padding: 0;
     padding-inline-end: 0.75rem;
     margin: 0 auto 0 0;
+
+    font-size: clamp(1.75rem, 5vw, 2.35rem);
+    line-height: 1.15;
+    font-weight: 650;
+    letter-spacing: -0.02em;
     border-inline-end: 1px solid var(--color-border-1);
 }
 
@@ -244,7 +311,7 @@ header>span {
     }
 
     &:focus-visible {
-        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline: 3px solid var(--color-accent-secondary);
         outline-offset: 2px;
     }
 }
@@ -300,7 +367,7 @@ header nav {
         }
 
         &:focus-visible {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: 2px;
         }
 
@@ -327,6 +394,23 @@ header nav {
     padding-inline-start: 0.75rem;
 
     border-inline-start: 1px solid var(--color-border-1);
+}
+
+/* Coin balance of the account */
+.nav-balance {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    padding: 0.35rem 0.75rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
 }
 
 /* Username, links to the profile */
@@ -366,7 +450,7 @@ header nav {
     }
 
     &:focus-visible {
-        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline: 3px solid var(--color-accent-secondary);
         outline-offset: 2px;
     }
 
@@ -375,13 +459,46 @@ header nav {
     }
 }
 
-/* Logging out is the neutral action */
+/* Log in and register: links to their pages, until the popups replace them */
+.nav-auth {
+    display: inline-flex;
+    align-items: center;
+
+    min-height: 2.5rem;
+    padding: 0.45rem 0.9rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary);
+    border-radius: 0.55rem;
+
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+
+    &:hover {
+        color: var(--color-text-alt);
+        background: var(--color-accent-secondary-dark);
+    }
+}
+
+/* Logging out is the neutral action, a form posting to /api/logout */
+.nav-logout-form {
+    display: flex;
+    margin: 0;
+}
+
+header.is-compact .nav-logout-form .nav-logout {
+    flex: 1;
+}
+
 .nav-logout {
     color: var(--color-text);
     background: transparent;
     box-shadow: inset 0 0 0 1px var(--color-border-2);
 
-    &:hover {
+    &:hover,
+    &:active {
+        color: var(--color-text);
         background: var(--color-bg-4);
     }
 }
@@ -392,15 +509,9 @@ header.is-measuring nav {
 }
 
 
-/* Hide controls when expanded */
-.nav-toggle,
+/* Menu buttons, only for the compact layout's side menu */
 .nav-toggle-btn,
-.nav-backdrop,
 .nav-close {
-    display: none;
-}
-
-input[type="checkbox"].nav-toggle {
     display: none;
 }
 
@@ -423,27 +534,26 @@ header.is-compact .header-title {
     border-inline-end: 0;
 }
 
-header.is-compact .nav-toggle {
-    display: block;
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    opacity: 0;
-    pointer-events: none;
-}
-
 header.is-compact .nav-toggle-btn,
 header.is-compact .nav-close {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0.25rem;
-    cursor: pointer;
-}
 
-header.is-compact .nav-toggle:focus-visible+.nav-toggle-btn {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+    padding: 0.25rem;
+
+    color: var(--color-text);
+    background: transparent;
+    border: 0;
+    border-radius: 0.5rem;
+
+    cursor: pointer;
+
+    &:hover {
+        background: var(--color-bg-4);
+    }
 }
 
 header.is-compact .nav-close {
@@ -503,17 +613,9 @@ header.is-compact .nav-user {
     max-width: none;
 }
 
-header.is-compact .nav-toggle:checked~nav {
+header.is-compact.nav-open nav {
     transform: none;
     visibility: visible;
-}
-
-header.is-compact .nav-toggle:checked~.nav-backdrop {
-    display: block;
-    position: fixed;
-    inset: 0;
-    z-index: 10;
-    background: rgb(0 0 0 / 0.4);
 }
 
 header.is-compact.nav-animate nav {
@@ -522,14 +624,14 @@ header.is-compact.nav-animate nav {
         visibility 0s linear 0.2s;
 }
 
-header.is-compact.nav-animate .nav-toggle:checked~nav {
+header.is-compact.nav-animate.nav-open nav {
     transition: transform 0.2s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
 
     header.is-compact.nav-animate nav,
-    header.is-compact.nav-animate .nav-toggle:checked~nav {
+    header.is-compact.nav-animate.nav-open nav {
         transition: none;
     }
 }
@@ -864,7 +966,7 @@ form input:not([type="checkbox"]):not([type="radio"]) {
     color: var(--color-text);
     background: var(--color-bg-4);
 
-    border: 1px solid var(--color-border-1);
+    border: 1px solid var(--color-border-control);
     border-radius: 0.6rem;
 
     appearance: none;
@@ -875,16 +977,18 @@ form input:not([type="checkbox"]):not([type="radio"]) {
     }
 
     &:hover {
-        border-color: var(--color-border-2);
+        border-color: var(--color-text-muted);
     }
 
+    /* A 2px ring of the accent (6:1 on the backgrounds), then a soft halo */
     &:focus {
         outline: none;
 
         border-color: var(--color-accent-primary);
 
         box-shadow:
-            0 0 0 3px color-mix(in srgb,
+            0 0 0 1px var(--color-accent-primary),
+            0 0 0 4px color-mix(in srgb,
                 var(--color-accent-primary) 20%,
                 transparent);
     }
@@ -911,10 +1015,7 @@ form button {
 
 button:focus-visible,
 input:focus-visible {
-    outline:
-        3px solid color-mix(in srgb,
-            var(--color-accent-secondary) 55%,
-            transparent);
+    outline: 3px solid var(--color-accent-secondary);
 
     outline-offset: 2px;
 }
@@ -935,13 +1036,13 @@ input[type="checkbox"] {
     vertical-align: -0.35em;
 
     background: var(--color-bg-4);
-    border: 1px solid var(--color-border-1);
+    border: 1px solid var(--color-border-control);
     border-radius: 0.3rem;
 
     cursor: pointer;
 
     &:hover {
-        border-color: var(--color-border-2);
+        border-color: var(--color-text-muted);
     }
 
     &:checked {
@@ -1020,7 +1121,7 @@ input[type="checkbox"] {
     text-align: center;
     color: var(--color-text);
     background: var(--color-bg-4);
-    border: 1px solid var(--color-border-1);
+    border: 1px solid var(--color-border-control);
     border-radius: 0.6rem;
 }
 
@@ -1028,6 +1129,11 @@ input[type="checkbox"] {
     color: var(--color-text-alt);
     background: var(--color-accent-secondary);
     border-color: var(--color-accent-secondary);
+}
+
+/* Terms of Service consent, its checkbox before the text */
+.auth-form .auth-form-consent {
+    margin: 0 0 1rem;
 }
 
 .login-type-option input:focus-visible + span {
@@ -1111,6 +1217,33 @@ input[type="checkbox"] {
     margin-bottom: 1rem;
 }
 
+/* A countdown that reached zero, offering to reload the page */
+.countdown-refresh {
+    font-weight: 650;
+}
+
+/* Result of a form sent in the background: a [role=alert] for failures, a
+   [role=status] for success. Both stay in the page while empty, collapsed,
+   so screen readers announce what is written in. */
+.form-result > p {
+    margin: 0 0 1rem;
+}
+
+.form-result > p:empty {
+    margin: 0;
+    padding: 0;
+    border: 0;
+}
+
+/* What a field expects, under it */
+.form-hint {
+    margin: -0.6rem 0 1rem;
+
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    line-height: 1.4;
+}
+
 /* Generic buttons */
 
 button {
@@ -1135,7 +1268,7 @@ button {
         background: var(--color-accent-secondary-dark);
     }
 
-    &active {
+    &:active {
         transform: translateY(1px);
     }
 }
@@ -1164,6 +1297,160 @@ section {
     border-radius: 1rem;
     box-shadow: 0 0 10px var(--color-shadow);
 }
+
+/* {{{ Popups */
+
+/* Frame, backdrop and entrance shared by the site's <dialog> popups. Each
+   sets its width with --popup-width; small screens get a bottom sheet. */
+.popup {
+    width: min(100% - 2rem, var(--popup-width, 26rem));
+    max-height: calc(100% - 2rem);
+    padding: 0;
+
+    overflow: auto;
+    overscroll-behavior: contain;
+
+    color: var(--color-text);
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 1rem;
+    box-shadow: 0 10px 30px var(--color-shadow);
+
+    &::backdrop {
+        background: rgb(0 0 0 / 55%);
+        backdrop-filter: blur(3px);
+    }
+
+    &[open] {
+        animation: popup-in 150ms ease;
+    }
+}
+
+@keyframes popup-in {
+    from {
+        opacity: 0;
+        transform: translateY(0.5rem) scale(0.98);
+    }
+}
+
+@media (max-width: 480px) {
+    .popup {
+        width: 100%;
+        max-width: 100%;
+        margin: auto 0 0;
+
+        border-radius: 1rem 1rem 0 0;
+        border-bottom: 0;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .popup[open] {
+        animation: none;
+    }
+}
+
+/* Coin top-up popup (templates/partials/topup-popup.html) */
+.shop-topup-popup {
+    --popup-width: 34rem;
+}
+
+.shop-topup-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    padding: 1.25rem 1.25rem 1rem;
+
+    h2 {
+        margin: 0;
+
+        font-size: 1.25rem;
+    }
+}
+
+.shop-note {
+    margin: 0;
+
+    color: var(--color-text-muted);
+    font-size: .9em;
+}
+
+.shop-topup-packs {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+    gap: .75rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.shop-topup-pack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: .75rem;
+
+    height: 100%;
+    padding: 1rem .75rem .75rem;
+
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: .75rem;
+
+    button {
+        width: 100%;
+        margin-top: auto;
+
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Not enough to cover what the page needs */
+    &.is-short {
+        opacity: .5;
+    }
+}
+
+.shop-topup-amount {
+    display: inline-flex;
+    align-items: center;
+    gap: .35em;
+
+    font-size: 1.1rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+
+    .coin-icon {
+        width: 1.3em;
+        height: 1.3em;
+    }
+}
+
+/* Closing is the neutral action, like the unselected inventory tabs */
+.shop-topup-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        color: var(--color-text);
+        background: var(--color-bg-4);
+
+        &:hover {
+            background: color-mix(in srgb, var(--color-bg-4), black 10%);
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    .shop-topup-content {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+}
+
+/* }}} */
 
 .section-success,
 .section-error {
@@ -1298,9 +1585,31 @@ section {
         border-color 150ms ease;
 
     &:hover {
-        background: var(--color-accent-primary-darker);
-        border-color: var(--color-accent-primary);
+        color: var(--color-text);
+        background: var(--color-bg-4);
+        border-color: var(--color-border-control);
     }
+}
+
+/* The page shown: filled, not only another color (aria-current tells it) */
+.paginator .is-current {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 2.5rem;
+    height: 2.5rem;
+    padding: 0 0.625rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary);
+    border-radius: 0.625rem;
+}
+
+/* No previous or next page */
+.paginator .is-disabled {
+    min-width: 2.5rem;
+    color: var(--color-text-muted);
+    text-align: center;
 }
 
 @media (max-width: 480px) {
@@ -1427,19 +1736,10 @@ section {
     text-align: center;
 }
 
+/* Avatar deletion: the shared .popup frame */
 .profile-confirm-dialog {
-    width: min(28rem, calc(100% - 2rem));
+    --popup-width: 28rem;
     padding: 1.5rem;
-    color: var(--color-text);
-    background: var(--color-bg-2);
-    border: 1px solid var(--color-border-1);
-    border-radius: 1rem;
-    box-shadow: 0 12px 40px var(--color-shadow);
-}
-
-.profile-confirm-dialog::backdrop {
-    background: rgb(0 0 0 / 50%);
-    backdrop-filter: blur(3px);
 }
 
 .profile-confirm-dialog h2 {
@@ -1526,7 +1826,7 @@ section {
 .profile-page select {
     color: var(--color-text);
     background: var(--color-bg-4);
-    border: 1px solid var(--color-border-1);
+    border: 1px solid var(--color-border-control);
     border-radius: 0.6rem;
 }
 
@@ -1535,7 +1835,7 @@ section {
     min-height: 7rem;
     color: var(--color-text);
     background: var(--color-bg-4);
-    border: 1px solid var(--color-border-1);
+    border: 1px solid var(--color-border-control);
     border-radius: 0.6rem;
 }
 
@@ -1544,13 +1844,20 @@ section {
 }
 
 .profile-page textarea:hover {
-    border-color: var(--color-border-2);
+    border-color: var(--color-text-muted);
 }
 
 .profile-page textarea:focus {
     outline: none;
     border-color: var(--color-accent-primary);
-    box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+    box-shadow:
+        0 0 0 1px var(--color-accent-primary),
+        0 0 0 4px color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+}
+
+/* A field the server refused, along its message */
+.profile-page [aria-invalid="true"] {
+    border-color: var(--color-error-3);
 }
 
 .profile-fields > button {
@@ -1567,13 +1874,6 @@ section {
     overflow-wrap: anywhere;
 }
 
-.profile-page #profile-result:not(:empty) {
-    padding: 0.75rem 0.9rem;
-    margin-bottom: 1rem;
-    background: var(--color-error-1);
-    border: 1px solid var(--color-error-2);
-    border-radius: 0.6rem;
-}
 
 .profile-readonly {
     display: grid;
@@ -1631,6 +1931,26 @@ section {
     transform: translateY(1px);
 }
 
+.profile-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+}
+
+.profile-links .profile-inventory {
+    margin: 0;
+}
+
+.profile-message {
+    background: var(--color-accent-primary);
+}
+
+.profile-message:hover {
+    background: var(--color-accent-primary-dark);
+}
+
 .profile-detail {
     min-width: 0;
     padding-top: 1rem;
@@ -1660,6 +1980,131 @@ section {
     max-width: 76rem;
     margin: 0 auto;
     padding-inline: 1rem;
+}
+
+/* Daily streak section, on top of every tab of one's own inventory */
+.daily-streak {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem 2rem;
+
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.55rem;
+}
+
+.daily-streak-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 1.25rem;
+}
+
+.daily-streak-title {
+    margin: 0;
+
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* Reward ladder: one bar of fused cells, one per tier, the one of the
+   bonus of the day standing out and the others grayed out */
+.daily-streak-meter {
+    display: flex;
+    flex-wrap: wrap;
+    overflow: hidden;
+
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-variant-numeric: tabular-nums;
+}
+
+.daily-streak-tier {
+    padding: 0.25rem 0.7rem;
+
+    color: var(--color-text-muted);
+
+    font-size: 0.85rem;
+    font-weight: 600;
+
+    /* Fused cells, split by a hairline */
+    & + & {
+        border-left: 1px solid var(--color-border-1);
+    }
+}
+
+.daily-streak-tier-current {
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    font-weight: 700;
+}
+
+/* Raw streak count, shown past the reward cap */
+.daily-streak-count {
+    color: var(--color-accent-secondary);
+    font-weight: 700;
+}
+
+.daily-streak-best {
+    color: var(--color-text-muted);
+    font-variant-numeric: tabular-nums;
+}
+
+.daily-streak-claim {
+    margin-left: auto;
+}
+
+.daily-streak-button {
+    min-height: 2.5rem;
+    padding: 0.45rem 1rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    border: 0;
+    border-radius: 0.55rem;
+
+    font-weight: 700;
+
+    transition:
+        background-color 120ms ease,
+        transform 120ms ease;
+
+    &:hover:not(:disabled) {
+        background: var(--color-accent-primary-dark);
+        transform: translateY(-1px);
+    }
+
+    /* The countdown of the next bonus keeps its opacity */
+    &:disabled {
+        color: var(--color-text-muted);
+        background: var(--color-bg-4);
+        opacity: 1;
+    }
+}
+
+.daily-streak-button [data-countdown] {
+    font-variant-numeric: tabular-nums;
+}
+
+/* Confirmation of the claimed bonus, on the row under the claim button */
+.daily-streak-notice {
+    width: 100%;
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+
+    color: var(--color-success-3);
+    background: var(--color-success-1);
+    border: 1px solid var(--color-success-2);
+    border-radius: 0.6rem;
+
+    font-size: 0.95rem;
+    line-height: 1.45;
 }
 
 .inventory-header {
@@ -1730,7 +2175,7 @@ section {
         }
 
         &:focus-visible {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: 2px;
         }
 
@@ -1760,6 +2205,10 @@ section {
 
     .inventory-tab-collections {
         --icon: var(--icon-collections);
+    }
+
+    .inventory-tab-tradeup {
+        --icon: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5 12 6H9.5v5.5h-3V6H4l4-4.5Z'/%3E%3Cpath d='M2.5 13h11v1.5h-11V13Z'/%3E%3C/svg%3E");
     }
 }
 
@@ -1809,16 +2258,23 @@ section {
     }
 
     &:focus-visible {
-        outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+        outline: 3px solid var(--color-accent-secondary);
         outline-offset: 4px;
     }
 }
 
-/* Booster tile, clicking it asks to open the booster */
+/* Booster tile, a link opening the booster when it has some */
 .inventory-booster {
     display: flex;
     flex-direction: column;
     align-items: center;
+
+    color: inherit;
+    text-decoration: none;
+
+    &:hover {
+        color: inherit;
+    }
 
     .card-container {
         cursor: pointer;
@@ -1840,7 +2296,7 @@ section {
     }
 
     &:focus-visible {
-        outline: 2px solid var(--color-accent-primary);
+        outline: 3px solid var(--color-accent-secondary);
         outline-offset: 4px;
         border-radius: 1rem;
     }
@@ -1929,7 +2385,8 @@ section {
 /* Number of identical boosters in a stack */
 /* Number of copies of a folded booster or card */
 .collection-stack,
-.card-stack {
+.card-stack,
+.tradeup-taken {
     position: absolute;
     top: -0.6rem;
     right: -0.6rem;
@@ -1950,6 +2407,72 @@ section {
     pointer-events: none;
 }
 
+/* Copies of a card up in pending trades, under the copy count */
+.card-locked {
+    position: absolute;
+    top: 1.55rem;
+    right: -0.6rem;
+    z-index: 20;
+
+    padding: 0.2rem 0.6rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-size: 0.8rem;
+    font-weight: 650;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* Number of available boosters in a pile */
+.booster-pile-count {
+    position: absolute;
+    top: -0.6rem;
+    left: -0.6rem;
+    z-index: 20;
+
+    min-width: 2.25rem;
+    padding: 0.2rem 0.6rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+}
+
+/* Time left before the next booster joins a pile */
+.booster-pile-timer {
+    position: absolute;
+    top: -0.6rem;
+    right: -0.6rem;
+    z-index: 20;
+
+    min-width: 2.25rem;
+    padding: 0.2rem 0.6rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-2);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+    pointer-events: none;
+}
+
 .inventory-heading {
     display: flex;
     flex-wrap: wrap;
@@ -1960,6 +2483,7 @@ section {
 
 .inventory-title {
     margin: 0;
+    text-align: start;
 
     font-size: clamp(1.5rem, 4vw, 2rem);
     line-height: 1.15;
@@ -2020,7 +2544,7 @@ section {
         }
 
         &:focus-visible {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: 2px;
         }
 
@@ -2029,6 +2553,15 @@ section {
             background: var(--color-accent-secondary);
         }
     }
+}
+
+/* Applies the filters: choosing an option doesn't reload the page by itself */
+.inventory-filters-apply {
+    min-height: 2.25rem;
+    padding: 0.3rem 0.9rem;
+
+    font-size: 0.95rem;
+    font-weight: 600;
 }
 
 /* Card filters and sort, part of the search form */
@@ -2056,7 +2589,7 @@ section {
 
         color: var(--color-text);
         background: var(--color-bg-4);
-        border: 1px solid var(--color-border-1);
+        border: 1px solid var(--color-border-control);
         border-radius: 0.55rem;
 
         font-size: 0.95rem;
@@ -2068,7 +2601,7 @@ section {
         }
 
         &:focus-visible {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: 2px;
         }
     }
@@ -2374,11 +2907,28 @@ body:has(.pack-page.is-opening) > .site-footer {
     gap: 1.5rem 2.5rem;
 }
 
+/* After the panel in the page, so its h1 comes first, but shown first */
 .pack-booster {
+    order: -1;
+
     display: flex;
     justify-content: center;
 
     animation: pack-float 4s ease-in-out infinite;
+}
+
+/* The page's animation switch is off: as with reduced motion, every
+   animation jumps to its end, so the endless ones (floating booster,
+   pulsing buttons and bars, swaying reels) stand still */
+.pack-page.is-still *,
+.pack-page.is-still *::before,
+.pack-page.is-still *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+}
+
+.pack-page.is-still .pack-window {
+    animation: none !important;
 }
 
 @keyframes pack-float {
@@ -2397,8 +2947,14 @@ body:has(.pack-page.is-opening) > .site-footer {
     flex: 1 1 26rem;
     max-width: 40rem;
 
-    h2 {
+    h1 {
         margin: 0;
+
+        font-size: 1.5rem;
+        line-height: 1.25;
+        font-weight: 700;
+        letter-spacing: normal;
+        text-align: start;
     }
 
     .pack-form {
@@ -2568,7 +3124,7 @@ body:has(.pack-page.is-opening) > .site-footer {
 
     padding: 0.1rem 0.6rem;
 
-    background: rgb(255 255 255 / 22%);
+    background: var(--color-accent-tint);
     border-radius: 999px;
 
     font-size: 0.95rem;
@@ -2588,7 +3144,7 @@ body:has(.pack-page.is-opening) > .site-footer {
     border: 1px solid var(--color-border-1);
     border-radius: 0.75rem;
 
-    h3 {
+    h2 {
         margin: 0 0 0.5rem;
         font-size: 1rem;
     }
@@ -2738,14 +3294,40 @@ body:has(.pack-page.is-opening) > .site-footer {
     text-transform: uppercase;
 }
 
-/* A card of the collection not collected yet */
+/* A card of the collection not collected yet: grayed out, its text kept
+   readable (no opacity), and its pill says it in words */
 .card-container.is-missing {
-    filter: grayscale(0.9) opacity(0.5);
+    filter: grayscale(0.9);
     transition: filter 200ms ease;
 
     &:hover {
-        filter: grayscale(0.5) opacity(0.8);
+        filter: grayscale(0.5);
     }
+}
+
+.catalog-missing {
+    position: relative;
+}
+
+.catalog-missing-pill {
+    position: absolute;
+    bottom: -0.6rem;
+    left: 50%;
+    z-index: 20;
+    translate: -50% 0;
+
+    padding: 0.15rem 0.6rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border: 2px solid var(--color-bg-1);
+    border-radius: 999px;
+    box-shadow: 0 2px 6px var(--color-shadow);
+
+    font-size: 0.8rem;
+    font-weight: 700;
+    white-space: nowrap;
+    pointer-events: none;
 }
 
 /* The owned count pops when it rolls up after an opening */
@@ -2815,7 +3397,7 @@ body:has(.pack-page.is-opening) > .site-footer {
 
         color: var(--color-text);
         background: var(--color-bg-4);
-        border: 1px solid var(--color-border-1);
+        border: 1px solid var(--color-border-control);
         border-radius: 0.55rem;
     }
 }
@@ -2914,7 +3496,7 @@ form .notification-text-button {
         }
 
         &:focus-visible {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: 2px;
         }
 
@@ -3069,7 +3651,7 @@ form .notification-text-button {
         outline: none;
 
         &::before {
-            outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+            outline: 3px solid var(--color-accent-secondary);
             outline-offset: -3px;
         }
     }
@@ -3213,3 +3795,529 @@ form .notification-action {
     }
 }
 /* }}} */
+
+/* {{{ Trades */
+/* Button to trade with the owner of a viewed collection */
+.inventory-trade {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 0.45rem 0.9rem;
+
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary);
+    border-radius: 0.55rem;
+
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+    white-space: nowrap;
+
+    transition:
+        background-color 120ms ease,
+        transform 120ms ease;
+}
+
+.inventory-trade:hover {
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary-dark);
+}
+
+.inventory-trade:active {
+    transform: translateY(1px);
+}
+
+/* Trade menu page, the panel itself is a component */
+.trade-menu-page {
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    padding-inline: 1rem;
+}
+
+.trade-menu-heading {
+    margin: 1.25rem 0 1rem;
+
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+}
+
+.trade-menu-noscript {
+    margin: 1rem 0 0;
+    padding: 0.75rem 0.9rem;
+
+    color: var(--color-error-3);
+    background: var(--color-error-1);
+    border: 1px solid var(--color-error-2);
+    border-radius: 0.6rem;
+}
+
+/* Trades page */
+.trades-page {
+    width: 100%;
+    max-width: 64rem;
+    margin: 0 auto;
+    padding-inline: 1rem;
+}
+
+.trades-title {
+    margin: 1.25rem 0 1rem;
+
+    font-size: 1.35rem;
+    letter-spacing: -0.01em;
+}
+
+/* Error of an action that could not run on its offer anymore */
+.trade-message {
+    margin: 0 0 1rem;
+    padding: 0.75rem 0.9rem;
+
+    color: var(--color-error-3);
+    background: var(--color-error-1);
+    border: 1px solid var(--color-error-2);
+    border-radius: 0.6rem;
+
+    font-size: 0.95rem;
+    line-height: 1.45;
+}
+
+.trades-section {
+    margin: 0 0 1.5rem;
+}
+
+.trades-section-title {
+    margin: 0 0 0.65rem;
+
+    font-size: 1.1rem;
+}
+
+.trade-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+/* One offer: partner, the two sides, then its actions */
+.trade-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem 1rem;
+
+    padding: 0.85rem 1rem;
+
+    background: var(--color-bg-2);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.85rem;
+}
+
+.trade-partner {
+    min-width: 6rem;
+
+    font-weight: 650;
+    overflow-wrap: anywhere;
+}
+
+.trade-sides {
+    display: grid;
+    flex: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+}
+
+.trade-side {
+    min-width: 0;
+
+    padding: 0.55rem 0.75rem;
+
+    background: var(--color-bg-4);
+    border-radius: 0.6rem;
+}
+
+.trade-side h3 {
+    margin: 0 0 0.35rem;
+
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    font-weight: 650;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.trade-lines {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    margin: 0;
+    padding: 0;
+
+    list-style: none;
+
+    font-size: 0.95rem;
+}
+
+.trade-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.trade-actions form {
+    margin: 0;
+}
+
+/* Buttons of an offer, links and buttons alike */
+.trade-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    min-height: 2.35rem;
+    padding: 0.45rem 1rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border: 0;
+    border-radius: 0.55rem;
+
+    font-weight: 600;
+    line-height: 1.3;
+    text-decoration: none;
+
+    transition: background-color 120ms ease;
+}
+
+.trade-button:hover {
+    background: color-mix(in srgb, var(--color-bg-4), black 10%);
+}
+
+.trade-button-accept {
+    color: var(--color-text-alt);
+    background: var(--color-accent-primary);
+
+    &:hover {
+        background: var(--color-accent-primary-dark);
+    }
+}
+
+.trade-button-counter {
+    color: var(--color-text-alt);
+    background: var(--color-accent-secondary);
+
+    &:hover {
+        background: var(--color-accent-secondary-dark);
+    }
+}
+
+/* State of a past offer */
+.trade-state {
+    padding: 0.35rem 0.75rem;
+
+    color: var(--color-text-muted);
+    background: var(--color-bg-4);
+    border-radius: 999px;
+
+    font-size: 0.9rem;
+    white-space: nowrap;
+}
+
+.trade-empty {
+    margin: 0;
+
+    color: var(--color-text-muted);
+}
+
+@media (max-width: 40rem) {
+    .trade-sides {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .trade-actions {
+        width: 100%;
+    }
+
+    .trade-button {
+        flex: 1;
+    }
+}
+/* }}} */
+
+/* What is up in pending trades, said next to the spendable balance */
+.shop-balance-locked {
+    font-weight: 450;
+    color: var(--color-text-muted);
+}
+
+/* Sells every duplicate card, after a confirmation */
+.inventory-sell-duplicates {
+    min-height: 2.25rem;
+    padding: 0.3rem 0.85rem;
+
+    font-size: 0.875rem;
+}
+
+/* Confirmation popups of the inventory: the shared .popup frame */
+.inventory-confirm {
+    --popup-width: 26rem;
+}
+
+.inventory-confirm-content {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+
+    padding: 1.25rem 1.25rem 1rem;
+
+    h2 {
+        margin: 0;
+        font-size: 1.25rem;
+    }
+
+    p {
+        margin: 0;
+    }
+}
+
+.inventory-confirm-note {
+    color: var(--color-text-muted);
+    font-size: 0.9em;
+}
+
+.inventory-confirm-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.5rem;
+}
+
+/* Cancelling is the neutral action, like the unselected inventory tabs */
+.inventory-confirm-cancel {
+    color: var(--color-text);
+    background: var(--color-bg-4);
+
+    &:hover {
+        background: color-mix(in srgb, var(--color-bg-4), black 10%);
+    }
+}
+
+@media (max-width: 480px) {
+    .inventory-confirm-content {
+        padding-bottom: max(1rem, env(safe-area-inset-bottom));
+    }
+
+    .inventory-confirm-actions button {
+        flex: 1;
+    }
+}
+
+/* Copies of a stack a tradeup contract has taken, opposite the copy count */
+.tradeup-taken {
+    right: auto;
+    left: -0.6rem;
+
+    background: var(--color-accent-secondary);
+}
+
+/* Card going into a tradeup contract */
+.tradeup-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* Card that can't join the contract: another rarity, no copies left, or a full contract */
+.tradeup-card-blocked {
+    opacity: 0.4;
+    filter: saturate(0.35);
+
+    .card-container {
+        cursor: not-allowed;
+    }
+}
+
+.tradeup-rules {
+    max-width: 36rem;
+    margin: 0 auto 1.25rem;
+
+    text-align: center;
+    color: var(--color-text-muted);
+    font-weight: 500;
+}
+
+/* Cards to trade on the left, the filter and the contract they fill on the right */
+.tradeup-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(16rem, 20rem);
+    gap: 1.25rem;
+    align-items: start;
+}
+
+/* Stays in view while the card grid scrolls */
+.tradeup-side {
+    position: sticky;
+    top: 1rem;
+
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+/* Collection filter of the tradeup sidebar, its select takes what the label leaves */
+.tradeup-filter {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    input[type="search"] {
+        width: 100%;
+        min-height: 2.25rem;
+        padding: 0.3rem 0.65rem;
+
+        color: var(--color-text);
+        background: var(--color-bg-4);
+    }
+}
+
+.tradeup-filter label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+
+    color: var(--color-text-muted);
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.tradeup-filter select {
+    flex: 1;
+    min-width: 0;
+    min-height: 2.25rem;
+    padding: 0.3rem 0.65rem;
+
+    color: var(--color-text);
+    background: var(--color-bg-4);
+    border: 1px solid var(--color-border-control);
+    border-radius: 0.55rem;
+}
+
+@media (max-width: 900px) {
+    .tradeup-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .tradeup-side {
+        position: static;
+    }
+}
+
+/* Offers waiting for an answer, on the link to the trades page */
+.inventory-trade-count {
+    min-width: 1.4rem;
+    margin-left: 0.45rem;
+    padding: 0.05rem 0.4rem;
+
+    color: var(--color-accent-secondary);
+    background: var(--color-text-alt);
+    border-radius: 999px;
+
+    font-size: 0.75rem;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    text-align: center;
+}
+
+/* Account management of admins, see templates/pages/admin_users.html */
+.admin-users-filters {
+    align-items: end;
+}
+
+.admin-users-notice,
+.admin-users-error {
+    margin: 1rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+}
+
+.admin-users-notice {
+    color: var(--color-success-3);
+    background: var(--color-success-1);
+}
+
+.admin-users-error {
+    color: var(--color-error-3);
+    background: var(--color-error-1);
+}
+
+/* Wide tables scroll on their own on narrow screens, the page does not */
+.admin-users-table {
+    overflow-x: auto;
+    margin: 1rem 0;
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    th,
+    td {
+        padding: 0.6rem 0.75rem;
+        border-bottom: 1px solid var(--color-border-1);
+        text-align: left;
+        vertical-align: top;
+    }
+
+    thead th {
+        color: var(--color-text-muted);
+        font-size: 0.85rem;
+        white-space: nowrap;
+    }
+
+    td:nth-child(2) {
+        overflow-wrap: anywhere;
+    }
+}
+
+.admin-users-online {
+    margin-left: 0.4rem;
+    padding: 0.05rem 0.4rem;
+    color: var(--color-success-3);
+    background: var(--color-success-1);
+    border-radius: 999px;
+    font-size: 0.75rem;
+}
+
+.admin-users-rank {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-bottom: 0.4rem;
+}
+
+.admin-users-password summary {
+    width: fit-content;
+    color: var(--color-accent-primary);
+    cursor: pointer;
+}
+
+.admin-users-password form {
+    display: grid;
+    gap: 0.35rem;
+    margin: 0.5rem 0;
+    max-width: 18rem;
+}
+
+.admin-users-delete summary {
+    width: fit-content;
+    color: var(--color-error-3);
+    cursor: pointer;
+}
+
+.admin-users-delete form {
+    margin-top: 0.5rem;
+}

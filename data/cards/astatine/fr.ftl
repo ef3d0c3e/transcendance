@@ -1,0 +1,2 @@
+title = Astate
+description = L'astate est un radioélément, de symbole At et de numéro atomique 85. C'est le plus rare des éléments chimiques hors transuraniens trouvés naturellement dans la croûte terrestre, où il est produit par décroissance radioactive d'éléments plus lourds. Tous les isotopes de l'astate ont des demi-vies courtes, le moins instable est l'astate 210 avec une période radioactive de 8,1 heures.

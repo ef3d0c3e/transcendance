@@ -252,11 +252,7 @@ func (dc *DataController) renderCatalog(c *gin.Context, v *catalogView) {
 	if len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   totalPages,
-		"Url":     paginatorUrl,
-	})
+	content.AddPaginator(v.Page, totalPages, paginatorUrl)
 	dc.Renderer.Render(c, &builder)
 }
 
@@ -290,11 +286,7 @@ func (dc *DataController) collectionTitle(c *gin.Context, collection *data.Colle
 
 // Page number from the query, 1 when missing or invalid
 func catalogPage(c *gin.Context) int {
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page < 1 {
-		return 1
-	}
-	return page
+	return controllers.PageParam(c.Query("p"))
 }
 
 // cards/search: every card, or the ones matching the search and filters

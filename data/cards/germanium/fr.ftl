@@ -1,0 +1,2 @@
+title = Germanium
+description = Le germanium est l'élément chimique de numéro atomique 32, de symbole Ge. Il possède cinq isotopes naturels, dont 76Ge, faiblement radioactif. Au moins 27 radioisotopes ont été synthétisés. Le germanium appartient au groupe 14 du tableau périodique, c'est un métalloïde. À l'état solide il est semi-conducteur et cristallise avec la même structure que le diamant, tout comme le silicium.

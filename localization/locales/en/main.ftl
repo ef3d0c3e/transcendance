@@ -2,6 +2,7 @@ register-title = Create account
 register-username = Username
 register-password = Password
 register-password-confirm = Confirm password
+register-password-hint = 8 to 72 characters.
 register-tos = I have read and agree to the
 register-tos-link = Terms of Service
 register-submit = Create account
@@ -25,16 +26,24 @@ login-error-username = Invalid username
 login-error-password = Invalid password
 login-error-invalid = Invalid login credentials
 login-error-internal = Login failed
+login-error-rate-limited = Too many failed attempts, try again in { $seconds ->
+    [one] { $seconds } second
+    *[other] { $seconds } seconds
+}.
 login-success = Welcome back, { $username }
+login-popup-loading = Loading the form…
+login-popup-error = Unable to load the form. Check your connection and try again.
+login-popup-close = Close
 
 logout-unauthenticated = You are not logged in
 logout-success = You have been logged out
 logout-error-all = Failed to log out all devices
 
 account-delete-error-generic = Failed to delete account
+account-delete-error-last-admin = You are the only administrator: make someone else an administrator before deleting your account.
 account-delete-title = Delete account
 account-email = Email
-account-error-email = An email is required (254 bytes maximum)
+account-error-email = A valid email address is required, e.g. name@example.org (254 characters maximum)
 account-error-email-taken = Email already in use
 
 search-user-title = Search for users
@@ -89,22 +98,28 @@ friends-empty-sent = You haven't sent any friend request
 friends-empty-received = You have no friend request
 
 navbar-label-toggle = Toggle menu
+navbar-label-close = Close menu
 navbar-label-main = Main navigation
+navbar-skip = Skip to content
 navbar-users = Users
 navbar-inventory = Inventory
 navbar-friends = Friends
+navbar-admin = Accounts
 navbar-profile = Your profile
 navbar-logout = Log out
+header-balance = Balance: { $amount }
 
 theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
 language-switcher = Choose language
+language-switcher-current = Language: English
 
 cards-error-not-found = Card not found
 cards-error-collection-not-found = Collection not found
 
 paginator-label-nav = Pagination
+paginator-label-nav-bottom = Pagination, bottom of the list
 paginator-label-previous = Previous page
 paginator-label-next = Next page
 
@@ -113,6 +128,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
 card-search-placeholder = Search for cards
+card-filter-placeholder = Filter by card or collection name
+card-filter-no-match = No card matches this filter
 card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
@@ -158,10 +175,12 @@ profile-error-passwords-do-not-match = Passwords do not match
 profile-error-password-missing = Must provide this field to change password
 profile-empty-field = Not specified
 profile-submit = Save
+profile-saved = Profile saved
 profile-error-network = Unable to contact the server
 
 error-unexpected = An error occurred
 error-unauthorized = You must be logged in to access this resource
+error-not-found = This page does not exist
 
 error-title = Error
 
@@ -176,15 +195,47 @@ profile-avatar-delete-title = Delete profile picture?
 profile-avatar-delete-description = This profile’s picture will be removed and replaced with the default avatar.
 profile-avatar-cancel = Cancel
 profile-inventory = View inventory
+profile-message = Send a message
 
 profile-rank = Rank
 profile-rank-user = User
 profile-rank-moderator = Moderator
 profile-rank-admin = Administrator
 profile-error-rank = Rank must be 0, 1 or 2.
+profile-error-rank-self = You cannot change your own rank.
 account-delete-profile-text = Permanently delete { $username } and all associated data. This cannot be undone.
 account-delete-profile-confirm = Permanently delete { $username } and all associated data?
 account-delete-profile-submit = Delete account
+
+admin-users-title = Manage accounts
+admin-users-caption = Accounts, their role and the actions available on them
+admin-users-search = Username or email
+admin-users-role = Role
+admin-users-role-all = All roles
+admin-users-apply = Apply
+admin-users-col-user = User
+admin-users-col-joined = Joined
+admin-users-col-cards = Cards
+admin-users-col-actions = Actions
+admin-users-online = online
+admin-users-own = Your account, managed from your profile
+admin-users-rank-of = Role of { $username }
+admin-users-rank-submit = Change role
+admin-users-delete = Delete…
+admin-users-done-rank = The role was changed.
+admin-users-done-delete = The account was deleted.
+admin-users-done-password = The password was changed, the user was logged out everywhere.
+admin-users-password = New password…
+admin-users-password-new = New password
+admin-users-password-confirm = Confirm the password
+admin-users-password-hint = Give it to the user privately: their sessions end and they log in with it.
+admin-users-password-submit = Set the password
+admin-users-error-password = The password must have between 8 and 72 characters.
+admin-users-error-password-match = The passwords do not match.
+admin-users-error-rank = This role does not exist.
+admin-users-error-self = Manage your own account from your profile.
+admin-users-error-missing = This account no longer exists.
+admin-users-error-internal = The action failed, try again.
 
 notification-title = Notifications
 notification-unread = unread
@@ -208,6 +259,15 @@ notification-friend-accepted-title = Friend request accepted
 notification-friend-accepted-desc = { $username } accepted your friend request
 notification-info-title = { $title }
 notification-info-desc = { $description }
+notification-trade-title = Trade offer
+notification-trade-desc = { $username } sent you a trade offer
+notification-trade-counter-title = Trade offer countered
+notification-trade-counter-desc = { $username } countered your trade offer
+notification-private-message-title = { $count ->
+    [one] New message from { $username }
+   *[other] { $count } new messages from { $username }
+}
+notification-private-message-desc = { $preview }
 
 catalog-title = Card catalog
 catalog-collection-count = { $count ->
@@ -235,6 +295,30 @@ inventory-search-submit = Search
 inventory-search-clear = Clear search
 inventory-card-acquired = Acquired on
 inventory-card-close = Close
+inventory-card-value = Value
+inventory-card-sell = Sell
+inventory-sell-quantity = Quantity
+inventory-sell-total = Total
+inventory-sell-confirm = Confirm sale
+inventory-sold = { $count ->
+    [one] You sold { $count } card for { $amount } coins
+   *[other] You sold { $count } cards for { $amount } coins
+}
+inventory-sell-error-card = This card cannot be sold
+inventory-sell-error-quantity = Choose a quantity of at least 1
+inventory-sell-error-missing = You do not have that many copies to sell
+inventory-sell-error-locked = Some of these copies are up in trades
+inventory-sell-error-none = You have no duplicate cards to sell
+inventory-sell-error-internal = Failed to sell your cards
+inventory-sell-duplicates = Sell duplicates
+inventory-sell-duplicates-title = Sell duplicate cards
+inventory-sell-duplicates-text = { $count ->
+    [one] Sell { $count } duplicate card for { $amount } coins?
+   *[other] Sell { $count } duplicate cards for { $amount } coins?
+}
+inventory-sell-duplicates-note = One copy of each card is kept, for each foil. Copies up in trades are neither sold nor counted as the copy kept.
+inventory-sell-duplicates-confirm = Sell for { $amount } coins
+inventory-sell-cancel = Cancel
 inventory-card-acquired-first = First acquired on
 inventory-card-acquired-last = Last acquired on
 inventory-card-copies = Copies
@@ -247,6 +331,8 @@ inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
 inventory-filter-effect-foil = Foil
+inventory-filter-collection = Collection
+inventory-filter-collection-all = All collections
 inventory-sort = Sort by
 inventory-sort-relevance = Relevance
 inventory-sort-recent = Last acquired
@@ -255,10 +341,12 @@ inventory-sort-rarity = Rarity
 inventory-sort-count = Count
 inventory-sort-name = Name (A-Z)
 inventory-sort-name-desc = Name (Z-A)
+inventory-filters-apply = Apply
 inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Trade up
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
@@ -273,6 +361,22 @@ inventory-search-count = { $count ->
     [one] { $count } card found
     *[other] { $count } cards found
 }
+inventory-locked-badge = { $count } in trades
+
+booster-pile-title = Default booster
+booster-pile-desc = { $count } random cards from all collections
+daily-streak-title = Daily streak
+daily-streak-meter = { $tier } · { $amount }
+daily-streak-count = Streak { $days }
+daily-streak-best = Best: { $best }
+daily-streak-best-current = current
+daily-streak-none = —
+daily-streak-claim = Claim { $amount } coins
+daily-streak-claimed = Available in
+daily-streak-claimed-notice = { $amount } coins added to your balance
+daily-streak-claim-ready = Claim your coins
+countdown-done = Ready
+countdown-refresh = Refresh to collect
 
 pack-opening-title = Pack Opening
 pack-opening-open = Open pack
@@ -287,15 +391,21 @@ pack-opening-remaining = { $count ->
     *[other] { $count } boosters left
 }
 pack-opening-error-booster = This booster is not in your inventory
+pack-opening-error-pile = No default booster available
 pack-opening-buy = Open again
 pack-opening-buy-label = Open again for { $price }
-pack-opening-sound-on = Sound on
-pack-opening-sound-off = Sound off
+pack-opening-sound = Sound
+pack-opening-motion = Animations
 pack-opening-odds-title = Drop rates
 pack-opening-odds-foil = Foil
 pack-opening-odds-note = Each card of the booster is rolled on its own.
 pack-opening-progress-title = Collection progress
 pack-opening-progress-note = Different cards of this collection you own.
+pack-opening-summary = Cards drawn: { $cards }
+pack-opening-card = { $title } ({ $rarity })
+pack-opening-card-foil = { $title } ({ $rarity }, foil)
+pack-opening-spinning = Opening the pack…
+pack-opening-skip = Skip
 
 shop-balance = Balance
 shop-login-hint = Log in to get coins and buy boosters
@@ -306,6 +416,7 @@ shop-topup-note = Demo checkout: no real payment is taken. Coins are credited to
 shop-topup-error-unconfirmed = Unable to confirm the top-up. Refresh the page to check your balance before trying again.
 shop-topup-price = €{ $euros }.{ $cents }
 shop-topup-open = Buy more coins
+shop-topup-buy = Buy { $amount } for { $price }
 shop-topup-success = { $amount } coins have been added to your balance
 shop-error-unauthenticated = You must be logged in to get coins
 shop-error-pack = Unknown coin pack
@@ -316,8 +427,10 @@ shop-buy-close = Close
 shop-buy-quantity = Quantity
 shop-buy-total = Total
 shop-coins = coins
+shop-coins-locked = { $amount } up in trades
 
 index-title = Transcendance, collect trading cards
+meta-description = Transcendance is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
 index-heading = Collect, trade and show off your cards
 index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
 index-stat-cards = { $count ->
@@ -391,17 +504,17 @@ legal-privacy-text = The development team is responsible for processing your per
 legal-data-title = Data we collect
 legal-data-account = Account: your username, email, password (stored only as a bcrypt hash) and registration date. Your email is not public: it is visible to you and users of a strictly higher rank. You and administrators can edit it.
 legal-data-profile = Profile: your bio, birth date, contact info and avatar, only if you fill them in. They are public.
-legal-data-activity = Activity: your login sessions, coins, cards, boosters and notifications.
+legal-data-activity = Activity: your login sessions, coins, cards, boosters, trade offers, daily streak, notifications, your friends, the users you block or ignore, and your chat messages, public ones in the shoutbox and private ones. Other users can see whether you are online (active in the last 5 minutes), and the people you trade with see how many coins you have available for the trade.
 legal-data-logs = Technical logs: the server logs each request along with your IP address.
 legal-purpose-title = Why we use it
 legal-purpose-text = This data is only used to provide the service (your account, collection and profile) and to keep it secure. Your email is used only as a login identifier. It is not verified and we do not send email, including marketing or password recovery messages. Data is processed to fulfil the terms you accept when registering, and in our legitimate interest of protecting the site. It is never sold, used for advertising, or shared with third parties.
 legal-thirdparty-text = The site loads no external resources: fonts and scripts are served by our own server, so no third party is notified of your visit.
 legal-retention-title = How long we keep it
-legal-retention-text = Account, profile and activity data are kept until you delete your account. Login sessions expire after 3 days. Technical logs are only kept as long as needed to investigate issues.
+legal-retention-text = Account, profile and activity data are kept until you delete your account. Login sessions expire after 3 days. Technical logs are kept 2 years, as French law requires for hosting providers, then deleted; nightly backups of them are kept 30 more days. Moderators can delete chat messages and mute users in the chat for up to a week.
 legal-rights-title = Your rights
 legal-rights-text = You have the right to access, correct, erase and export your data, and to object to or restrict its processing.
 legal-rights-edit = Your profile can be edited at any time:
-legal-rights-delete = Deleting your account from your profile permanently erases your account, profile, avatar, sessions, cards, boosters, coins and notifications.
+legal-rights-delete = Deleting your account from your profile permanently erases your account, profile, avatar, sessions, cards, boosters, coins, trade offers, friends, chat messages and notifications.
 legal-rights-other = For any other request, contact the team:
 legal-rights-complaint = If you believe your rights are not respected, you can file a complaint with the French data protection authority (CNIL):
 legal-cookies-title = Cookies
@@ -425,3 +538,123 @@ contact-team-title = The team
 contact-team-text = You can also reach a team member directly through their GitHub profile:
 contact-privacy-title = Personal data requests
 contact-privacy-text = For a request about your personal data, contact a team member privately rather than opening a public issue. You can delete your account at any time from your profile.
+
+inventory-trade = Propose a trade
+inventory-trades = Your trades
+inventory-trades-incoming = { $count ->
+    [one] { $count } offer waiting for your answer
+   *[other] { $count } offers waiting for your answer
+}
+
+trades-title = Trades
+trade-menu-title = Trade with { $username }
+trade-you-give = You give
+trade-you-get = You get
+trade-coins = Coins
+trade-send = Send offer
+trade-counter-send = Send counter-offer
+trade-back = Back to trades
+trade-accept = Accept
+trade-decline = Decline
+trade-counter = Counter
+trade-cancel = Cancel
+trade-incoming = Incoming offers
+trade-outgoing = Outgoing offers
+trade-history = Past trades
+trade-state-accepted = Accepted
+trade-state-declined = Declined
+trade-state-cancelled = Cancelled
+trade-none-incoming = No incoming offers
+trade-none-outgoing = No pending offers
+trade-none-history = No past trades
+trade-stack = { $count }× { $title }
+trade-menu-empty = Nothing to trade here
+trade-menu-loading = Loading…
+trade-menu-increase = Add one
+trade-menu-decrease = Remove one
+trade-menu-error-network = Unable to contact the server
+trade-menu-noscript = Building a trade offer needs JavaScript, to pick the cards of both inventories. Without it, you can still accept, decline or cancel your offers from your trades.
+trade-error-settle = This trade offer cannot be completed anymore
+trade-error-invalid = Invalid trade offer
+trade-error-internal = Failed to save the trade offer
+trade-error-not-found = Trade offer not found
+trade-error-user = User not found
+trade-error-self = You cannot trade with yourself
+trade-error-too-many = You have too many offers waiting for an answer: wait for them, or cancel some.
+trade-error-empty-give = Offer at least one card or coins
+trade-error-empty-want = Request at least one card or coins
+trade-error-count = Invalid card count
+trade-error-items = Too many card stacks in the offer
+trade-error-card = Unknown card
+trade-error-duplicate = The same card stack appears twice
+trade-error-owned = Not enough copies of a card
+trade-error-locked = Some copies of a card are up in another trade
+trade-error-coins = Not enough coins
+trade-error-locked-coins = Some coins are up in another trade
+trade-error-want-coins = The other user does not have that many coins
+trade-error-state = This trade offer is not pending anymore
+trade-error-forbidden = This trade offer is not yours
+trade-error-blocked = You cannot trade with this user
+shoutbox-title = Chat
+shoutbox-unread = new messages
+shoutbox-close = Close
+shoutbox-connected = Live
+shoutbox-connecting = Connecting...
+shoutbox-empty = No messages yet, say hi!
+shoutbox-placeholder = Write a message
+shoutbox-send = Send
+shoutbox-error-empty = Your message is empty
+shoutbox-error-too-long = Your message is too long, 500 characters at most
+shoutbox-error-rate-limited = You're sending messages too fast, wait a moment
+shoutbox-error-internal = Your message could not be sent, try again
+shoutbox-closed-unauthorized = Your session expired, log in again to chat
+shoutbox-closed-too-many = The shoutbox is open in too many tabs, close some and reload the page
+shoutbox-closed-error = Disconnected from the shoutbox, reload the page
+shoutbox-tab-shout = Shoutbox
+shoutbox-tab-messages = Messages
+shoutbox-private-placeholder = Write a private message
+shoutbox-conversation-empty = No messages yet, say hi!
+shoutbox-conversations-empty = No conversations yet
+shoutbox-start = Start a conversation with a user
+shoutbox-start-placeholder = Username
+shoutbox-start-button = Open
+shoutbox-back = Back to conversations
+shoutbox-you = You
+shoutbox-user-menu = User actions
+shoutbox-message-user = Send a private message
+shoutbox-view-profile = View profile
+shoutbox-ignore-hour = Ignore for 1 hour
+shoutbox-ignore-day = Ignore for 1 day
+shoutbox-ignore-week = Ignore for 1 week
+shoutbox-unignore = Stop ignoring
+shoutbox-delete-message = Delete the message
+shoutbox-mute-hour = Mute in the chat for an hour
+shoutbox-mute-day = Mute in the chat for a day
+shoutbox-mute-week = Mute in the chat for a week
+shoutbox-unmute = Let them post again
+shoutbox-ignored-title = Ignored users
+shoutbox-ignored-until = Until
+shoutbox-ignoring-notice = You are ignoring this user: their shoutbox messages are hidden and they can't message you.
+shoutbox-error-user-not-found = This user doesn't exist
+shoutbox-error-self = You can't message yourself
+shoutbox-error-blocked = This user isn't accepting your messages right now
+shoutbox-error-forbidden = Only moderators can do this
+shoutbox-error-muted = A moderator muted you in the chat for now
+shoutbox-error-message-not-found = This message no longer exists
+
+tradeup-rules = Trade { $count } cards of the same rarity for one random card of the next rarity. Each collection's chance follows how many of the cards come from it.
+tradeup-empty = No cards here can be traded up
+tradeup-slots = Trade-up slots
+tradeup-remove = Remove
+tradeup-slot-empty = Empty slot
+tradeup-clear = Clear
+tradeup-submit = Trade up
+tradeup-result = You obtained
+tradeup-result-close = Close
+tradeup-error-count = A trade-up needs exactly { $count } cards
+tradeup-error-rarity = Every card in a trade-up must share the same rarity
+tradeup-error-tier = These cards cannot be traded up
+tradeup-error-missing = You do not own enough of these cards
+tradeup-error-locked = Some of these cards are up in trades
+tradeup-error-empty = None of these collections holds a card of the next rarity
+tradeup-error-internal = Failed to complete the trade-up

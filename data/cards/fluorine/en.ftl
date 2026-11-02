@@ -1,0 +1,2 @@
+title = Fluorine
+description = Fluorine is a chemical element; it has the symbol F and atomic number 9. It is the lightest halogen and exists at standard conditions as pale yellow diatomic gas. Fluorine is extremely reactive as it reacts with all other elements except for the light noble gases. Fluorine in its elemental form is highly toxic. Among the elements, fluorine ranks 24th in cosmic abundance and 13th in crustal abundance.

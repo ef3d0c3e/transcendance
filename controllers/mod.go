@@ -11,4 +11,6 @@ type Controller struct {
 	DB       *gorm.DB
 	Renderer *views.Renderer
 	Data     *data.Data
+	// Failed login attempts, see NewLoginLimits
+	Logins *LoginLimits
 }

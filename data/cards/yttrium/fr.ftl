@@ -1,0 +1,2 @@
+title = Yttrium
+description = L'yttrium est l'élément chimique de numéro atomique 39, de symbole Y. C'est un élément de transition dont le comportement chimique est proche de celui des lanthanides, et classé historiquement, avec le scandium et les lanthanides, parmi les terres rares. L'yttrium possède un seul isotope stable qui est également son seul isotope naturel, 89Y, faisant de lui à la fois un élément monoisotopique et un élément mononucléidique.

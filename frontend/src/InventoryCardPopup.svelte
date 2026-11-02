@@ -1,11 +1,14 @@
 <!--
     Popup with stack details (copies, acquisition dates) when clicking an inventory card
 
-    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates)
+    Cards must provide `data-copies`, `data-acquired-first` and `data-acquired-last` (RFC 3339 dates).
+    On their owner's inventory they also provide `data-sell-id`, `data-sell-foil`, `data-sell-price`
+    and `data-sell-owned`, the copies free to sell, and the popup offers to sell some to the shop.
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
+	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
 
@@ -20,11 +23,31 @@
 	let dates = $state([]);
 	let returnFocus = null;
 
+	let sellId = $state("");
+	let sellFoil = $state("");
+	let sellPrice = $state(0);
+	let sellOwned = $state(0);
+	let selling = $state(false);
+	let quantity = $state(1);
+
 	const labelAcquired = $derived(target.dataset.labelAcquired ?? "");
 	const labelAcquiredFirst = $derived(target.dataset.labelAcquiredFirst ?? "");
 	const labelAcquiredLast = $derived(target.dataset.labelAcquiredLast ?? "");
 	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
+	const labelValue = $derived(target.dataset.labelValue ?? "");
+	const labelSell = $derived(target.dataset.labelSell ?? "");
+	const labelQuantity = $derived(target.dataset.labelQuantity ?? "");
+	const labelTotal = $derived(target.dataset.labelTotal ?? "");
+	const labelConfirm = $derived(target.dataset.labelConfirm ?? "");
+	const labelCoins = $derived(target.dataset.labelCoins ?? "");
+	const labelFoil = $derived(target.dataset.labelFoil ?? "");
+	const sellAction = $derived(target.dataset.sellAction ?? "");
+	// The popup offers to sell only where the card carries a price and the
+	// owner has copies of it that are not up in trades
+	const sellable = $derived(sellAction !== "" && sellId !== "" && sellOwned > 0);
+	const total = $derived(sellPrice * quantity);
+	const numberFormat = $derived(new Intl.NumberFormat(target.dataset.locale || undefined));
 	const dateFormat = $derived(
 		new Intl.DateTimeFormat(target.dataset.locale || undefined, {
 			dateStyle: "long",
@@ -43,6 +66,12 @@
 						date(labelAcquiredLast, card.dataset.acquiredLast),
 					]
 				: [date(labelAcquired, card.dataset.acquiredFirst)];
+		sellId = card.dataset.sellId ?? "";
+		sellFoil = card.dataset.sellFoil ?? "";
+		sellPrice = Number(card.dataset.sellPrice ?? 0);
+		sellOwned = Number(card.dataset.sellOwned ?? 0);
+		selling = false;
+		quantity = 1;
 		returnFocus = card;
 		dialog.showModal();
 	}
@@ -51,14 +80,30 @@
 		dialog.close();
 	}
 
+	// The sell button is replaced by the form: the focus goes to its first
+	// control instead of falling to the dialog
+	async function startSelling() {
+		selling = true;
+		await tick();
+		dialog.querySelector(".inventory-sell-form input[type=range], .inventory-sell-form button[type=submit]")?.focus();
+	}
+
 	function onDialogClose() {
 		returnFocus?.focus();
 		returnFocus = null;
 	}
 
-	// Clicking the backdrop targets the dialog itself
+	// Clicking the backdrop targets the dialog itself. Pressed inside (the
+	// quantity slider) and released over the backdrop isn't one.
+	let pressedBackdrop = false;
+
+	function onDialogPointerdown(e) {
+		pressedBackdrop = e.target === dialog;
+	}
+
 	function onDialogClick(e) {
-		if (e.target === dialog) close();
+		if (e.target === dialog && pressedBackdrop) close();
+		pressedBackdrop = false;
 	}
 
 	onMount(() => {
@@ -95,10 +140,8 @@
 
 		// Cards open a dialog, make them reachable and announced as buttons
 		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
-			card.tabIndex = 0;
-			card.setAttribute("role", "button");
+			makeCardButton(card, { foil: labelFoil, copies: labelCopies });
 			card.setAttribute("aria-haspopup", "dialog");
-			card.setAttribute("aria-label", card.querySelector(".card-title")?.textContent ?? "");
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
@@ -114,14 +157,15 @@
 </script>
 
 <dialog
-	class="inventory-popup"
+	class="popup inventory-popup"
 	aria-labelledby="inventory-popup-title"
 	bind:this={dialog}
+	onpointerdown={onDialogPointerdown}
 	onclick={onDialogClick}
 	onclose={onDialogClose}
 >
 	<div class="inventory-popup-content">
-		<h3 id="inventory-popup-title">{title}</h3>
+		<h2 id="inventory-popup-title">{title}</h2>
 		<dl>
 			{#if copies > 1}
 				<div>
@@ -135,30 +179,46 @@
 					<dd><time datetime={iso}>{text}</time></dd>
 				</div>
 			{/each}
+			{#if sellable}
+				<div>
+					<dt>{labelValue}</dt>
+					<dd>{numberFormat.format(sellPrice)} {labelCoins}</dd>
+				</div>
+			{/if}
 		</dl>
-		<button type="button" onclick={close}>{labelClose}</button>
+		{#if sellable && selling}
+			<form class="inventory-sell-form" method="post" action={sellAction}>
+				<input type="hidden" name="card" value={sellId} />
+				<input type="hidden" name="foil" value={sellFoil} />
+				<input type="hidden" name="quantity" value={quantity} />
+				{#if sellOwned > 1}
+					<label class="inventory-sell-quantity">
+						<span>{labelQuantity}</span>
+						<input type="range" min="1" max={sellOwned} bind:value={quantity} />
+						<output>{quantity} / {sellOwned}</output>
+					</label>
+				{/if}
+				<p class="inventory-sell-total">{labelTotal}: {numberFormat.format(total)} {labelCoins}</p>
+				<div class="inventory-popup-actions">
+					<button type="button" class="inventory-popup-neutral" onclick={close}>{labelClose}</button>
+					<button type="submit">{labelConfirm}</button>
+				</div>
+			</form>
+		{:else}
+			<div class="inventory-popup-actions">
+				{#if sellable}
+					<button type="button" onclick={startSelling}>{labelSell}</button>
+				{/if}
+				<button type="button" class:inventory-popup-neutral={sellable} onclick={close}>{labelClose}</button>
+			</div>
+		{/if}
 	</div>
 </dialog>
 
 <style>
+	/* Frame, backdrop and bottom sheet: the shared .popup of theme.css */
 	.inventory-popup {
-		width: min(100% - 2rem, 22rem);
-		padding: 0;
-
-		color: var(--color-text);
-		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
-		border-radius: 1rem;
-		box-shadow: 0 10px 30px var(--color-shadow);
-	}
-
-	.inventory-popup::backdrop {
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
-	}
-
-	.inventory-popup[open] {
-		animation: popup-in 150ms ease;
+		--popup-width: 22rem;
 	}
 
 	.inventory-popup-content {
@@ -169,7 +229,7 @@
 		padding: 1.25rem 1.25rem 1rem;
 	}
 
-	h3 {
+	h2 {
 		margin: 0;
 
 		font-size: 1.25rem;
@@ -198,40 +258,62 @@
 		font-variant-numeric: tabular-nums;
 	}
 
-	button {
-		align-self: flex-end;
+	.inventory-popup-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.5rem;
 	}
 
-	@keyframes popup-in {
-		from {
-			opacity: 0;
-			transform: translateY(0.5rem) scale(0.98);
-		}
+	/* Closing is the neutral action next to selling */
+	.inventory-popup-neutral {
+		color: var(--color-text);
+		background: var(--color-bg-4);
 	}
 
-	/* Small screens: bottom sheet, like the other popups */
+	.inventory-popup-neutral:hover {
+		background: color-mix(in srgb, var(--color-bg-4), black 10%);
+	}
+
+	.inventory-sell-form {
+		display: flex;
+		flex-direction: column;
+		gap: 0.75rem;
+	}
+
+	.inventory-sell-quantity {
+		display: flex;
+		align-items: center;
+		gap: 0.6rem;
+
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.inventory-sell-quantity input {
+		flex: 1;
+	}
+
+	.inventory-sell-quantity output {
+		color: var(--color-text-muted);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.inventory-sell-total {
+		margin: 0;
+
+		font-weight: 650;
+		font-variant-numeric: tabular-nums;
+	}
+
 	@media (max-width: 480px) {
-		.inventory-popup {
-			width: 100%;
-			max-width: 100%;
-			margin: auto 0 0;
-
-			border-radius: 1rem 1rem 0 0;
-			border-bottom: 0;
-		}
-
 		.inventory-popup-content {
 			padding-bottom: max(1rem, env(safe-area-inset-bottom));
 		}
 
-		button {
-			align-self: stretch;
+		.inventory-popup-actions button {
+			flex: 1;
 		}
 	}
 
-	@media (prefers-reduced-motion: reduce) {
-		.inventory-popup[open] {
-			animation: none;
-		}
-	}
 </style>

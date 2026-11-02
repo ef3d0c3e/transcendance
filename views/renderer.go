@@ -34,6 +34,8 @@ type View struct {
 	Data any
 	// Theme
 	Theme string
+	// Negotiated locale, e.g. "en", for the page's lang attribute
+	Lang string
 	// Authenticated user, nil for visitors (shown in the header)
 	User any
 	// Request path, to highlight the current page in the header
@@ -122,11 +124,25 @@ func (b *pageBuilder) Add(templateName string, name string, data map[string]any)
 	return child
 }
 
+// AddPaginator adds the page links as "Paginator", and a copy for the bottom of
+// lists as "PaginatorBottom": landmarks repeated on a page need distinct names
+func (b *pageBuilder) AddPaginator(current int, total int, url string) {
+	for name, bottom := range map[string]bool{"Paginator": false, "PaginatorBottom": true} {
+		b.Add("paginator", name, map[string]any{
+			"Current": current,
+			"Total":   total,
+			"Url":     url,
+			"Bottom":  bottom,
+		})
+	}
+}
+
 // Request-wide values given to every template
 type pageContext struct {
 	theme string
 	user  any
 	path  string
+	lang  string
 	loc   *fluentloc.Localization
 }
 
@@ -146,6 +162,7 @@ func (r *Renderer) renderPage(ctx *pageContext, b *pageBuilder) (template.HTML, 
 	view := View{
 		Data:     b.data,
 		Theme:    ctx.theme,
+		Lang:     ctx.lang,
 		User:     ctx.user,
 		Path:     ctx.path,
 		Children: children,
@@ -177,6 +194,7 @@ func (r *Renderer) Render(c *gin.Context, b *pageBuilder) {
 		theme: r.themer.Theme(c),
 		user:  user,
 		path:  c.Request.URL.Path,
+		lang:  r.Localizer.GetLocale(c),
 		loc:   r.Localizer.Localization(c),
 	}
 
