@@ -66,6 +66,7 @@ func RegisterRoutes(
 	// admin.go
 	router.GET("/admin/users", controller.AdminUsersGet)
 	router.POST("/admin/users/:id/rank", controller.AdminUserRankPost)
+	router.POST("/admin/users/:id/password", controller.AdminUserPasswordPost)
 	router.POST("/admin/users/:id/delete", controller.AdminUserDeletePost)
 	router.HEAD("/avatars/:id", controller.AvatarGet)
 
