@@ -3923,7 +3923,8 @@ form .notification-action {
     gap: 1rem;
 }
 
-/* Collection filter of the tradeup sidebar, its select takes what the label leaves */
+/* Filters and sort of the tradeup sidebar, in the style of the inventory
+   filters; the selects take what the labels leave */
 .tradeup-filter {
     display: flex;
     flex-direction: column;
@@ -3957,6 +3958,21 @@ form .notification-action {
 
     color: var(--color-text);
     background: var(--color-bg-4);
+    border: 1px solid var(--color-border-1);
+    border-radius: 0.55rem;
+
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+
+    &:hover {
+        background: color-mix(in srgb, var(--color-bg-4), black 10%);
+    }
+
+    &:focus-visible {
+        outline: 3px solid var(--color-accent-secondary);
+        outline-offset: 2px;
+    }
 }
 
 @media (max-width: 900px) {

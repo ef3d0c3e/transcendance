@@ -5,15 +5,20 @@
 
     Cards must provide `data-tradeup-id`, `data-tradeup-foil`,
     `data-tradeup-count` (copies owned), `data-tradeup-rarity`,
-    `data-tradeup-title` and `data-tradeup-collection-id`. A contract is all
-    one rarity, so cards of another rarity can't join once one is picked.
-    Stacks with copies in the contract wear a `.tradeup-taken` pill.
+    `data-tradeup-title`, `data-tradeup-collection-id` and
+    `data-tradeup-order` (the place of the card in the collection-and-rarity
+    order, which `#tradeup-sort` brings back). A contract is all one rarity,
+    so cards of another rarity can't join once one is picked. Stacks with
+    copies in the contract wear a `.tradeup-taken` pill.
 
     The optional `#tradeup-collection-filter` narrows the grid down to one
-    collection, and `#tradeup-search` to the cards whose name or collection
-    (`data-tradeup-collection`) holds its text, without navigating, keeping
-    the contract: the picks live here, not in the page. Picks the filters hide
-    stay in it. `#tradeup-no-match` shows when they hide every card.
+    collection, `#tradeup-rarity-filter` to one rarity, and `#tradeup-search`
+    to the cards whose name or collection (`data-tradeup-collection`) holds
+    its text. `#tradeup-sort` orders the grid, the biggest stacks first or in
+    the collection-and-rarity order of `data-tradeup-order`. All of it without
+    navigating, keeping the contract: the picks live here, not in the page.
+    Picks the filters hide stay in it. `#tradeup-no-match` shows when they
+    hide every card.
 -->
 
 <script>
@@ -25,6 +30,8 @@
 	const TILE_SELECTOR = `${CARD_SELECTOR} .card-container`;
 	const FILTER_SELECTOR = "#tradeup-collection-filter";
 	const SEARCH_SELECTOR = "#tradeup-search";
+	const RARITY_SELECTOR = "#tradeup-rarity-filter";
+	const SORT_SELECTOR = "#tradeup-sort";
 	const NO_MATCH_SELECTOR = "#tradeup-no-match";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
@@ -83,27 +90,47 @@
 		return text.normalize("NFD").replaceAll(/\p{Diacritic}/gu, "").toLowerCase();
 	}
 
-	// Hides the tiles of the other collections and those the search misses,
-	// without navigating, so a contract in progress survives. `collection` is
-	// a collection ID, "" shows all, as does an empty `query`.
-	function applyFilter(collection, query) {
+	// Hides the tiles of the other collections and rarities and those the
+	// search misses, then orders the rest, without navigating, so a contract
+	// in progress survives. `collection` is a collection ID and `rarity` a
+	// rarity, "" shows all, as does an empty `query`. `sort` is "" for the
+	// biggest stacks first and "grouped" for the collection-and-rarity order.
+	// Every tile carries its place in that order (`data-tradeup-order`), which
+	// breaks the ties of both sorts, so switching between them leaves the grid
+	// exactly as the page arrived.
+	function applyGrid({ collection, query, rarity, sort }) {
 		const folded = fold(query.trim());
+		const cards = [...document.querySelectorAll(CARD_SELECTOR)];
 		let shown = 0;
-		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
+		for (const card of cards) {
 			const name = fold(`${card.dataset.tradeupTitle ?? ""} ${card.dataset.tradeupCollection ?? ""}`);
 			card.hidden = (collection !== "" && card.dataset.tradeupCollectionId !== collection)
+				|| (rarity !== "" && card.dataset.tradeupRarity !== rarity)
 				|| (folded !== "" && !name.includes(folded));
 			if (!card.hidden) shown++;
 		}
 		const noMatch = document.querySelector(NO_MATCH_SELECTOR);
 		if (noMatch) noMatch.hidden = shown > 0;
 
-		// A refresh lands on the same filters
+		cards.sort((a, b) => {
+			const byOrder = Number(a.dataset.tradeupOrder) - Number(b.dataset.tradeupOrder);
+			const byCount = Number(b.dataset.tradeupCount) - Number(a.dataset.tradeupCount);
+			return sort === "grouped" ? byOrder : byCount || byOrder;
+		});
+		const cluster = cards[0]?.parentElement;
+		for (const card of cards) cluster?.append(card);
+		if (cluster && noMatch) cluster.append(noMatch);
+
+		// A refresh lands on the same filters and sort
 		const url = new URL(location.href);
 		if (collection === "") url.searchParams.delete("collection");
 		else url.searchParams.set("collection", collection);
 		if (folded === "") url.searchParams.delete("q");
 		else url.searchParams.set("q", query.trim());
+		if (rarity === "") url.searchParams.delete("rarity");
+		else url.searchParams.set("rarity", rarity);
+		if (sort === "") url.searchParams.delete("sort");
+		else url.searchParams.set("sort", sort);
 		history.replaceState(history.state, "", url);
 	}
 
@@ -177,18 +204,27 @@
 
 		const filter = document.querySelector(FILTER_SELECTOR);
 		const search = document.querySelector(SEARCH_SELECTOR);
-		function onFilterChange() {
-			applyFilter(filter?.value ?? "", search?.value ?? "");
+		const rarityFilter = document.querySelector(RARITY_SELECTOR);
+		const sortSelect = document.querySelector(SORT_SELECTOR);
+		function onControlChange() {
+			applyGrid({
+				collection: filter?.value ?? "",
+				query: search?.value ?? "",
+				rarity: rarityFilter?.value ?? "",
+				sort: sortSelect?.value ?? "",
+			});
 		}
-		filter?.addEventListener("change", onFilterChange);
-		search?.addEventListener("input", onFilterChange);
+		filter?.addEventListener("change", onControlChange);
+		search?.addEventListener("input", onControlChange);
+		rarityFilter?.addEventListener("change", onControlChange);
+		sortSelect?.addEventListener("change", onControlChange);
 		// Filtering happens as the text is typed, Enter would leave the page
 		function onSearchKeyDown(e) {
 			if (e.key === "Enter") e.preventDefault();
 		}
 		search?.addEventListener("keydown", onSearchKeyDown);
 
-		// A shared link can arrive already filtered
+		// A shared link can arrive already filtered and sorted
 		const params = new URL(location.href).searchParams;
 		if (filter && params.get("collection")) {
 			filter.value = params.get("collection");
@@ -196,16 +232,24 @@
 		if (search && params.get("q")) {
 			search.value = params.get("q");
 		}
-		if (params.get("collection") || params.get("q")) {
-			onFilterChange();
+		if (rarityFilter && params.get("rarity")) {
+			rarityFilter.value = params.get("rarity");
+		}
+		if (sortSelect && params.get("sort")) {
+			sortSelect.value = params.get("sort");
+		}
+		if (params.get("collection") || params.get("q") || params.get("rarity") || params.get("sort")) {
+			onControlChange();
 		}
 
 		return () => {
 			document.removeEventListener("pointerdown", onPointerDown);
 			document.removeEventListener("click", onClick);
 			document.removeEventListener("keydown", onKeyDown);
-			filter?.removeEventListener("change", onFilterChange);
-			search?.removeEventListener("input", onFilterChange);
+			filter?.removeEventListener("change", onControlChange);
+			search?.removeEventListener("input", onControlChange);
+			rarityFilter?.removeEventListener("change", onControlChange);
+			sortSelect?.removeEventListener("change", onControlChange);
 			search?.removeEventListener("keydown", onSearchKeyDown);
 		};
 	});

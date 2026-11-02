@@ -585,6 +585,7 @@ shoutbox-error-blocked = This user isn't accepting your messages right now
 
 tradeup-rules = Trade { $count } cards of the same rarity for one random card of the next rarity. Each collection's chance follows how many of the cards come from it.
 tradeup-empty = No cards here can be traded up
+tradeup-sort-grouped = Collection and rarity
 tradeup-slots = Trade-up slots
 tradeup-remove = Remove
 tradeup-slot-empty = Empty slot

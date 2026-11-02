@@ -125,6 +125,7 @@
 			{{ range $val := .Data.Items }}
 			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
 				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
+				data-tradeup-order="{{ $val.Order }}"
 				data-tradeup-title="{{ $val.Data.CardTitle }}"
 				data-tradeup-collection-id="{{ $val.Data.CardCollectionID }}"
 				data-tradeup-collection="{{ $val.Data.CardCollectionTitle }}">
@@ -143,6 +144,22 @@
 					<select id="tradeup-collection-filter" name="collection">
 						{{ range .Data.TradeupCollections }}
 						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+				<label>
+					<span>{{ .T "inventory-filter-rarity" }}</span>
+					<select id="tradeup-rarity-filter" name="rarity">
+						{{ range .Data.RarityOptions }}
+						<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+				<label>
+					<span>{{ .T "inventory-sort" }}</span>
+					<select id="tradeup-sort" name="sort">
+						{{ range .Data.SortOptions }}
+						<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 						{{ end }}
 					</select>
 				</label>
