@@ -1,0 +1,2 @@
+title = Carnelian
+description = Carnelian is a brownish-red mineral commonly used as a semiprecious stone. Similar to carnelian is sard, which is generally harder and darker; the difference is not rigidly defined, and the two names are often used interchangeably. Both carnelian and sard are varieties of the silica mineral chalcedony colored by impurities of iron oxide. The color can vary greatly, ranging from pale orange to an intense almost-black coloration.

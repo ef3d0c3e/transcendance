@@ -1,0 +1,2 @@
+title = Pyrite
+description = La pyrite est une espèce minérale composée de disulfure de fer (FeS2), polymorphe de la marcassite; elle contient généralement des traces de métaux précieux comme de l'argent (Ag) et de l'or (Au), ainsi que des traces de métaux lourds et métalloïdes toxiques nickel (Ni), cobalt (Co), arsenic (As), cuivre (Cu), zinc (Zn), thallium (Tl), sélénium (Se) et vanadium (V), et qui rendent son exploitation en tant que minerai très polluante.

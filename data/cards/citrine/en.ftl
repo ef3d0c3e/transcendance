@@ -1,0 +1,2 @@
+title = Citrine
+description = Citrine is a transparent, yellow variety of quartz. Its name is derived from the Latin word citrus, by way of the French citrin or citron (lemon). Citrine is one of the most popular yellow gemstones and has been used since ancient Egyptian times. There is disagreement as to which trace elements are responsible for its color. Not all yellow quartz is considered citrine, such as quartz stained by iron inclusions or coatings.
