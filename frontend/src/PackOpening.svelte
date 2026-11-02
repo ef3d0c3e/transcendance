@@ -2,7 +2,7 @@
 	import { onMount, tick } from "svelte";
 	import { openTopup, updateNavBalance } from "./topup.js";
 	import { apiFetch } from "./api.js";
-	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
+	import { loadMuted, packSounds, saveMuted, unlockSounds } from "./pack-sounds.js";
 	import { loadStill, saveStill } from "./pack-motion.js";
 
 	let {
@@ -12,7 +12,6 @@
 		errorLabel,
 		againLabel,
 		coins: initialCoins = 0,
-		autostart = false,
 		// Names of the sound and animation switches, which tell their state
 		// with aria-pressed and an icon
 		soundLabel = "Sound",
@@ -603,20 +602,6 @@
 		}
 	}
 
-	// Open right away when the browser lets the sounds play. Otherwise they
-	// would miss the spin: the page shows, its button calling for the click.
-	async function openOnArrival(open) {
-		if (open && (muted || (await soundsAllowed()))) {
-			openPack();
-			return;
-		}
-		revealPage();
-		if (open) {
-			openButton?.classList.add("is-ready");
-			openButton?.focus();
-		}
-	}
-
 	// Buy the next booster when the balance covers it, else offer coins
 	function buyOrTopUp() {
 		const price = Number(buyButton.dataset.price);
@@ -711,8 +696,8 @@
 		unlockSounds();
 		buyButton?.addEventListener("click", buyOrTopUp);
 
-		// Coming from the inventory's open button: open the owned booster
-		openOnArrival(autostart);
+		// The page shows, its button calling for the click
+		revealPage();
 
 		return () => {
 			form.removeEventListener("submit", handleSubmit);

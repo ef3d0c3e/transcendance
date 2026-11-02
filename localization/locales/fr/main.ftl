@@ -349,6 +349,7 @@ inventory-tab-collections = Collections
 inventory-tab-tradeup = Améliorer
 inventory-message-no-boosters = Aucun booster pour l'instant
 inventory-booster-open = Ouvrir le booster { $name }
+inventory-booster-buy = Acheter un booster { $name }
 inventory-booster-count = { $count ->
     [one] { $count } booster
     *[other] { $count } boosters
@@ -408,8 +409,6 @@ pack-opening-spinning = Ouverture du paquet…
 pack-opening-skip = Passer
 
 shop-balance = Solde
-shop-login-hint = Connectez-vous pour obtenir des pièces et acheter des boosters
-shop-booster-buy = Acheter
 shop-price = { $amount } pièces
 shop-topup-title = Obtenir des pièces
 shop-topup-note = Paiement de démonstration : aucun paiement réel n'est effectué. Les pièces sont créditées immédiatement sur votre compte.
@@ -421,11 +420,8 @@ shop-topup-success = { $amount } pièces ont été ajoutées à votre solde
 shop-error-unauthenticated = Vous devez être connecté pour obtenir des pièces
 shop-error-pack = Paquet de pièces inconnu
 shop-error-funds = Vous n'avez pas assez de pièces pour cet achat
-shop-error-quantity = Saisissez une quantité entre 1 et { $max }
 shop-error-internal = Impossible de mettre à jour votre solde
 shop-buy-close = Fermer
-shop-buy-quantity = Quantité
-shop-buy-total = Total
 shop-coins = pièces
 shop-coins-locked = { $amount } dans des échanges
 

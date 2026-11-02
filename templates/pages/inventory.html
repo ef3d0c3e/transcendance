@@ -273,26 +273,30 @@
 		{{ end }}
 		{{ end }}
 		{{ range $val := .Data.Items }}
-		{{ if $val.Empty }}
-		<!-- None left: clicking buys some -->
-		<div class="inventory-booster is-empty shop-booster" data-collection="{{ $val.CollectionID }}"
-			data-title="{{ $val.Title }}" data-price="{{ $val.Price }}">
-			<div class="shop-booster-display">
-				{{ template "collection" $val }}
-				<span class="shop-price-pill">{{ template "coin-icon" }} {{ $val.PriceLabel }}</span>
-			</div>
-		</div>
-		{{ else if eq (len $.Data.Viewed) 0 }}
-		<a class="inventory-booster" href="/opening?booster={{ $val.BoosterID }}" draggable="false"
-			data-booster-open="/opening?booster={{ $val.BoosterID }}" data-booster-label="{{ $val.Label }}"
-			aria-label="{{ $val.Label }}, {{ $.T "inventory-booster-count" "count" $val.Data.CollectionStack }}">
-			{{ template "collection" $val }}
-		</a>
+		{{/* Owned or not, the tile leads to the pack opening page: its
+		progress underneath tells what the collection still misses */}}
+		{{ if eq (len $.Data.Viewed) 0 }}
+		<a class="inventory-booster" href="{{ $val.Open }}" draggable="false"
+			data-booster-open="{{ $val.Open }}" data-booster-label="{{ $val.Label }}"
+			aria-label="{{ $val.Label }}{{ with $val.Data.CollectionStack }}, {{ $.T "inventory-booster-count" "count" . }}{{ end }}">
 		{{ else }}
 		<div class="inventory-booster">
-			{{ template "collection" $val }}
-		</div>
 		{{ end }}
+			{{ template "collection" $val }}
+			{{/* Another's tile cannot say "open": the stack's count stays
+			heard, no longer shown */}}
+			{{ if ne (len $.Data.Viewed) 0 }}{{ with $val.Data.CollectionStack }}
+			<span class="sr-only">{{ $.T "inventory-booster-count" "count" . }}</span>
+			{{ end }}{{ end }}
+			<div class="inventory-collection-progress">
+				<p class="pack-progress-count"><strong>{{ $val.Owned }}</strong> / {{ $val.Total }}</p>
+				<div class="pack-progress is-static" role="progressbar" aria-valuemin="0"
+					aria-valuemax="{{ $val.Total }}" aria-valuenow="{{ $val.Owned }}"
+					aria-label="{{ $.T "pack-opening-progress-title" }}">
+					<div class="pack-progress-bar" style="width: {{ $val.Percent }}%"></div>
+				</div>
+			</div>
+		{{ if eq (len $.Data.Viewed) 0 }}</a>{{ else }}</div>{{ end }}
 		{{ end }}
 	</e-cluster>
 	{{ else if eq .Data.Tab "collections" }}
@@ -324,17 +328,6 @@
 	{{ .Children.PaginatorBottom }}
 	{{ end }}
 	{{ if .Data.Topups }}
-	<div id="shop-buy-popup" data-coins="{{ .Data.Coins }}"
-		data-max-quantity="{{ .Data.MaxQuantity }}"
-		data-label-buy="{{ .T "shop-booster-buy" }}"
-		data-label-balance="{{ .T "shop-balance" }}"
-		data-label-funds="{{ .T "shop-error-funds" }}"
-		data-label-login="{{ .T "login-submit" }}"
-		data-label-login-hint="{{ .T "shop-login-hint" }}"
-		data-label-close="{{ .T "shop-buy-close" }}"
-		data-label-quantity="{{ .T "shop-buy-quantity" }}"
-		data-label-total="{{ .T "shop-buy-total" }}"
-		data-label-coins="{{ .T "shop-coins" }}"></div>
 	{{ template "topup-popup" . }}
 	{{ end }}
 	{{ if eq .Data.Tab "cards" }}

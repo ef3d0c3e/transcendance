@@ -24,6 +24,9 @@ const (
 	cardRosetta       = 1005
 )
 
+// Global ID of Tungsten, a card of the elements collection
+const cardTungsten = 8074
+
 func giveCards(t *testing.T, username string, cardID uint, count int) {
 	var user models.User
 	require.NoError(t, tests.DB.Where("username = ?", username).First(&user).Error)
@@ -263,11 +266,17 @@ func TestInventoryBoosters(t *testing.T) {
 	body := getInventory(t, router, cookie, "/inventory")
 	// One stack per (collection, size), and the other collections to buy
 	require.Equal(t, len(tests.Data.Collections)+1, strings.Count(body, `<article class="collection"`))
-	require.Contains(t, body, `<span class="collection-stack">×3</span>`)
-	require.Contains(t, body, `<span class="collection-stack">×1</span>`)
+	// No count badge on the tiles: their accessible name says the count
+	require.NotContains(t, body, `class="collection-stack"`)
+	require.Contains(t, body, `aria-label="Open booster Development, 3 boosters"`)
+	require.Contains(t, body, `aria-label="Open booster Development, 1 booster"`)
 	require.Contains(t, body, "5 cards booster")
 	require.Contains(t, body, "3 cards booster")
 	require.Contains(t, body, `<p class="inventory-count">4 boosters</p>`)
+	// Each tile leads to its pack opening page, with the collection progress
+	require.Contains(t, body, `data-booster-open="/opening?booster=`)
+	require.Contains(t, body, `class="inventory-collection-progress"`)
+	require.Contains(t, body, "<strong>1</strong> / 5")
 	// Boosters can't be searched, and tabs show both counts
 	require.NotContains(t, body, `id="search-form"`)
 	require.Contains(t, body, `<span class="inventory-tab-count">2</span>`)
@@ -288,7 +297,10 @@ func TestInventoryBoostersOtherUser(t *testing.T) {
 	cookie := login(t, router, "invbooster3", "foo-bar-baz-qux")
 
 	body := getInventory(t, router, cookie, "/inventory?u=invbooster4&tab=boosters")
-	require.Contains(t, body, `<span class="collection-stack">×2</span>`)
+	// The stack's count is heard, no longer shown on the tile
+	require.NotContains(t, body, `class="collection-stack"`)
+	require.Contains(t, body, `<span class="sr-only">2 boosters</span>`)
+	require.Contains(t, body, "<strong>0</strong> / 5")
 	// Only the boosters owned, none is sold here
 	require.Equal(t, 1, strings.Count(body, `<article class="collection"`))
 	require.NotContains(t, body, "shop-booster")
@@ -304,13 +316,18 @@ func TestInventoryBoostersEmpty(t *testing.T) {
 	createAccount(t, router, "invbooster5", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "invbooster5", "foo-bar-baz-qux")
 
-	// Every collection is listed grayed out, clicking one buys some
+	// Every collection is listed, its tile leading to the pack opening page
+	// where some are bought
 	body := getInventory(t, router, cookie, "/inventory")
-	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<div class="inventory-booster is-empty shop-booster"`))
-	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `<span class="collection-stack collection-stack-empty">×0</span>`))
-	require.Contains(t, body, `data-collection="1"`)
-	require.Contains(t, body, `data-price="250"`)
-	require.Contains(t, body, `id="shop-buy-popup" data-coins="0"`)
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `href="/opening?collection=`))
+	require.Equal(t, len(tests.Data.Collections), strings.Count(body, `data-booster-label="Buy booster `))
+	// Not grayed out, no count badge and no price pill
+	require.NotContains(t, body, `is-empty`)
+	require.NotContains(t, body, `class="collection-stack"`)
+	require.NotContains(t, body, `shop-price-pill`)
+	require.NotContains(t, body, `data-price=`)
+	// Bulk buying is gone with its popup
+	require.NotContains(t, body, `id="shop-buy-popup"`)
 	// With the balance and the coin top-up
 	require.Contains(t, body, `Balance: <span id="shop-coins">0 coins</span>`)
 	require.Contains(t, body, `id="shop-topup-popup"`)

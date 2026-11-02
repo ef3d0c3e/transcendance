@@ -2,7 +2,6 @@ package controllers_test
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -99,21 +98,24 @@ func TestShopGetListsBoosters(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
 	require.Contains(t, body, "Development")
-	require.Contains(t, body, "250 coins")
-	// Collection tile with its price pill and coin icon
-	require.Contains(t, body, `class="shop-booster-display"`)
-	require.Contains(t, body, `class="shop-price-pill"`)
+	// Collection tile with its coin icon
 	require.Contains(t, body, `class="coin-icon"`)
 	require.Contains(t, body, "data-tilt")
 	require.Contains(t, body, "/collections/1/thumbnail")
 	require.Contains(t, body, "5 cards booster")
-	// Buy popup mount, with the tile price the popup compares to the balance
-	require.Contains(t, body, `id="shop-buy-popup"`)
-	require.Contains(t, body, `data-price="250"`)
-	require.Contains(t, body, `data-label-buy="Buy"`)
-	// And the bulk quantity cap the popup's stepper must not exceed
-	require.Contains(t, body, `data-max-quantity="10"`)
-	require.Contains(t, body, `data-label-quantity="Quantity"`)
+	// No booster left: the tile leads to the pack opening page, where some
+	// are bought
+	require.Contains(t, body, `href="/opening?collection=1"`)
+	require.Contains(t, body, `data-booster-open="/opening?collection=1"`)
+	require.Contains(t, body, `data-booster-label="Buy booster Development"`)
+	// The collection progress under the tile, as on the collections tab
+	require.Contains(t, body, `class="inventory-collection-progress"`)
+	require.Contains(t, body, "<strong>0</strong> / 5")
+	// No pack buying popup, no grayed tile and no price pill
+	require.NotContains(t, body, `id="shop-buy-popup"`)
+	require.NotContains(t, body, `class="inventory-booster is-empty`)
+	require.NotContains(t, body, `shop-price-pill`)
+	require.NotContains(t, body, `shop-booster-display`)
 }
 
 func TestShopGetRedirectsToInventory(t *testing.T) {
@@ -141,7 +143,7 @@ func TestShopGetFollowsLocale(t *testing.T) {
 	body := shopBody(rec)
 	require.Contains(t, body, "Solde")
 	require.Contains(t, body, "Développement")
-	require.Contains(t, body, "250 pièces")
+	require.Contains(t, body, `data-booster-label="Acheter un booster Développement"`)
 }
 
 func TestShopTopupRequiresLogin(t *testing.T) {
@@ -273,7 +275,9 @@ func TestShopGetLoggedInShowsCoins(t *testing.T) {
 	require.Equal(t, http.StatusOK, rec.Code)
 	body := shopBody(rec)
 	require.Contains(t, body, `Balance: <span id="shop-coins">1,000 coins</span>`)
-	require.Contains(t, body, `data-coins="1000"`)
+	// With the top-up popup, to buy more
+	require.Contains(t, body, `class="shop-topup-open"`)
+	require.Contains(t, body, `id="shop-topup-popup"`)
 }
 
 func TestCollectionThumbnailServed(t *testing.T) {
@@ -300,161 +304,4 @@ func TestCardAssetsServed(t *testing.T) {
 
 	rec = shopRequest(t, router, http.MethodGet, "/cards/assets/nope.png", nil, nil)
 	require.Equal(t, http.StatusNotFound, rec.Code)
-}
-
-func TestShopBuyRequiresLogin(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-
-	rec := shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"1"},
-	}, nil)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/login", rec.Header().Get("Location"))
-}
-
-func TestShopBuyUnknownCollection(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shopbuy", "foo-bar-qux", 0)
-	cookie := login(t, router, "shopbuy", "foo-bar-qux")
-
-	rec := shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"999"},
-	}, cookie)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?error=collection", rec.Header().Get("Location"))
-	require.Equal(t, uint(0), shopBalance(t, "shopbuy"))
-	require.Empty(t, shopBoosters(t, "shopbuy"))
-}
-
-func TestShopBuyInsufficientFunds(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shopfiona", "foo-bar-qux", 0)
-	cookie := login(t, router, "shopfiona", "foo-bar-qux")
-
-	// One booster costs 250 coins, the small pack only credits 100
-	rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack": {"small"},
-	}, cookie)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"1"},
-	}, cookie)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
-	require.Equal(t, uint(100), shopBalance(t, "shopfiona"))
-	require.Empty(t, shopBoosters(t, "shopfiona"))
-}
-
-func TestShopBuyAddsBoosterToInventory(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shopgail", "foo-bar-qux", 0)
-	cookie := login(t, router, "shopgail", "foo-bar-qux")
-
-	rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack": {"medium"},
-	}, cookie)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"1"},
-	}, cookie)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	// 500 credited, one 250 coin booster bought
-	require.Equal(t, uint(250), shopBalance(t, "shopgail"))
-
-	// The booster lands in the inventory, and the buyer on its opening
-	boosters := shopBoosters(t, "shopgail")
-	require.Len(t, boosters, 1)
-	require.Equal(t, uint(1), boosters[0].CollectionID)
-	require.Equal(t, uint(5), boosters[0].Size)
-	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
-}
-
-func TestShopBuyBulkAddsBoostersToInventory(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shophank", "foo-bar-qux", 0)
-	cookie := login(t, router, "shophank", "foo-bar-qux")
-
-	rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack": {"large"},
-	}, cookie)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"1"},
-		"quantity":   {"3"},
-	}, cookie)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	// 1000 credited, three 250 coin boosters bought
-	require.Equal(t, uint(250), shopBalance(t, "shophank"))
-
-	boosters := shopBoosters(t, "shophank")
-	require.Len(t, boosters, 3)
-	for _, booster := range boosters {
-		require.Equal(t, uint(1), booster.CollectionID)
-		require.Equal(t, uint(5), booster.Size)
-	}
-
-	// The first one opens, the page chains into the others
-	require.Equal(t, fmt.Sprintf("/opening?booster=%d", boosters[0].ID), rec.Header().Get("Location"))
-}
-
-func TestShopBuyRejectsInvalidQuantity(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shopiris", "foo-bar-qux", 0)
-	cookie := login(t, router, "shopiris", "foo-bar-qux")
-
-	rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack": {"medium"},
-	}, cookie)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-
-	// Zero, above the cap, negative and not even a number are all refused
-	for _, quantity := range []string{"0", "11", "-2", "many"} {
-		rec := shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-			"collection": {"1"},
-			"quantity":   {quantity},
-		}, cookie)
-
-		require.Equal(t, http.StatusSeeOther, rec.Code)
-		require.Equal(t, "/inventory?error=quantity", rec.Header().Get("Location"), "quantity %q", quantity)
-	}
-
-	// Nothing was sold and the balance is untouched
-	require.Equal(t, uint(500), shopBalance(t, "shopiris"))
-	require.Empty(t, shopBoosters(t, "shopiris"))
-
-	// The shop explains the range it accepts
-	rec = shopRequest(t, router, http.MethodGet, "/inventory?error=quantity", nil, cookie)
-	require.Equal(t, http.StatusOK, rec.Code)
-	require.Contains(t, shopBody(rec), "Enter a quantity between 1 and 10")
-}
-
-func TestShopBuyInsufficientFundsForBulk(t *testing.T) {
-	router := tests.Run(tests.Data, tests.DB)
-	createAccount(t, router, "shopjude", "foo-bar-qux", 0)
-	cookie := login(t, router, "shopjude", "foo-bar-qux")
-
-	// 500 coins cover two boosters but not three
-	rec := shopRequest(t, router, http.MethodPost, "/shop/topup", url.Values{
-		"pack": {"medium"},
-	}, cookie)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
-		"collection": {"1"},
-		"quantity":   {"3"},
-	}, cookie)
-
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
-	// The whole order is refused, not just the boosters that do not fit
-	require.Equal(t, uint(500), shopBalance(t, "shopjude"))
-	require.Empty(t, shopBoosters(t, "shopjude"))
 }

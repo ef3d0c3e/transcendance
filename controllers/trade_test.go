@@ -743,24 +743,25 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 	require.Contains(t, body, "200 up in trades")
 
 	// A booster cannot eat into the coins of the offer
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
+	rec = postForm(t, router, cookie27, "/opening/buy", url.Values{
 		"collection": {"1"},
-	}, cookie27)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.Equal(t, "/inventory?error=funds", rec.Header().Get("Location"))
+	})
+	require.Equal(t, http.StatusPaymentRequired, rec.Code)
 	require.Equal(t, uint(305), shopBalance(t, "trade27"))
 	require.Empty(t, shopBoosters(t, "trade27"))
+	require.Len(t, ownedCards(t, "trade27"), 1)
 
 	// Withdrawing the offer frees its coins for the shop again
 	target := tradeAction(t, router, cookie27, offer.ID, "cancel")
 	require.Equal(t, "/trades", target)
-	rec = shopRequest(t, router, http.MethodPost, "/shop/buy", url.Values{
+	rec = postForm(t, router, cookie27, "/opening/buy", url.Values{
 		"collection": {"1"},
-	}, cookie27)
-	require.Equal(t, http.StatusSeeOther, rec.Code)
-	require.True(t, strings.HasPrefix(rec.Header().Get("Location"), "/opening?booster="))
+	})
+	require.Equal(t, http.StatusOK, rec.Code)
+	// Bought and opened at once: the coins are spent, the cards owned
 	require.Equal(t, uint(55), shopBalance(t, "trade27"))
-	require.Len(t, shopBoosters(t, "trade27"), 1)
+	require.Empty(t, shopBoosters(t, "trade27"))
+	require.Len(t, ownedCards(t, "trade27"), 6)
 }
 
 // A counter starts mirrored, the coins of the other side included
