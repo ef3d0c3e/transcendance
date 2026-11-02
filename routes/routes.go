@@ -87,7 +87,6 @@ func RegisterRoutes(
 	router.POST("/api/notifications/:ID/unread", controller.ApiNotificationUnreadPost)
 	router.POST("/api/notifications/:ID/delete", controller.ApiNotificationDeletePost)
 
-	// Debug: send a notification to the authenticated admin
 	if debug {
 		router.GET("/add_notification", controller.AddNotificationGet)
 		router.POST("/add_notification", controller.AddNotificationPost)
@@ -96,7 +95,7 @@ func RegisterRoutes(
 	// shoutbox.go
 	shoutboxController := controllers.NewShoutboxController(db, renderer)
 	router.GET("/api/shoutbox", shoutboxController.ApiShoutboxGet)
-	//friends
+	// friends.go
 	router.POST("/friendaction", controller.FriendsPost)
 	router.GET("/friends", controller.FriendsGet)
 
@@ -112,7 +111,6 @@ func RegisterRoutes(
 
 	router.GET("/inventory", dataController.InventoryGet)
 	router.POST("/inventory/claim", dataController.InventoryClaimPost)
-	// Debug: add a card to the authenticated admin's inventory
 	if debug {
 		router.POST("/add", dataController.InventoryAddPost)
 	}
@@ -128,7 +126,6 @@ func RegisterRoutes(
 	// foil.go
 	router.POST("/foil", dataController.FoilRoulettePost)
 
-	// Debug: add a booster to the authenticated admin's inventory
 	if debug {
 		router.GET("/add_booster", dataController.AddBoosterGet)
 		router.POST("/add_booster", dataController.AddBoosterPost)

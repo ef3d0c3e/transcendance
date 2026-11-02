@@ -18,31 +18,24 @@ var localesFS embed.FS
 
 const localesDir = "locales"
 
-// contextKey is a private type used to store the negotiated Localization
-// in the Gin context.
 type contextKey string
 
 const localizationContextKey contextKey = "localization.Localizer"
 
 type Localizer struct {
-	// Available locales
 	Available []string
-	// List of individial .ftl files
+	// The .ftl files
 	Resources []string
 	Loader    fluentloc.ResourceLoader
 
-	// Fallback locale: 'en'
-	Fallback string
-	// Locale GET parameter: 'lang'
+	Fallback   string
 	QueryParam string
-	// Locale cookie name: 'lang'
 	CookieName string
 
 	// Cache of (locale fallback chain, locale)
 	Cache sync.Map
 }
 
-// Build localizer
 func New() (*Localizer, error) {
 	entries, err := fs.ReadDir(localesFS, localesDir)
 	if err != nil {
@@ -86,15 +79,13 @@ func New() (*Localizer, error) {
 	return l, nil
 }
 
-// Localization middleware. Negotiate locale based on request parameters and/or cookie
+// Middleware negotiates the locale from the query parameter and/or cookie
 func (l *Localizer) Middleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if _, exists := c.Get(localizationContextKey); !exists {
-			// Negotiate and store
 			loc := l.negotiate(c)
 			c.Set(localizationContextKey, loc)
 
-			// Store cookie
 			requested := l.requestedLocales(c)
 			chosen := l.chosenLocale(requested)
 			c.SetSameSite(http.SameSiteLaxMode)
@@ -104,14 +95,12 @@ func (l *Localizer) Middleware() gin.HandlerFunc {
 	}
 }
 
-// Return the negotiated locale. Locale is negotiated once, then cached
+// Localization negotiates the locale once per request, then caches it
 func (l *Localizer) Localization(c *gin.Context) *fluentloc.Localization {
-	// Cached?
 	if loc, exists := c.Get(localizationContextKey); exists {
 		return loc.(*fluentloc.Localization)
 	}
 
-	// Negotiate and store
 	loc := l.negotiate(c)
 	c.Set(localizationContextKey, loc)
 	return loc
@@ -123,7 +112,6 @@ func (l *Localizer) Translate(loc *fluentloc.Localization, id string, kv ...any)
 	return val
 }
 
-// negotiate builds the requested locales list, using the cache, and returns a Localization
 func (l *Localizer) negotiate(c *gin.Context) *fluentloc.Localization {
 	requested := l.requestedLocales(c)
 	cacheKey := strings.Join(requested, ",")
@@ -148,7 +136,6 @@ func (l *Localizer) negotiate(c *gin.Context) *fluentloc.Localization {
 	return loc
 }
 
-// Attempt to get the requested locale using a fallback chain
 func (l *Localizer) chosenLocale(requested []string) string {
 	for _, r := range requested {
 		for _, a := range l.Available {
@@ -160,7 +147,7 @@ func (l *Localizer) chosenLocale(requested []string) string {
 	return l.Fallback
 }
 
-// Detect locale requested by user. Build a list of requested locale in ordered by priority
+// requestedLocales lists the requested locales by priority
 func (l *Localizer) requestedLocales(c *gin.Context) []string {
 	var requested []string
 
