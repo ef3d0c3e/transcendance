@@ -147,6 +147,9 @@
 			{{ end }}
 			<p class="inventory-message" id="tradeup-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
 		</e-cluster>
+			{{/* What the filters keep, told to screen readers (frontend/src/card-filter.js) */}}
+			<p class="sr-only" id="tradeup-filter-status" role="status"
+				data-label-results="{{ .T "card-filter-results" "count" "{count}" }}"></p>
 			<div class="tradeup-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
 				data-label-nav="{{ .T "paginator-label-nav-bottom" }}"
 				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
@@ -212,7 +215,7 @@
 			<div class="foil-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
 				data-label-nav="{{ .T "paginator-label-nav" }}"
 				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
-		<e-cluster class="inventory-cards tradeup-cards" justify="center">
+		<e-cluster class="inventory-cards tradeup-cards" id="foil-cards" justify="center">
 			{{ range $val := .Data.Items }}
 			<div class="tradeup-card foil-card" data-foil-id="{{ $val.CardID }}" data-foil-foil="{{ $val.Foil }}"
 				data-foil-count="{{ $val.Count }}" data-foil-rarity="{{ $val.Rarity }}"
@@ -224,6 +227,8 @@
 			{{ end }}
 			<p class="inventory-message" id="foil-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
 		</e-cluster>
+			<p class="sr-only" id="foil-filter-status" role="status"
+				data-label-results="{{ .T "card-filter-results" "count" "{count}" }}"></p>
 			<div class="foil-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
 				data-label-nav="{{ .T "paginator-label-nav-bottom" }}"
 				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
@@ -232,7 +237,7 @@
 			<form class="tradeup-filter" action="/inventory" method="get">
 				<input type="hidden" name="tab" value="foil">
 				<input type="search" id="foil-search" name="q" placeholder="{{ .T "card-filter-placeholder" }}"
-					aria-label="{{ .T "card-filter-placeholder" }}">
+					aria-label="{{ .T "card-filter-placeholder" }}" aria-controls="foil-cards">
 				<label>
 					<span>{{ .T "inventory-filter-collection" }}</span>
 					<select id="foil-collection-filter" name="collection">

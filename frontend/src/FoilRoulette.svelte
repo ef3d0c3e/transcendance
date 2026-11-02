@@ -21,7 +21,8 @@
 
     Filtering, sorting and paging are left to card-filter.js, on
     `#foil-search`, `#foil-collection-filter`, `#foil-rarity-filter`,
-    `#foil-sort` and the `.foil-pager` elements.
+    `#foil-sort`, `#foil-no-match`, `#foil-filter-status` and the
+    `.foil-pager` elements.
 -->
 
 <script>
@@ -252,6 +253,7 @@
 			rarity: "#foil-rarity-filter",
 			sort: "#foil-sort",
 			noMatch: "#foil-no-match",
+			status: "#foil-filter-status",
 			pagers: ".foil-pager",
 		});
 

@@ -18,8 +18,9 @@
     the collection-and-rarity order of `data-tradeup-order`. All of it without
     navigating, keeping the contract: the picks live here, not in the page.
     Picks the filters hide stay in it. `#tradeup-no-match` shows when they
-    hide every card. The grid is paged in the page too, in the
-    `.tradeup-pager` elements, so picks survive turning pages.
+    hide every card, and `#tradeup-filter-status` tells screen readers what
+    they kept. The grid is paged in the page too, in the `.tradeup-pager`
+    elements, so picks survive turning pages.
 -->
 
 <script>
@@ -36,6 +37,7 @@
 	const RARITY_SELECTOR = "#tradeup-rarity-filter";
 	const SORT_SELECTOR = "#tradeup-sort";
 	const NO_MATCH_SELECTOR = "#tradeup-no-match";
+	const STATUS_SELECTOR = "#tradeup-filter-status";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
 
@@ -196,6 +198,7 @@
 			rarity: RARITY_SELECTOR,
 			sort: SORT_SELECTOR,
 			noMatch: NO_MATCH_SELECTOR,
+			status: STATUS_SELECTOR,
 			pagers: ".tradeup-pager",
 		});
 

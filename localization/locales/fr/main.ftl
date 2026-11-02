@@ -130,6 +130,7 @@ card-rarity-legendary = Legendaire
 card-search-placeholder = Rechercher des cartes
 card-filter-placeholder = Filtrer par nom de carte ou de collection
 card-filter-no-match = Aucune carte ne correspond à ce filtre
+card-filter-results = Cartes correspondantes : { $count }
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echec de la recherche
