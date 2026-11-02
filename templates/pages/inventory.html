@@ -1,10 +1,21 @@
 {{ define "inventory" }}
 <div class="inventory">
+	{{ with .Data.Streak }}
+	{{ template "daily-streak" . }}
+	{{ end }}
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h1 class="inventory-title">{{ .Data.Title }}</h1>
 			{{ if .Data.Count }}
 			<p class="inventory-count">{{ .Data.Count }}</p>
+			{{ end }}
+			{{ if .Data.Tradable }}
+			<a class="inventory-trade" href="/trades/new?u={{ .Data.Viewed }}">{{ .T "inventory-trade" }}</a>
+			{{ else if eq (len .Data.Viewed) 0 }}
+			<!-- One's own offers, with how many wait for an answer -->
+			<a class="inventory-trade" href="/trades">{{ .T "inventory-trades" }}
+				{{- with .Data.IncomingTrades }} <span class="inventory-trade-count" aria-hidden="true">{{ . }}</span>
+				<span class="sr-only">{{ $.T "inventory-trades-incoming" "count" . }}</span>{{ end }}</a>
 			{{ end }}
 		</div>
 		{{ if eq .Data.Tab "cards" }}
@@ -31,7 +42,8 @@
 
 	{{ if .Data.Topups }}
 	<div class="inventory-wallet">
-		<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="shop-coins">{{ .Data.CoinsLabel }}</span></p>
+		<p class="shop-balance">{{ template "coin-icon" }} {{ .T "shop-balance" }}: <span id="shop-coins">{{ .Data.CoinsLabel }}</span>
+			{{- with .Data.CoinsLockedLabel }} <span class="shop-balance-locked">{{ . }}</span>{{ end }}</p>
 		<button type="button" class="shop-topup-open" aria-haspopup="dialog" aria-controls="shop-topup-popup">{{ .T "shop-topup-open" }}</button>
 	</div>
 	{{ end }}
@@ -68,7 +80,26 @@
 				{{ end }}
 			</select>
 		</label>
+		{{ with .Data.Duplicates }}{{ if .Count }}
+		<button type="button" class="inventory-sell-duplicates" aria-haspopup="dialog"
+			data-dialog-open="inventory-sell-duplicates-popup">{{ $.T "inventory-sell-duplicates" }}</button>
+		{{ end }}{{ end }}
 	</div>
+	{{ with .Data.Duplicates }}{{ if .Count }}
+	<!-- Says what selling the duplicates pays before doing it -->
+	<dialog id="inventory-sell-duplicates-popup" class="inventory-confirm"
+		aria-labelledby="inventory-sell-duplicates-title" aria-describedby="inventory-sell-duplicates-text">
+		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post">
+			<h2 id="inventory-sell-duplicates-title">{{ $.T "inventory-sell-duplicates-title" }}</h2>
+			<p id="inventory-sell-duplicates-text">{{ $.T "inventory-sell-duplicates-text" "count" .Count "amount" .Coins }}</p>
+			<p class="inventory-confirm-note">{{ $.T "inventory-sell-duplicates-note" }}</p>
+			<div class="inventory-confirm-actions">
+				<button type="button" class="inventory-confirm-cancel" data-dialog-close>{{ $.T "inventory-sell-cancel" }}</button>
+				<button type="submit">{{ $.T "inventory-sell-duplicates-confirm" "amount" .Coins }}</button>
+			</div>
+		</form>
+	</dialog>
+	{{ end }}{{ end }}
 	{{ end }}
 
 	{{ if .Data.Message }}
@@ -80,10 +111,62 @@
 	</div>
 	{{ end }}
 
+	{{ if eq .Data.Tab "tradeup" }}
+	{{ with .Data.TradeupResult }}
+	<div id="tradeup-result" data-label-title="{{ $.T "tradeup-result" }}"
+		data-label-close="{{ $.T "tradeup-result-close" }}">
+		<template>{{ template "card" . }}</template>
+	</div>
+	{{ end }}
+	{{ if ne (len .Data.Items) 0 }}
+	<p class="tradeup-rules">{{ .T "tradeup-rules" "count" .Data.TradeupCost }}</p>
+	<div class="tradeup-layout">
+		<e-cluster class="inventory-cards tradeup-cards" justify="center">
+			{{ range $val := .Data.Items }}
+			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
+				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
+				data-tradeup-title="{{ $val.Data.CardTitle }}"
+				data-tradeup-collection-id="{{ $val.Data.CardCollectionID }}"
+				data-tradeup-collection="{{ $val.Data.CardCollectionTitle }}">
+				{{ template "card" $val }}
+			</div>
+			{{ end }}
+			<p class="inventory-message" id="tradeup-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
+		</e-cluster>
+		<div class="tradeup-side">
+			<form class="tradeup-filter" action="/inventory" method="get">
+				<input type="hidden" name="tab" value="tradeup">
+				<input type="search" id="tradeup-search" name="q" placeholder="{{ .T "card-filter-placeholder" }}"
+					aria-label="{{ .T "card-filter-placeholder" }}">
+				<label>
+					<span>{{ .T "inventory-filter-collection" }}</span>
+					<select id="tradeup-collection-filter" name="collection">
+						{{ range .Data.TradeupCollections }}
+						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+			</form>
+			<form class="tradeup-form" action="/tradeup" method="post">
+				<div id="tradeup-picker" data-cost="{{ .Data.TradeupCost }}" data-label-slots="{{ .T "tradeup-slots" }}"
+					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
+					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"></div>
+			</form>
+		</div>
+	</div>
+	{{ end }}
+	{{ else if or (ne (len .Data.Items) 0) .Data.Pile }}
 	{{ if ne (len .Data.Items) 0 }}
 	{{ .Children.Paginator }}
+	{{ end }}
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
+		{{ with .Data.Pile }}
+		<div class="inventory-booster"{{ if not .PileEmpty }} data-booster-open="{{ .PileOpen }}"
+			data-booster-label="{{ .PileLabel }}"{{ end }}>
+			{{ template "booster-pile" . }}
+		</div>
+		{{ end }}
 		{{ range $val := .Data.Items }}
 		{{ if $val.Empty }}
 		<!-- None left: clicking buys some -->
@@ -153,7 +236,11 @@
 		data-label-acquired="{{ .T "inventory-card-acquired" }}"
 		data-label-acquired-first="{{ .T "inventory-card-acquired-first" }}"
 		data-label-acquired-last="{{ .T "inventory-card-acquired-last" }}"
-		data-label-copies="{{ .T "inventory-card-copies" }}" data-label-close="{{ .T "inventory-card-close" }}"></div>
+		data-label-copies="{{ .T "inventory-card-copies" }}" data-label-close="{{ .T "inventory-card-close" }}"
+		data-label-value="{{ .T "inventory-card-value" }}" data-label-sell="{{ .T "inventory-card-sell" }}"
+		data-label-quantity="{{ .T "inventory-sell-quantity" }}" data-label-total="{{ .T "inventory-sell-total" }}"
+		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
+		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}
 	{{ end }}
 </div>

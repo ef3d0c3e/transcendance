@@ -1,5 +1,6 @@
 {{/* Inventory tabs, also over a collection's cards. Needs .Data.Tab, the
-.Data.Tab*Url links and the .Data.Total* counts. */}}
+.Data.Tab*Url links and the .Data.Total* counts. The tradeup tab shows when
+.Data.TabTradeupUrl is set, on one's own inventory. */}}
 {{ define "inventory-tabs" }}
 <nav class="inventory-tabs" aria-label="{{ .T "inventory-tabs-label" }}">
 	<a class="inventory-tab-cards" href="{{ .Data.TabCardsUrl }}" {{ if eq .Data.Tab "cards" }}aria-current="page"{{ end }}>
@@ -11,5 +12,10 @@
 	<a class="inventory-tab-collections" href="{{ .Data.TabCollectionsUrl }}" {{ if eq .Data.Tab "collections" }}aria-current="page"{{ end }}>
 		{{ .T "inventory-tab-collections" }} <span class="inventory-tab-count">{{ .Data.TotalCollections }}</span>
 	</a>
+	{{ with .Data.TabTradeupUrl }}
+	<a class="inventory-tab-tradeup" href="{{ . }}" {{ if eq $.Data.Tab "tradeup" }}aria-current="page"{{ end }}>
+		{{ $.T "inventory-tab-tradeup" }}
+	</a>
+	{{ end }}
 </nav>
 {{ end }}

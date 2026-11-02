@@ -1,6 +1,6 @@
 <script>
 	import { onMount, tick } from "svelte";
-	import { openTopup } from "./topup.js";
+	import { openTopup, updateNavBalance } from "./topup.js";
 	import { loadMuted, packSounds, saveMuted, soundsAllowed, unlockSounds } from "./pack-sounds.js";
 
 	let {
@@ -371,6 +371,7 @@
 			owned,
 			coins: data.coins,
 			coinsLabel: data.coinsLabel ?? "",
+			navBalance: data.navBalance ?? "",
 			summary: data.summary ?? "",
 		};
 	}
@@ -544,14 +545,18 @@
 			// Its light stays, only its label changes
 			openButton.querySelector(".pack-open-label").textContent = retryLabel ?? openLabel;
 			openButton.hidden = !chained;
-			buyButton.hidden = chained;
+			// Default boosters have none to buy: the page ends with the pile
+			const buyable = !chained && Boolean(buyButton);
+			if (buyButton) {
+				buyButton.hidden = chained;
+			}
 			// Calls for the next opening, until it is clicked
 			const next = chained ? openButton : buyButton;
-			next.classList.add("is-ready");
+			next?.classList.add("is-ready");
 
 			// The won cards stay on the stage, its button opens the next one
-			priceHtml = chained ? "" : (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "");
-			stageAction = chained ? "open" : "buy";
+			priceHtml = buyable ? (buyButton.querySelector(".pack-buy-price")?.outerHTML ?? "") : "";
+			stageAction = chained ? "open" : (buyable ? "buy" : null);
 			await tick();
 			againButton?.focus();
 		} catch (error) {
@@ -626,6 +631,13 @@
 		if (left && result.remainingLabel) {
 			left.textContent = result.remainingLabel;
 		}
+		// The pile of default boosters shows what it has left
+		const pile = document.querySelector(".pack-booster .booster-pile-count");
+		if (pile) {
+			pile.textContent = `×${result.remaining}`;
+			pile.closest(".card-container")?.querySelector(".booster-pile-art")
+				?.classList.toggle("booster-pile-empty", result.remaining === 0);
+		}
 
 		const owned = document.querySelector("#pack-owned");
 		const total = Number(document.querySelector("#pack-total")?.textContent);
@@ -634,6 +646,7 @@
 		if (balance && result.coinsLabel) {
 			balance.textContent = result.coinsLabel;
 		}
+		updateNavBalance(result.navBalance);
 
 		if (owned && typeof result.owned === "number") {
 			countUp(owned, result.owned);
