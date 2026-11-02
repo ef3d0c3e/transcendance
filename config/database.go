@@ -79,7 +79,7 @@ func MigrateDatabase(db *gorm.DB) error {
 			return err
 		}
 	}
-	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Relation{}, &models.Notification{}, &models.ShoutboxMessage{}, &models.PrivateMessage{}, &models.UserIgnore{}, &models.Card{}, &models.Booster{}, &models.BoosterPile{}, &models.DailyStreak{}, &models.Trade{}, &models.TradeLine{}); err != nil {
+	if err := db.AutoMigrate(&models.User{}, &models.UserSession{}, &models.UserProfile{}, &models.Relation{}, &models.Notification{}, &models.ShoutboxMessage{}, &models.PrivateMessage{}, &models.UserIgnore{}, &models.ShoutboxMute{}, &models.Card{}, &models.Booster{}, &models.BoosterPile{}, &models.DailyStreak{}, &models.Trade{}, &models.TradeLine{}); err != nil {
 		return err
 	}
 	// The stacks of offers were JSON lists in the trades table before they got their own
