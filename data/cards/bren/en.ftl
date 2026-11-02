@@ -1,0 +1,2 @@
+title = Bren Light Machine Gun
+description = The Bren gun (Brno-Enfield) was a series of light machine guns (LMG) made by the United Kingdom in the 1930s and used in various roles until 1992. While best known for its role as the British and British Empire forces' primary infantry LMG in World War II, it was also used in the Korean War and saw service throughout the latter half of the 20th century, including the 1982 Falklands War.

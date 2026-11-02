@@ -38,11 +38,12 @@
 
 	{{ template "inventory-tabs" . }}
 
-	{{ if .Data.Notice.Message }}
-	<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}">
-		{{ .Data.Notice.Message }}
-	</p>
-	{{ end }}
+	<!-- A live region from the start, so what a sale made without reloading
+	     writes in (frontend/src/sell.js) is announced -->
+	<div role="status">
+		<p class="shop-message {{ if .Data.Notice.Error }}shop-message-error{{ else }}shop-message-success{{ end }}"
+			data-inventory-notice tabindex="-1"{{ if not .Data.Notice.Message }} hidden{{ end }}>{{ .Data.Notice.Message }}</p>
+	</div>
 
 	{{ if .Data.Topups }}
 	<div class="inventory-wallet">
@@ -92,12 +93,14 @@
 	</div>
 	{{ with .Data.Duplicates }}{{ if .Count }}
 	<!-- Says what selling the duplicates pays before doing it -->
-	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm"
+	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm" data-count="{{ .Count }}"
 		aria-labelledby="inventory-sell-duplicates-title" aria-describedby="inventory-sell-duplicates-text">
-		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post">
+		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post"
+			data-label-error="{{ $.T "inventory-sell-error-internal" }}">
 			<h2 id="inventory-sell-duplicates-title">{{ $.T "inventory-sell-duplicates-title" }}</h2>
 			<p id="inventory-sell-duplicates-text">{{ $.T "inventory-sell-duplicates-text" "count" .Count "amount" .Coins }}</p>
 			<p class="inventory-confirm-note">{{ $.T "inventory-sell-duplicates-note" }}</p>
+			<p class="section-error" data-sell-error role="alert" hidden></p>
 			<div class="inventory-confirm-actions">
 				<button type="button" class="inventory-confirm-cancel" data-dialog-close>{{ $.T "inventory-sell-cancel" }}</button>
 				<button type="submit">{{ $.T "inventory-sell-duplicates-confirm" "amount" .Coins }}</button>
@@ -126,10 +129,15 @@
 	{{ if ne (len .Data.Items) 0 }}
 	<p class="tradeup-rules">{{ .T "tradeup-rules" "count" .Data.TradeupCost }}</p>
 	<div class="tradeup-layout">
+		<div class="tradeup-main">
+			<div class="tradeup-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
+				data-label-nav="{{ .T "paginator-label-nav" }}"
+				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
 		<e-cluster class="inventory-cards tradeup-cards" id="tradeup-cards" justify="center">
 			{{ range $val := .Data.Items }}
 			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
 				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
+				data-tradeup-order="{{ $val.Order }}"
 				data-tradeup-title="{{ $val.Data.CardTitle }}"
 				data-tradeup-collection-id="{{ $val.Data.CardCollectionID }}"
 				data-tradeup-collection="{{ $val.Data.CardCollectionTitle }}">
@@ -138,6 +146,13 @@
 			{{ end }}
 			<p class="inventory-message" id="tradeup-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
 		</e-cluster>
+			{{/* What the filters keep, told to screen readers (frontend/src/card-filter.js) */}}
+			<p class="sr-only" id="tradeup-filter-status" role="status"
+				data-label-results="{{ .T "card-filter-results" "count" "{count}" }}"></p>
+			<div class="tradeup-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
+				data-label-nav="{{ .T "paginator-label-nav-bottom" }}"
+				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
+		</div>
 		<div class="tradeup-side">
 			<form class="tradeup-filter" action="/inventory" method="get">
 				<input type="hidden" name="tab" value="tradeup">
@@ -151,11 +166,117 @@
 						{{ end }}
 					</select>
 				</label>
+				<label>
+					<span>{{ .T "inventory-filter-rarity" }}</span>
+					<select id="tradeup-rarity-filter" name="rarity">
+						{{ range .Data.RarityOptions }}
+						<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+				<label>
+					<span>{{ .T "inventory-sort" }}</span>
+					<select id="tradeup-sort" name="sort">
+						{{ range .Data.SortOptions }}
+						<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
 			</form>
 			<form class="tradeup-form" action="/tradeup" method="post">
 				<div id="tradeup-picker" data-cost="{{ .Data.TradeupCost }}" data-label-slots="{{ .T "tradeup-slots" }}"
 					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
 					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"
+					data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+					data-label-copies="{{ .T "inventory-card-copies" }}"></div>
+			</form>
+		</div>
+	</div>
+	{{ end }}
+	{{ else if eq .Data.Tab "foil" }}
+	{{ with .Data.FoilResult }}
+	<div id="tradeup-result"
+		{{ if $.Data.FoilResultLost }}data-outcome="lost" data-label-title="{{ $.T "foil-result-lost" }}"
+		data-label-text="{{ $.T "foil-result-lost-text" "title" .Data.CardTitle }}"
+		{{ else }}data-label-title="{{ $.T "foil-result-won" }}" data-label-text="{{ $.T "foil-result-won-text" }}"{{ end }}
+		data-label-close="{{ $.T "tradeup-result-close" }}">
+		<template>{{ template "card" . }}</template>
+	</div>
+	{{ end }}
+	{{ if ne (len .Data.Items) 0 }}
+	<p class="tradeup-rules">{{ .Data.FoilRules }}</p>
+	{{/* The tiles are picked and the roll built by frontend/src/FoilRoulette.svelte */}}
+	<noscript>
+		<p class="trade-menu-noscript foil-noscript">{{ .T "foil-noscript" }}</p>
+	</noscript>
+	<div class="tradeup-layout">
+		<div class="tradeup-main">
+			<div class="foil-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
+				data-label-nav="{{ .T "paginator-label-nav" }}"
+				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
+		<e-cluster class="inventory-cards tradeup-cards" id="foil-cards" justify="center">
+			{{ range $val := .Data.Items }}
+			<div class="tradeup-card foil-card" data-foil-id="{{ $val.CardID }}" data-foil-foil="{{ $val.Foil }}"
+				data-foil-count="{{ $val.Count }}" data-foil-rarity="{{ $val.Rarity }}"
+				data-foil-title="{{ $val.Data.CardTitle }}"
+				data-foil-collection-id="{{ $val.Data.CardCollectionID }}"
+				data-foil-collection="{{ $val.Data.CardCollectionTitle }}">
+				{{ template "card" $val }}
+			</div>
+			{{ end }}
+			<p class="inventory-message" id="foil-no-match" hidden>{{ .T "card-filter-no-match" }}</p>
+		</e-cluster>
+			<p class="sr-only" id="foil-filter-status" role="status"
+				data-label-results="{{ .T "card-filter-results" "count" "{count}" }}"></p>
+			<div class="foil-pager card-pager" data-page-size="{{ .Data.PickerPageSize }}"
+				data-label-nav="{{ .T "paginator-label-nav-bottom" }}"
+				data-label-previous="{{ .T "paginator-label-previous" }}" data-label-next="{{ .T "paginator-label-next" }}"></div>
+		</div>
+		<div class="tradeup-side">
+			<form class="tradeup-filter" action="/inventory" method="get">
+				<input type="hidden" name="tab" value="foil">
+				<input type="search" id="foil-search" name="q" placeholder="{{ .T "card-filter-placeholder" }}"
+					aria-label="{{ .T "card-filter-placeholder" }}" aria-controls="foil-cards">
+				<label>
+					<span>{{ .T "inventory-filter-collection" }}</span>
+					<select id="foil-collection-filter" name="collection">
+						{{ range .Data.FoilCollections }}
+						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+				<label>
+					<span>{{ .T "inventory-filter-rarity" }}</span>
+					<select id="foil-rarity-filter" name="rarity">
+						{{ range .Data.FoilRarityOptions }}
+						<option value="{{ .Value }}">{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+				<label>
+					<span>{{ .T "inventory-sort" }}</span>
+					<select id="foil-sort" name="sort">
+						{{ range .Data.FoilSortOptions }}
+						<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
+						{{ end }}
+					</select>
+				</label>
+			</form>
+			<form class="tradeup-form" action="/foil" method="post">
+				<div id="foil-roulette" data-odds="{{ .Data.FoilOdds }}" data-rarities="{{ .Data.FoilRarities }}"
+					data-cap="{{ .Data.FoilCap }}" data-scale="{{ .Data.FoilScale }}" data-max="{{ .Data.FoilMaxSacrifices }}"
+					data-label-rolled="{{ .T "foil-rolled" }}" data-label-pick-rolled="{{ .T "foil-pick-rolled" }}"
+					data-label-chance="{{ .T "foil-chance" }}" data-label-capped="{{ .T "foil-chance-capped" }}"
+					data-label-base="{{ .T "foil-chance-base" }}" data-label-bonus="{{ .T "foil-chance-bonus" }}"
+					data-label-odds="{{ .T "foil-odds" }}" data-label-rarity="{{ .T "inventory-filter-rarity" }}"
+					data-label-per-sacrifice="{{ .T "foil-odds-per-sacrifice" }}"
+					data-label-sacrifices="{{ .T "foil-sacrifices" }}" data-label-pick-sacrifices="{{ .T "foil-pick-sacrifices" }}"
+					data-label-sacrifices-later="{{ .T "foil-sacrifices-later" }}"
+					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
+					data-label-submit="{{ .T "foil-submit" }}" data-label-cancel="{{ .T "inventory-sell-cancel" }}"
+					data-label-confirm-title="{{ .T "foil-confirm-title" }}"
+					data-label-confirm-text="{{ .Data.FoilConfirmText }}"
+					data-label-confirm-sacrifices="{{ .Data.FoilConfirmSacrifices }}"
 					data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
 					data-label-copies="{{ .T "inventory-card-copies" }}"></div>
 			</form>
@@ -256,7 +377,18 @@
 		data-label-value="{{ .T "inventory-card-value" }}" data-label-sell="{{ .T "inventory-card-sell" }}"
 		data-label-quantity="{{ .T "inventory-sell-quantity" }}" data-label-total="{{ .T "inventory-sell-total" }}"
 		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
+		data-label-error="{{ .T "inventory-sell-error-internal" }}"
 		data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+		{{/* What a sale without reloading changes in the page (frontend/src/sell.js):
+		the count next to the title in its two plural forms, unless it counts the
+		whole catalog */}}
+		{{ if not .Data.All }}
+		data-label-count-one="{{ if .Data.Filtered }}{{ .T "inventory-search-count" "count" 1 }}{{ else }}{{ .T "inventory-count" "count" 1 }}{{ end }}"
+		data-label-count-other="{{ if .Data.Filtered }}{{ .T "inventory-search-count" "count" 2 }}{{ else }}{{ .T "inventory-count" "count" 2 }}{{ end }}"
+		{{ if .Data.Filtered }}data-filtered{{ end }}
+		{{ end }}
+		data-label-stale="{{ .T "inventory-sold-stale" }}" data-label-page-sold="{{ .T "inventory-page-sold" }}"
+		data-label-reload="{{ .T "inventory-reload" }}"
 		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}
 	{{ end }}

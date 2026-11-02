@@ -1,23 +1,24 @@
 <!--
-    Builds a tradeup contract: clicking a card in the inventory adds a copy of
-    it to the bar, clicking a filled slot takes that copy back out. The
-    contract is submitted as one `card` field per copy.
+    Builds a tradeup contract: clicking an inventory card adds a copy of it
+    to the bar, clicking a filled slot takes it back out. The contract is
+    submitted as one `card` field per copy.
 
     Cards must provide `data-tradeup-id`, `data-tradeup-foil`,
     `data-tradeup-count` (copies owned), `data-tradeup-rarity`,
-    `data-tradeup-title` and `data-tradeup-collection-id`. A contract is all
-    one rarity, so cards of another rarity can't join once one is picked.
+    `data-tradeup-title`, `data-tradeup-collection`,
+    `data-tradeup-collection-id` and `data-tradeup-order` (the
+    collection-and-rarity order `#tradeup-sort` brings back). A contract is
+    all one rarity: cards of another one can't join once one is picked.
     Stacks with copies in the contract wear a `.tradeup-taken` pill.
 
-    The optional `#tradeup-collection-filter` narrows the grid down to one
-    collection, and `#tradeup-search` to the cards whose name or collection
-    (`data-tradeup-collection`) holds its text, without navigating, keeping
-    the contract: the picks live here, not in the page. Picks the filters hide
-    stay in it. `#tradeup-no-match` shows when they hide every card.
+    The optional filters, sort and pages (card-filter.js) work without
+    navigating, so the picks survive them; picks the filters hide stay in
+    the contract.
 -->
 
 <script>
 	import { onMount, tick } from "svelte";
+	import { attachCardFilter } from "./card-filter.js";
 	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
@@ -26,7 +27,10 @@
 	const TILE_SELECTOR = `${CARD_SELECTOR} .card-container`;
 	const FILTER_SELECTOR = "#tradeup-collection-filter";
 	const SEARCH_SELECTOR = "#tradeup-search";
+	const RARITY_SELECTOR = "#tradeup-rarity-filter";
+	const SORT_SELECTOR = "#tradeup-sort";
 	const NO_MATCH_SELECTOR = "#tradeup-no-match";
+	const STATUS_SELECTOR = "#tradeup-filter-status";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
 
@@ -47,7 +51,6 @@
 	const rarity = $derived(selection[0]?.rarity ?? "");
 	const filled = $derived(selection.length);
 	const ready = $derived(filled === cost);
-	// One slot per card of the contract
 	const slots = $derived(Array.from({ length: cost }, (_, index) => index));
 
 	function cardOf(tile) {
@@ -95,35 +98,6 @@
 		selection = [];
 		await tick();
 		slotsElement.focus();
-	}
-
-	// Case and accents are ignored when searching
-	function fold(text) {
-		return text.normalize("NFD").replaceAll(/\p{Diacritic}/gu, "").toLowerCase();
-	}
-
-	// Hides the tiles of the other collections and those the search misses,
-	// without navigating, so a contract in progress survives. `collection` is
-	// a collection ID, "" shows all, as does an empty `query`.
-	function applyFilter(collection, query) {
-		const folded = fold(query.trim());
-		let shown = 0;
-		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
-			const name = fold(`${card.dataset.tradeupTitle ?? ""} ${card.dataset.tradeupCollection ?? ""}`);
-			card.hidden = (collection !== "" && card.dataset.tradeupCollectionId !== collection)
-				|| (folded !== "" && !name.includes(folded));
-			if (!card.hidden) shown++;
-		}
-		const noMatch = document.querySelector(NO_MATCH_SELECTOR);
-		if (noMatch) noMatch.hidden = shown > 0;
-
-		// A refresh lands on the same filters
-		const url = new URL(location.href);
-		if (collection === "") url.searchParams.delete("collection");
-		else url.searchParams.set("collection", collection);
-		if (folded === "") url.searchParams.delete("q");
-		else url.searchParams.set("q", query.trim());
-		history.replaceState(history.state, "", url);
 	}
 
 	// Tiles of another rarity, exhausted stacks and a full contract are inert;
@@ -186,7 +160,6 @@
 			add(e.target.closest(CARD_SELECTOR));
 		}
 
-		// Cards add to the contract, make them reachable and announced as buttons
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
 			const card = tile.closest(CARD_SELECTOR);
 			makeCardButton(tile, {
@@ -200,47 +173,36 @@
 		document.addEventListener("click", onClick);
 		document.addEventListener("keydown", onKeyDown);
 
-		const filter = document.querySelector(FILTER_SELECTOR);
-		const search = document.querySelector(SEARCH_SELECTOR);
-		function onFilterChange() {
-			applyFilter(filter?.value ?? "", search?.value ?? "");
-		}
-		filter?.addEventListener("change", onFilterChange);
-		search?.addEventListener("input", onFilterChange);
-		// Filtering happens as the text is typed, Enter would leave the page
-		function onSearchKeyDown(e) {
-			if (e.key === "Enter") e.preventDefault();
-		}
-		search?.addEventListener("keydown", onSearchKeyDown);
-
-		// A shared link can arrive already filtered
-		const params = new URL(location.href).searchParams;
-		if (filter && params.get("collection")) {
-			filter.value = params.get("collection");
-		}
-		if (search && params.get("q")) {
-			search.value = params.get("q");
-		}
-		if (params.get("collection") || params.get("q")) {
-			onFilterChange();
-		}
+		const detachFilter = attachCardFilter({
+			tiles: CARD_SELECTOR,
+			read: (tile) => ({
+				title: tile.dataset.tradeupTitle ?? "",
+				collection: tile.dataset.tradeupCollection ?? "",
+				collectionId: tile.dataset.tradeupCollectionId ?? "",
+				rarity: tile.dataset.tradeupRarity ?? "",
+				number: Number(tile.dataset.tradeupId ?? 0),
+				count: Number(tile.dataset.tradeupCount ?? 0),
+				order: Number(tile.dataset.tradeupOrder ?? 0),
+			}),
+			search: SEARCH_SELECTOR,
+			collection: FILTER_SELECTOR,
+			rarity: RARITY_SELECTOR,
+			sort: SORT_SELECTOR,
+			noMatch: NO_MATCH_SELECTOR,
+			status: STATUS_SELECTOR,
+			pagers: ".tradeup-pager",
+		});
 
 		return () => {
 			document.removeEventListener("pointerdown", onPointerDown);
 			document.removeEventListener("click", onClick);
 			document.removeEventListener("keydown", onKeyDown);
-			filter?.removeEventListener("change", onFilterChange);
-			search?.removeEventListener("input", onFilterChange);
-			search?.removeEventListener("keydown", onSearchKeyDown);
+			detachFilter();
 		};
 	});
 </script>
 
 <div class="tradeup-picker">
-	<p class="tradeup-progress" aria-live="polite">
-		<span class="tradeup-progress-count">{filled} / {cost}</span>
-	</p>
-
 	<div class="tradeup-slots" role="group" aria-label={labelSlots} tabindex="-1" bind:this={slotsElement}>
 		{#each slots as i (i)}
 			{#if i < filled}
@@ -262,7 +224,12 @@
 		<input type="hidden" name="card" value={card.foil ? `${card.id}:${card.foil}` : `${card.id}`} />
 	{/each}
 
+	<!-- Pinned to the bottom of the sidebar, or of the screen on small ones -->
 	<div class="tradeup-actions">
+		<p class="tradeup-progress" aria-live="polite">
+			<span class="tradeup-progress-label">{labelSlots}</span>
+			<span class="tradeup-progress-count">{filled} / {cost}</span>
+		</p>
 		<button type="button" class="tradeup-clear" onclick={clear} disabled={filled === 0}>
 			{labelClear}
 		</button>
@@ -284,8 +251,28 @@
 	}
 
 	.tradeup-progress {
+		grid-column: 1 / -1;
+
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 0.75rem;
 		margin: 0;
 
+		line-height: 1.2;
+	}
+
+	.tradeup-progress-label {
+		min-width: 0;
+
+		color: var(--color-text-muted);
+		font-size: 0.875rem;
+		font-weight: 600;
+	}
+
+	.tradeup-progress-count {
+		font-size: 1.15rem;
+		white-space: nowrap;
 		font-variant-numeric: tabular-nums;
 		font-weight: 650;
 		letter-spacing: -0.01em;
@@ -328,21 +315,39 @@
 		}
 	}
 
+	/* Pinned to the bottom of the scrolling sidebar, past the padding it
+	   keeps for focus rings, so nothing shows under the bar */
 	.tradeup-actions {
-		display: flex;
-		justify-content: flex-end;
-		gap: 0.75rem;
+		position: sticky;
+		bottom: -4px;
+		z-index: 1;
+
+		/* The progress on a row of its own, the two buttons sharing the next */
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		align-items: center;
+		gap: 0.6rem 0.75rem;
+
+		margin: 0 -1.25rem -1.25rem;
+		padding: 0.85rem 1.25rem 1.25rem;
+
+		background: var(--color-bg-2);
+		border-top: 1px solid var(--color-border-1);
+		border-radius: 0 0 1rem 1rem;
 	}
 
+	/* Labels never break inside a word: the buttons share the row instead */
 	.tradeup-clear,
 	.tradeup-submit {
 		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 
-		min-width: 5.5rem;
+		min-width: 0;
 		min-height: 2.5rem;
-		padding: 0.45rem 1rem;
+		padding: 0.45rem 0.75rem;
+
+		white-space: nowrap;
 
 		border: 0;
 		border-radius: 0.55rem;
@@ -383,14 +388,40 @@
 		cursor: not-allowed;
 	}
 
-	@media (max-width: 480px) {
+	/* The sidebar comes after the grid: the bar is fixed to the screen instead */
+	@media (max-width: 900px) {
 		.tradeup-actions {
-			flex-direction: column-reverse;
+			position: fixed;
+			right: 0;
+			bottom: 0;
+			left: 0;
+			z-index: 30;
+
+			margin: 0;
+			padding: 0.75rem max(1rem, env(safe-area-inset-right)) max(0.75rem, env(safe-area-inset-bottom))
+				max(1rem, env(safe-area-inset-left));
+
+			border: 1px solid var(--color-border-1);
+			border-bottom: 0;
+			border-radius: 1rem 1rem 0 0;
+			box-shadow: 0 -6px 20px var(--color-shadow);
+		}
+	}
+
+	/* Across a whole screen there is room for one row */
+	@media (480px < width <= 900px) {
+		.tradeup-actions {
+			grid-template-columns: 1fr auto auto;
+		}
+
+		.tradeup-progress {
+			grid-column: auto;
+			justify-content: flex-start;
 		}
 
 		.tradeup-clear,
 		.tradeup-submit {
-			width: 100%;
+			min-width: 7rem;
 		}
 	}
 </style>

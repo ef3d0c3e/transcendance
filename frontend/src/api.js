@@ -1,10 +1,8 @@
-// Requests to the app's own endpoints.
-//
-// Expected failures (a wrong password, a taken username, not enough coins)
-// come back as 4xx, which browsers log in red in the console. Asked with
+// Fetch for the app's own endpoints. Expected failures (a wrong password,
+// not enough coins) would be 4xx, which browsers log in red: asked with
 // `X-Soft-Errors: 1`, the server answers them with a 200 and the real status
-// in `X-Status`: the response is rebuilt with that status, so callers keep
-// checking `response.ok` and `response.status` as usual.
+// in `X-Status`, and the response is rebuilt with that status so callers
+// check `response.ok` and `response.status` as usual.
 
 // Statuses the server may report through `X-Status`
 const minSoftStatus = 400;

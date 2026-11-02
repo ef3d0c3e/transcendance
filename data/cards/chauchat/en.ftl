@@ -1,0 +1,2 @@
+title = Chauchat
+description = The Chauchat was the standard light machine gun or "machine rifle" of the French Army during World War I (1914–18). Its official designation was "Fusil Mitrailleur Modèle 1915 CSRG". Beginning in June 1916, it was placed into regular service with French infantry, where the troops called it the FM Chauchat, after Colonel Louis Chauchat, the main contributor to its design.

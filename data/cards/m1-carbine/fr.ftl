@@ -1,0 +1,2 @@
+title = Carabine M1
+description = La carabine M1 est une carabine semi-automatique conçue entre 1940 et 1941 aux États-Unis par Winchester. Tirant la cartouche .30 Carbine, elle est également déclinée en une version permettant le tir automatique, désignée M2. Produites à plus de six millions d’exemplaires entre 1941 et 1945, la M1 et sa variante M2 sont les carabines les plus utilisées pendant la Seconde Guerre mondiale.

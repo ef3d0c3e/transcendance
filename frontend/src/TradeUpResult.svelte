@@ -2,6 +2,10 @@
     Popup with the card a tradeup just awarded, opened as soon as the page
     loads. The card markup is server-rendered into a <template> on the mount
     target and revealed here with a scale-up, like the pack showcase.
+
+    Also tells the outcome of a foil roll. With `data-outcome="lost"`, the
+    card was destroyed: it shows faded out, without the burst.
+    `data-label-text` adds a line under the card.
 -->
 
 <script>
@@ -11,37 +15,46 @@
 
 	const labelTitle = $derived(target.dataset.labelTitle ?? "");
 	const labelClose = $derived(target.dataset.labelClose ?? "");
+	const labelText = $derived(target.dataset.labelText ?? "");
+	const lost = $derived(target.dataset.outcome === "lost");
 	const cardHtml = $derived(target.querySelector("template")?.innerHTML ?? "");
 
 	let dialog;
+	let closeButton;
 
 	// Clicking the backdrop targets the dialog itself
 	function onDialogClick(e) {
 		if (e.target === dialog) dialog.close();
 	}
 
+	// The popup would focus the card's collection link, its first control:
+	// the close button gets the focus instead, so Enter dismisses it
 	onMount(() => {
 		dialog.showModal();
+		closeButton.focus();
 	});
 </script>
 
 <dialog
 	class="popup tradeup-result"
+	class:is-lost={lost}
 	aria-labelledby="tradeup-result-title"
+	aria-describedby={labelText ? "tradeup-result-text" : undefined}
 	bind:this={dialog}
 	onclick={onDialogClick}
 >
 	<div class="tradeup-result-content">
 		<h2 class="tradeup-result-title" id="tradeup-result-title">{labelTitle}</h2>
 		<div class="tradeup-result-stage">
-			<div class="tradeup-result-flash" aria-hidden="true"></div>
+			{#if !lost}<div class="tradeup-result-flash" aria-hidden="true"></div>{/if}
 			<div class="tradeup-result-card">
 				<!-- The server-rendered card of the page's <template> -->
 				<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 				<div class="tradeup-result-inner">{@html cardHtml}</div>
 			</div>
 		</div>
-		<button type="button" class="tradeup-result-close" onclick={() => dialog.close()}>
+		{#if labelText}<p class="tradeup-result-text" id="tradeup-result-text">{labelText}</p>{/if}
+		<button type="button" class="tradeup-result-close" bind:this={closeButton} onclick={() => dialog.close()}>
 			{labelClose}
 		</button>
 	</div>
@@ -53,12 +66,14 @@
 		--popup-width: 26rem;
 	}
 
+	/* The glow is clipped here: past the popup it would only make it scroll */
 	.tradeup-result-content {
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;
 
 		padding: 1.25rem;
+		overflow: clip;
 	}
 
 	.tradeup-result-title {
@@ -70,14 +85,13 @@
 		text-align: center;
 	}
 
+	/* Takes the size of the scaled card, the glow sits behind it */
 	.tradeup-result-stage {
 		--tradeup-scale: 0.8;
 
 		position: relative;
 
-		width: calc(30ch * var(--tradeup-scale));
-		height: calc(30em * var(--tradeup-scale));
-		margin: 0 auto;
+		align-self: center;
 	}
 
 	/* Glow that bursts out from behind the card as it lands */
@@ -92,23 +106,65 @@
 		);
 		border-radius: 50%;
 
+		/* Gone once it burst: no transform left to count in the popup's size */
+		opacity: 0;
+
 		pointer-events: none;
-		animation: tradeup-flash 1s ease-out both;
+		animation: tradeup-flash 1s ease-out backwards;
 	}
 
 	.tradeup-result-card {
-		width: 100%;
-		height: 100%;
+		position: relative;
 
 		animation: tradeup-reveal 0.7s cubic-bezier(0.34, 1.4, 0.64, 1) both;
 	}
 
-	.tradeup-result-inner {
-		width: 30ch;
-		height: 30em;
+	.tradeup-result-text {
+		margin: 0;
 
-		transform: scale(var(--tradeup-scale));
-		transform-origin: top left;
+		color: var(--color-text-muted);
+		text-align: center;
+	}
+
+	/* A destroyed card fades away instead of landing, its text still
+	   readable (4.5:1) */
+	.is-lost .tradeup-result-card {
+		filter: grayscale(1);
+		opacity: 0.75;
+
+		animation: tradeup-destroy 0.9s ease-out both;
+	}
+
+	@keyframes tradeup-destroy {
+		0% {
+			filter: grayscale(0);
+			opacity: 1;
+			transform: scale(1);
+		}
+
+		20% {
+			transform: translateX(-4%) rotate(-2deg);
+		}
+
+		40% {
+			transform: translateX(4%) rotate(2deg);
+		}
+
+		60% {
+			transform: translateX(-2%) rotate(-1deg);
+		}
+
+		100% {
+			filter: grayscale(1);
+			opacity: 0.75;
+			transform: scale(0.94);
+		}
+	}
+
+	/* Zoomed, not transformed: the layout shrinks with the card, so the
+	   popup fits it exactly whatever size the card renders at */
+	.tradeup-result-inner {
+		zoom: var(--tradeup-scale);
 	}
 
 	.tradeup-result-close {
@@ -160,21 +216,22 @@
 		}
 	}
 
-	@media (width <= 1100px) {
+	/* The card is the tallest part: it shrinks with the screen height */
+	@media (height <= 760px) {
 		.tradeup-result-stage {
-			--tradeup-scale: 0.68;
+			--tradeup-scale: 0.65;
 		}
 	}
 
-	@media (width <= 820px) {
+	@media (height <= 620px) {
 		.tradeup-result-stage {
-			--tradeup-scale: 0.54;
+			--tradeup-scale: 0.5;
 		}
 	}
 
-	@media (width <= 560px) {
+	@media (height <= 480px) {
 		.tradeup-result-stage {
-			--tradeup-scale: 0.42;
+			--tradeup-scale: 0.38;
 		}
 	}
 

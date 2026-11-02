@@ -79,7 +79,6 @@ func shoutboxDial(t *testing.T, server *httptest.Server, cookie *http.Cookie, or
 	return conn, res, err
 }
 
-// Connect and read the history
 func shoutboxConnect(t *testing.T, server *httptest.Server, cookie *http.Cookie) (*websocket.Conn, []shoutboxMessage) {
 	conn, _, err := shoutboxDial(t, server, cookie, "")
 	require.NoError(t, err)
@@ -111,7 +110,6 @@ func shoutboxSend(t *testing.T, conn *websocket.Conn, body string) {
 	shoutboxWrite(t, conn, string(payload))
 }
 
-// Expect the connection to be closed by the server with the given code
 func shoutboxExpectClose(t *testing.T, conn *websocket.Conn, code websocket.StatusCode) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

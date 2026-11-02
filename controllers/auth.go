@@ -22,31 +22,26 @@ import (
 	"transcendance/views"
 )
 
-// PasswordHashCost is the bcrypt cost of new password hashes. The tests
-// lower it, hashing at the default cost is slow under the race detector
+// PasswordHashCost is the bcrypt cost of new password hashes, lowered by the tests
 var PasswordHashCost = bcrypt.DefaultCost
 
-// Lifetime of a session
 const sessionDuration = 3 * 24 * time.Hour
 
-// Failed logins allowed in a row per client address and per account, then one more every refill period
+// Failed logins allowed in a row per account, then one more every refill period. Attempts are not limited per
+// client address: the site is used from the school's network, where most visitors share one address
 const (
-	loginBurstPerAddress  = 20
-	loginRefillPerAddress = 30 * time.Second
 	loginBurstPerAccount  = 5
 	loginRefillPerAccount = time.Minute
 )
 
 // LoginLimits slows down password guessing, see LoginPost
 type LoginLimits struct {
-	addresses *AttemptLimiter
-	accounts  *AttemptLimiter
+	accounts *AttemptLimiter
 }
 
 func NewLoginLimits() *LoginLimits {
 	return &LoginLimits{
-		addresses: NewAttemptLimiter(loginBurstPerAddress, loginRefillPerAddress),
-		accounts:  NewAttemptLimiter(loginBurstPerAccount, loginRefillPerAccount),
+		accounts: NewAttemptLimiter(loginBurstPerAccount, loginRefillPerAccount),
 	}
 }
 
@@ -57,24 +52,20 @@ type AuthenticatedUser struct {
 	ID       uint
 	Username string
 	// One of the ranks, e.g models.RankAdmin
-	Rank uint
-	// In-shop currency balance
+	Rank  uint
 	Coins uint
 	// Coins of the balance up in pending trades, which cannot be spent
 	LockedCoins uint
 }
 
-// FreeCoins is the balance the user can spend
 func (u *AuthenticatedUser) FreeCoins() uint {
 	return FreeCoins(u.Coins, u.LockedCoins)
 }
 
-// IsModerator reports whether the user can moderate the chat, which admins can too
 func (u *AuthenticatedUser) IsModerator() bool {
 	return u != nil && u.Rank >= models.RankModerator
 }
 
-// IsAdmin reports whether the user can manage accounts and roles
 func (u *AuthenticatedUser) IsAdmin() bool {
 	return u != nil && u.Rank >= models.RankAdmin
 }
@@ -103,7 +94,6 @@ func AuthMiddleware(db *gorm.DB) gin.HandlerFunc {
 			return
 		}
 
-		// Invalid or expired tokens are unauthenticated
 		var user models.User
 		err = db.Model(&models.User{}).
 			Select("users.id", "users.username", "users.rank", "users.coins", "users.last_seen_at").
@@ -356,13 +346,9 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		return
 	}
 
-	// Too many failed attempts from this address or on this account: wait before guessing again
-	address, account := c.ClientIP(), column+":"+strings.ToLower(identifier)
-	blocked, wait := ac.Logins.addresses.Blocked(address)
-	if accountBlocked, accountWait := ac.Logins.accounts.Blocked(account); accountBlocked {
-		blocked, wait = true, max(wait, accountWait)
-	}
-	if blocked {
+	// Too many failed attempts on this account: wait before guessing again
+	account := column + ":" + strings.ToLower(identifier)
+	if blocked, wait := ac.Logins.accounts.Blocked(account); blocked {
 		seconds := int(math.Ceil(wait.Seconds()))
 		c.Header("Retry-After", strconv.Itoa(seconds))
 		c.JSON(http.StatusTooManyRequests, gin.H{
@@ -386,7 +372,6 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		hash = []byte(user.PasswordHash)
 	}
 	if bcrypt.CompareHashAndPassword(hash, []byte(password)) != nil || err != nil {
-		ac.Logins.addresses.Fail(address)
 		ac.Logins.accounts.Fail(account)
 		c.JSON(http.StatusBadRequest, gin.H{
 			"message": ac.Renderer.T(c, "login-error-invalid"),
@@ -394,7 +379,6 @@ func (ac *Controller) LoginPost(c *gin.Context) {
 		return
 	}
 
-	// Token
 	buf := make([]byte, 32)
 	if _, err := rand.Read(buf); err != nil {
 		log.Printf("Failed to acquire randomness: %s", err)
@@ -459,7 +443,6 @@ func (ac *Controller) LogoutPost(c *gin.Context) {
 	}
 
 	if v := c.Query("all"); v == "yes" {
-		// Log out all devices
 		ctx := c.Request.Context()
 		_, err := gorm.G[models.UserSession](ac.DB).
 			Where("user_id = ?", user.ID).
@@ -471,7 +454,6 @@ func (ac *Controller) LogoutPost(c *gin.Context) {
 			return
 		}
 	} else {
-		// Log out current device
 		token, err := c.Cookie("session_token")
 		if err == nil && token != "" {
 			ctx := c.Request.Context()

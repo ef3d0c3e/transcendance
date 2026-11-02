@@ -27,9 +27,7 @@ type TradeItem struct {
 	Count  uint   `json:"count"`
 }
 
-// Trade is an offer between two users: the sender offers their cards and
-// coins against cards owned by the receiver. Countering an offer replaces
-// its contents and flips the two sides.
+// Trade is an offer of the sender's cards and coins against the receiver's
 type Trade struct {
 	ID uint `gorm:"primaryKey"`
 
@@ -63,15 +61,13 @@ type TradeLine struct {
 	Side   string `gorm:"size:4;not null;uniqueIndex:idx_trade_items_stack,priority:2"`
 	CardID uint   `gorm:"not null;uniqueIndex:idx_trade_items_stack,priority:3"`
 	Foil   string `gorm:"type:varchar(32) COLLATE utf8mb4_bin;not null;default:'';uniqueIndex:idx_trade_items_stack,priority:4"`
-	// At least one copy
-	Count uint `gorm:"not null;check:chk_trade_items_count,count > 0"`
+	Count  uint   `gorm:"not null;check:chk_trade_items_count,count > 0"`
 }
 
 func (TradeLine) TableName() string {
 	return "trade_items"
 }
 
-// TradeItems are the stacks of both sides of an offer
 type TradeItems struct {
 	Give []TradeItem
 	Want []TradeItem
@@ -102,7 +98,6 @@ func LoadTradeItems(db *gorm.DB, tradeIDs ...uint) (map[uint]*TradeItems, error)
 	return items, nil
 }
 
-// Items of the offer, both sides
 func (t *Trade) Items(db *gorm.DB) (*TradeItems, error) {
 	items, err := LoadTradeItems(db, t.ID)
 	if err != nil {
@@ -111,7 +106,6 @@ func (t *Trade) Items(db *gorm.DB) (*TradeItems, error) {
 	return items[t.ID], nil
 }
 
-// SaveTradeItems replaces the stacks of an offer
 func SaveTradeItems(tx *gorm.DB, tradeID uint, give []TradeItem, want []TradeItem) error {
 	if err := tx.Where("trade_id = ?", tradeID).Delete(&TradeLine{}).Error; err != nil {
 		return err

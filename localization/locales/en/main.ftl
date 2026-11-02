@@ -130,6 +130,7 @@ card-rarity-legendary = Legendary
 card-search-placeholder = Search for cards
 card-filter-placeholder = Filter by card or collection name
 card-filter-no-match = No card matches this filter
+card-filter-results = Matching cards: { $count }
 card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
@@ -304,6 +305,9 @@ inventory-sold = { $count ->
     [one] You sold { $count } card for { $amount } coins
    *[other] You sold { $count } cards for { $amount } coins
 }
+inventory-sold-stale = The card count next to the title updates when the page is refreshed.
+inventory-page-sold = Every card of this page was sold
+inventory-reload = Refresh the page
 inventory-sell-error-card = This card cannot be sold
 inventory-sell-error-quantity = Choose a quantity of at least 1
 inventory-sell-error-missing = You do not have that many copies to sell
@@ -404,6 +408,9 @@ pack-opening-progress-note = Different cards of this collection you own.
 pack-opening-summary = Cards drawn: { $cards }
 pack-opening-card = { $title } ({ $rarity })
 pack-opening-card-foil = { $title } ({ $rarity }, foil)
+pack-opening-card-new = { $title } ({ $rarity }, new)
+pack-opening-card-foil-new = { $title } ({ $rarity }, foil, new)
+pack-opening-new = New
 pack-opening-spinning = Opening the pack…
 pack-opening-skip = Skip
 
@@ -429,10 +436,10 @@ shop-buy-total = Total
 shop-coins = coins
 shop-coins-locked = { $amount } up in trades
 
-index-title = Transcendance, collect trading cards
-meta-description = Transcendance is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
+index-title = AnyCardz, collect trading cards
+meta-description = AnyCardz is a trading card game: buy boosters, open packs and trade cards with other players to complete your collections.
 index-heading = Collect, trade and show off your cards
-index-tagline = Transcendance is a trading card game: buy boosters and trade cards to grow your collection.
+index-tagline = AnyCardz is a trading card game: buy boosters and trade cards to grow your collection.
 index-stat-cards = { $count ->
     [one] { $count } card
     *[other] { $count } cards
@@ -451,7 +458,7 @@ index-step-open-text = Every booster holds a handful of cards, some of them rare
 index-step-trade-title = Trade cards
 index-step-trade-text = Keep your cards in your inventory and trade with other players to complete your collections.
 index-install-title = Install the app
-index-install-text = Add Transcendance to your home screen to open it like an app, without the browser's bars.
+index-install-text = Add AnyCardz to your home screen to open it like an app, without the browser's bars.
 index-install-ios-title = iPhone and iPad:
 index-install-ios-text = in Safari, tap Share, then Add to Home Screen.
 index-install-android-title = Android:
@@ -464,14 +471,14 @@ index-collections-title = Collections
 index-collections-all = See every collection
 
 footer-label = Site information
-footer-project = Transcendance, a student project
+footer-project = AnyCardz, a student project
 
 info-page-updated = Last updated: October 29, 2026
 
 terms-title = Terms of Service
-terms-intro = These terms govern your use of Transcendance. By creating an account or using the site, you agree to them.
+terms-intro = These terms govern your use of AnyCardz. By creating an account or using the site, you agree to them.
 terms-service-title = 1. The service
-terms-service-text = Transcendance is a non-commercial student project where you collect, open and trade virtual cards. It is provided free of charge, for entertainment and educational purposes.
+terms-service-text = AnyCardz is a non-commercial student project where you collect, open and trade virtual cards. It is provided free of charge, for entertainment and educational purposes.
 terms-account-title = 2. Your account
 terms-account-text = You need a username, an email and a password to create an account. Your email is not verified and is used only to log in; we do not send email. You may log in using your username or email. You can edit your email, and administrators can edit it for you. You are responsible for keeping your password secret and for everything done with your account. Offensive usernames, or usernames impersonating someone, may be changed or removed.
 terms-conduct-title = 3. Acceptable use
@@ -494,9 +501,9 @@ terms-law-title = 9. Applicable law
 terms-law-text = These terms are governed by French law.
 
 legal-title = Legal notice & privacy
-legal-intro = This page describes who runs Transcendance, which personal data it processes and why, and which cookies it uses.
+legal-intro = This page describes who runs AnyCardz, which personal data it processes and why, and which cookies it uses.
 legal-publisher-title = Publisher
-legal-publisher-text = Transcendance is a non-commercial student project, published and run by its development team:
+legal-publisher-text = AnyCardz is a non-commercial student project, published and run by its development team:
 legal-publisher-source = The source code is public:
 legal-host-text = The site and its database are hosted by the development team.
 legal-privacy-title = Personal data
@@ -530,7 +537,7 @@ legal-cookies-year = 1 year
 legal-cookies-consent = These cookies are needed for the site to work or to remember your own choices, so they do not require your consent. There are no analytics or advertising cookies.
 
 contact-title = Contact
-contact-intro = Transcendance is made by a small team of students. Here is how to reach us.
+contact-intro = AnyCardz is made by a small team of students. Here is how to reach us.
 contact-issues-title = Bugs, suggestions and questions
 contact-issues-text = The best way to reach us is to open an issue on the project's GitHub repository. Issues are public, so do not include personal information.
 contact-issues-link = Open an issue on GitHub
@@ -644,6 +651,7 @@ shoutbox-error-message-not-found = This message no longer exists
 
 tradeup-rules = Trade { $count } cards of the same rarity for one random card of the next rarity. Each collection's chance follows how many of the cards come from it.
 tradeup-empty = No cards here can be traded up
+tradeup-sort-grouped = Collection and rarity
 tradeup-slots = Trade-up slots
 tradeup-remove = Remove
 tradeup-slot-empty = Empty slot
@@ -658,3 +666,33 @@ tradeup-error-missing = You do not own enough of these cards
 tradeup-error-locked = Some of these cards are up in trades
 tradeup-error-empty = None of these collections holds a card of the next rarity
 tradeup-error-internal = Failed to complete the trade-up
+
+inventory-tab-foil = Foil roulette
+foil-rules = Roll a card for a foil version. Sacrifice other cards to raise the odds, up to { $cap }%. Win, and the card turns foil with a random pattern; lose, and it is destroyed. Sacrificed cards are spent either way.
+foil-empty = No cards here can be rolled for a foil
+foil-rolled = Card to roll
+foil-pick-rolled = Pick a plain card to roll for a foil
+foil-chance = Foil chance
+foil-chance-capped = Maximum reached
+foil-chance-base = Base
+foil-chance-bonus = Sacrifices
+foil-odds = Odds by rarity
+foil-odds-per-sacrifice = Per sacrifice
+foil-sacrifices = Sacrifices
+foil-pick-sacrifices = Pick cards to sacrifice for better odds
+foil-sacrifices-later = Pick a card to roll first, then cards to sacrifice
+foil-submit = Roll
+foil-confirm-title = Roll for a foil?
+foil-confirm-text = { $title } has a { $chance } chance to turn foil. If the roll is lost, the card is destroyed.
+foil-confirm-sacrifices = Sacrificed cards: { $count }. They are spent whether the roll is won or lost.
+foil-result-won = It's a foil!
+foil-result-won-text = Your card now shines with a new pattern.
+foil-result-lost = Card destroyed
+foil-result-lost-text = The roll was lost, and { $title } with it.
+foil-noscript = Rolling for a foil needs JavaScript, to pick the card to roll and the cards to sacrifice.
+foil-error-count = A roll can sacrifice at most { $count } cards
+foil-error-foil = This card is already foil
+foil-error-rarity = These cards cannot be rolled for a foil
+foil-error-missing = You do not own these cards
+foil-error-locked = Some of these cards are up in trades
+foil-error-internal = Failed to roll for a foil

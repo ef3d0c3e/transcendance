@@ -13,7 +13,6 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// formatCountdown renders a number of seconds as M:SS, or H:MM:SS past an hour
 func formatCountdown(seconds int) string {
 	if seconds < 0 {
 		seconds = 0
@@ -24,19 +23,17 @@ func formatCountdown(seconds int) string {
 	return fmt.Sprintf("%d:%02d", seconds/60, seconds%60)
 }
 
-// streakTier is one tier of the reward ladder in the streak meter
 type streakTier struct {
 	// Tier number and coin value of the tier, e.g "3 · 500"
 	Label string
-	// Whether the tier is the one of the bonus of the day
+	// The tier of the bonus of the day
 	Current bool
 }
 
-// streakTile is the template data of the daily streak section, consumed by
-// the "daily-streak" partial
+// Template data of the "daily-streak" partial
 type streakTile struct {
 	Title string
-	// Reward ladder, one cell per tier, the current one highlighted
+	// Reward ladder, one cell per tier
 	Tiers []streakTier
 	// Raw streak count, shown past the reward cap
 	StreakLabel string
@@ -46,23 +43,21 @@ type streakTile struct {
 	ClaimDisabled bool
 	TimerSeconds  int
 	TimerValue    string
-	// Form claiming the bonus of the day
+	// Form claiming the bonus
 	ClaimAction string
 	// Tab the section is rendered on, kept when claiming
 	Tab string
-	// Success message shown right after the bonus was claimed
+	// Shown right after the bonus was claimed
 	Notice string
 }
 
-// streakTileData builds the template data of the daily streak section
 func (dc *DataController) streakTileData(c *gin.Context, state *controllers.StreakState, tab string) *streakTile {
 	tile := &streakTile{
 		Tab:         tab,
 		Title:       dc.Renderer.T(c, "daily-streak-title"),
 		ClaimAction: "/inventory/claim",
 	}
-	// The meter shows the tier number and the coin value of every tier,
-	// the one of the bonus of the day standing out
+
 	tile.Tiers = make([]streakTier, 0, len(state.Rewards))
 	for i, amount := range state.Rewards {
 		tier := uint(i + 1)
@@ -71,12 +66,11 @@ func (dc *DataController) streakTileData(c *gin.Context, state *controllers.Stre
 			Current: tier == state.Tier,
 		})
 	}
-	// The streak count is only shown once it climbs past the reward cap
+
 	if state.Day > uint(len(state.Rewards)) {
 		tile.StreakLabel = dc.Renderer.T(c, "daily-streak-count", "days", int(state.Day))
 	}
-	// The best streak shows as a number, or as "current" while the ongoing
-	// streak holds the record
+	// "current" while the ongoing streak holds the record
 	var best any = dc.Renderer.T(c, "daily-streak-none")
 	if state.Best > 0 {
 		if state.Day > 0 && state.Day == state.Best {
@@ -100,8 +94,7 @@ func (dc *DataController) streakTileData(c *gin.Context, state *controllers.Stre
 	} else {
 		tile.ClaimLabel = dc.Renderer.T(c, "daily-streak-claim", "amount", int(state.Reward))
 	}
-	// The claim of the bonus is confirmed by a message, shown on the page
-	// the claim redirects to
+	// Shown on the page the claim redirects to
 	if state.Claimed && c.Query("claimed") != "" {
 		tile.Notice = dc.Renderer.T(c, "daily-streak-claimed-notice", "amount", int(state.Reward))
 	}
@@ -124,8 +117,7 @@ func (dc *DataController) InventoryClaimPost(c *gin.Context) {
 		return
 	}
 
-	// Back to the tab the bonus was claimed from, flagged with the claim
-	// when the bonus was credited just now
+	// Back to the claiming tab, flagged when the bonus was credited just now
 	params := url.Values{}
 	switch tab := c.PostForm("tab"); tab {
 	case inventoryTabCards, inventoryTabBoosters, inventoryTabCollections:

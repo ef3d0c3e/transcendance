@@ -1,7 +1,6 @@
 name: transcendance-stack
 
-# Docker sends every line to Logstash, nothing is read from the host.
-# Lines sent before Logstash is up are lost, docker compose logs still has them.
+# Every line goes to Logstash; those sent before it is up are only in docker compose logs
 x-logging: &logging
   driver: gelf
   options:
@@ -474,8 +473,7 @@ volumes:
   certificates:
   card_images:
 
-# The site and the admin tools are kept apart: the app, the only service handling visitors' input, cannot reach
-# the admin tools (Grafana trusts the gateway's Remote-User header, Prometheus and Alertmanager have no login)
+# The app, the only service handling visitors' input, cannot reach the admin tools (Grafana trusts Remote-User)
 networks:
   # Gateway, app and admin sign-in
   edge:

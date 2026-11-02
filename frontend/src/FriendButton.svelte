@@ -11,7 +11,6 @@
 	let error = $state('');
 	let actionsElement = $state();
 
-	// Actions available for each relation
 	const ACTIONS = {
 		'': ['add'],
 		pending: ['cancel'],
@@ -21,7 +20,6 @@
 		// Blocked by the other user, adding them explains why it can't be done
 		block: ['add'],
 	};
-	// Dataset key of each action's label
 	const LABELS = {
 		add: 'labelAdd',
 		cancel: 'labelCancel',

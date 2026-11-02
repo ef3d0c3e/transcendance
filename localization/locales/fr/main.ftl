@@ -130,6 +130,7 @@ card-rarity-legendary = Legendaire
 card-search-placeholder = Rechercher des cartes
 card-filter-placeholder = Filtrer par nom de carte ou de collection
 card-filter-no-match = Aucune carte ne correspond à ce filtre
+card-filter-results = Cartes correspondantes : { $count }
 card-search-empty = Aucune carte trouvée
 card-search-submit = Rechercher
 card-search-error-internal = Echec de la recherche
@@ -304,6 +305,9 @@ inventory-sold = { $count ->
     [one] Vous avez vendu { $count } carte pour { $amount } pièces
    *[other] Vous avez vendu { $count } cartes pour { $amount } pièces
 }
+inventory-sold-stale = Le nombre de cartes à côté du titre se met à jour en rechargeant la page.
+inventory-page-sold = Toutes les cartes de cette page ont été vendues
+inventory-reload = Recharger la page
 inventory-sell-error-card = Cette carte ne peut pas être vendue
 inventory-sell-error-quantity = Choisissez une quantité d’au moins 1
 inventory-sell-error-missing = Vous n’avez pas autant d’exemplaires à vendre
@@ -404,6 +408,9 @@ pack-opening-progress-note = Cartes différentes de cette collection que vous po
 pack-opening-summary = Cartes tirées : { $cards }
 pack-opening-card = { $title } ({ $rarity })
 pack-opening-card-foil = { $title } ({ $rarity }, holographique)
+pack-opening-card-new = { $title } ({ $rarity }, nouvelle carte)
+pack-opening-card-foil-new = { $title } ({ $rarity }, holographique, nouvelle carte)
+pack-opening-new = Nouveau
 pack-opening-spinning = Ouverture du paquet…
 pack-opening-skip = Passer
 
@@ -429,10 +436,10 @@ shop-buy-total = Total
 shop-coins = pièces
 shop-coins-locked = { $amount } dans des échanges
 
-index-title = Transcendance, collectionnez des cartes
-meta-description = Transcendance est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
+index-title = AnyCardz, collectionnez des cartes
+meta-description = AnyCardz est un jeu de cartes à collectionner : achetez des boosters, ouvrez des paquets et échangez des cartes avec d'autres joueurs pour compléter vos collections.
 index-heading = Collectionnez, troquez et exposez vos cartes
-index-tagline = Transcendance est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
+index-tagline = AnyCardz est un jeu de cartes à collectionner : achetez des boosters et troquez vos cartes pour enrichir votre collection.
 index-stat-cards = { $count ->
     [one] { $count } carte
     *[other] { $count } cartes
@@ -451,7 +458,7 @@ index-step-open-text = Chaque booster contient quelques cartes, dont certaines r
 index-step-trade-title = Troquez vos cartes
 index-step-trade-text = Retrouvez vos cartes dans votre inventaire et troquez avec d’autres joueurs pour compléter vos collections.
 index-install-title = Installer l’application
-index-install-text = Ajoutez Transcendance à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
+index-install-text = Ajoutez AnyCardz à votre écran d’accueil pour l’ouvrir comme une application, sans les barres du navigateur.
 index-install-ios-title = iPhone et iPad :
 index-install-ios-text = dans Safari, touchez Partager, puis Sur l’écran d’accueil.
 index-install-android-title = Android :
@@ -464,14 +471,14 @@ index-collections-title = Collections
 index-collections-all = Voir toutes les collections
 
 footer-label = Informations sur le site
-footer-project = Transcendance, un projet étudiant
+footer-project = AnyCardz, un projet étudiant
 
 info-page-updated = Dernière mise à jour : 29 octobre 2026
 
 terms-title = Conditions d'Utilisation
-terms-intro = Ces conditions encadrent votre utilisation de Transcendance. En créant un compte ou en utilisant le site, vous les acceptez.
+terms-intro = Ces conditions encadrent votre utilisation de AnyCardz. En créant un compte ou en utilisant le site, vous les acceptez.
 terms-service-title = 1. Le service
-terms-service-text = Transcendance est un projet étudiant non commercial dans lequel vous collectionnez, ouvrez et échangez des cartes virtuelles. Il est fourni gratuitement, à des fins de divertissement et d'apprentissage.
+terms-service-text = AnyCardz est un projet étudiant non commercial dans lequel vous collectionnez, ouvrez et échangez des cartes virtuelles. Il est fourni gratuitement, à des fins de divertissement et d'apprentissage.
 terms-account-title = 2. Votre compte
 terms-account-text = Un nom d'utilisateur, une adresse e-mail et un mot de passe sont nécessaires pour créer un compte. Votre adresse e-mail n’est pas vérifiée et sert uniquement à vous connecter ; aucun e-mail n’est envoyé. Vous pouvez vous connecter avec votre nom d’utilisateur ou votre adresse e-mail. Vous êtes responsable de la confidentialité de votre mot de passe et de toute activité réalisée avec votre compte. Les noms d’utilisateur injurieux ou usurpant une identité peuvent être modifiés ou supprimés.
 terms-conduct-title = 3. Règles d'usage
@@ -494,9 +501,9 @@ terms-law-title = 9. Droit applicable
 terms-law-text = Ces conditions sont régies par le droit français.
 
 legal-title = Mentions légales et confidentialité
-legal-intro = Cette page indique qui édite Transcendance, quelles données personnelles sont traitées et pourquoi, et quels cookies sont utilisés.
+legal-intro = Cette page indique qui édite AnyCardz, quelles données personnelles sont traitées et pourquoi, et quels cookies sont utilisés.
 legal-publisher-title = Éditeur
-legal-publisher-text = Transcendance est un projet étudiant non commercial, édité et exploité par son équipe de développement :
+legal-publisher-text = AnyCardz est un projet étudiant non commercial, édité et exploité par son équipe de développement :
 legal-publisher-source = Le code source est public :
 legal-host-text = Le site et sa base de données sont hébergés par l'équipe de développement.
 legal-privacy-title = Données personnelles
@@ -530,7 +537,7 @@ legal-cookies-year = 1 an
 legal-cookies-consent = Ces cookies sont nécessaires au fonctionnement du site ou à la mémorisation de vos propres choix, ils ne requièrent donc pas votre consentement. Il n'y a aucun cookie de mesure d'audience ni de publicité.
 
 contact-title = Contact
-contact-intro = Transcendance est réalisé par une petite équipe d'étudiants. Voici comment nous joindre.
+contact-intro = AnyCardz est réalisé par une petite équipe d'étudiants. Voici comment nous joindre.
 contact-issues-title = Bugs, suggestions et questions
 contact-issues-text = Le meilleur moyen de nous joindre est d'ouvrir une issue sur le dépôt GitHub du projet. Les issues sont publiques, n'y mettez donc pas d'informations personnelles.
 contact-issues-link = Ouvrir une issue sur GitHub
@@ -644,6 +651,7 @@ shoutbox-error-message-not-found = Ce message n'existe plus
 
 tradeup-rules = Combinez { $count } cartes de la même rareté pour obtenir une carte aléatoire de la rareté supérieure. Les chances de chaque collection suivent le nombre de cartes qui en viennent.
 tradeup-empty = Aucune carte ici ne peut être améliorée
+tradeup-sort-grouped = Collection et rareté
 tradeup-slots = Emplacements de l’amélioration
 tradeup-remove = Retirer
 tradeup-slot-empty = Emplacement vide
@@ -658,3 +666,33 @@ tradeup-error-missing = Vous ne possédez pas assez de ces cartes
 tradeup-error-locked = Certaines de ces cartes sont dans des échanges
 tradeup-error-empty = Aucune de ces collections ne contient de carte de la rareté supérieure
 tradeup-error-internal = Échec de l’amélioration
+
+inventory-tab-foil = Roulette holographique
+foil-rules = Tentez d’obtenir la version holographique d’une carte. Sacrifiez d’autres cartes pour augmenter vos chances, jusqu’à { $cap } %. Si vous gagnez, la carte devient holographique avec un motif aléatoire ; si vous perdez, elle est détruite. Les cartes sacrifiées sont perdues dans tous les cas.
+foil-empty = Aucune carte ici ne peut tenter la roulette holographique
+foil-rolled = Carte à tenter
+foil-pick-rolled = Choisissez une carte non holographique à tenter
+foil-chance = Chance holographique
+foil-chance-capped = Maximum atteint
+foil-chance-base = Base
+foil-chance-bonus = Sacrifices
+foil-odds = Chances par rareté
+foil-odds-per-sacrifice = Par sacrifice
+foil-sacrifices = Sacrifices
+foil-pick-sacrifices = Choisissez des cartes à sacrifier pour augmenter vos chances
+foil-sacrifices-later = Choisissez d’abord une carte à tenter, puis des cartes à sacrifier
+foil-submit = Tenter
+foil-confirm-title = Tenter la roulette ?
+foil-confirm-text = { $title } a { $chance } de chances de devenir holographique. Si vous perdez, la carte est détruite.
+foil-confirm-sacrifices = Cartes sacrifiées : { $count }. Elles sont perdues que vous gagniez ou non.
+foil-result-won = Holographique !
+foil-result-won-text = Votre carte brille désormais d’un nouveau motif.
+foil-result-lost = Carte détruite
+foil-result-lost-text = La roulette a été perdue, et { $title } avec.
+foil-noscript = Tenter la roulette holographique nécessite JavaScript, pour choisir la carte à tenter et les cartes à sacrifier.
+foil-error-count = Une tentative peut sacrifier au plus { $count } cartes
+foil-error-foil = Cette carte est déjà holographique
+foil-error-rarity = Ces cartes ne peuvent pas tenter la roulette holographique
+foil-error-missing = Vous ne possédez pas ces cartes
+foil-error-locked = Certaines de ces cartes sont dans des échanges
+foil-error-internal = Échec de la roulette holographique

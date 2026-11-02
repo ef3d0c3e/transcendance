@@ -1,0 +1,2 @@
+title = Lebel Model 1886 Rifle
+description = The Lebel Model 1886 rifle also known as the "Fusil Mle 1886 M93", after a bolt modification was added in 1893, is an 8 mm bolt-action infantry rifle that entered service in the French Army in 1887. It is a repeating rifle that can hold eight rounds in its fore-stock tube magazine, one round in the elevator plus one round in the chamber; equaling a total of ten rounds held.

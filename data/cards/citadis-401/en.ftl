@@ -1,0 +1,2 @@
+title = Citadis 401
+description = Citadis is a family of low-floor trams and light rail vehicles built by Alstom. As of 2025, over 8,000 Citadis trams have been ordered, with operations in over 140 cities on all six inhabited continents. The Alstom Citadis 401 operates on a 1435 mm gauge, features a 5-car formation and is powered by a 750 V DC electric system. This tram is a key component of the Tramway de Montpellier's fleet, known as TAM Citadis 401.

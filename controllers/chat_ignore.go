@@ -17,7 +17,6 @@ var chatIgnoreDurations = map[string]time.Duration{
 	"week": 7 * 24 * time.Hour,
 }
 
-// A user ignored by the client's user, as sent to clients
 type chatIgnoredUser struct {
 	Username string `json:"username"`
 	Until    string `json:"until"`
@@ -71,7 +70,6 @@ func (sc *ShoutboxController) loadIgnores(ctx context.Context, userID uint) (map
 	return ids, users, nil
 }
 
-// Register a client with its user's ignores, returns them for the client
 func (sc *ShoutboxController) registerClient(ctx context.Context, client *shoutboxClient) (bool, []chatIgnoredUser, error) {
 	sc.ignoreMu.Lock()
 	defer sc.ignoreMu.Unlock()
@@ -83,7 +81,6 @@ func (sc *ShoutboxController) registerClient(ctx context.Context, client *shoutb
 	return sc.hub.register(client, ids), users, nil
 }
 
-// Whether a user ignores another right now
 func (sc *ShoutboxController) ignores(ctx context.Context, userID uint, otherID uint) (bool, error) {
 	var count int64
 	err := sc.DB.WithContext(ctx).
@@ -94,7 +91,7 @@ func (sc *ShoutboxController) ignores(ctx context.Context, userID uint, otherID 
 	return count > 0, err
 }
 
-// Ignore a user for a duration, or stop ignoring them when 0, then send the new list to every tab
+// ignore stops ignoring when duration is 0, and sends the new list to every tab
 func (sc *ShoutboxController) ignore(ctx context.Context, client *shoutboxClient, username string, duration time.Duration) {
 	other, ok := sc.findPartner(ctx, client, username)
 	if !ok {

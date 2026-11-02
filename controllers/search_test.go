@@ -14,7 +14,6 @@ import (
 
 var searchUsernameRe = regexp.MustCompile(`class="user-result-name" href="/profile/[^"]*">([^<]*)</a>`)
 
-// Usernames of the displayed users, in order
 func searchUsernames(body string) []string {
 	var usernames []string
 	for _, match := range searchUsernameRe.FindAllStringSubmatch(body, -1) {
@@ -23,7 +22,6 @@ func searchUsernames(body string) []string {
 	return usernames
 }
 
-// Create accounts registered at the given times
 func createSearchAccounts(t *testing.T, router *gin.Engine, accounts map[string]time.Time) {
 	for username, created := range accounts {
 		createAccount(t, router, username, "foo-bar-baz-qux", 0)

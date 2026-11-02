@@ -1,0 +1,85 @@
+id = 10
+tags = [ "train" ]
+color-primary = "#a1006b"
+color-secondary = "#cd0037"
+
+[[cards]]
+name = "alstom"
+
+[[cards]]
+name = "avelia-euroduplex"
+
+[[cards]]
+name = "bombardier-flexity-outlook"
+
+[[cards]]
+name = "cc-72000"
+
+[[cards]]
+name = "cc-72100"
+
+[[cards]]
+name = "citadis-302"
+
+[[cards]]
+name = "citadis-304"
+
+[[cards]]
+name = "citadis-401"
+
+[[cards]]
+name = "citadis-403"
+
+[[cards]]
+name = "mf-67"
+
+[[cards]]
+name = "mp-05"
+
+[[cards]]
+name = "mp-55"
+
+[[cards]]
+name = "mp-89"
+
+[[cards]]
+name = "ouigo"
+
+[[cards]]
+name = "paris-metro"
+
+[[cards]]
+name = "ratp"
+
+[[cards]]
+name = "regio-2n"
+
+[[cards]]
+name = "regiolis"
+
+[[cards]]
+name = "sncf"
+
+[[cards]]
+name = "sprague-thomson"
+
+[[cards]]
+name = "tam"
+
+[[cards]]
+name = "tcl"
+
+[[cards]]
+name = "tgv-dasye"
+
+[[cards]]
+name = "tgv-duplex"
+
+[[cards]]
+name = "tisseo"
+
+[[cards]]
+name = "x73500"
+
+[[cards]]
+name = "z-23000"

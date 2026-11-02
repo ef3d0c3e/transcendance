@@ -67,14 +67,12 @@ func getNotifications(t *testing.T, router *gin.Engine, cookie *http.Cookie, que
 	return res
 }
 
-// The user signed in with a session cookie
 func cookieUserID(t *testing.T, cookie *http.Cookie) uint {
 	var session models.UserSession
 	require.NoError(t, tests.DB.Where("token = ?", models.HashSessionToken(cookie.Value)).First(&session).Error)
 	return session.UserID
 }
 
-// Notify the signed in user of a friend request from `username`, as the friends system does
 func addFriendRequest(t *testing.T, _ *gin.Engine, cookie *http.Cookie, username string) {
 	require.NoError(t, tests.DB.Create(&models.Notification{
 		UserID: cookieUserID(t, cookie),
@@ -86,7 +84,6 @@ func addFriendRequest(t *testing.T, _ *gin.Engine, cookie *http.Cookie, username
 	time.Sleep(time.Millisecond)
 }
 
-// The debug page creating notifications is for admins only
 func TestAddNotificationAdminOnly(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "notifdbg1", "123456789", 0)

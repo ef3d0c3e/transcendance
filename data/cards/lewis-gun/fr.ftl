@@ -1,0 +1,2 @@
+title = Lewis Mark I
+description = Le fusil-mitrailleur Lewis Mark I fut une des armes automatiques légères les plus marquantes de la Première Guerre mondiale. Employée à terre comme sur les premiers avions de chasse, elle incita les Allemands à créer la Maxim 08/15. Construit en grand nombre au Royaume-Uni, en Belgique, aux États-Unis et en France, le Lewis est à nouveau employé lors de la Seconde Guerre mondiale.
