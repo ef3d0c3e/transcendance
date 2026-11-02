@@ -1,5 +1,4 @@
-# Development database only, the server runs on the host (see docs/DEV.md).
-# The deployment stack is docker/docker-compose.yml, started with `make`.
+# Development database only, see docs/DEV.md; the deployment stack is docker/docker-compose.yml
 services:
   mariadb:
     image: mariadb:11.8

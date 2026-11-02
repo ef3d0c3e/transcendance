@@ -95,8 +95,7 @@ es /_index_template/logs-transcendance -X PUT -d '{
 # Indices made before the template, if any
 es '/logs-transcendance-*/_settings?allow_no_indices=true' -X PUT -d '{"index.number_of_replicas": 0}'
 
-# Archive: every night the logs are copied to snapshots outside of the cluster's data, in DATA_DIR/log-archive,
-# kept LOG_ARCHIVE_DAYS. Snapshots are incremental, a night only adds what changed.
+# Archive: nightly incremental snapshots in DATA_DIR/log-archive, kept LOG_ARCHIVE_DAYS
 es /_snapshot/log-archive -X PUT -d '{
 	"type": "fs",
 	"settings": {"location": "/usr/share/elasticsearch/snapshots", "compress": true}
