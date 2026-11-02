@@ -107,6 +107,20 @@ export class ShoutboxConnection {
 		return this.#request({ type: 'unignore', username });
 	}
 
+	// Moderators: delete a shoutbox message for everyone
+	deleteMessage(id) {
+		return this.#request({ type: 'delete', id });
+	}
+
+	// Moderators: refuse the shoutbox messages of a user for an `hour`, a `day` or a `week`
+	mute(username, duration) {
+		return this.#request({ type: 'mute', username, duration });
+	}
+
+	unmute(username) {
+		return this.#request({ type: 'unmute', username });
+	}
+
 	close() {
 		this.#isStopped = true;
 		clearTimeout(this.#timer);

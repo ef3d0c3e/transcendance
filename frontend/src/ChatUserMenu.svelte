@@ -5,8 +5,20 @@
 -->
 
 <script>
-	// `onMessage` is left out where a conversation with the user is already shown
-	let { username, labels, ignored, onMessage, onIgnore, onUnignore, class: className = '' } = $props();
+	// `onMessage` is left out where a conversation with the user is already shown. Moderators also get
+	// `onMute` and `onUnmute`.
+	let {
+		username,
+		labels,
+		ignored,
+		onMessage,
+		onIgnore,
+		onUnignore,
+		moderator = false,
+		onMute,
+		onUnmute,
+		class: className = '',
+	} = $props();
 
 	const DURATIONS = [
 		['hour', 'labelIgnoreHour'],
@@ -14,8 +26,14 @@
 		['week', 'labelIgnoreWeek'],
 	];
 
+	const MUTE_DURATIONS = [
+		['hour', 'labelMuteHour'],
+		['day', 'labelMuteDay'],
+		['week', 'labelMuteWeek'],
+	];
+
 	// Room the menu needs below its trigger, in pixels
-	const MENU_HEIGHT = 180;
+	const MENU_HEIGHT = $derived(moderator && onMute ? 330 : 180);
 
 	let open = $state(false);
 	// Opens upwards when there is no room below, in the scrolled list or the window
@@ -90,6 +108,14 @@
 						{labels[label]}
 					</button>
 				{/each}
+			{/if}
+			{#if moderator && onMute}
+				{#each MUTE_DURATIONS as [duration, label] (duration)}
+					<button type="button" class="is-danger" onclick={() => pick(() => onMute(duration))}>
+						{labels[label]}
+					</button>
+				{/each}
+				<button type="button" onclick={() => pick(onUnmute)}>{labels.labelUnmute}</button>
 			{/if}
 		</span>
 	{/if}

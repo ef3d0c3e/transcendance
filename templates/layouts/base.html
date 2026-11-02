@@ -66,6 +66,9 @@
 				{{ if .User }}
 				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
 				<li><a href="/friends" {{ if hasPrefix .Path "/friends" }}aria-current="page"{{ end }}>{{ .T "navbar-friends" }}</a></li>
+				{{ if .User.IsAdmin }}
+				<li><a href="/admin/users" {{ if hasPrefix .Path "/admin" }}aria-current="page"{{ end }}>{{ .T "navbar-admin" }}</a></li>
+				{{ end }}
 				{{ end }}
 			</ul>
 
@@ -117,7 +120,15 @@
 						data-label-ignoring-notice="{{ .T "shoutbox-ignoring-notice" }}"
 						data-label-error-user-not-found="{{ .T "shoutbox-error-user-not-found" }}"
 						data-label-error-self="{{ .T "shoutbox-error-self" }}"
-						data-label-error-blocked="{{ .T "shoutbox-error-blocked" }}"></span>
+						data-label-error-blocked="{{ .T "shoutbox-error-blocked" }}"
+						data-label-error-forbidden="{{ .T "shoutbox-error-forbidden" }}"
+						data-label-error-muted="{{ .T "shoutbox-error-muted" }}"
+						data-label-error-message-not-found="{{ .T "shoutbox-error-message-not-found" }}"
+						data-label-delete-message="{{ .T "shoutbox-delete-message" }}"
+						data-label-mute-hour="{{ .T "shoutbox-mute-hour" }}"
+						data-label-mute-day="{{ .T "shoutbox-mute-day" }}"
+						data-label-mute-week="{{ .T "shoutbox-mute-week" }}"
+						data-label-unmute="{{ .T "shoutbox-unmute" }}"></span>
 				{{ end }}
 				<div id="language-switcher" data-label="{{ .T "language-switcher" }}"
 					data-label-current="{{ .T "language-switcher-current" }}"></div>

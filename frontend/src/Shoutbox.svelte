@@ -29,6 +29,8 @@
 	// Latest first
 	let conversations = $state([]);
 	let ignored = $state([]);
+	// Moderators delete messages and mute users, the history tells
+	let moderator = $state(false);
 
 	// `shout` or `messages`
 	let tab = $state('shout');
@@ -211,7 +213,7 @@
 			rateLimited(event.retryAfter ?? 2000);
 		}
 		// Nobody to talk to, back to the list
-		if (['user-not-found', 'self'].includes(event.error) && request?.kind !== 'ignore' && !loaded) {
+		if (['user-not-found', 'self'].includes(event.error) && !['ignore', 'moderate'].includes(request?.kind) && !loaded) {
 			active = '';
 		}
 	}
@@ -221,6 +223,7 @@
 			case 'history': {
 				locale = event.locale;
 				ignored = event.ignored ?? [];
+				moderator = event.moderator === true;
 				for (const conversation of (event.conversations ?? []).toReversed()) {
 					addPrivate(conversation.last);
 					const added = conversations.find((current) => current.username === conversation.username);
@@ -257,6 +260,11 @@
 			}
 			case 'ignored': {
 				ignored = event.ignored ?? [];
+				break;
+			}
+			case 'deleted': {
+				// A moderator removed it, for everyone
+				messages = messages.filter((message) => message.id !== event.id);
 				break;
 			}
 			case 'ack': {
@@ -311,6 +319,24 @@
 	function unignore(username) {
 		if (connection.unignore(username)) {
 			expect('ignore');
+		}
+	}
+
+	function deleteMessage(id) {
+		if (connection.deleteMessage(id)) {
+			expect('moderate');
+		}
+	}
+
+	function mute(username, duration) {
+		if (connection.mute(username, duration)) {
+			expect('moderate');
+		}
+	}
+
+	function unmute(username) {
+		if (connection.unmute(username)) {
+			expect('moderate');
 		}
 	}
 
@@ -417,6 +443,9 @@
 		'user-not-found': dataset.labelErrorUserNotFound,
 		self: dataset.labelErrorSelf,
 		blocked: dataset.labelErrorBlocked,
+		forbidden: dataset.labelErrorForbidden,
+		muted: dataset.labelErrorMuted,
+		'message-not-found': dataset.labelErrorMessageNotFound,
 	});
 
 	const closedLabels = $derived({
@@ -595,11 +624,25 @@
 										onMessage={() => openConversation(message.username)}
 										onIgnore={(duration) => ignore(message.username, duration)}
 										onUnignore={() => unignore(message.username)}
+										{moderator}
+										onMute={(duration) => mute(message.username, duration)}
+										onUnmute={() => unmute(message.username)}
 									/>
 								{/if}
 								<time datetime={message.createdAt} title={fullDate(message.createdAt, locale)}>
 									{ago(message.createdAt, now)}
 								</time>
+								{#if moderator}
+									<button type="button" class="shout-delete"
+										aria-label="{dataset.labelDeleteMessage} ({message.username})"
+										title={dataset.labelDeleteMessage}
+										onclick={() => deleteMessage(message.id)}>
+										<svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true">
+											<path d="M5 7h14M10 7V4h4v3M7 7l1 13h8l1-13" stroke="currentColor" stroke-width="2"
+												stroke-linecap="round" stroke-linejoin="round" fill="none" />
+										</svg>
+									</button>
+								{/if}
 							</span>
 							<span class="shout-body">{message.body}</span>
 						</li>
@@ -1035,6 +1078,29 @@
 			color: var(--color-text-muted);
 			font-size: 0.75rem;
 			font-variant-numeric: tabular-nums;
+		}
+	}
+
+	/* Moderators only */
+	.shout-delete {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		align-self: center;
+
+		min-width: 1.5rem;
+		min-height: 1.5rem;
+		margin-left: auto;
+		padding: 0.2rem;
+
+		color: var(--color-text-muted);
+		background: transparent;
+		border-radius: 0.4rem;
+
+		&:hover,
+		&:focus-visible {
+			color: var(--color-error-3);
+			background: var(--color-error-1);
 		}
 	}
 

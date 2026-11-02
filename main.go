@@ -92,8 +92,13 @@ func main() {
 		}()
 	}
 
-	log.Println("Server running on http://localhost:8080")
-	if err := router.Run(":8080"); err != nil {
+	// The container publishes 8080, another address helps running several servers side by side
+	addr := os.Getenv("LISTEN_ADDR")
+	if addr == "" {
+		addr = ":8080"
+	}
+	log.Printf("INFO server running on http://localhost%s", addr)
+	if err := router.Run(addr); err != nil {
 		log.Fatal(err)
 	}
 }
