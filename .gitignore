@@ -1,6 +1,8 @@
 tmp/
 node_modules/
 coverage.out
+# Binary written by `go build` at the root
+/transcendance
 # Credentials stay local, see .env.example and docker/.env.example
 .env
 docker/.env

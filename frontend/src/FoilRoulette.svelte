@@ -1,31 +1,32 @@
 <!--
-    Builds a foil roll: the first card clicked in the inventory is the one
-    rolled, every card clicked after it is sacrificed to raise the odds.
-    Clicking the rolled card or a sacrifice in the sidebar takes it back out.
-    The roll is submitted as a `target` field and one `card` field per
-    sacrifice, after a confirmation: a lost roll destroys the card.
+    Builds a foil roll: the first inventory card clicked is rolled, every one
+    clicked after it is sacrificed to raise the odds; clicking one in the
+    sidebar takes it back out. The roll is submitted as a `target` field and
+    one `card` field per sacrifice, after a confirmation: a lost roll
+    destroys the card.
 
     Cards must provide `data-foil-id`, `data-foil-foil` (the pattern, "" for a
     plain copy), `data-foil-count` (copies owned), `data-foil-rarity`,
     `data-foil-title`, `data-foil-collection-id` and `data-foil-collection`.
-    Only plain copies can be rolled; any copy can be sacrificed. Each eligible
-    tile wears a `.foil-bonus` badge with the chance it gives, and stacks with
+    Only plain copies can be rolled; any copy can be sacrificed. Eligible
+    tiles wear a `.foil-bonus` badge with the chance they give, stacks with
     sacrificed copies a `.tradeup-taken` pill.
 
     The mount target provides the odds (`data-odds`, rarity to `{base, bonus}`
     in `data-scale` units), the chance cap (`data-cap`), the most sacrifices a
     roll takes (`data-max`), the rarities in the order the odds table lists
-    them (`data-rarities`, `[{value, label}]`) and the labels.
+    them (`data-rarities`, `[{value, label}]`) and the labels, `data-label-foil`
+    and `data-label-copies` naming the cards as the inventory does.
     `{title}` and `{chance}` in labels are replaced here.
 
-    Filtering, sorting and paging are left to card-filter.js, on
-    `#foil-search`, `#foil-collection-filter`, `#foil-rarity-filter`,
-    `#foil-sort` and the `.foil-pager` elements.
+    Filtering, sorting and paging: card-filter.js, on the `#foil-*` controls
+    and the `.foil-pager` elements.
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
 	import { attachCardFilter } from "./card-filter.js";
+	import { cardName, makeCardButton } from "./card-name.js";
 
 	let { target: mount } = $props();
 
@@ -49,6 +50,7 @@
 	const scale = $derived(Number(mount.dataset.scale ?? 10000));
 	const max = $derived(Number(mount.dataset.max ?? 0));
 	const label = (name) => mount.dataset[name] ?? "";
+	const cardLabels = $derived({ foil: label("labelFoil"), copies: label("labelCopies") });
 
 	const lang = document.documentElement.lang || undefined;
 	const percent = new Intl.NumberFormat(lang, { style: "percent", maximumFractionDigits: 2 });
@@ -71,6 +73,10 @@
 	let dialog;
 	let form;
 	let confirmed = false;
+	// Focused when the button that had the focus goes away: the sections the
+	// rolled card and the sacrifices leave
+	let rolledSection = $state();
+	let sacrificesSection = $state();
 
 	function cardOf(tile) {
 		return {
@@ -113,8 +119,59 @@
 		else rolled = card;
 	}
 
-	function remove(index) {
+	// The rolled card's button is gone: the focus goes to its section, which
+	// now says to pick one
+	async function unroll() {
+		rolled = null;
+		await tick();
+		rolledSection.focus();
+	}
+
+	// The focused slot is gone: the focus goes to the slot taking its place,
+	// else the one before, else the section
+	async function remove(index) {
 		sacrifices.splice(index, 1);
+		await tick();
+		const slots = sacrificesSection.querySelectorAll(".foil-slot");
+		(slots[index] ?? slots[index - 1] ?? sacrificesSection).focus();
+	}
+
+	// The clear button is disabled once the roll is empty: the focus goes
+	// back to its start, picking the card to roll
+	async function clear() {
+		rolled = null;
+		sacrifices = [];
+		await tick();
+		rolledSection.focus();
+	}
+
+	// Name of a button taking a card back out, with what it shows of it
+	function removeName(card) {
+		return [`${label("labelRemove")} ${card.title}`, rarityName(card.rarity), card.foil ? label("labelFoil") : ""]
+			.filter(Boolean)
+			.join(", ");
+	}
+
+	// What a tile gives, as its badge shows it: its chance as the card
+	// rolled, or the bonus it adds as a sacrifice once one is
+	function chanceOf(card) {
+		const odd = odds[card.rarity];
+		if (!odd) return "";
+		return rolled ? formatBonus(odd.bonus) : formatChance(odd.base);
+	}
+
+	// A tile's name: the card as the inventory names it, then what the
+	// roulette makes of it, the badges being only seen
+	function tileName(tile, card, { blocked, isRolled, count }) {
+		const chanceLabel = rolled ? label("labelPerSacrifice") : label("labelChance");
+		return [
+			cardName(tile, { ...cardLabels, count: card.count }),
+			isRolled ? label("labelRolled") : "",
+			blocked ? "" : `${chanceLabel}: ${chanceOf(card)}`,
+			count > 0 ? `${label("labelSacrifices")}: ${count}` : "",
+		]
+			.filter(Boolean)
+			.join(", ");
 	}
 
 	function fill(text, values) {
@@ -132,50 +189,6 @@
 		dialog.close();
 		form.requestSubmit();
 	}
-
-	// Ineligible tiles are inert; eligible ones wear the chance they give, the
-	// rolled one stands out, and sacrificed stacks wear how many copies went
-	$effect(() => {
-		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
-			const info = cardOf(card);
-			const blocked = !canTake(info);
-			const isRolled = rolled !== null && same(rolled, info);
-			card.classList.toggle("tradeup-card-blocked", blocked && !isRolled);
-			card.classList.toggle("foil-card-rolled", isRolled);
-			card.setAttribute("aria-disabled", blocked ? "true" : "false");
-
-			const tile = card.querySelector(".card-container");
-			if (!tile) continue;
-
-			let badge = tile.querySelector(":scope > .foil-bonus");
-			if (blocked) {
-				badge?.remove();
-			} else {
-				if (!badge) {
-					badge = document.createElement("span");
-					badge.className = "foil-bonus";
-					badge.setAttribute("aria-hidden", "true");
-					tile.append(badge);
-				}
-				const odd = odds[info.rarity];
-				badge.textContent = rolled ? formatBonus(odd.bonus) : formatChance(odd.base);
-			}
-
-			const count = sacrificed(info);
-			let pill = tile.querySelector(":scope > .tradeup-taken");
-			if (count === 0) {
-				pill?.remove();
-				continue;
-			}
-			if (!pill) {
-				pill = document.createElement("span");
-				pill.className = "tradeup-taken";
-				pill.setAttribute("aria-hidden", "true");
-				tile.append(pill);
-			}
-			pill.textContent = `×${count}`;
-		}
-	});
 
 	onMount(() => {
 		form = mount.closest("form");
@@ -201,20 +214,20 @@
 			add(card);
 		}
 
+		// The focused element is the tile, inside the card's wrapper
+		// A held key adds the card once, not until the roll is full
 		function onKeyDown(e) {
 			if (e.key !== "Enter" && e.key !== " ") return;
-			const card = cardFrom(e);
-			if (!card || !e.target.matches?.(".card-container")) return;
+			if (!(e.target instanceof Element) || !e.target.matches(TILE_SELECTOR)) return;
 
 			e.preventDefault();
-			add(card);
+			if (e.repeat) return;
+			add(e.target.closest(CARD_SELECTOR));
 		}
 
-		// Cards are picked by clicking, make them reachable and announced as buttons
+		// Named by the effect below
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
-			tile.tabIndex = 0;
-			tile.setAttribute("role", "button");
-			tile.setAttribute("aria-label", tile.closest(CARD_SELECTOR).dataset.foilTitle);
+			makeCardButton(tile, cardLabels);
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
@@ -236,6 +249,7 @@
 			rarity: "#foil-rarity-filter",
 			sort: "#foil-sort",
 			noMatch: "#foil-no-match",
+			status: "#foil-filter-status",
 			pagers: ".foil-pager",
 		});
 
@@ -247,18 +261,59 @@
 			detachFilter();
 		};
 	});
+
+	// Ineligible tiles are inert; eligible ones wear the chance they give, the
+	// rolled one stands out, and sacrificed stacks wear how many copies went.
+	// Their names say the same. After onMount, which made them buttons.
+	$effect(() => {
+		for (const card of document.querySelectorAll(CARD_SELECTOR)) {
+			const info = cardOf(card);
+			const blocked = !canTake(info);
+			const isRolled = rolled !== null && same(rolled, info);
+			const count = sacrificed(info);
+			card.classList.toggle("tradeup-card-blocked", blocked && !isRolled);
+			card.classList.toggle("foil-card-rolled", isRolled);
+
+			const tile = card.querySelector(".card-container");
+			if (!tile) continue;
+			// On the button itself, so screen readers tell it does nothing
+			tile.setAttribute("aria-disabled", blocked ? "true" : "false");
+			tile.setAttribute("aria-label", tileName(tile, info, { blocked, isRolled, count }));
+
+			let badge = tile.querySelector(":scope > .foil-bonus");
+			if (blocked) {
+				badge?.remove();
+			} else {
+				if (!badge) {
+					badge = document.createElement("span");
+					badge.className = "foil-bonus";
+					badge.setAttribute("aria-hidden", "true");
+					tile.append(badge);
+				}
+				badge.textContent = chanceOf(info);
+			}
+
+			let pill = tile.querySelector(":scope > .tradeup-taken");
+			if (count === 0) {
+				pill?.remove();
+				continue;
+			}
+			if (!pill) {
+				pill = document.createElement("span");
+				pill.className = "tradeup-taken";
+				pill.setAttribute("aria-hidden", "true");
+				tile.append(pill);
+			}
+			pill.textContent = `×${count}`;
+		}
+	});
 </script>
 
 <div class="foil-roulette">
-	<section class="foil-section" aria-labelledby="foil-rolled-title">
+	<section class="foil-section" aria-labelledby="foil-rolled-title" tabindex="-1" bind:this={rolledSection}>
 		<h2 class="foil-section-title" id="foil-rolled-title">{label("labelRolled")}</h2>
 		{#if rolled}
-			<button
-				type="button"
-				class="foil-rolled"
-				aria-label="{label('labelRemove')} {rolled.title}"
-				onclick={() => (rolled = null)}
-			>
+			<button type="button" class="foil-rolled" aria-label={removeName(rolled)} onclick={unroll}>
 				<span class="foil-thumb" style="background-image: url('/cards/{rolled.id}/thumbnail')"></span>
 				<span class="foil-rolled-text">
 					<span class="foil-rolled-name">{rolled.title}</span>
@@ -325,7 +380,7 @@
 		</details>
 	</section>
 
-	<section class="foil-section" aria-labelledby="foil-sacrifices-title">
+	<section class="foil-section" aria-labelledby="foil-sacrifices-title" tabindex="-1" bind:this={sacrificesSection}>
 		<h2 class="foil-section-title" id="foil-sacrifices-title">
 			{label("labelSacrifices")} <span class="foil-count">{sacrifices.length}</span>
 		</h2>
@@ -338,7 +393,7 @@
 						type="button"
 						class="foil-slot"
 						title={card.title}
-						aria-label="{label('labelRemove')} {card.title}"
+						aria-label={removeName(card)}
 						style="background-image: url('/cards/{card.id}/thumbnail')"
 						onclick={() => remove(i)}
 					>
@@ -362,15 +417,7 @@
 			<span class="foil-actions-label">{label("labelChance")}</span>
 			<strong>{rolled ? formatChance(chance) : "–"}</strong>
 		</p>
-		<button
-			type="button"
-			class="foil-clear"
-			onclick={() => {
-				rolled = null;
-				sacrifices = [];
-			}}
-			disabled={!rolled && sacrifices.length === 0}
-		>
+		<button type="button" class="foil-clear" onclick={clear} disabled={!rolled && sacrifices.length === 0}>
 			{label("labelClear")}
 		</button>
 		<button type="submit" class="foil-submit" disabled={!rolled}>{label("labelSubmit")}</button>
@@ -488,7 +535,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}
@@ -641,7 +688,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}
@@ -763,7 +810,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}

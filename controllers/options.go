@@ -14,7 +14,6 @@ func PageParam(raw string) int {
 	return min(page, maxPage)
 }
 
-// An option of the filter and sort selects
 type SelectOption struct {
 	Value    string
 	Label    string

@@ -15,49 +15,39 @@ import (
 	"transcendance/localization"
 )
 
-// Renderer holds parsed templates and localization state
 type Renderer struct {
 	templates *template.Template
 	Localizer *localization.Localizer
 	themer    *Themer
 }
 
-// T is a method to translate strings
 func (r *Renderer) T(c *gin.Context, id string, kv ...any) string {
 	loc := r.Localizer.Localization(c)
 	return r.Localizer.Translate(loc, id, kv...)
 }
 
-// Data passed to templates
 type View struct {
-	// Parameters
-	Data any
-	// Theme
+	Data  any
 	Theme string
 	// Negotiated locale, e.g. "en", for the page's lang attribute
 	Lang string
 	// Authenticated user, nil for visitors (shown in the header)
 	User any
 	// Request path, to highlight the current page in the header
-	Path string
-	// Child templates
+	Path     string
 	Children map[string]template.HTML
-	// Translator instance
 	Translator
 }
 
-// Translator that is given to templates
 type Translator struct {
 	localizer *localization.Localizer
 	loc       *fluentloc.Localization
 }
 
-// Translate string, available in templates
 func (t Translator) T(id string, kv ...any) string {
 	return t.localizer.Translate(t.loc, id, kv...)
 }
 
-// NewRenderer: parse all templates under templates/**/*.html
 func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	t := template.Must(
 		template.New("").Funcs(template.FuncMap{
@@ -77,8 +67,7 @@ func NewRenderer(l *localization.Localizer, themer *Themer) *Renderer {
 	}
 }
 
-// RenderToString executes a named template and returns the result as a string.
-// Useful to embed fragments (like cards) into JSON responses.
+// RenderToString renders fragments (like cards) to embed in JSON responses.
 func (r *Renderer) RenderToString(name string, data any) (string, error) {
 	var content bytes.Buffer
 
@@ -95,7 +84,6 @@ type pageBuilder struct {
 	children     map[string]*pageBuilder
 }
 
-// Create a new page builder
 func PageBuilder(templateName string, data map[string]any) pageBuilder {
 	if data == nil {
 		data = make(map[string]any, 1)
@@ -107,10 +95,8 @@ func PageBuilder(templateName string, data map[string]any) pageBuilder {
 	}
 }
 
-// Add a template (child) to the page builder
-// - `templateName` Template name
-// - `name` Name that will be available to the parent
-// This method returns the added child, so you may add children to that child
+// Add adds a child template, available to the parent as name, and returns it
+// so it can get children of its own
 func (b *pageBuilder) Add(templateName string, name string, data map[string]any) *pageBuilder {
 	if data == nil {
 		data = make(map[string]any, 1)
@@ -137,7 +123,6 @@ func (b *pageBuilder) AddPaginator(current int, total int, url string) {
 	}
 }
 
-// Request-wide values given to every template
 type pageContext struct {
 	theme string
 	user  any

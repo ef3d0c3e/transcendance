@@ -1,7 +1,5 @@
 #!/bin/sh
-# Create or complete .env from .env.example, generating the secrets left empty.
-# Values already in .env are kept, so it can run again after an update.
-# The Docker socket is asked to Docker, it differs with rootless Docker.
+# Create or complete .env from .env.example, generating the empty secrets; existing values are kept
 set -eu
 cd "$(dirname "$0")"
 
@@ -40,7 +38,7 @@ while IFS= read -r line; do
 done <.env.example
 echo "Added $added value(s) to $(pwd)/.env"
 
-# cAdvisor reads the containers from the Docker socket, a value set by hand is kept
+# cAdvisor needs Docker's socket, which differs with rootless Docker; a value set by hand is kept
 current=$(sed -n 's/^DOCKER_SOCKET=//p' .env)
 host=$(docker context inspect --format '{{.Endpoints.docker.Host}}' 2>/dev/null || true)
 if [ "${host#unix://}" != "$host" ]; then

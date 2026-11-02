@@ -20,7 +20,6 @@ func foilRoll(t *testing.T, router *gin.Engine, cookie *http.Cookie, target stri
 	return postForm(t, router, cookie, "/foil", url.Values{"target": {target}, "card": sacrifices})
 }
 
-// Copies of one card owned by a user, by foil ("" for plain copies)
 func ownedFoils(t *testing.T, username string, cardID uint) map[string]int {
 	foils := make(map[string]int)
 	for _, owned := range ownedCards(t, username) {
@@ -31,8 +30,8 @@ func ownedFoils(t *testing.T, username string, cardID uint) map[string]int {
 	return foils
 }
 
-// A roll is won or lost; the sacrifices go either way, the rolled card turns
-// foil or is destroyed. Rolled at the 50% cap until both outcomes were seen.
+// The sacrifices are spent either way, the rolled card turns foil or is
+// destroyed. Rolled at the 50% cap until both outcomes were seen.
 func TestFoilRouletteWinsOrDestroys(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil1", "foo-bar-baz-qux", 0)
@@ -143,25 +142,24 @@ func TestFoilRouletteLimitsSacrifices(t *testing.T) {
 	createAccount(t, router, "foil5", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "foil5", "foo-bar-baz-qux")
 
-	rec := foilRoll(t, router, cookie, strconv.Itoa(cardPythagorean), copies(cardTungsten, "", 101)...)
+	rec := foilRoll(t, router, cookie, strconv.Itoa(cardPythagorean), copies(cardRosetta, "", 101)...)
 
 	require.Equal(t, "/inventory?tab=foil&error=count", rec.Header().Get("Location"))
 	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=foil&error=count"), "A roll can sacrifice at most 100 cards")
 }
 
-// Copies up in pending trades leave with them, a roll cannot spend them
 func TestFoilRouletteKeepsCopiesUpInTrades(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil6", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "foil7", "foo-bar-baz-qux", 0)
 	giveCards(t, "foil6", cardPythagorean, 1)
 	giveCards(t, "foil6", cardMcMurdo, 2)
-	giveCards(t, "foil7", cardTungsten, 1)
+	giveCards(t, "foil7", cardRosetta, 1)
 	cookie := login(t, router, "foil6", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie, "/trades", tradeBody(t, "foil7",
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The tab only offers the free copy
@@ -187,7 +185,7 @@ func TestFoilRouletteAnonymousIsSentToLogin(t *testing.T) {
 func TestFoilRouletteTab(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil8", "foo-bar-baz-qux", 0)
-	giveCards(t, "foil8", cardTungsten, 1)
+	giveCards(t, "foil8", cardRosetta, 1)
 	giveCards(t, "foil8", cardFordT, 2)
 	giveCardAt(t, "foil8", cardPythagorean, "foil2", time.Now())
 	cookie := login(t, router, "foil8", "foo-bar-baz-qux")
@@ -200,7 +198,7 @@ func TestFoilRouletteTab(t *testing.T) {
 	require.Less(t, strings.Index(body, "inventory-tab-tradeup"), strings.Index(body, "inventory-tab-foil"))
 
 	// Every rarity can be rolled or sacrificed, foils included, in collection order
-	require.Equal(t, []string{"Pythagorean tiling", "Ford Model T", "Tungsten"}, cardTitles(body))
+	require.Equal(t, []string{"Pythagorean tiling", "Ford Model T", "Rosetta Stone"}, cardTitles(body))
 	require.Contains(t, body, `data-foil-id="1001" data-foil-foil="foil2"`)
 	require.Contains(t, body, `data-foil-count="1" data-foil-rarity="common"`)
 	require.Contains(t, body, `data-foil-id="1004" data-foil-foil=""`)
@@ -247,4 +245,37 @@ func TestFoilRouletteTabIsNotOfferedOnOtherInventories(t *testing.T) {
 	require.NotContains(t, body, "inventory-tab-foil")
 	require.NotContains(t, body, `id="foil-roulette"`)
 	require.Contains(t, body, `class="inventory-tab-boosters" href="/inventory?u=foil10" aria-current="page"`)
+}
+
+func TestForgedResultLinksShowNothing(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "forged1", "foo-bar-baz-qux", 0)
+	giveCards(t, "forged1", cardPythagorean, 1)
+	cookie := login(t, router, "forged1", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=foil&result=1004&foil=foil3")
+	require.NotContains(t, body, `id="tradeup-result"`)
+	body = getInventory(t, router, cookie, "/inventory?tab=foil&result=1004&lost=1")
+	require.NotContains(t, body, `data-outcome="lost"`)
+	body = getInventory(t, router, cookie, "/inventory?tab=tradeup&result=1003")
+	require.NotContains(t, body, `id="tradeup-result"`)
+}
+
+func TestConcurrentFoilRollsSettleOnce(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "racefoil1", "foo-bar-baz-qux", 0)
+	giveCards(t, "racefoil1", cardFordT, 1)
+	cookie := login(t, router, "racefoil1", "foo-bar-baz-qux")
+
+	recs := raceForm(router, cookie, "/foil", url.Values{"target": {strconv.Itoa(cardFordT)}}, concurrentRequests)
+	settled := 0
+	for _, rec := range recs {
+		if strings.Contains(rec.Header().Get("Location"), "result=") {
+			settled++
+		}
+	}
+	require.Equal(t, 1, settled)
+	// Won, the copy is now foil; lost, it is gone: never both, never two
+	require.Zero(t, ownedCardCount(t, "racefoil1", cardFordT, ""))
+	require.LessOrEqual(t, len(ownedCards(t, "racefoil1")), 1)
 }

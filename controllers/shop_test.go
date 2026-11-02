@@ -57,7 +57,6 @@ func shopBalance(t *testing.T, username string) uint {
 	return user.Coins
 }
 
-// shopBoosters returns the boosters owned by a user, as the inventory sees them.
 func shopBoosters(t *testing.T, username string) []models.Booster {
 	t.Helper()
 
@@ -76,8 +75,7 @@ func shopBoosters(t *testing.T, username string) []models.Booster {
 	return boosters
 }
 
-// shopBody strips the bidi isolate characters Fluent wraps around interpolated
-// values (U+2068/U+2069), so assertions can match plain text.
+// shopBody strips the bidi isolates Fluent wraps around interpolated values (U+2068/U+2069)
 func shopBody(rec *httptest.ResponseRecorder) string {
 	return strings.Map(func(r rune) rune {
 		if r == 0x2068 || r == 0x2069 {
@@ -230,7 +228,6 @@ func TestShopTopupCreditsCoins(t *testing.T) {
 	require.Contains(t, body, `id="shop-topup-popup"`)
 	require.Contains(t, body, "Buy more coins")
 	require.Contains(t, body, "€4.49")
-	// The biggest packs
 	require.Contains(t, body, "5,000 coins")
 	require.Contains(t, body, "€29.99")
 	require.Contains(t, body, "10,000 coins")

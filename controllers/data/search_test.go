@@ -102,7 +102,6 @@ func TestSearchSetConcurrentBuild(t *testing.T) {
 	}
 	wg.Wait()
 
-	// Every caller gets the same, single search set
 	for _, ss := range sets {
 		require.Same(t, sets[0], ss)
 	}

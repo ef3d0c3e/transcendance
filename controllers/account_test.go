@@ -69,7 +69,6 @@ func login(t *testing.T, router *gin.Engine, username string, password string) *
 
 	require.Equal(t, http.StatusOK, loginRec.Code)
 
-	// Get the session cookie set by /login
 	cookies := loginRec.Result().Cookies()
 	require.NotEmpty(t, cookies)
 
@@ -88,10 +87,8 @@ func TestAccountDeleteSelf1(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foo1", "123456789", 0)
 
-	// Login
 	cookie := login(t, router, "foo1", "123456789")
 
-	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
 		http.MethodPost,
 		fmt.Sprintf("/profiles/%d/delete", userID(t, "foo1")),
@@ -113,7 +110,6 @@ func TestAccountDeleteSelf1(t *testing.T) {
 	require.ErrorIs(t, err, gorm.ErrRecordNotFound)
 }
 
-// Deleting an account erases the user and everything that belongs to them
 func TestAccountDeleteErasesData(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "erase1", "123456789", 0)
@@ -151,10 +147,8 @@ func TestAccountDeleteSelf2(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foo2", "123456789", 0)
 
-	// Login
 	cookie := login(t, router, "foo2", "123456789")
 
-	// Delete the account using the authenticated session
 	deleteReq := httptest.NewRequest(
 		http.MethodPost,
 		fmt.Sprintf("/profiles/%d/delete", userID(t, "foo2")),
@@ -184,10 +178,8 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		createAccount(t, router, "foo3", "123456789", 0)
 		createAccount(t, router, "other1", "123456789", 0)
 
-		// Login
 		cookie := login(t, router, "foo3", "123456789")
 
-		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("/profiles/%d/delete", userID(t, "other1")),
@@ -208,10 +200,8 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		createAccount(t, router, "foo4", "123456789", 1)
 		createAccount(t, router, "other2", "123456789", 0)
 
-		// Login
 		cookie := login(t, router, "foo4", "123456789")
 
-		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("/profiles/%d/delete", userID(t, "other2")),
@@ -239,10 +229,8 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		createAccount(t, router, "foo5", "123456789", 1)
 		createAccount(t, router, "other3", "123456789", 1)
 
-		// Login
 		cookie := login(t, router, "foo5", "123456789")
 
-		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("/profiles/%d/delete", userID(t, "other3")),
@@ -257,16 +245,14 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		require.Equal(t, http.StatusForbidden, deleteRec.Code)
 	}
 
-	// Amin -> Mod: Ok
+	// Admin -> Mod: Ok
 	{
 		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo6", "123456789", 2)
 		createAccount(t, router, "other4", "123456789", 1)
 
-		// Login
 		cookie := login(t, router, "foo6", "123456789")
 
-		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("/profiles/%d/delete", userID(t, "other4")),
@@ -288,16 +274,14 @@ func TestAccountDeleteOtherPermission(t *testing.T) {
 		require.ErrorIs(t, err, gorm.ErrRecordNotFound)
 	}
 
-	// Amin -> Admin: Ok
+	// Admin -> Admin: Ok
 	{
 		router := tests.Run(tests.Data, tests.DB)
 		createAccount(t, router, "foo7", "123456789", 2)
 		createAccount(t, router, "other5", "123456789", 2)
 
-		// Login
 		cookie := login(t, router, "foo7", "123456789")
 
-		// Delete the account using the authenticated session
 		deleteReq := httptest.NewRequest(
 			http.MethodPost,
 			fmt.Sprintf("/profiles/%d/delete", userID(t, "other5")),

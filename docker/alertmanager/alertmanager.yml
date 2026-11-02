@@ -1,6 +1,5 @@
-# Admins see the alerts in Grafana (Alerts dashboard) and here, where they can be silenced. They are also sent to
-# the webhook and Discord channel of ALERT_WEBHOOK_URL and ALERT_DISCORD_WEBHOOK_URL when set, see start.sh, which
-# adds them to the receiver below: it must stay the last entry of this file.
+# Alerts show in Grafana and here; start.sh appends the optional webhook and Discord receivers to the receiver
+# below, which must stay the last entry of this file
 route:
   receiver: admins
   group_by: [alertname]

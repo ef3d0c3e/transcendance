@@ -23,7 +23,6 @@ const (
 	chatPreviewLength = 80
 )
 
-// Private message as sent to clients
 type chatPrivateMessage struct {
 	ID        uint   `json:"id"`
 	From      string `json:"from"`
@@ -32,14 +31,13 @@ type chatPrivateMessage struct {
 	CreatedAt string `json:"createdAt"`
 }
 
-// Conversation with another user as sent to clients, with the latest message and the number of unread ones
 type chatConversation struct {
 	Username string             `json:"username"`
 	Last     chatPrivateMessage `json:"last"`
 	Unread   int                `json:"unread"`
 }
 
-// Private messages with their sender and recipient usernames, to be filtered and ordered by the caller
+// privateQuery is filtered and ordered by the caller
 func (sc *ShoutboxController) privateQuery(ctx context.Context) *gorm.DB {
 	return sc.DB.WithContext(ctx).
 		Table("private_messages AS m").
@@ -72,7 +70,6 @@ func scanPrivate(query *gorm.DB) ([]chatPrivateMessage, error) {
 	return messages, nil
 }
 
-// The user's latest conversations, latest first
 func (sc *ShoutboxController) conversations(ctx context.Context, userID uint) ([]chatConversation, error) {
 	var summaries []struct {
 		PartnerID uint
@@ -132,7 +129,7 @@ func (sc *ShoutboxController) conversations(ctx context.Context, userID uint) ([
 	return conversations, nil
 }
 
-// Find the other user of a conversation, queues the error for the client if there is none
+// findPartner queues the error for the client if there is none
 func (sc *ShoutboxController) findPartner(ctx context.Context, client *shoutboxClient, username string) (*models.User, bool) {
 	var user models.User
 	err := sc.DB.WithContext(ctx).Where("username = ?", username).First(&user).Error
@@ -151,7 +148,7 @@ func (sc *ShoutboxController) findPartner(ctx context.Context, client *shoutboxC
 	return &user, true
 }
 
-// Save a private message and send it to both users' tabs. Users who ignore the sender don't receive it.
+// sendPrivate saves the message and sends it to both users' tabs, unless the recipient ignores the sender
 func (sc *ShoutboxController) sendPrivate(ctx context.Context, client *shoutboxClient, username string, to string, body string) {
 	recipient, ok := sc.findPartner(ctx, client, to)
 	if !ok {
@@ -217,8 +214,8 @@ func (sc *ShoutboxController) sendPrivate(ctx context.Context, client *shoutboxC
 	queueShoutboxEvent(client, shoutboxEvent{Type: "ack"})
 }
 
-// Notify a user of unread private messages from a sender. There is one unread notification per sender, updated
-// with the number of unread messages and the latest one, and moved back to the top.
+// notifyPrivate keeps one unread notification per sender, updated with the unread count and the latest message,
+// and moved back to the top
 func (sc *ShoutboxController) notifyPrivate(ctx context.Context, recipientID uint, senderID uint, username string, body string) error {
 	db := sc.DB.WithContext(ctx)
 
@@ -268,8 +265,8 @@ func (sc *ShoutboxController) notifyPrivate(ctx context.Context, recipientID uin
 	}).Error
 }
 
-// Show the conversation with a user on a client, or none when empty. It is marked read on every tab, with its
-// notification, and sent to the client.
+// view shows the conversation with a user on a client, or none when empty, marking it and its notification read
+// on every tab
 func (sc *ShoutboxController) view(ctx context.Context, client *shoutboxClient, with string) {
 	if with == "" {
 		sc.hub.setViewing(client, 0)
@@ -312,7 +309,7 @@ func (sc *ShoutboxController) view(ctx context.Context, client *shoutboxClient, 
 	queueShoutboxEvent(client, shoutboxEvent{Type: "conversation", With: partner.Username, Privates: privates})
 }
 
-// Mark the messages from a partner and their notification read, returns whether there were unread ones
+// markRead also reads the notification, and returns whether there were unread messages
 func (sc *ShoutboxController) markRead(ctx context.Context, userID uint, partnerID uint) (bool, error) {
 	now := time.Now()
 	db := sc.DB.WithContext(ctx)

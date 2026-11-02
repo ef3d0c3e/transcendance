@@ -23,7 +23,6 @@ const (
 	notificationFilterUnread = "unread"
 )
 
-// Translate a notification's title and description, using its data as arguments
 func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (string, string) {
 	args := make([]any, 0, len(notif.Data)*2)
 	for key, value := range notif.Data {
@@ -40,7 +39,7 @@ func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (str
 	return title, desc
 }
 
-// Get the user's notification by the `ID` param, writes the error response if any
+// find writes the error response itself when it fails
 func (nc *Controller) find(c *gin.Context, userID uint) (*models.Notification, bool) {
 	notif, err := gorm.G[models.Notification](nc.DB).
 		Where("id = ? AND user_id = ?", c.Param("ID"), userID).
@@ -56,7 +55,7 @@ func (nc *Controller) find(c *gin.Context, userID uint) (*models.Notification, b
 	return &notif, true
 }
 
-// /notifications GET: notifications page
+// /notifications GET
 func (nc *Controller) NotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -206,9 +205,7 @@ func localPath(target string) bool {
 	return err == nil && u.Scheme == "" && u.Host == ""
 }
 
-// /api/notifications GET: a page of the user's notifications, newest first
-//
-// Query: `page` (from 1), `limit` (page size), `filter=unread` to only list unread ones
+// /api/notifications GET: query `page` (from 1), `limit` (page size), `filter=unread` for unread ones only
 func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {
@@ -238,7 +235,6 @@ func (nc *Controller) ApiNotificationsGet(c *gin.Context) {
 	})
 }
 
-// Set whether a notification is read
 func (nc *Controller) setRead(c *gin.Context, read bool) {
 	user := GetAuthenticatedUser(c)
 	if user == nil {

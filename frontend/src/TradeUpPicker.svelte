@@ -1,21 +1,19 @@
 <!--
-    Builds a tradeup contract: clicking a card in the inventory adds a copy of
-    it to the bar, clicking a filled slot takes that copy back out. The
-    contract is submitted as one `card` field per copy.
+    Builds a tradeup contract: clicking an inventory card adds a copy of it
+    to the bar, clicking a filled slot takes it back out. The contract is
+    submitted as one `card` field per copy.
 
     Cards must provide `data-tradeup-id`, `data-tradeup-foil`,
     `data-tradeup-count` (copies owned), `data-tradeup-rarity`,
-    `data-tradeup-title` and `data-tradeup-collection-id`. A contract is all
-    one rarity, so cards of another rarity can't join once one is picked.
+    `data-tradeup-title`, `data-tradeup-collection`,
+    `data-tradeup-collection-id` and `data-tradeup-order` (the
+    collection-and-rarity order `#tradeup-sort` brings back). A contract is
+    all one rarity: cards of another one can't join once one is picked.
     Stacks with copies in the contract wear a `.tradeup-taken` pill.
 
-    The optional `#tradeup-collection-filter` narrows the grid down to one
-    collection, and `#tradeup-search` to the cards whose name or collection
-    (`data-tradeup-collection`) holds its text, without navigating, keeping
-    the contract: the picks live here, not in the page. Picks the filters hide
-    stay in it. `#tradeup-no-match` shows when they hide every card. The grid
-    is paged in the page too, in the `.tradeup-pager` elements, so picks
-    survive turning pages.
+    The optional filters, sort and pages (card-filter.js) work without
+    navigating, so the picks survive them; picks the filters hide stay in
+    the contract.
 -->
 
 <script>
@@ -29,7 +27,10 @@
 	const TILE_SELECTOR = `${CARD_SELECTOR} .card-container`;
 	const FILTER_SELECTOR = "#tradeup-collection-filter";
 	const SEARCH_SELECTOR = "#tradeup-search";
+	const RARITY_SELECTOR = "#tradeup-rarity-filter";
+	const SORT_SELECTOR = "#tradeup-sort";
 	const NO_MATCH_SELECTOR = "#tradeup-no-match";
+	const STATUS_SELECTOR = "#tradeup-filter-status";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
 
@@ -50,7 +51,6 @@
 	const rarity = $derived(selection[0]?.rarity ?? "");
 	const filled = $derived(selection.length);
 	const ready = $derived(filled === cost);
-	// One slot per card of the contract
 	const slots = $derived(Array.from({ length: cost }, (_, index) => index));
 
 	function cardOf(tile) {
@@ -160,7 +160,6 @@
 			add(e.target.closest(CARD_SELECTOR));
 		}
 
-		// Cards add to the contract, make them reachable and announced as buttons
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
 			const card = tile.closest(CARD_SELECTOR);
 			makeCardButton(tile, {
@@ -183,10 +182,14 @@
 				rarity: tile.dataset.tradeupRarity ?? "",
 				number: Number(tile.dataset.tradeupId ?? 0),
 				count: Number(tile.dataset.tradeupCount ?? 0),
+				order: Number(tile.dataset.tradeupOrder ?? 0),
 			}),
 			search: SEARCH_SELECTOR,
 			collection: FILTER_SELECTOR,
+			rarity: RARITY_SELECTOR,
+			sort: SORT_SELECTOR,
 			noMatch: NO_MATCH_SELECTOR,
+			status: STATUS_SELECTOR,
 			pagers: ".tradeup-pager",
 		});
 
@@ -247,7 +250,6 @@
 		border-radius: 1rem;
 	}
 
-	/* How full the contract is, on a row of its own above the buttons */
 	.tradeup-progress {
 		grid-column: 1 / -1;
 

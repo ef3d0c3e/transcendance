@@ -21,7 +21,7 @@ const (
 	cardFlyingScotsman = 1002
 	cardMcMurdo        = 1003
 	cardFordT          = 1004
-	cardRosetta       = 1005
+	cardRosetta        = 1005
 )
 
 // Global ID of Tungsten, a card of the elements collection
@@ -40,7 +40,6 @@ func giveCards(t *testing.T, username string, cardID uint, count int) {
 	}
 }
 
-// Give one copy of a card with a foil and acquisition date
 func giveCardAt(t *testing.T, username string, cardID uint, foil string, acquired time.Time) {
 	require.NoError(t, tests.DB.Create(&models.Card{
 		CardID:   cardID,
@@ -50,7 +49,6 @@ func giveCardAt(t *testing.T, username string, cardID uint, foil string, acquire
 	}).Error)
 }
 
-// Titles of the displayed cards, in order
 func cardTitles(body string) []string {
 	var titles []string
 	for _, match := range cardTitleRe.FindAllStringSubmatch(body, -1) {
@@ -203,7 +201,6 @@ func TestInventorySearchOtherUser(t *testing.T) {
 	require.Zero(t, countCard(body, "Ford Model T"))
 	require.Zero(t, countCard(body, "Rosetta Stone"))
 	require.Contains(t, body, `<p class="inventory-count">1 card found</p>`)
-	// The search form keeps the viewed user
 	require.Contains(t, body, `<input type="hidden" name="u" value="invsearch7">`)
 }
 
@@ -235,7 +232,6 @@ func TestInventoryCardAcquiredDate(t *testing.T) {
 	require.NotContains(t, search, "data-copies")
 }
 
-// Collection ID of the dev collection
 const collectionDev = 1
 
 func giveBoosters(t *testing.T, username string, collectionID uint, size uint, count int) {
@@ -307,7 +303,6 @@ func TestInventoryBoostersOtherUser(t *testing.T) {
 	require.NotContains(t, body, "shop-booster")
 	require.NotContains(t, body, `id="shop-buy-popup"`)
 	require.NotContains(t, body, "data-booster-open")
-	// Tabs keep the viewed user
 	require.Contains(t, body, `href="/inventory?tab=cards&amp;u=invbooster4"`)
 	require.Contains(t, body, `href="/inventory?u=invbooster4"`)
 }

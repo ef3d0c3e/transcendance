@@ -25,7 +25,6 @@ func setLastSeen(t *testing.T, username string, seen any) {
 		UpdateColumn("last_seen_at", seen).Error)
 }
 
-// Status line of the first user status, with collapsed whitespace
 func onlineStatus(body string) string {
 	match := regexp.MustCompile(`(?s)<p class="user-status[^>]*>(.*?)</p>`).FindStringSubmatch(body)
 	if match == nil {

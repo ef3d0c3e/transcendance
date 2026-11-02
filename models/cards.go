@@ -22,15 +22,13 @@ type Card struct {
 
 	CardID   uint      `gorm:"not null;index:idx_cards_stack,priority:2"`
 	Acquired time.Time `gorm:"not null"`
-	// Foil pattern the card was obtained with, empty when not foil
-	Foil string `gorm:"type:varchar(32) COLLATE utf8mb4_bin;not null;default:'';index:idx_cards_stack,priority:3"`
+	Foil     string    `gorm:"type:varchar(32) COLLATE utf8mb4_bin;not null;default:'';index:idx_cards_stack,priority:3"`
 
 	// The stack index serves the queries of an inventory, by card and foil
 	OwnerID uint `gorm:"not null;index;index:idx_cards_stack,priority:1"`
 	Owner   User `gorm:"constraint:OnDelete:CASCADE"`
 }
 
-// Unopened booster of a collection
 type Booster struct {
 	ID uint `gorm:"primaryKey"`
 
@@ -48,7 +46,6 @@ type BoosterPile struct {
 	OwnerID uint `gorm:"primaryKey"`
 	Owner   User `gorm:"constraint:OnDelete:CASCADE"`
 
-	// Boosters currently in the pile
 	Count uint `gorm:"not null;default:0"`
 	// Time at which the next booster joins the pile, nil while the pile is full
 	NextAt *time.Time

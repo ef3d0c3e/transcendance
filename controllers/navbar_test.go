@@ -42,7 +42,6 @@ func TestNavbarAuthenticated(t *testing.T) {
 	require.NotContains(t, body, `id="register-popup"`)
 }
 
-// The header shows the coin balance of the account on every page
 func TestNavbarShowsBalance(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "navcoin", "foo-bar-baz-qux", 0)

@@ -20,7 +20,6 @@ import (
 
 const adminUsersPageSize = 25
 
-// Role filters of the account list, by rank
 var adminRoles = map[string]uint{
 	"user":      models.RankUser,
 	"moderator": models.RankModerator,
@@ -40,7 +39,6 @@ func rankName(rank uint) string {
 	return "user"
 }
 
-// An account of the list
 type adminUserRow struct {
 	ID         uint
 	Username   string
@@ -200,7 +198,6 @@ func (ac *Controller) adminTarget(c *gin.Context, admin *AuthenticatedUser) (*mo
 	return &target, true
 }
 
-// Back to the list the action came from, with its outcome
 func adminBack(c *gin.Context, outcome string) {
 	target := c.PostForm("redirect")
 	if !localPath(target) || !strings.HasPrefix(target, "/admin/users") {
