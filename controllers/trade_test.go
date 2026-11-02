@@ -178,8 +178,18 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	body := getInventory(t, router, cookie4, "/trades/new?counter="+strconv.FormatUint(uint64(original.ID), 10))
 	require.Contains(t, body, "Trade with trade3")
 	require.Contains(t, body, `data-counter-id="`+strconv.FormatUint(uint64(original.ID), 10)+`"`)
-	require.Contains(t, body, "&#34;card_id&#34;:1005")
-	require.Contains(t, body, "&#34;card_id&#34;:1004")
+	// The stacks API mirrors the cards: what trade4 was asked for is what they give
+	rec = get(t, router, cookie4, "/api/trade/stacks?u=trade3&counter="+strconv.FormatUint(uint64(original.ID), 10))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var prefill struct {
+		MinePicked   []stackJSON `json:"mine_picked"`
+		TheirsPicked []stackJSON `json:"theirs_picked"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &prefill))
+	require.Len(t, prefill.MinePicked, 1)
+	require.Equal(t, uint(cardRosetta), prefill.MinePicked[0].CardID)
+	require.Len(t, prefill.TheirsPicked, 1)
+	require.Equal(t, uint(cardFordT), prefill.TheirsPicked[0].CardID)
 
 	// trade4 counters with one Rosetta Stone and 100 coins for the Ford Model T
 	rec = postJSON(t, router, cookie4, "/trades", tradeBody(t, "trade3",
@@ -515,6 +525,8 @@ type stackJSON struct {
 	Rarity     string `json:"rarity"`
 	Image      string `json:"image"`
 	HTML       string `json:"html"`
+	// Copies a counter starts with
+	Picked uint `json:"picked"`
 }
 
 // GET a page as the authenticated user, without following redirects
@@ -793,6 +805,21 @@ func TestTradeCounterMirrorsCoins(t *testing.T) {
 	require.Contains(t, body, `data-prefill-give-coins="50"`)
 	require.Contains(t, body, `data-prefill-want-coins="100"`)
 
+	// The stacks API brings the mirrored cards along, whatever page they are on
+	rec = get(t, router, cookie30, "/api/trade/stacks?u=trade29&counter="+strconv.FormatUint(uint64(original.ID), 10))
+	require.Equal(t, http.StatusOK, rec.Code)
+	var prefill struct {
+		MinePicked   []stackJSON `json:"mine_picked"`
+		TheirsPicked []stackJSON `json:"theirs_picked"`
+	}
+	require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &prefill))
+	require.Len(t, prefill.MinePicked, 1)
+	require.Equal(t, uint(cardRosetta), prefill.MinePicked[0].CardID)
+	require.Equal(t, uint(1), prefill.MinePicked[0].Picked)
+	require.Len(t, prefill.TheirsPicked, 1)
+	require.Equal(t, uint(cardFordT), prefill.TheirsPicked[0].CardID)
+	require.Equal(t, uint(1), prefill.TheirsPicked[0].Picked)
+
 	// trade30 counters with the very same deal, direction flipped
 	rec = postJSON(t, router, cookie30, "/trades", tradeBodyWantCoins(t, "trade29",
 		[]models.TradeItem{item(cardRosetta, "", 1)}, 50,
@@ -1053,4 +1080,77 @@ func TestTradeWantsFreeCoins(t *testing.T) {
 
 	// The navbar shows the free balance too
 	require.Contains(t, getInventory(t, router, cookie43, "/inventory?tab=cards"), "Balance: 200")
+}
+
+// The stacks of the trade menu come one page and one side at a time, filtered
+// by card or collection title
+func TestTradeStacksPagesAndSearch(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "trade50", "foo-bar-baz-qux", 0)
+	createAccount(t, router, "trade51", "foo-bar-baz-qux", 0)
+	// The first 30 elements of the periodic table
+	const cardHydrogen = 8001
+	for id := uint(cardHydrogen); id < cardHydrogen+30; id++ {
+		giveCards(t, "trade50", id, 1)
+	}
+	giveCards(t, "trade51", cardMcMurdo, 1)
+
+	cookie50 := login(t, router, "trade50", "foo-bar-baz-qux")
+
+	type stacksPage struct {
+		PageSize    int         `json:"page_size"`
+		Mine        []stackJSON `json:"mine"`
+		MineTotal   *int        `json:"mine_total"`
+		Theirs      []stackJSON `json:"theirs"`
+		TheirsTotal *int        `json:"theirs_total"`
+	}
+	fetch := func(query string) stacksPage {
+		rec := get(t, router, cookie50, "/api/trade/stacks?u=trade51"+query)
+		require.Equal(t, http.StatusOK, rec.Code)
+		var page stacksPage
+		require.NoError(t, json.Unmarshal(rec.Body.Bytes(), &page))
+		return page
+	}
+
+	// The first page of both sides, with how many stacks each has in all
+	page := fetch("")
+	require.Equal(t, 24, page.PageSize)
+	require.Len(t, page.Mine, 24)
+	require.Equal(t, 30, *page.MineTotal)
+	require.Equal(t, uint(cardHydrogen), page.Mine[0].CardID)
+	require.Len(t, page.Theirs, 1)
+	require.Equal(t, 1, *page.TheirsTotal)
+
+	// The next page of one side only, the other side is not sent again
+	page = fetch("&side=mine&page=2")
+	require.Len(t, page.Mine, 6)
+	require.Equal(t, uint(cardHydrogen+24), page.Mine[0].CardID)
+	require.Contains(t, page.Mine[0].HTML, `class="card-container"`)
+	require.Nil(t, page.Theirs)
+	require.Nil(t, page.TheirsTotal)
+
+	// Past the end, nothing is left
+	page = fetch("&side=mine&page=3")
+	require.Empty(t, page.Mine)
+	require.Equal(t, 30, *page.MineTotal)
+
+	// The search ignores case and matches the collection title too
+	page = fetch("&side=mine&q=HYDRO")
+	require.Len(t, page.Mine, 1)
+	require.Equal(t, "Hydrogen", page.Mine[0].Title)
+	page = fetch("&side=mine&q=periodic")
+	require.Equal(t, 30, *page.MineTotal)
+	page = fetch("&side=theirs&q=mcmurdo")
+	require.Len(t, page.Theirs, 1)
+	page = fetch("&side=theirs&q=hydrogen")
+	require.Empty(t, page.Theirs)
+	require.Equal(t, 0, *page.TheirsTotal)
+
+	// Accents are ignored as well
+	page = fetch("&side=theirs&q=" + url.QueryEscape("mcmurdó"))
+	require.Len(t, page.Theirs, 1)
+
+	// Unknown sides and pages are refused
+	require.Equal(t, http.StatusBadRequest, get(t, router, cookie50, "/api/trade/stacks?u=trade51&side=both").Code)
+	require.Equal(t, http.StatusBadRequest, get(t, router, cookie50, "/api/trade/stacks?u=trade51&page=0").Code)
 }

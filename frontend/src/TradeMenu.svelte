@@ -3,9 +3,12 @@
     gives on one side, the cards they want from the partner on the other
 
     The mount point must provide `data-target`, `data-stacks-url` and
-    `data-submit-url`, optionally `data-counter-id`, `data-prefill-give` and
-    `data-prefill-want` (JSON lists of card stacks), `data-prefill-give-coins`
+    `data-submit-url`, optionally `data-counter-id`, `data-prefill-give-coins`
     and `data-prefill-want-coins`, and the `data-label-*` strings
+
+    Each side's inventory comes one page at a time from the stacks API, the
+    next page is asked for as its picker is scrolled down. The filter runs on
+    the server too, so it covers the whole inventory and not the pages loaded
 -->
 
 <script>
@@ -40,12 +43,50 @@
 		legendary: target.dataset.labelRarityLegendary ?? "",
 	});
 
-	let mine = $state([]);
-	let theirs = $state([]);
+	// Delay between the last key typed in a filter and the search it runs
+	const searchDelay = 250;
+
+	// The inventory of one side, as far as its pages are loaded
+	class Side {
+		// Stacks of the pages loaded, not made deeply reactive: they are
+		// only replaced or appended to
+		stacks = $state.raw([]);
+		// Stacks matching the filter, in all the pages
+		total = $state(0);
+		// Stacks of the whole inventory, without a filter
+		owned = $state(0);
+		page = $state(0);
+		loading = $state(false);
+		query = $state("");
+		// Answers to an older request are dropped
+		request = 0;
+		timer = undefined;
+
+		constructor(api) {
+			// Name of the side in the stacks API
+			this.api = api;
+		}
+
+		get more() {
+			return this.stacks.length < this.total;
+		}
+
+		// Take in a page of the stacks API, the first one replacing the list
+		receive(body, page) {
+			const stacks = body[this.api] ?? [];
+			this.stacks = page === 1 ? stacks : [...this.stacks, ...stacks];
+			this.total = Number(body[`${this.api}_total`]) || 0;
+			this.page = page;
+		}
+	}
+
+	const sides = { give: new Side("mine"), want: new Side("theirs") };
+
 	// Coins free to be put up or asked for, on each side
 	let balance = $state(0);
 	let theirBalance = $state(0);
-	// Copies put up per stack, by `card_id:foil`
+	// Stacks put up and their copies, by `card_id:foil`. The stack is kept
+	// with its count: it stays picked when the filter hides it
 	const give = $state({});
 	const want = $state({});
 	let coins = $state(0);
@@ -53,9 +94,6 @@
 	let loading = $state(true);
 	let sending = $state(false);
 	let message = $state("");
-	// What each side's inventory is filtered down to
-	let giveQuery = $state("");
-	let wantQuery = $state("");
 
 	// Width of a picker column and of the fixed 30ch card box, in pixels. The
 	// cards are scaled to the column so a tile never overflows it, whatever
@@ -71,26 +109,71 @@
 
 	const key = (stack) => `${stack.card_id}:${stack.foil}`;
 
-	// Stacks put up on each side, in inventory order
-	const givePicked = $derived(mine.filter((stack) => give[key(stack)]));
-	const wantPicked = $derived(theirs.filter((stack) => want[key(stack)]));
+	// Stacks put up on each side, in the order they were picked
+	const givePicked = $derived(Object.values(give));
+	const wantPicked = $derived(Object.values(want));
 
-	// Case and accents are ignored when filtering
-	function fold(text) {
-		return text.normalize("NFD").replaceAll(/\p{Diacritic}/gu, "").toLowerCase();
-	}
-
-	// Stacks whose card or collection name holds the query
-	function search(stacks, query) {
-		const folded = fold(query.trim());
-		if (folded === "") {
-			return stacks;
+	// Ask the stacks API for the next page of a side, or for the first one
+	// again when the filter changed
+	async function load(name, reset) {
+		const side = sides[name];
+		if (!reset && (side.loading || !side.more)) {
+			return;
 		}
-		return stacks.filter((stack) => fold(`${stack.title} ${stack.collection ?? ""}`).includes(folded));
+		const request = ++side.request;
+		const page = reset ? 1 : side.page + 1;
+		side.loading = true;
+		try {
+			const url = new URL(stacksUrl, location.href);
+			url.searchParams.set("side", side.api);
+			url.searchParams.set("page", String(page));
+			const query = side.query.trim();
+			if (query !== "") {
+				url.searchParams.set("q", query);
+			}
+			const response = await apiFetch(url);
+			if (!response.ok) {
+				throw new Error();
+			}
+			const body = await response.json();
+			if (request === side.request) {
+				side.receive(body, page);
+			}
+		} catch {
+			if (request === side.request) {
+				message = labelError;
+			}
+		} finally {
+			if (request === side.request) {
+				side.loading = false;
+			}
+		}
 	}
 
-	const mineShown = $derived(search(mine, giveQuery));
-	const theirsShown = $derived(search(theirs, wantQuery));
+	// Filter a side once its filter is left alone for a moment
+	function searchSoon(name) {
+		const side = sides[name];
+		clearTimeout(side.timer);
+		side.timer = setTimeout(() => load(name, true), searchDelay);
+	}
+
+	// Load the next page of a side as the end of its picker comes into view.
+	// Set on a marker made again for every page: a new observer reports
+	// right away, so pages keep coming while the picker isn't filled
+	function nextPageOnView(name) {
+		return (node) => {
+			const observer = new IntersectionObserver(
+				(entries) => {
+					if (entries.some((entry) => entry.isIntersecting)) {
+						load(name, false);
+					}
+				},
+				{ root: node.closest(".trade-menu-picker"), rootMargin: "0px 0px 50% 0px" },
+			);
+			observer.observe(node);
+			return () => observer.disconnect();
+		};
+	}
 
 	// The card, its rarity and foil: the thumbnails only show the rarity as
 	// a border color
@@ -124,7 +207,7 @@
 		if (sel[key(stack)]) {
 			delete sel[key(stack)];
 		} else if (stack.count > 0) {
-			sel[key(stack)] = 1;
+			sel[key(stack)] = { stack, count: 1 };
 		}
 	}
 
@@ -152,12 +235,12 @@
 
 	function step(side, stack, delta) {
 		const sel = side === "give" ? give : want;
-		const next = (sel[key(stack)] ?? 0) + delta;
+		const next = (sel[key(stack)]?.count ?? 0) + delta;
 		if (next <= 0) {
 			delete sel[key(stack)];
 			return;
 		}
-		sel[key(stack)] = Math.min(next, stack.count);
+		sel[key(stack)].count = Math.min(next, stack.count);
 	}
 
 	// The free balance is the most that can be put up or asked for: cap the
@@ -185,31 +268,22 @@
 		return Math.min(Math.max(0, Math.floor(Number(encoded) || 0)), limit);
 	}
 
-	// Start a side from the stacks of a counter, capped to the stacks free to
-	// put up on that side
-	function prefill(sel, stacks, encoded) {
-		let prefilled;
-		try {
-			prefilled = JSON.parse(encoded || "[]");
-		} catch {
-			prefilled = [];
-		}
-		for (const item of prefilled) {
-			const stack = stacks.find((s) => s.card_id === item.card_id && s.foil === item.foil);
-			if (stack && stack.count > 0) {
-				sel[key(stack)] = Math.min(item.count, stack.count);
+	// Start a side from the stacks of a counter, already capped by the
+	// server to the copies free to put up
+	function prefill(sel, stacks) {
+		for (const stack of stacks ?? []) {
+			if (stack.count > 0 && stack.picked > 0) {
+				sel[key(stack)] = { stack, count: Math.min(stack.picked, stack.count) };
 			}
 		}
 	}
 
-	function items(sel, stacks) {
-		return stacks
-			.filter((stack) => sel[key(stack)])
-			.map((stack) => ({
-				card_id: stack.card_id,
-				foil: stack.foil,
-				count: sel[key(stack)],
-			}));
+	function items(sel) {
+		return Object.values(sel).map(({ stack, count }) => ({
+			card_id: stack.card_id,
+			foil: stack.foil,
+			count,
+		}));
 	}
 
 	async function send() {
@@ -221,9 +295,9 @@
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					target: targetName,
-					give: items(give, mine),
+					give: items(give),
 					coins: Math.max(0, Math.floor(coins || 0)),
-					want: items(want, theirs),
+					want: items(want),
 					want_coins: Math.max(0, Math.floor(wantCoins || 0)),
 					counter_of: counterId,
 				}),
@@ -243,6 +317,8 @@
 		}
 	}
 
+	// The first page of both sides comes at once, with the balances and what
+	// a counter starts with
 	onMount(async () => {
 		try {
 			const response = await apiFetch(stacksUrl);
@@ -250,12 +326,14 @@
 				throw new Error();
 			}
 			const body = await response.json();
-			mine = body.mine ?? [];
-			theirs = body.theirs ?? [];
+			for (const side of Object.values(sides)) {
+				side.receive(body, 1);
+				side.owned = side.total;
+			}
 			balance = Number(body.coins) || 0;
 			theirBalance = Number(body.their_coins) || 0;
-			prefill(give, mine, target.dataset.prefillGive);
-			prefill(want, theirs, target.dataset.prefillWant);
+			prefill(give, body.mine_picked);
+			prefill(want, body.theirs_picked);
 			coins = prefillCoins(target.dataset.prefillGiveCoins, balance);
 			wantCoins = prefillCoins(target.dataset.prefillWantCoins, theirBalance);
 		} catch {
@@ -263,6 +341,11 @@
 		} finally {
 			loading = false;
 		}
+		return () => {
+			for (const side of Object.values(sides)) {
+				clearTimeout(side.timer);
+			}
+		};
 	});
 </script>
 
@@ -286,26 +369,26 @@
 					</label>
 				</div>
 				<div class="trade-menu-deal">
-					{#each givePicked as stack (key(stack))}
+					{#each givePicked as { stack, count } (key(stack))}
 						<div class="trade-menu-item" style="--tile-color: {rarityColor(stack.rarity)}">
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
 								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("give", stack, -1)}>−</button>
-								<span class="trade-menu-count" aria-live="polite">{give[key(stack)]}</span>
+								<span class="trade-menu-count" aria-live="polite">{count}</span>
 								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("give", stack, 1)}>+</button>
 							</span>
 						</div>
 					{/each}
 				</div>
-				{#if mine.length > 0}
+				{#if sides.give.owned > 0}
 					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
-						bind:value={giveQuery} />
+						bind:value={sides.give.query} oninput={() => searchSoon("give")} />
 				{/if}
 				<div class="trade-menu-picker" bind:contentRect={pickerRect}
 					style="--trade-card-scale: {cardScale}">
-					{#each mineShown as stack (key(stack))}
-						<div class="trade-menu-tile" class:is-picked={give[key(stack)]} class:is-locked={!stack.count}
+					{#each sides.give.stacks as stack (key(stack))}
+						<div class="trade-menu-tile" class:is-picked={Boolean(give[key(stack)])} class:is-locked={!stack.count}
 							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(give[key(stack)])}
 							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "give", stack)}
@@ -316,8 +399,15 @@
 							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
-						<p class="trade-menu-empty">{mine.length > 0 ? labelNoMatch : labelEmpty}</p>
+						{#if !sides.give.loading}
+							<p class="trade-menu-empty">{sides.give.query.trim() ? labelNoMatch : labelEmpty}</p>
+						{/if}
 					{/each}
+					{#if sides.give.more}
+						{#key sides.give.page}
+							<p class="trade-menu-more" {@attach nextPageOnView("give")}>{labelLoading}</p>
+						{/key}
+					{/if}
 				</div>
 			</section>
 
@@ -332,26 +422,26 @@
 					</label>
 				</div>
 				<div class="trade-menu-deal">
-					{#each wantPicked as stack (key(stack))}
+					{#each wantPicked as { stack, count } (key(stack))}
 						<div class="trade-menu-item" style="--tile-color: {rarityColor(stack.rarity)}">
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
 								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("want", stack, -1)}>−</button>
-								<span class="trade-menu-count" aria-live="polite">{want[key(stack)]}</span>
+								<span class="trade-menu-count" aria-live="polite">{count}</span>
 								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("want", stack, 1)}>+</button>
 							</span>
 						</div>
 					{/each}
 				</div>
-				{#if theirs.length > 0}
+				{#if sides.want.owned > 0}
 					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
-						bind:value={wantQuery} />
+						bind:value={sides.want.query} oninput={() => searchSoon("want")} />
 				{/if}
 				<!-- Both columns are as wide: the first one is measured -->
 				<div class="trade-menu-picker" style="--trade-card-scale: {cardScale}">
-					{#each theirsShown as stack (key(stack))}
-						<div class="trade-menu-tile" class:is-picked={want[key(stack)]} class:is-locked={!stack.count}
+					{#each sides.want.stacks as stack (key(stack))}
+						<div class="trade-menu-tile" class:is-picked={Boolean(want[key(stack)])} class:is-locked={!stack.count}
 							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(want[key(stack)])}
 							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
@@ -362,8 +452,15 @@
 							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
-						<p class="trade-menu-empty">{theirs.length > 0 ? labelNoMatch : labelEmpty}</p>
+						{#if !sides.want.loading}
+							<p class="trade-menu-empty">{sides.want.query.trim() ? labelNoMatch : labelEmpty}</p>
+						{/if}
 					{/each}
+					{#if sides.want.more}
+						{#key sides.want.page}
+							<p class="trade-menu-more" {@attach nextPageOnView("want")}>{labelLoading}</p>
+						{/key}
+					{/if}
 				</div>
 			</section>
 		</section>
@@ -619,9 +716,11 @@
 		overflow-x: hidden;
 	}
 
-	/* A pickable stack, shown as its card render */
+	/* A pickable stack, shown as its card render. Its size is set, so the
+	   browser can skip the cards scrolled out of the picker */
 	.trade-menu-tile {
 		position: relative;
+		content-visibility: auto;
 		width: calc(30ch * var(--trade-card-scale));
 		height: calc(30em * var(--trade-card-scale));
 
@@ -698,11 +797,18 @@
 		right: 0.5rem;
 	}
 
-	.trade-menu-empty {
+	.trade-menu-empty,
+	.trade-menu-more {
 		grid-column: 1 / -1;
 		margin: 0;
 
 		color: var(--color-text-muted);
+	}
+
+	/* Marks the end of the pages loaded, the next one comes as it shows */
+	.trade-menu-more {
+		text-align: center;
+		font-size: 0.9rem;
 	}
 
 	.trade-menu-footer {

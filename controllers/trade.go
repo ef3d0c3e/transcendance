@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -829,8 +828,6 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 
 	targetName := c.Query("u")
 	counterID := 0
-	give := "[]"
-	want := "[]"
 	giveCoins := 0
 	wantCoins := 0
 
@@ -872,15 +869,9 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 		}
 		targetName = other.Username
 		counterID = int(old.ID)
-		// The counter starts mirrored: the cards and coins the sender offered
-		// become what the user wants, and what they asked for what the user gives
-		items, err := old.Items(tc.DB)
-		if err != nil {
-			InternalError(c, tc.Renderer, err)
-			return
-		}
-		give = marshalTradeItems(items.Want)
-		want = marshalTradeItems(items.Give)
+		// The counter starts mirrored: the coins the sender offered become
+		// what the user wants, and what they asked for what the user gives.
+		// The stacks API mirrors the cards the same way
 		giveCoins = int(old.WantCoins)
 		wantCoins = int(old.Coins)
 	}
@@ -936,22 +927,8 @@ func (tc *Controller) TradeMenuGet(c *gin.Context) {
 		"StacksUrl":        stacksUrl,
 		"SubmitUrl":        "/trades",
 		"CounterID":        counterID,
-		"GivePrefill":      give,
-		"WantPrefill":      want,
 		"GiveCoinsPrefill": giveCoins,
 		"WantCoinsPrefill": wantCoins,
 	})
 	tc.Renderer.Render(c, &builder)
-}
-
-// JSON list of the stacks prefilled into one side of the menu
-func marshalTradeItems(items []models.TradeItem) string {
-	if items == nil {
-		items = []models.TradeItem{}
-	}
-	encoded, err := json.Marshal(items)
-	if err != nil {
-		return "[]"
-	}
-	return string(encoded)
 }
