@@ -1,0 +1,38 @@
+name: Docker stack
+
+on:
+  push:
+
+jobs:
+  monitoring:
+    name: promtool and amtool
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check the Prometheus configuration
+        run: docker run --rm -v "$PWD/docker/prometheus:/etc/prometheus:ro" --entrypoint promtool prom/prometheus:v3.15.1 check config /etc/prometheus/prometheus.yml
+
+      - name: Test the alert rules
+        run: docker run --rm -v "$PWD/docker/prometheus:/etc/prometheus:ro" -w /etc/prometheus/rules --entrypoint promtool prom/prometheus:v3.15.1 test rules alerts_test.yml
+
+      - name: Check the Alertmanager configuration
+        run: docker run --rm -v "$PWD/docker/alertmanager:/etc/alertmanager:ro" --entrypoint amtool prom/alertmanager:v0.34.1 check-config /etc/alertmanager/alertmanager.yml
+
+  build:
+    name: compose build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # The same .env as `make` creates, with generated secrets
+      - name: Create docker/.env
+        run: ./docker/init-env.sh
+
+      - name: Check the compose file
+        run: docker compose -f docker/docker-compose.yml config --quiet
+
+      - name: Build the images
+        run: docker compose -f docker/docker-compose.yml build

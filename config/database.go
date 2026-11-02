@@ -5,8 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
-	"log"
+	"log/slog"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -40,12 +41,11 @@ func ConnectDatabase() (*gorm.DB, error) {
 	)
 
 	gormLogger := logger.New(
-		log.New(os.Stdout, "\n", log.LstdFlags),
+		slogWriter{},
 		logger.Config{
 			SlowThreshold:             time.Second,
 			LogLevel:                  logger.Warn,
 			IgnoreRecordNotFoundError: true,
-			Colorful:                  true,
 		},
 	)
 	db, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
@@ -55,7 +55,23 @@ func ConnectDatabase() (*gorm.DB, error) {
 		return nil, err
 	}
 
+	// Bounded, so a burst of requests waits for a connection instead of exhausting the database's
+	sqlDB, err := db.DB()
+	if err != nil {
+		return nil, err
+	}
+	sqlDB.SetMaxOpenConns(50)
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+
 	return db, nil
+}
+
+// slogWriter logs GORM's slow queries and errors as one warning line each
+type slogWriter struct{}
+
+func (slogWriter) Printf(format string, args ...any) {
+	slog.Warn(strings.TrimSpace(fmt.Sprintf(format, args...)))
 }
 
 func MigrateDatabase(db *gorm.DB) error {

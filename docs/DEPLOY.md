@@ -33,6 +33,7 @@ Run `./init-env.sh` from `docker/`. It creates `.env` from `.env.example` and ge
 | `AUTH_SESSION_TTL`    | How long an admin stays signed in, e.g `12h`                                  |
 | `LOG_RETENTION_DAYS`  | Days logs are kept, `730` (2 years) by default                                |
 | `LOG_COMPRESS_AFTER_DAYS` | Days before logs are compressed, `14` by default                          |
+| `LOG_ARCHIVE_DAYS`    | Days the nightly log snapshots in `DATA_DIR/log-archive` are kept, `1095` by default |
 | `METRICS_RETENTION`   | How long metrics are kept, e.g `30d`                                          |
 | `DATA_DIR`            | Folder of the database, logs, metrics and admin keys, `./data` by default     |
 | `DOCKER_SOCKET`       | Docker's socket, read for the container metrics. `init-env.sh` asks Docker for it |

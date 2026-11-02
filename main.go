@@ -14,6 +14,7 @@ import (
 	"transcendance/controllers"
 	"transcendance/data"
 	"transcendance/localization"
+	"transcendance/logs"
 	"transcendance/metrics"
 	"transcendance/routes"
 	"transcendance/views"
@@ -65,6 +66,8 @@ func trustedProxies() []string {
 }
 
 func main() {
+	logs.Setup()
+
 	data, err := data.LoadCards()
 	if err != nil {
 		log.Fatal(err)
