@@ -356,6 +356,9 @@ pack-opening-progress-note = Cartes différentes de cette collection que vous po
 pack-opening-summary = Cartes tirées : { $cards }
 pack-opening-card = { $title } ({ $rarity })
 pack-opening-card-foil = { $title } ({ $rarity }, holographique)
+pack-opening-card-new = { $title } ({ $rarity }, nouvelle carte)
+pack-opening-card-foil-new = { $title } ({ $rarity }, holographique, nouvelle carte)
+pack-opening-new = Nouveau
 pack-opening-spinning = Ouverture du paquet…
 pack-opening-skip = Passer
 

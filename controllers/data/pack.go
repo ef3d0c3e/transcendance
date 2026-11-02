@@ -215,6 +215,60 @@ func (dc *DataController) countBoosters(ownerID uint, collectionID uint, size ui
 	return count, err
 }
 
+// packCardIDs returns the inventory ID of each drawn card: its collection,
+// then its place in it
+func packCardIDs(pack []poolCard) []uint {
+	ids := make([]uint, len(pack))
+	for i, drawn := range pack {
+		ids[i] = uint(drawn.collection.ID*1000 + drawn.card.ID)
+	}
+	return ids
+}
+
+// ownedCardIDs returns, among the given card IDs, the ones the owner has at
+// least one copy of
+func ownedCardIDs(tx *gorm.DB, ownerID uint, ids []uint) (map[uint]bool, error) {
+	var owned []uint
+	if err := tx.Model(&models.Card{}).
+		Where("owner_id = ? AND card_id IN ?", ownerID, ids).
+		Pluck("card_id", &owned).
+		Error; err != nil {
+		return nil, err
+	}
+	have := make(map[uint]bool, len(owned))
+	for _, id := range owned {
+		have[id] = true
+	}
+	return have, nil
+}
+
+// firstCopies marks the drawn cards that are new to their owner: the ones
+// they have no copy of, where the copies drawn before in the same pack count
+// as theirs already
+func firstCopies(owned map[uint]bool, drawn []uint) []bool {
+	have := make(map[uint]bool, len(owned)+len(drawn))
+	for id := range owned {
+		have[id] = true
+	}
+	news := make([]bool, len(drawn))
+	for i, id := range drawn {
+		news[i] = !have[id]
+		have[id] = true
+	}
+	return news
+}
+
+// newCards tells which cards of a drawn pack are new to their owner, foil or
+// not. Must run before the cards are added to the inventory.
+func newCards(tx *gorm.DB, ownerID uint, pack []poolCard) ([]bool, error) {
+	drawn := packCardIDs(pack)
+	owned, err := ownedCardIDs(tx, ownerID, drawn)
+	if err != nil {
+		return nil, err
+	}
+	return firstCopies(owned, drawn), nil
+}
+
 // Number of distinct cards of a collection owned by a user
 func (dc *DataController) countOwnedCards(ownerID uint, collection *data.Collection) (int64, error) {
 	var count int64
@@ -264,19 +318,22 @@ func (dc *DataController) allCardsPool() []poolCard {
 
 // packReels renders the opening reels of a drawn pack from a pool of
 // possible cards, or writes the failure
-func (dc *DataController) packReels(c *gin.Context, rnd *rand.Rand, pool []poolCard, pack []poolCard, foils []string) ([][]gin.H, bool) {
+func (dc *DataController) packReels(c *gin.Context, rnd *rand.Rand, pool []poolCard, pack []poolCard, foils []string, news []bool) ([][]gin.H, bool) {
 	reels := make([][]gin.H, 0, len(pack))
 	for i, winner := range pack {
 		strip := buildReel(rnd, pool, winner)
 
 		slots := make([]gin.H, 0, len(strip))
 		for _, entry := range strip {
-			// Only the won card shows the foil it was obtained with
+			// Only the won card shows the foil it was obtained with, and
+			// whether it is new to its owner
 			foil := ""
+			isNew := false
 			if entry.Win {
 				foil = foils[i]
+				isNew = news[i]
 			}
-			html, ok := packCard(dc, c, entry.Collection, entry.Card, foil)
+			html, ok := packCard(dc, c, entry.Collection, entry.Card, foil, isNew)
 			if !ok {
 				return nil, false
 			}
@@ -453,8 +510,9 @@ func (dc *DataController) freeCoins(user *controllers.AuthenticatedUser) uint {
 	return controllers.FreeCoins(balance, locked)
 }
 
-// packCard renders one drawn card with its foil ("" for none) as an HTML fragment, or writes the failure
-func packCard(dc *DataController, c *gin.Context, collection *data.Collection, card *data.Card, foil string) (string, bool) {
+// packCard renders one drawn card with its foil ("" for none) and its new
+// mark, as an HTML fragment, or writes the failure
+func packCard(dc *DataController, c *gin.Context, collection *data.Collection, card *data.Card, foil string, isNew bool) (string, bool) {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
 	cardData, err := GetCardData(c, loc, dc.Renderer, collection, card)
@@ -469,6 +527,9 @@ func packCard(dc *DataController, c *gin.Context, collection *data.Collection, c
 	// The reel scrolls cards into view while spinning, lazy pictures would show up blank
 	cardData["CardEager"] = true
 	setCardFoil(cardData, foil)
+	if isNew {
+		cardData["CardNew"] = dc.Renderer.T(c, "pack-opening-new")
+	}
 
 	html, err := dc.Renderer.RenderToString("pack-card", map[string]any{"Data": cardData})
 	if err != nil {
@@ -483,7 +544,7 @@ func packCard(dc *DataController, c *gin.Context, collection *data.Collection, c
 
 // packSummary lists the drawn cards in a sentence, announced to screen
 // readers once the reels stopped, or writes the failure
-func packSummary(dc *DataController, c *gin.Context, pack []poolCard, foils []string) (string, bool) {
+func packSummary(dc *DataController, c *gin.Context, pack []poolCard, foils []string, news []bool) (string, bool) {
 	loc := dc.Renderer.Localizer.GetLocale(c)
 
 	labels := make([]string, len(pack))
@@ -500,6 +561,10 @@ func packSummary(dc *DataController, c *gin.Context, pack []poolCard, foils []st
 		key := "pack-opening-card"
 		if foils[i] != "" {
 			key = "pack-opening-card-foil"
+		}
+		if news[i] {
+			// The owner's first copy of that card
+			key += "-new"
 		}
 		labels[i] = dc.Renderer.T(c, key, "title", title, "rarity", dc.Renderer.T(c, "card-rarity-"+card.Rarity))
 	}
@@ -623,15 +688,25 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 
 	// Pay and award the cards at once
 	now := time.Now()
+	var news []bool
 	err := dc.DB.Transaction(func(tx *gorm.DB) error {
 		if err := pay(tx); err != nil {
 			return err
 		}
 
+		// The inventory is untouched yet: the copies it already holds are
+		// not new
+		var err error
+		news, err = newCards(tx, user.ID, pack)
+		if err != nil {
+			return err
+		}
+
+		ids := packCardIDs(pack)
 		cards := make([]models.Card, len(pack))
-		for i, drawn := range pack {
+		for i := range pack {
 			cards[i] = models.Card{
-				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
+				CardID:   ids[i],
 				Acquired: now,
 				Foil:     foils[i],
 				OwnerID:  user.ID,
@@ -659,11 +734,11 @@ func (dc *DataController) openPack(c *gin.Context, user *controllers.Authenticat
 	}
 
 	// The cards are in the inventory, what follows is only the animation
-	summary, ok := packSummary(dc, c, pack, foils)
+	summary, ok := packSummary(dc, c, pack, foils, news)
 	if !ok {
 		return
 	}
-	reels, ok := dc.packReels(c, rnd, flattenByRarity(byRarity), pack, foils)
+	reels, ok := dc.packReels(c, rnd, flattenByRarity(byRarity), pack, foils, news)
 	if !ok {
 		return
 	}
@@ -735,6 +810,7 @@ func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.Auth
 	// empty pile.
 	now := time.Now()
 	var pile models.BoosterPile
+	var news []bool
 	err := dc.DB.Transaction(func(tx *gorm.DB) error {
 		var err error
 		pile, err = controllers.ConsumePileBooster(tx, user.ID)
@@ -742,10 +818,18 @@ func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.Auth
 			return err
 		}
 
+		// The inventory is untouched yet: the copies it already holds are
+		// not new
+		news, err = newCards(tx, user.ID, pack)
+		if err != nil {
+			return err
+		}
+
+		ids := packCardIDs(pack)
 		cards := make([]models.Card, len(pack))
-		for i, drawn := range pack {
+		for i := range pack {
 			cards[i] = models.Card{
-				CardID:   uint(drawn.collection.ID*1000 + drawn.card.ID),
+				CardID:   ids[i],
 				Acquired: now,
 				Foil:     foils[i],
 				OwnerID:  user.ID,
@@ -768,11 +852,11 @@ func (dc *DataController) openDefaultPost(c *gin.Context, user *controllers.Auth
 	}
 
 	// The cards are in the inventory, what follows is only the animation
-	summary, ok := packSummary(dc, c, pack, foils)
+	summary, ok := packSummary(dc, c, pack, foils, news)
 	if !ok {
 		return
 	}
-	reels, ok := dc.packReels(c, rnd, pool, pack, foils)
+	reels, ok := dc.packReels(c, rnd, pool, pack, foils, news)
 	if !ok {
 		return
 	}
