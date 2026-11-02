@@ -42,7 +42,7 @@ func TestFoilRouletteWinsOrDestroys(t *testing.T) {
 	sacrifices := copies(cardFordT, "", 23)
 
 	won, lost := false, false
-	for i := 0; i < 30 && !(won && lost); i++ {
+	for i := 0; i < 30 && (!won || !lost); i++ {
 		require.NoError(t, tests.DB.Where("owner_id = ?", userID(t, "foil1")).Delete(&models.Card{}).Error)
 		giveCards(t, "foil1", cardPythagorean, 2)
 		giveCards(t, "foil1", cardFordT, 23)
