@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"regexp"
 	"strconv"
 	"strings"
 	"testing"
@@ -47,6 +48,18 @@ func ownedCopies(t *testing.T, username string, cardID uint) int {
 		}
 	}
 	return n
+}
+
+var tradeupOrderRe = regexp.MustCompile(`data-tradeup-order="(\d+)"`)
+
+// Places of the displayed tiles in the collection-and-rarity order, in the
+// order the tiles stand on the page
+func tradeupOrders(body string) []string {
+	var orders []string
+	for _, match := range tradeupOrderRe.FindAllStringSubmatch(body, -1) {
+		orders = append(orders, match[1])
+	}
+	return orders
 }
 
 func TestTradeupConsumesCardsAndAwardsOneTierUp(t *testing.T) {
@@ -296,7 +309,7 @@ func TestTradeupTabCollectionFilter(t *testing.T) {
 	require.Contains(t, body, `id="tradeup-no-match" hidden>No card matches this filter</p>`)
 }
 
-func TestTradeupTabOrdersCardsByCollectionRarityAndCount(t *testing.T) {
+func TestTradeupTabOrdersCardsByHowManyCopiesToSpend(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "tradeup15", "foo-bar-baz-qux", 0)
 	giveCards(t, "tradeup15", cardPythagorean, 30)
@@ -304,9 +317,38 @@ func TestTradeupTabOrdersCardsByCollectionRarityAndCount(t *testing.T) {
 	giveCards(t, "tradeup15", cardRosetta, 2)
 	cookie := login(t, router, "tradeup15", "foo-bar-baz-qux")
 
-	// One collection, so rarity decides first, then how many copies to spend
+	// The biggest stacks to spend come first, whatever their rarity
 	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
-	require.Equal(t, []string{"McMurdo Station", "Pythagorean tiling", "Rosetta Stone"}, cardTitles(body))
+	require.Equal(t, []string{"Pythagorean tiling", "McMurdo Station", "Rosetta Stone"}, cardTitles(body))
+
+	// Each tile keeps its place in the collection-and-rarity order, the one
+	// the sort control restores: the rare McMurdo first, then the commons by
+	// how many copies there are
+	require.Equal(t, []string{"1", "0", "2"}, tradeupOrders(body))
+}
+
+func TestTradeupTabSortAndRarityControls(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "tradeup19", "foo-bar-baz-qux", 0)
+	giveCards(t, "tradeup19", cardPythagorean, 2)
+	giveCards(t, "tradeup19", cardMcMurdo, 1)
+	cookie := login(t, router, "tradeup19", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=tradeup")
+
+	// The rarity filter offers what a tradeup can hold, lowest first
+	require.Contains(t, body, `id="tradeup-rarity-filter"`)
+	require.Contains(t, body, `<option value="" selected>All rarities</option>`)
+	require.Contains(t, body, `<option value="common" >Common</option>`)
+	require.Contains(t, body, `<option value="rare" >Rare</option>`)
+	// The highest rarity has no tier above, it never lands on the grid
+	require.NotContains(t, body, `value="legendary"`)
+
+	// The sort lists the biggest stacks first by default, the
+	// collection-and-rarity order as the alternative
+	require.Contains(t, body, `id="tradeup-sort"`)
+	require.Contains(t, body, `<option value="" selected>Count</option>`)
+	require.Contains(t, body, `<option value="grouped" >Collection and rarity</option>`)
 }
 
 // Copies up in pending trades leave with them, a contract cannot spend them

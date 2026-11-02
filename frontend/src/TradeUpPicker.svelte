@@ -5,17 +5,21 @@
 
     Cards must provide `data-tradeup-id`, `data-tradeup-foil`,
     `data-tradeup-count` (copies owned), `data-tradeup-rarity`,
-    `data-tradeup-title` and `data-tradeup-collection-id`. A contract is all
-    one rarity, so cards of another rarity can't join once one is picked.
-    Stacks with copies in the contract wear a `.tradeup-taken` pill.
+    `data-tradeup-title`, `data-tradeup-collection-id` and
+    `data-tradeup-order` (the place of the card in the collection-and-rarity
+    order, which `#tradeup-sort` brings back). A contract is all one rarity,
+    so cards of another rarity can't join once one is picked. Stacks with
+    copies in the contract wear a `.tradeup-taken` pill.
 
     The optional `#tradeup-collection-filter` narrows the grid down to one
-    collection, and `#tradeup-search` to the cards whose name or collection
-    (`data-tradeup-collection`) holds its text, without navigating, keeping
-    the contract: the picks live here, not in the page. Picks the filters hide
-    stay in it. `#tradeup-no-match` shows when they hide every card. The grid
-    is paged in the page too, in the `.tradeup-pager` elements, so picks
-    survive turning pages.
+    collection, `#tradeup-rarity-filter` to one rarity, and `#tradeup-search`
+    to the cards whose name or collection (`data-tradeup-collection`) holds
+    its text. `#tradeup-sort` orders the grid, the biggest stacks first or in
+    the collection-and-rarity order of `data-tradeup-order`. All of it without
+    navigating, keeping the contract: the picks live here, not in the page.
+    Picks the filters hide stay in it. `#tradeup-no-match` shows when they
+    hide every card. The grid is paged in the page too, in the
+    `.tradeup-pager` elements, so picks survive turning pages.
 -->
 
 <script>
@@ -29,6 +33,8 @@
 	const TILE_SELECTOR = `${CARD_SELECTOR} .card-container`;
 	const FILTER_SELECTOR = "#tradeup-collection-filter";
 	const SEARCH_SELECTOR = "#tradeup-search";
+	const RARITY_SELECTOR = "#tradeup-rarity-filter";
+	const SORT_SELECTOR = "#tradeup-sort";
 	const NO_MATCH_SELECTOR = "#tradeup-no-match";
 	// Pointer travel (px) after which a press counts as a tilt drag, not a click
 	const DRAG_THRESHOLD = 6;
@@ -183,9 +189,12 @@
 				rarity: tile.dataset.tradeupRarity ?? "",
 				number: Number(tile.dataset.tradeupId ?? 0),
 				count: Number(tile.dataset.tradeupCount ?? 0),
+				order: Number(tile.dataset.tradeupOrder ?? 0),
 			}),
 			search: SEARCH_SELECTOR,
 			collection: FILTER_SELECTOR,
+			rarity: RARITY_SELECTOR,
+			sort: SORT_SELECTOR,
 			noMatch: NO_MATCH_SELECTOR,
 			pagers: ".tradeup-pager",
 		});
