@@ -382,10 +382,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page <= 0 {
-		page = 1
-	}
+	page := controllers.PageParam(c.Query("p"))
+	var err error
 
 	v := &inventoryView{
 		Tab:      inventoryTabBoosters,

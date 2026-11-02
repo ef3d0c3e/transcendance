@@ -536,6 +536,7 @@ trade-error-internal = Échec de l’enregistrement de l’offre
 trade-error-not-found = Offre d’échange introuvable
 trade-error-user = Utilisateur introuvable
 trade-error-self = Vous ne pouvez pas échanger avec vous-même
+trade-error-too-many = Vous avez trop d'offres en attente de réponse : attendez-les, ou annulez-en.
 trade-error-empty-give = Proposez au moins une carte ou des pièces
 trade-error-empty-want = Demandez au moins une carte ou des pièces
 trade-error-count = Nombre de cartes invalide

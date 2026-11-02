@@ -1,18 +1,32 @@
 package models
 
 import (
+	"slices"
 	"time"
 )
+
+// Foil patterns a card can be obtained with, each one has a mask in `data/assets`. A card without foil has "".
+var FoilPatterns = []string{"foil1", "foil2", "foil3", "foil4", "foil5", "foil6"}
+
+// ValidFoil reports whether a foil value from a request is exactly "" or one of the patterns
+func ValidFoil(foil string) bool {
+	return foil == "" || slices.Contains(FoilPatterns, foil)
+}
+
+// Column type of foil values: compared byte for byte like in Go, where the default collation would match
+// "foil1" with "FOIL1 "
+const FoilColumnType = "varchar(32) COLLATE utf8mb4_bin"
 
 type Card struct {
 	ID uint `gorm:"primaryKey"`
 
-	CardID   uint      `gorm:"not null"`
+	CardID   uint      `gorm:"not null;index:idx_cards_stack,priority:2"`
 	Acquired time.Time `gorm:"not null"`
 	// Foil pattern the card was obtained with, empty when not foil
-	Foil string `gorm:"size:32;not null;default:''"`
+	Foil string `gorm:"type:varchar(32) COLLATE utf8mb4_bin;not null;default:'';index:idx_cards_stack,priority:3"`
 
-	OwnerID uint `gorm:"not null;index"`
+	// The stack index serves the queries of an inventory, by card and foil
+	OwnerID uint `gorm:"not null;index;index:idx_cards_stack,priority:1"`
 	Owner   User `gorm:"constraint:OnDelete:CASCADE"`
 }
 

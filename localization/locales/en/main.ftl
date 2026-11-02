@@ -536,6 +536,7 @@ trade-error-internal = Failed to save the trade offer
 trade-error-not-found = Trade offer not found
 trade-error-user = User not found
 trade-error-self = You cannot trade with yourself
+trade-error-too-many = You have too many offers waiting for an answer: wait for them, or cancel some.
 trade-error-empty-give = Offer at least one card or coins
 trade-error-empty-want = Request at least one card or coins
 trade-error-count = Invalid card count
