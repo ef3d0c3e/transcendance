@@ -1,0 +1,2 @@
+title = Queen Butterfly
+description = The queen butterfly (Danaus gilippus) is a North and South American butterfly in the family Nymphalidae with a wingspan of 80–85 mm (3+1⁄8–3+3⁄8 in). It is orange or brown with black wing borders and small white forewing spots on its dorsal wing surface, and reddish ventral wing surface fairly similar to the dorsal surface. The ventral hindwings have black veins and small white spots in a black border.

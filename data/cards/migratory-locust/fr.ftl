@@ -1,0 +1,2 @@
+title = Criquet migrateur
+description = Locusta migratoria, le Criquet migrateur, unique représentant du genre Locusta, est une espèce d'insectes orthoptères de la famille des Acrididae. Il fait partie des locustes (espèces de criquets présentant un phénomène de polymorphisme phasaire), tout comme le Criquet pèlerin ou le Criquet nomade. C'est un insecte ravageur majeur dans de nombreuses régions tropicales.

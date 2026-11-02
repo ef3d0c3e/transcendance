@@ -1,0 +1,2 @@
+title = Velvet Ant
+description = Dasymutilla occidentalis (red velvet ant, eastern velvet ant, cow ant or cow killer) is a species of parasitoid wasp that ranges from Connecticut to Kansas in the north and Florida to Texas in the south. Adults are mostly seen in the summer months. The eastern velvet ant is the largest of the velvet ant species in the eastern United States, attaining an approximate length of 1.

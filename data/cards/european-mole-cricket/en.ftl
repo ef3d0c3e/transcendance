@@ -1,0 +1,2 @@
+title = European Mole Cricket
+description = Gryllotalpa gryllotalpa, commonly known as the European mole cricket, is widespread in Europe and has been introduced to the eastern United States. Its scientific name is derived from the Latin 'gryllus' (cricket); and 'talpa' (mole), because of the fine dense fur which covers it and its subterranean habits, and because of the mole-like forelegs adapted for digging, it's a good example of convergent evolution.

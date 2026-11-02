@@ -1,0 +1,2 @@
+title = Robber Fly
+description = The Asilidae are the robber fly family, also called assassin flies. They are powerfully built, bristly flies with a short, stout proboscis enclosing the sharp, sucking hypopharynx. The name "robber flies" reflects their expert predatory habits; they feed mainly or exclusively on other insects and, as a rule, they wait in ambush and catch their prey in flight.

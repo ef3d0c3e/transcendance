@@ -1,0 +1,2 @@
+title = Palomena prasina
+description = La punaise verte des bois (Palomena prasina) est une espèce européenne d'insectes hétéroptères, une punaise malodorante (Pentatomomorpha) de la famille des Pentatomidae. Son nom vernaculaire peut s'appliquer à d'autres espèces de la tribu des Pentatomini. La forme adulte peut changer la couleur de la partie dorsale, variant du vert au bronze au cours des saisons, sans marque distinctive.

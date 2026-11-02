@@ -1,0 +1,2 @@
+title = Cantharide officinale
+description = La cantharide officinale, Lytta vesicatoria, est une espèce d'insectes coléoptères de la famille des méloïdés. Il mesure de 12 à 21 mm de long, son corps est allongé, et d'une couleur vert brillant. On l'appelle aussi mouche cantharide ou mouche espagnole ou encore mouche de Milan, mais ce n'est ni une mouche d'un point de vue scientifique (diptère), ni un insecte de la famille des cantharidés.

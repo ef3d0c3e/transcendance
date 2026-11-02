@@ -1,0 +1,2 @@
+title = Asian Longhorned Beetle
+description = The Asian long-horned beetle (Anoplophora glabripennis), also known as the starry sky, sky beetle, or ALB, is native to the Korean Peninsula, northern and southern China, and disputably in northern Japan. This species has now been accidentally introduced into the eastern United States, where it was first discovered in 1996, as well as Canada, and several countries in Europe, including Austria, France, Germany, Italy and UK.

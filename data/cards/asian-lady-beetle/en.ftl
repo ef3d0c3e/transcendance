@@ -1,0 +1,2 @@
+title = Asian Lady Beetle
+description = Harmonia axyridis is a lady beetle or ladybug species that is most commonly known as the harlequin, Asian, or multicolored Asian lady beetle. This is one of the most variable lady beetle species in the world, with an exceptionally wide range of color forms. It is native to eastern Asia, and has been artificially introduced to North America and Europe to control aphids and scale insects.

@@ -1,0 +1,2 @@
+title = Eastern Subterranean Termite
+description = Reticulitermes flavipes, the eastern subterranean termite, is the most common termite found in North America. These termites are the most economically important wood destroying insects in the United States and are classified as pests. They feed on cellulose material such as the structural wood in buildings, wooden fixtures, paper, books, and cotton.

@@ -1,0 +1,2 @@
+title = Orchid Mantis
+description = Hymenopus coronatus is a mantis from the tropical forests of Southeast Asia. It is known by various common names, including walking flower mantis, orchid-blossom mantis and (pink) orchid mantis. It is one of several species known as flower mantises, a reference to their unique physical form and behaviour, which often involves moving with a "swaying" motion, as if being "blown" in the breeze.

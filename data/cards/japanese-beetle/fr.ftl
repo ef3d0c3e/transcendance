@@ -1,0 +1,2 @@
+title = Scarabée japonais
+description = Le Scarabée japonais (Popillia japonica) est une espèce d'insectes coléoptères de la famille des Scarabaeidae. Originaire de l’est de l’Asie (principalement des grandes îles du Japon), le scarabée japonais a été accidentellement introduit aux États-Unis en 1916. La présence du scarabée japonais a été signalée pour la première fois au Canada en 1939 à Yarmouth en Nouvelle-Écosse.

@@ -1,0 +1,2 @@
+title = Titan Beetle
+description = The titan beetle (Titanus giganteus) is a Neotropical species of longhorn beetle, the sole species in the genus Titanus, and one of the largest known beetles, as well as one of the largest known insects, at over 170 mm (6. 7 in) in length. Adult titan beetles only live for a few weeks, and protect themselves from predators with their sharp spines and powerful jaws.

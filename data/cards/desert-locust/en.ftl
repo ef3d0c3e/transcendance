@@ -1,0 +1,2 @@
+title = Desert Locust
+description = The desert locust (Schistocerca gregaria) is a species of locust in the grasshopper family, Acrididae. A periodically swarming, short-horned bird grasshopper, it is found primarily in the deserts and dry areas of northern and eastern Africa, Arabia, and southwest Asia. During population surge years, its range may extend north into parts of Southern Europe, Eastern Africa, and Northern India.
