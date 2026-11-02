@@ -1,15 +1,15 @@
 <script>
+	import { tick } from 'svelte';
 	import { apiFetch } from './api.js';
-
-	// How long an error stays shown, in milliseconds
-	const ERROR_DELAY = 4000;
 
 	let { dataset } = $props();
 
 	// Relation to the user, rendered by the server then given back by every action
 	let relation = $derived(dataset.relation ?? '');
 	let busy = $state(false);
+	// Stays until the next action, so it can be read at any pace
 	let error = $state('');
+	let actionsElement = $state();
 
 	// Actions available for each relation
 	const ACTIONS = {
@@ -40,15 +40,12 @@
 		return list;
 	});
 
-	$effect(() => {
-		if (!error) {
+	// The clicked button is replaced by the new relation's: the focus goes to
+	// the first of them, whose name tells what changed
+	async function run(action) {
+		if (busy) {
 			return;
 		}
-		const timeout = setTimeout(() => (error = ''), ERROR_DELAY);
-		return () => clearTimeout(timeout);
-	});
-
-	async function run(action) {
 		busy = true;
 		error = '';
 		try {
@@ -66,17 +63,22 @@
 		} finally {
 			busy = false;
 		}
+		await tick();
+		if (actionsElement && !actionsElement.contains(document.activeElement)) {
+			actionsElement.querySelector('button')?.focus();
+		}
 	}
 </script>
 
-<div class="friend-actions">
+<!-- aria-disabled while waiting: disabled would drop the focus -->
+<div class="friend-actions" bind:this={actionsElement}>
 	{#each actions as action (action)}
 		<button
 			type="button"
 			class="friend-action"
 			class:is-main={action === 'add' || action === 'accept'}
 			class:is-danger={action === 'block' || action === 'unfriend'}
-			disabled={busy}
+			aria-disabled={busy}
 			onclick={() => run(action)}
 		>
 			{dataset[LABELS[action]]}
@@ -109,7 +111,7 @@
 
 		transition: background-color 120ms ease;
 
-		&:hover:not(:disabled) {
+		&:hover:not([aria-disabled='true']) {
 			background: var(--color-bg-3);
 		}
 
@@ -118,7 +120,7 @@
 			background: var(--color-accent-primary);
 			border-color: transparent;
 
-			&:hover:not(:disabled) {
+			&:hover:not([aria-disabled='true']) {
 				background: var(--color-accent-primary-dark);
 			}
 		}

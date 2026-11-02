@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from "svelte";
+	import { loadStill, onStillChange } from "./pack-motion.js";
 
 	let { target } = $props();
 
@@ -158,7 +159,8 @@
 			gl.drawArrays(gl.TRIANGLES, 0, 3);
 		}
 
-		// Reduced motion only slows the swirl down to a drift
+		// Reduced motion only slows the swirl down to a drift; the page's
+		// switch stops it on its current frame
 		const reduced = window.matchMedia("(prefers-reduced-motion: reduce)");
 		let elapsed = 0;
 		let last = performance.now();
@@ -176,14 +178,31 @@
 			draw(elapsed);
 		}
 
+		function play(isStill) {
+			cancelAnimationFrame(frame);
+			frame = 0;
+			if (!isStill) {
+				last = performance.now();
+				frame = requestAnimationFrame(loop);
+			}
+		}
+
+		// A resize clears the canvas: the still frame is drawn again
+		function handleResize() {
+			resize();
+			draw(elapsed);
+		}
+
 		resize();
 		draw(elapsed);
-		frame = requestAnimationFrame(loop);
-		window.addEventListener("resize", resize);
+		play(loadStill());
+		const stopListening = onStillChange(play);
+		window.addEventListener("resize", handleResize);
 
 		return () => {
 			cancelAnimationFrame(frame);
-			window.removeEventListener("resize", resize);
+			stopListening();
+			window.removeEventListener("resize", handleResize);
 		};
 	});
 </script>

@@ -259,11 +259,11 @@ import { apiFetch } from './api.js';
 	}
 }
 
-// Selects that apply as soon as they change (inventory filters)
+// Filters of the search forms, applied by their button: choosing an option
+// doesn't reload the page, the arrow keys go through the options
 {
 	const forms = new Set();
-	for (const select of document.querySelectorAll('select[data-autosubmit]')) {
-		select.addEventListener('change', () => select.form?.requestSubmit());
+	for (const select of document.querySelectorAll('select[data-filter]')) {
 		if (select.form) {
 			forms.add(select.form);
 		}
@@ -351,8 +351,8 @@ import { apiFetch } from './api.js';
 				againLabel: target.dataset.againLabel,
 				coins: Number(target.dataset.coins) || 0,
 				autostart: target.dataset.autostart === 'true',
-				soundOnLabel: target.dataset.soundOn,
-				soundOffLabel: target.dataset.soundOff,
+				soundLabel: target.dataset.soundLabel,
+				motionLabel: target.dataset.motionLabel,
 				skipLabel: target.dataset.skipLabel,
 				spinningLabel: target.dataset.spinningLabel,
 			},

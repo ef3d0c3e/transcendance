@@ -26,13 +26,13 @@
 </script>
 
 <dialog
-	class="tradeup-result"
+	class="popup tradeup-result"
 	aria-labelledby="tradeup-result-title"
 	bind:this={dialog}
 	onclick={onDialogClick}
 >
 	<div class="tradeup-result-content">
-		<h3 class="tradeup-result-title" id="tradeup-result-title">{labelTitle}</h3>
+		<h2 class="tradeup-result-title" id="tradeup-result-title">{labelTitle}</h2>
 		<div class="tradeup-result-stage">
 			<div class="tradeup-result-flash" aria-hidden="true"></div>
 			<div class="tradeup-result-card">
@@ -48,24 +48,9 @@
 </dialog>
 
 <style>
+	/* Frame, backdrop, entrance and bottom sheet: the shared .popup of theme.css */
 	.tradeup-result {
-		width: min(100% - 2rem, 26rem);
-		padding: 0;
-
-		color: var(--color-text);
-		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
-		border-radius: 1rem;
-		box-shadow: 0 10px 30px var(--color-shadow);
-	}
-
-	.tradeup-result::backdrop {
-		background: rgb(0 0 0 / 55%);
-		backdrop-filter: blur(3px);
-	}
-
-	.tradeup-result[open] {
-		animation: popup-in 150ms ease;
+		--popup-width: 26rem;
 	}
 
 	.tradeup-result-content {
@@ -151,13 +136,6 @@
 		background: color-mix(in srgb, var(--color-bg-4), black 10%);
 	}
 
-	@keyframes popup-in {
-		from {
-			opacity: 0;
-			transform: translateY(0.5rem) scale(0.98);
-		}
-	}
-
 	@keyframes tradeup-reveal {
 		0% {
 			opacity: 0;
@@ -200,17 +178,7 @@
 		}
 	}
 
-	/* Small screens: bottom sheet, like the other popups */
 	@media (max-width: 480px) {
-		.tradeup-result {
-			width: 100%;
-			max-width: 100%;
-			margin: auto 0 0;
-
-			border-radius: 1rem 1rem 0 0;
-			border-bottom: 0;
-		}
-
 		.tradeup-result-content {
 			padding-bottom: max(1.25rem, env(safe-area-inset-bottom));
 		}
@@ -221,7 +189,6 @@
 	}
 
 	@media (prefers-reduced-motion: reduce) {
-		.tradeup-result[open],
 		.tradeup-result-card,
 		.tradeup-result-flash {
 			animation: none;

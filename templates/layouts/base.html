@@ -28,7 +28,10 @@
 	<script type="module" src="/frontend/main.js"></script>
 </head>
 
-<body>
+{{/* Labels of the countdowns reaching zero (frontend/src/countdown.js) */}}
+<body data-label-countdown-done="{{ .T "countdown-done" }}"
+	data-label-countdown-refresh="{{ .T "countdown-refresh" }}"
+	data-label-countdown-claim="{{ .T "daily-streak-claim-ready" }}">
 	<a class="skip-link" href="#main">{{ .T "navbar-skip" }}</a>
 	<header>
 		<!-- Not a heading: each page has its own title as its h1 -->
@@ -36,23 +39,26 @@
 			<a href="/"{{ if eq .Path "/" }} aria-current="page"{{ end }}>Transcendance</a>
 		</p>
 
-		<input type="checkbox" id="nav-toggle" class="nav-toggle" aria-label={{ .T "navbar-label-toggle" }} />
-		<label for="nav-toggle" class="nav-toggle-btn" aria-hidden="true">
-			<svg width="24" height="24" viewBox="0 0 24 24">
+		{{/* Shown on narrow screens only, where the navigation becomes a side
+		menu (JavaScript measures the header) */}}
+		<button type="button" class="nav-toggle-btn" aria-expanded="false" aria-controls="header-nav"
+			aria-label="{{ .T "navbar-label-toggle" }}" title="{{ .T "navbar-label-toggle" }}">
+			<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 				<path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"
 					fill="none" />
 			</svg>
-		</label>
+		</button>
 
 		<nav id="header-nav" aria-label="{{ .T "navbar-label-main" }}">
-			<label for="nav-toggle" class="nav-close" aria-hidden="true">
-				<svg width="24" height="24" viewBox="0 0 24 24">
+			<button type="button" class="nav-close" aria-label="{{ .T "navbar-label-close" }}"
+				title="{{ .T "navbar-label-close" }}">
+				<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
 					<path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"
 						fill="none" />
 				</svg>
-			</label>
+			</button>
 
-			<ul class="nav-links" aria-label="{{ .T "navbar-label-main" }}">
+			<ul class="nav-links">
 				<li><a href="/search" {{ if hasPrefix .Path "/search" }}aria-current="page"{{ end }}>{{ .T "navbar-users" }}</a></li>
 				{{ if .User }}
 				<li><a href="/inventory" {{ if or (hasPrefix .Path "/inventory") (hasPrefix .Path "/opening") (hasPrefix .Path "/collections") }}aria-current="page"{{ end }}>{{ .T "navbar-inventory" }}</a></li>
@@ -118,7 +124,7 @@
 
 				<div class="nav-account">
 					{{ with .User }}
-					<a class="nav-user" href="/profile" title="{{ $.T "navbar-profile" }}" {{ if hasPrefix $.Path "/profile" }}aria-current="page"{{ end }}>
+					<a class="nav-user" href="/profile" title="{{ $.T "navbar-profile" }}" {{ if or (eq $.Path "/profile") (eq $.Path (printf "/profile/%s" .Username)) }}aria-current="page"{{ end }}>
 						<svg width="18" height="18" viewBox="0 0 16 16" aria-hidden="true">
 							<path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6Zm0 1.5c-3 0-5.5 1.6-5.5 3.75V15h11v-1.75C13.5 11.1 11 9.5 8 9.5Z"
 								fill="currentColor" />

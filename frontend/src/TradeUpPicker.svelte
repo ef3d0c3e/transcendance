@@ -17,7 +17,8 @@
 -->
 
 <script>
-	import { onMount } from "svelte";
+	import { onMount, tick } from "svelte";
+	import { makeCardButton } from "./card-name.js";
 
 	let { target } = $props();
 
@@ -35,9 +36,13 @@
 	const labelClear = $derived(target.dataset.labelClear ?? "");
 	const labelSubmit = $derived(target.dataset.labelSubmit ?? "");
 	const labelEmpty = $derived(target.dataset.labelEmpty ?? "");
+	const labelFoil = $derived(target.dataset.labelFoil ?? "");
+	const labelCopies = $derived(target.dataset.labelCopies ?? "");
 
 	// Copies put into the contract, in the order they were added
 	let selection = $state([]);
+	// The slots' group, focused when the last filled slot is taken out
+	let slotsElement = $state();
 	// Rarity of the contract so far, "" while it is still empty
 	const rarity = $derived(selection[0]?.rarity ?? "");
 	const filled = $derived(selection.length);
@@ -76,8 +81,20 @@
 		selection.push(card);
 	}
 
-	function remove(index) {
+	// The focused slot is gone: the focus goes to the slot taking its place,
+	// else the one before, else the slots
+	async function remove(index) {
 		selection.splice(index, 1);
+		await tick();
+		const filledSlots = slotsElement.querySelectorAll(".tradeup-slot.is-filled");
+		(filledSlots[index] ?? filledSlots[index - 1] ?? slotsElement).focus();
+	}
+
+	// The clear button is disabled once the contract is empty
+	async function clear() {
+		selection = [];
+		await tick();
+		slotsElement.focus();
 	}
 
 	// Case and accents are ignored when searching
@@ -116,10 +133,11 @@
 			const info = cardOf(card);
 			const blocked = !canTake(info);
 			card.classList.toggle("tradeup-card-blocked", blocked);
-			card.setAttribute("aria-disabled", blocked ? "true" : "false");
 
 			const tile = card.querySelector(".card-container");
 			if (!tile) continue;
+			// On the button itself, so screen readers tell it does nothing
+			tile.setAttribute("aria-disabled", blocked ? "true" : "false");
 			const count = taken(info.id, info.foil);
 			let pill = tile.querySelector(":scope > .tradeup-taken");
 			if (count === 0) {
@@ -157,20 +175,23 @@
 			add(card);
 		}
 
+		// The focused element is the tile, inside the card's wrapper
 		function onKeyDown(e) {
 			if (e.key !== "Enter" && e.key !== " ") return;
-			const card = cardFrom(e);
-			if (!card || e.target !== card) return;
+			if (!(e.target instanceof Element) || !e.target.matches(TILE_SELECTOR)) return;
 
 			e.preventDefault();
-			add(card);
+			add(e.target.closest(CARD_SELECTOR));
 		}
 
 		// Cards add to the contract, make them reachable and announced as buttons
 		for (const tile of document.querySelectorAll(TILE_SELECTOR)) {
-			tile.tabIndex = 0;
-			tile.setAttribute("role", "button");
-			tile.setAttribute("aria-label", tile.closest(CARD_SELECTOR).dataset.tradeupTitle);
+			const card = tile.closest(CARD_SELECTOR);
+			makeCardButton(tile, {
+				foil: labelFoil,
+				copies: labelCopies,
+				count: card.dataset.tradeupCount,
+			});
 		}
 
 		document.addEventListener("pointerdown", onPointerDown, { passive: true });
@@ -218,7 +239,7 @@
 		<span class="tradeup-progress-count">{filled} / {cost}</span>
 	</p>
 
-	<div class="tradeup-slots" role="group" aria-label={labelSlots}>
+	<div class="tradeup-slots" role="group" aria-label={labelSlots} tabindex="-1" bind:this={slotsElement}>
 		{#each slots as i (i)}
 			{#if i < filled}
 				<button
@@ -240,7 +261,7 @@
 	{/each}
 
 	<div class="tradeup-actions">
-		<button type="button" class="tradeup-clear" onclick={() => (selection = [])} disabled={filled === 0}>
+		<button type="button" class="tradeup-clear" onclick={clear} disabled={filled === 0}>
 			{labelClear}
 		</button>
 		<button type="submit" class="tradeup-submit" disabled={!ready}>{labelSubmit}</button>
@@ -269,6 +290,7 @@
 	}
 
 	.tradeup-slots {
+		border-radius: 0.5rem;
 		display: grid;
 		grid-template-columns: repeat(auto-fill, minmax(2.5rem, 1fr));
 		gap: 0.5rem;
@@ -299,7 +321,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}
@@ -348,7 +370,7 @@
 		}
 
 		&:focus-visible {
-			outline: 3px solid color-mix(in srgb, var(--color-accent-secondary) 55%, transparent);
+			outline: 3px solid var(--color-accent-secondary);
 			outline-offset: 2px;
 		}
 	}

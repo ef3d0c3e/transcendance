@@ -117,14 +117,16 @@
 		return [fresh, [...current, ...fresh].toSorted((a, b) => a.id - b.id).slice(-MAX_MESSAGES)];
 	}
 
-	function addMessages(incoming) {
+	// `isNew` is unset for the history sent on connection: it was there
+	// before the page, it isn't unread
+	function addMessages(incoming, isNew = true) {
 		const follow = nearBottom() || incoming.some((message) => message.username === me);
 		const [fresh, merged] = merge(messages, incoming);
 		if (fresh.length === 0) {
 			return;
 		}
 		messages = merged;
-		if (!(open && tab === 'shout')) {
+		if (isNew && !(open && tab === 'shout')) {
 			shoutUnread += fresh.filter((message) => message.username !== me).length;
 		}
 		if (follow && tab === 'shout') {
@@ -224,7 +226,8 @@
 					const added = conversations.find((current) => current.username === conversation.username);
 					added.unread = conversation.unread;
 				}
-				addMessages(event.messages ?? []);
+				// After a reconnection, what was missed meanwhile is new
+				addMessages(event.messages ?? [], messages.length > 0);
 				break;
 			}
 			case 'message': {
@@ -292,8 +295,9 @@
 	}
 
 	function handleInputKeydown(event) {
-		// Enter sends, shift+enter is ignored as messages are a single line
-		if (event.key === 'Enter') {
+		// Enter sends, shift+enter is ignored as messages are a single line.
+		// Enter also ends a composition (Chinese, Japanese...): not a send.
+		if (event.key === 'Enter' && !event.isComposing && event.keyCode !== 229) {
 			send(event);
 		}
 	}
@@ -310,14 +314,18 @@
 		}
 	}
 
-	async function showTab(next) {
+	// `focusInput` is unset when the arrow keys move between the tabs: the
+	// focus stays on the tabs
+	async function showTab(next, focusInput = true) {
 		tab = next;
 		error = '';
 		if (next === 'shout') {
 			shoutUnread = 0;
 		}
 		await scrollToBottom();
-		input?.focus();
+		if (focusInput) {
+			input?.focus();
+		}
 	}
 
 	async function openConversation(username) {
@@ -337,6 +345,27 @@
 		error = '';
 	}
 
+	// Tabs follow the ARIA tabs pattern: only the selected one is in the tab
+	// order, the arrow keys, Home and End move between them
+	const TABS = ['shout', 'messages'];
+
+	function handleTabKeydown(event) {
+		const index = TABS.indexOf(tab);
+		const moves = {
+			ArrowLeft: index - 1,
+			ArrowRight: index + 1,
+			Home: 0,
+			End: TABS.length - 1,
+		};
+		if (!(event.key in moves)) {
+			return;
+		}
+		event.preventDefault();
+		const next = TABS[(moves[event.key] + TABS.length) % TABS.length];
+		showTab(next, false);
+		panel?.querySelector(`#shoutbox-tab-${next}`)?.focus();
+	}
+
 	// Move the panel out of the compact header's side menu, where it can't be shown
 	function portal(node, enabled) {
 		if (enabled) {
@@ -353,11 +382,8 @@
 		open = true;
 		compact = Boolean(root?.closest('header.is-compact'));
 		if (compact) {
-			const navToggle = document.querySelector('#nav-toggle');
-			if (navToggle?.checked) {
-				navToggle.checked = false;
-				navToggle.dispatchEvent(new Event('change'));
-			}
+			// The side menu can't hold the panel
+			globalThis.dispatchEvent(new Event('nav-menu-close'));
 		}
 		if (tab === 'shout') {
 			shoutUnread = 0;
@@ -509,12 +535,15 @@
 			use:portal={compact}
 		>
 			<div class="shout-head">
-				<div class="shout-tabs" role="tablist">
+				<div class="shout-tabs" role="tablist" tabindex="-1" onkeydown={handleTabKeydown}>
 					<button
 						type="button"
 						role="tab"
+						id="shoutbox-tab-shout"
 						class="shout-tab"
 						aria-selected={tab === 'shout'}
+						aria-controls="shoutbox-tabpanel"
+						tabindex={tab === 'shout' ? 0 : -1}
 						onclick={() => showTab('shout')}
 					>
 						{dataset.labelTabShout}
@@ -525,8 +554,11 @@
 					<button
 						type="button"
 						role="tab"
+						id="shoutbox-tab-messages"
 						class="shout-tab"
 						aria-selected={tab === 'messages'}
+						aria-controls="shoutbox-tabpanel"
+						tabindex={tab === 'messages' ? 0 : -1}
 						onclick={() => showTab('messages')}
 					>
 						{dataset.labelTabMessages}
@@ -546,6 +578,8 @@
 				</button>
 			</div>
 
+			<div class="shout-tabpanel" id="shoutbox-tabpanel" role="tabpanel"
+				aria-labelledby="shoutbox-tab-{tab}">
 			{#if tab === 'shout'}
 				<ol class="shout-list" bind:this={list} data-chat-scroll aria-live="polite" aria-relevant="additions" aria-busy={status !== 'open'}>
 					{#each shown as message (message.id)}
@@ -648,6 +682,7 @@
 					</button>
 				</form>
 			{/if}
+			</div>
 		</div>
 	{/if}
 </div>
@@ -783,6 +818,14 @@
 		}
 	}
 
+	/* The content of the tab shown: the panel's flex column, passed through */
+	.shout-tabpanel {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		min-height: 0;
+	}
+
 	.shout-head {
 		display: flex;
 		align-items: center;
@@ -853,15 +896,19 @@
 		font-size: 0.8rem;
 	}
 
+	/* The shape tells the state too, not only the color: a filled dot when
+		live, a ring while connecting, a square once closed */
 	.shout-status-dot {
-		width: 0.5rem;
-		height: 0.5rem;
+		width: 0.6rem;
+		height: 0.6rem;
+		border: 2px solid var(--color-text-muted);
 		border-radius: 999px;
-		background: var(--color-border-2);
+		background: transparent;
 	}
 
 	.shout-status[data-status='open'] .shout-status-dot {
 		background: var(--color-success-3);
+		border-color: var(--color-success-3);
 	}
 
 	.shout-status[data-status='connecting'] .shout-status-dot {
@@ -870,6 +917,8 @@
 
 	.shout-status[data-status='closed'] .shout-status-dot {
 		background: var(--color-error-3);
+		border-color: var(--color-error-3);
+		border-radius: 1px;
 	}
 
 	@keyframes shout-pulse {
