@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+	"sync"
 	"transcendance/data"
 
 	"github.com/blevesearch/bleve"
@@ -449,38 +450,49 @@ func (ss *CollectionSearchSet) Search(search string, limit int, offset int) ([]*
 	return collections, result.Total, nil
 }
 
+// The search sets only depend on the card data and the locale, so every
+// controller built on the same data shares them: they are built once, lazily
+type searchKey struct {
+	data   *data.Data
+	locale string
+}
+
+var searchSets = struct {
+	// Guards lazy building of the search sets
+	sync.Mutex
+	cards       map[searchKey]*CardSearchSet
+	collections map[searchKey]*CollectionSearchSet
+}{
+	cards:       map[searchKey]*CardSearchSet{},
+	collections: map[searchKey]*CollectionSearchSet{},
+}
+
 func (dc *DataController) GetCardSearchSet(locale string) (*CardSearchSet, error) {
-	dc.searchMu.Lock()
-	defer dc.searchMu.Unlock()
+	searchSets.Lock()
+	defer searchSets.Unlock()
 
-	if dc.CardSearch == nil {
-		dc.CardSearch = map[string]*CardSearchSet{}
-	}
-
-	if dc.CardSearch[locale] == nil {
+	key := searchKey{data: dc.Data, locale: locale}
+	if searchSets.cards[key] == nil {
 		ss, err := dc.BuildCardSearchSet(locale)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build search set for locale '%s': %w", locale, err)
 		}
-		dc.CardSearch[locale] = ss
+		searchSets.cards[key] = ss
 	}
-	return dc.CardSearch[locale], nil
+	return searchSets.cards[key], nil
 }
 
 func (dc *DataController) GetCollectionSearchSet(locale string) (*CollectionSearchSet, error) {
-	dc.searchMu.Lock()
-	defer dc.searchMu.Unlock()
+	searchSets.Lock()
+	defer searchSets.Unlock()
 
-	if dc.CollectionSearch == nil {
-		dc.CollectionSearch = map[string]*CollectionSearchSet{}
-	}
-
-	if dc.CollectionSearch[locale] == nil {
+	key := searchKey{data: dc.Data, locale: locale}
+	if searchSets.collections[key] == nil {
 		ss, err := dc.BuildCollectionSearchSet(locale)
 		if err != nil {
 			return nil, fmt.Errorf("failed to build search set for locale '%s': %w", locale, err)
 		}
-		dc.CollectionSearch[locale] = ss
+		searchSets.collections[key] = ss
 	}
-	return dc.CollectionSearch[locale], nil
+	return searchSets.collections[key], nil
 }
