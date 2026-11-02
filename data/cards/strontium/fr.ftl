@@ -1,0 +1,2 @@
+title = Strontium
+description = Le strontium est l'élément chimique de numéro atomique 38, de symbole Sr. Comme le calcium, qui le précède dans la seconde colonne du tableau périodique, c'est un alcalino-terreux. Le corps simple est un métal mou, malléable, gris-jaune. Au contact avec l'air, il forme un film d'oxyde protecteur (passivation). Il s'enflamme et brûle facilement dans l'air et réagit avec l'eau.

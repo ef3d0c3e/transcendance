@@ -1,0 +1,2 @@
+title = Cérium
+description = Le cérium est l'élément chimique de numéro atomique 58, de symbole Ce. C'est un métal gris argenté, mou et ductile, de la famille des lanthanides et le plus abondant des terres rares. Il doit son nom à l'astéroïde Cérès, découvert peu avant lui. Allié au fer, il forme le ferrocérium des pierres à briquet, et son oxyde sert à polir le verre et dans les pots catalytiques.

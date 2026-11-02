@@ -1,0 +1,2 @@
+title = Iridium
+description = Iridium is a chemical element; it has symbol Ir and atomic number 77. A very hard, brittle, silvery-white transition metal of the platinum group, it is the second-densest naturally occurring metal after osmium and the most corrosion-resistant metal known. Iridium is rare in Earth's crust but abundant in meteorites, and a thin iridium-rich clay layer marks the asteroid impact that ended the age of the dinosaurs.

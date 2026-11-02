@@ -1,0 +1,2 @@
+title = Cobalt
+description = Le cobalt est l'élément chimique de numéro atomique 27, de symbole Co. C'est un métal de transition gris, dur et ferromagnétique, que l'on trouve dans la croûte terrestre combiné à d'autres éléments, souvent avec le nickel et le cuivre. Ses composés donnent depuis l'Antiquité une couleur bleu profond au verre et à la céramique ; il entre aujourd'hui dans les superalliages et les batteries lithium-ion.

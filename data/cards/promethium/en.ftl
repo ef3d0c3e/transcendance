@@ -1,0 +1,2 @@
+title = Promethium
+description = Promethium is a generally synthetic chemical element; it has symbol Pm and atomic number 61. All of its isotopes are radioactive; it is extremely rare, with only about 500–600 grams naturally occurring in the Earth's crust at any given time. Promethium is one of only two radioactive elements that are both preceded and succeeded in the periodic table by elements with stable forms, the other being technetium. Chemically, promethium is a lanthanide.

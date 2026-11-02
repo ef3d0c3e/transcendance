@@ -1,0 +1,2 @@
+title = Actinium
+description = Actinium is a chemical element; it has symbol Ac and atomic number 89. It was discovered by Friedrich Oskar Giesel in 1902, who gave it the name emanium; the element got its name by being wrongly identified with a substance André-Louis Debierne found in 1899 and called actinium. The actinide series, a set of 15 elements between actinium and lawrencium in the periodic table, is named after actinium.

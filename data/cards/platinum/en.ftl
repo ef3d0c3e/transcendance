@@ -1,0 +1,2 @@
+title = Platinum
+description = Platinum is a chemical element; it has symbol Pt and atomic number 78. It is a dense, malleable, ductile, highly unreactive, precious, silverish-white transition metal. Its name originates from Spanish platina, a diminutive of plata "silver". Platinum is a member of the platinum group of elements and group 10 of the periodic table of elements. It has six naturally occurring isotopes.

@@ -1,0 +1,2 @@
+title = Radon
+description = Le radon est l'élément chimique de numéro atomique 86, de symbole Rn. C'est un gaz noble (ou gaz rare) radioactif, incolore, inodore et d'origine le plus souvent naturelle. C'est l'une des substances les plus denses sous forme de gaz dans les conditions normales de température et de pression. Le radon n'existe pas sous forme de corps stable et tous ses isotopes connus sont radioactifs.

@@ -1,0 +1,2 @@
+title = Cuivre
+description = Le cuivre est l'élément chimique de numéro atomique 29, de symbole Cu. C'est un métal rouge orangé, mou, malléable et ductile, excellent conducteur de la chaleur et de l'électricité. Présent à l'état natif dans la nature, il est l'un des premiers métaux travaillés par l'homme, et son alliage avec l'étain, le bronze, a donné son nom à toute une époque de la préhistoire.

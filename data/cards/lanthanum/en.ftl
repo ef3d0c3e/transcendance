@@ -1,0 +1,2 @@
+title = Lanthanum
+description = Lanthanum is a chemical element; it has symbol La and atomic number 57. It is a soft, ductile, silvery-white metal that tarnishes slowly when exposed to air. It is the first and the prototype of the lanthanide series, a group of 15 similar elements between lanthanum and lutetium in the periodic table. Lanthanum is traditionally counted among the rare-earth elements.

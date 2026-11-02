@@ -1,0 +1,2 @@
+title = Curium
+description = Le curium, de symbole Cm, est l'élément chimique de numéro atomique 96. C'est un transuranien synthétique de la famille des actinides. Il a été nommé d'après les physiciens Pierre et Marie Curie. Le curium se présente comme un métal radioactif, d'un blanc argenté et d'une grande dureté. Il se forme dans les réacteurs nucléaires : une tonne de combustible usé en contient en moyenne 20 g.

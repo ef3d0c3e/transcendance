@@ -1,0 +1,2 @@
+title = Europium
+description = L'europium est un élément chimique, de symbole Eu et de numéro atomique 63. L’europium est un métal blanc argenté de la série des lanthanides qui réagit facilement avec l’air pour former un revêtement d’oxyde sombre. C’est le plus chimiquement réactif, le moins dense et le plus mou des éléments lanthanides. Il est suffisamment mou pour être coupé au couteau. L'europium a été isolé en 1901 et nommé d’après le continent européen.

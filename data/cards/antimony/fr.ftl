@@ -1,0 +1,2 @@
+title = Antimoine
+description = L'antimoine est l'élément chimique de numéro atomique 51, de symbole Sb (Stibium). L'adjectif « antimonié » qualifie un corps ou une matière qui contient de l'antimoine. L'antimoine est un membre du groupe des pnictogènes. De propriétés intermédiaires entre celles des métaux et des non-métaux, l'antimoine est, avec l'arsenic, un métalloïde du cinquième groupe principal du tableau périodique. Il s'agit d'un élément faiblement électropositif.

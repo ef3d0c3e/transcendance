@@ -1,0 +1,2 @@
+title = Phosphorus
+description = Phosphorus is a chemical element; it has symbol P and atomic number 15. All elemental forms of phosphorus are highly reactive and are therefore never found in nature. Elemental phosphorus can be prepared artificially, the two most common allotropes being white phosphorus and red phosphorus. With 31P as its only stable isotope, phosphorus has an occurrence in Earth's crust of about 0.1%, generally as phosphate rock.

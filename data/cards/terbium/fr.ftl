@@ -1,0 +1,2 @@
+title = Terbium
+description = Le terbium est un élément chimique, de symbole Tb et de numéro atomique 65. C'est un métal gris argenté de la famille des lanthanides appartenant au groupe des terres rares. L'appellation terbium, provient de l'endroit, Ytterby près de Stockholm en Suède, où l'on a découvert le minerai dans lequel ont également été identifiées plusieurs autres terres rares. Les éléments chimiques yttrium, erbium et ytterbium partagent la même étymologie.
