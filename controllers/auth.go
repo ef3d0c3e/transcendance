@@ -86,7 +86,8 @@ func staticPath(path string) bool {
 			return true
 		}
 	}
-	if strings.HasPrefix(path, "/cards/") && (strings.HasSuffix(path, "/thumbnail") || strings.HasSuffix(path, "/artwork")) {
+	if (strings.HasPrefix(path, "/cards/") || strings.HasPrefix(path, "/collections/")) &&
+		(strings.HasSuffix(path, "/thumbnail") || strings.HasSuffix(path, "/artwork")) {
 		return true
 	}
 	return path == "/favicon.ico" || path == "/robots.txt"

@@ -33,6 +33,10 @@ func RegisterRoutes(
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
 
+	// seo.go
+	router.GET("/robots.txt", controller.RobotsGet)
+	router.GET("/sitemap.xml", controller.SitemapGet)
+
 	// health.go
 	router.GET("/healthz", controller.HealthzGet)
 
@@ -112,8 +116,10 @@ func RegisterRoutes(
 	}
 
 	router.GET("/opening", dataController.OpeningGet)
-	router.POST("/opening", dataController.OpeningPost)
-	router.POST("/opening/buy", dataController.OpeningBuyPost)
+	// Without JavaScript, the opened cards are shown in the inventory, newest first
+	openedTarget, openFailedTarget := "/inventory?tab=cards&sort=recent", "/inventory?tab=boosters&error=opening"
+	router.POST("/opening", controllers.FormFallback(dataController.OpeningPost, openedTarget, openFailedTarget))
+	router.POST("/opening/buy", controllers.FormFallback(dataController.OpeningBuyPost, openedTarget, openFailedTarget))
 
 	// tradeup.go
 	router.POST("/tradeup", dataController.TradeupPost)
