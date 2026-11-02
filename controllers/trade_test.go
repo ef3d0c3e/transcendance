@@ -103,16 +103,16 @@ func TestTradeOfferSettlesOnAccept(t *testing.T) {
 	createAccount(t, router, "trade1", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade2", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade1", cardFordT, 1)
-	giveCards(t, "trade2", cardTungsten, 1)
+	giveCards(t, "trade2", cardRosetta, 1)
 	setCoins(t, "trade1", 300)
 
 	cookie1 := login(t, router, "trade1", "foo-bar-baz-qux")
 	cookie2 := login(t, router, "trade2", "foo-bar-baz-qux")
 
-	// trade1 offers one Ford Model T and 300 coins for one Tungsten
+	// trade1 offers one Ford Model T and 300 coins for one Rosetta Stone
 	rec := postJSON(t, router, cookie1, "/trades", tradeBody(t, "trade2",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 300,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	trades := tradesOf(t, "trade1")
@@ -127,7 +127,7 @@ func TestTradeOfferSettlesOnAccept(t *testing.T) {
 	require.Contains(t, body, "trade1")
 	require.Contains(t, body, "1× Ford Model T")
 	require.Contains(t, body, "300 coins")
-	require.Contains(t, body, "1× Tungsten")
+	require.Contains(t, body, "1× Rosetta Stone")
 	require.Contains(t, body, "/accept")
 	require.Contains(t, body, "/decline")
 	require.NotContains(t, body, "/cancel")
@@ -143,9 +143,9 @@ func TestTradeOfferSettlesOnAccept(t *testing.T) {
 	require.Equal(t, "/trades", target)
 
 	require.Zero(t, ownedCardCount(t, "trade1", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "trade1", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade1", cardRosetta, ""))
 	require.Equal(t, int64(1), ownedCardCount(t, "trade2", cardFordT, ""))
-	require.Zero(t, ownedCardCount(t, "trade2", cardTungsten, ""))
+	require.Zero(t, ownedCardCount(t, "trade2", cardRosetta, ""))
 	require.Zero(t, shopBalance(t, "trade1"))
 	require.Equal(t, uint(300), shopBalance(t, "trade2"))
 	require.Equal(t, models.TradeAccepted, tradesOf(t, "trade1")[0].State)
@@ -162,7 +162,7 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	createAccount(t, router, "trade3", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade4", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade3", cardFordT, 1)
-	giveCards(t, "trade4", cardTungsten, 1)
+	giveCards(t, "trade4", cardRosetta, 1)
 	setCoins(t, "trade4", 100)
 
 	cookie3 := login(t, router, "trade3", "foo-bar-baz-qux")
@@ -170,7 +170,7 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 
 	rec := postJSON(t, router, cookie3, "/trades", tradeBody(t, "trade4",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	original := tradesOf(t, "trade3")[0]
 
@@ -181,9 +181,9 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	require.Contains(t, body, "&#34;card_id&#34;:1005")
 	require.Contains(t, body, "&#34;card_id&#34;:1004")
 
-	// trade4 counters with one Tungsten and 100 coins for the Ford Model T
+	// trade4 counters with one Rosetta Stone and 100 coins for the Ford Model T
 	rec = postJSON(t, router, cookie4, "/trades", tradeBody(t, "trade3",
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 100,
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 100,
 		[]models.TradeItem{item(cardFordT, "", 1)}, original.ID))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
@@ -197,12 +197,12 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	require.Equal(t, models.TradePending, trades[0].State)
 	give, err := trades[0].GiveItems()
 	require.NoError(t, err)
-	require.Equal(t, []models.TradeItem{item(cardTungsten, "", 1)}, give)
+	require.Equal(t, []models.TradeItem{item(cardRosetta, "", 1)}, give)
 
 	// trade3 accepts its own card back, with the coins on top
 	target := tradeAction(t, router, cookie3, trades[0].ID, "accept")
 	require.Equal(t, "/trades", target)
-	require.Equal(t, int64(1), ownedCardCount(t, "trade3", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade3", cardRosetta, ""))
 	require.Equal(t, int64(1), ownedCardCount(t, "trade4", cardFordT, ""))
 	require.Zero(t, ownedCardCount(t, "trade3", cardFordT, ""))
 	require.Equal(t, uint(100), shopBalance(t, "trade3"))
@@ -215,14 +215,14 @@ func TestTradeDeclineAndCancel(t *testing.T) {
 	createAccount(t, router, "trade5", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade6", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade5", cardFordT, 1)
-	giveCards(t, "trade6", cardTungsten, 1)
+	giveCards(t, "trade6", cardRosetta, 1)
 
 	cookie5 := login(t, router, "trade5", "foo-bar-baz-qux")
 	cookie6 := login(t, router, "trade6", "foo-bar-baz-qux")
 
 	offer := tradeBody(t, "trade6",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0)
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0)
 	rec := postJSON(t, router, cookie5, "/trades", offer)
 	require.Equal(t, http.StatusCreated, rec.Code)
 	first := tradesOf(t, "trade5")[0]
@@ -232,7 +232,7 @@ func TestTradeDeclineAndCancel(t *testing.T) {
 	require.Equal(t, "/trades", target)
 	require.Equal(t, models.TradeDeclined, tradesOf(t, "trade5")[0].State)
 	require.Equal(t, int64(1), ownedCardCount(t, "trade5", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "trade6", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade6", cardRosetta, ""))
 
 	// A declined offer cannot be accepted anymore
 	target = tradeAction(t, router, cookie6, first.ID, "accept")
@@ -258,7 +258,7 @@ func TestTradeOfferValidation(t *testing.T) {
 	createAccount(t, router, "trade7", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade8", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade7", cardFordT, 1)
-	giveCards(t, "trade8", cardTungsten, 1)
+	giveCards(t, "trade8", cardRosetta, 1)
 	setCoins(t, "trade7", 100)
 	cookie7 := login(t, router, "trade7", "foo-bar-baz-qux")
 
@@ -270,13 +270,13 @@ func TestTradeOfferValidation(t *testing.T) {
 	}{
 		{
 			name:   "with oneself",
-			body:   tradeBody(t, "trade7", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			body:   tradeBody(t, "trade7", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "You cannot trade with yourself",
 		},
 		{
 			name:   "unknown user",
-			body:   tradeBody(t, "nobody", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			body:   tradeBody(t, "nobody", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusNotFound,
 			error:  "User not found",
 		},
@@ -288,13 +288,13 @@ func TestTradeOfferValidation(t *testing.T) {
 		},
 		{
 			name:   "nothing given",
-			body:   tradeBody(t, "trade8", nil, 0, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			body:   tradeBody(t, "trade8", nil, 0, []models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "Offer at least one card or coins",
 		},
 		{
 			name:   "zero count",
-			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardTungsten, "", 0)}, 0),
+			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 1)}, 0, []models.TradeItem{item(cardRosetta, "", 0)}, 0),
 			status: http.StatusBadRequest,
 			error:  "Invalid card count",
 		},
@@ -308,7 +308,7 @@ func TestTradeOfferValidation(t *testing.T) {
 			name: "duplicate stack",
 			body: tradeBody(t, "trade8",
 				[]models.TradeItem{item(cardFordT, "", 1), item(cardFordT, "", 1)}, 0,
-				[]models.TradeItem{item(cardTungsten, "", 1)}, 0),
+				[]models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "The same card stack appears twice",
 		},
@@ -316,19 +316,19 @@ func TestTradeOfferValidation(t *testing.T) {
 			name: "same stack with another count",
 			body: tradeBody(t, "trade8",
 				[]models.TradeItem{item(cardFordT, "", 1), item(cardFordT, "", 2)}, 0,
-				[]models.TradeItem{item(cardTungsten, "", 1)}, 0),
+				[]models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "The same card stack appears twice",
 		},
 		{
 			name:   "too many copies",
-			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 5)}, 0, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 5)}, 0, []models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "Not enough copies of a card",
 		},
 		{
 			name:   "too many coins",
-			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 1)}, 1000, []models.TradeItem{item(cardTungsten, "", 1)}, 0),
+			body:   tradeBody(t, "trade8", []models.TradeItem{item(cardFordT, "", 1)}, 1000, []models.TradeItem{item(cardRosetta, "", 1)}, 0),
 			status: http.StatusBadRequest,
 			error:  "Not enough coins",
 		},
@@ -357,7 +357,7 @@ func TestTradeActionsRespectSides(t *testing.T) {
 	createAccount(t, router, "trade10", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade11", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade9", cardFordT, 1)
-	giveCards(t, "trade10", cardTungsten, 1)
+	giveCards(t, "trade10", cardRosetta, 1)
 
 	cookie9 := login(t, router, "trade9", "foo-bar-baz-qux")
 	cookie10 := login(t, router, "trade10", "foo-bar-baz-qux")
@@ -365,7 +365,7 @@ func TestTradeActionsRespectSides(t *testing.T) {
 
 	rec := postJSON(t, router, cookie9, "/trades", tradeBody(t, "trade10",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	offer := tradesOf(t, "trade9")[0]
 
@@ -385,7 +385,7 @@ func TestTradeActionsRespectSides(t *testing.T) {
 	// The sender cannot counter their own offer either
 	rec = postJSON(t, router, cookie9, "/trades", tradeBody(t, "trade10",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, offer.ID))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, offer.ID))
 	require.Equal(t, http.StatusForbidden, rec.Code)
 	require.Contains(t, rec.Body.String(), "This trade offer is not yours")
 }
@@ -397,7 +397,7 @@ func TestTradeAcceptFailsWithoutTheAssets(t *testing.T) {
 	createAccount(t, router, "trade13", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade14", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade12", cardFordT, 1)
-	giveCards(t, "trade13", cardTungsten, 1)
+	giveCards(t, "trade13", cardRosetta, 1)
 	setCoins(t, "trade12", 300)
 
 	cookie12 := login(t, router, "trade12", "foo-bar-baz-qux")
@@ -406,7 +406,7 @@ func TestTradeAcceptFailsWithoutTheAssets(t *testing.T) {
 	// The offered coins get spent while the offer is pending
 	rec := postJSON(t, router, cookie12, "/trades", tradeBody(t, "trade13",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 300,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	first := tradesOf(t, "trade12")[0]
 	setCoins(t, "trade12", 0)
@@ -416,7 +416,7 @@ func TestTradeAcceptFailsWithoutTheAssets(t *testing.T) {
 	require.Equal(t, models.TradePending, tradesOf(t, "trade12")[0].State)
 	// Nothing moved, not even the cards offered along the missing coins
 	require.Equal(t, int64(1), ownedCardCount(t, "trade12", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "trade13", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade13", cardRosetta, ""))
 	require.Zero(t, shopBalance(t, "trade13"))
 
 	// Withdrawing the offer gives its assets back: the Ford Model T can be
@@ -426,11 +426,11 @@ func TestTradeAcceptFailsWithoutTheAssets(t *testing.T) {
 	require.Equal(t, "/trades", target)
 	rec = postJSON(t, router, cookie12, "/trades", tradeBody(t, "trade13",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	second := tradesOf(t, "trade12")[1]
 	require.NoError(t, tests.DB.Model(&models.Card{}).
-		Where("owner_id = ? AND card_id = ?", userID(t, "trade13"), cardTungsten).
+		Where("owner_id = ? AND card_id = ?", userID(t, "trade13"), cardRosetta).
 		Update("owner_id", userID(t, "trade14")).
 		Error)
 
@@ -438,7 +438,7 @@ func TestTradeAcceptFailsWithoutTheAssets(t *testing.T) {
 	require.Equal(t, "/trades?error=settle", target)
 	require.Equal(t, models.TradePending, tradesOf(t, "trade12")[1].State)
 	require.Equal(t, int64(1), ownedCardCount(t, "trade12", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "trade14", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade14", cardRosetta, ""))
 }
 
 // The trade menu opens on a viewed collection, the stacks come from its API
@@ -447,7 +447,7 @@ func TestTradeMenuAndStacks(t *testing.T) {
 	createAccount(t, router, "trade15", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade16", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade15", cardFordT, 2)
-	giveCardAt(t, "trade15", cardTungsten, "foil3", time.Now())
+	giveCardAt(t, "trade15", cardRosetta, "foil3", time.Now())
 	giveCards(t, "trade16", cardMcMurdo, 1)
 	setCoins(t, "trade15", 55)
 
@@ -483,7 +483,7 @@ func TestTradeMenuAndStacks(t *testing.T) {
 	require.Equal(t, uint(cardFordT), stacks.Mine[0].CardID)
 	require.Equal(t, uint(2), stacks.Mine[0].Count)
 	require.Equal(t, "Ford Model T", stacks.Mine[0].Title)
-	require.Equal(t, uint(cardTungsten), stacks.Mine[1].CardID)
+	require.Equal(t, uint(cardRosetta), stacks.Mine[1].CardID)
 	require.Equal(t, "foil3", stacks.Mine[1].Foil)
 	require.Equal(t, uint(1), stacks.Mine[1].Count)
 	require.Len(t, stacks.Theirs, 1)
@@ -544,11 +544,11 @@ func TestTradeButtonOnCollection(t *testing.T) {
 	require.Contains(t, body, `<a class="inventory-trade" href="/trades">Your trades</a>`)
 
 	// With how many offers wait for an answer
-	giveCards(t, "trade17", cardTungsten, 1)
+	giveCards(t, "trade17", cardRosetta, 1)
 	giveCards(t, "trade18", cardFordT, 1)
 	rec := postJSON(t, router, login(t, router, "trade18", "foo-bar-baz-qux"), "/trades", tradeBody(t, "trade17",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	body = getInventory(t, router, cookie17, "/inventory?tab=cards")
 	require.Contains(t, body, `<span class="inventory-trade-count" aria-hidden="true">1</span>`)
@@ -562,7 +562,7 @@ func TestTradeVisibilityAndErasure(t *testing.T) {
 	createAccount(t, router, "trade20", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade21", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade19", cardFordT, 1)
-	giveCards(t, "trade20", cardTungsten, 1)
+	giveCards(t, "trade20", cardRosetta, 1)
 
 	cookie19 := login(t, router, "trade19", "foo-bar-baz-qux")
 	cookie20 := login(t, router, "trade20", "foo-bar-baz-qux")
@@ -570,7 +570,7 @@ func TestTradeVisibilityAndErasure(t *testing.T) {
 
 	rec := postJSON(t, router, cookie19, "/trades", tradeBody(t, "trade20",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// A stranger sees an empty trades page
@@ -610,14 +610,14 @@ func TestTradeOfferNotifies(t *testing.T) {
 	createAccount(t, router, "trade22", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade23", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade22", cardFordT, 1)
-	giveCards(t, "trade23", cardTungsten, 1)
+	giveCards(t, "trade23", cardRosetta, 1)
 
 	cookie22 := login(t, router, "trade22", "foo-bar-baz-qux")
 	cookie23 := login(t, router, "trade23", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie22, "/trades", tradeBody(t, "trade23",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The receiver reads the offer on their notifications page
@@ -636,7 +636,7 @@ func TestTradeOfferNotifies(t *testing.T) {
 	// Countering notifies the original sender
 	offer := tradesOf(t, "trade22")[0]
 	rec = postJSON(t, router, cookie23, "/trades", tradeBody(t, "trade22",
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0,
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0,
 		[]models.TradeItem{item(cardFordT, "", 1)}, offer.ID))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
@@ -660,7 +660,7 @@ func TestTradeAssetsStayLocked(t *testing.T) {
 	createAccount(t, router, "trade25", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade26", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade24", cardFordT, 2)
-	giveCards(t, "trade25", cardTungsten, 1)
+	giveCards(t, "trade25", cardRosetta, 1)
 	giveCards(t, "trade26", cardMcMurdo, 1)
 	setCoins(t, "trade24", 100)
 
@@ -670,7 +670,7 @@ func TestTradeAssetsStayLocked(t *testing.T) {
 	// One of the two Ford Model T and 40 of the 100 coins go up in an offer
 	rec := postJSON(t, router, cookie24, "/trades", tradeBody(t, "trade25",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 40,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The copies and coins up in that offer cannot be put up in another one
@@ -713,7 +713,7 @@ func TestTradeAssetsStayLocked(t *testing.T) {
 	require.Equal(t, "/trades", target)
 	rec = postJSON(t, router, cookie24, "/trades", tradeBody(t, "trade25",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 40,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 }
 
@@ -723,7 +723,7 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 	createAccount(t, router, "trade27", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade28", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade27", cardFordT, 1)
-	giveCards(t, "trade28", cardTungsten, 1)
+	giveCards(t, "trade28", cardRosetta, 1)
 	setCoins(t, "trade27", 305)
 
 	cookie27 := login(t, router, "trade27", "foo-bar-baz-qux")
@@ -731,7 +731,7 @@ func TestTradeShopSpendsFreeCoinsOnly(t *testing.T) {
 	// 200 of the 305 coins go up in an offer
 	rec := postJSON(t, router, cookie27, "/trades", tradeBody(t, "trade28",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 200,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	offer := tradesOf(t, "trade27")[0]
 
@@ -767,17 +767,17 @@ func TestTradeCounterMirrorsCoins(t *testing.T) {
 	createAccount(t, router, "trade29", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade30", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade29", cardFordT, 1)
-	giveCards(t, "trade30", cardTungsten, 1)
+	giveCards(t, "trade30", cardRosetta, 1)
 	setCoins(t, "trade29", 300)
 	setCoins(t, "trade30", 200)
 
 	cookie29 := login(t, router, "trade29", "foo-bar-baz-qux")
 	cookie30 := login(t, router, "trade30", "foo-bar-baz-qux")
 
-	// A Ford Model T and 100 coins for a Tungsten and 50 coins
+	// A Ford Model T and 100 coins for a Rosetta Stone and 50 coins
 	rec := postJSON(t, router, cookie29, "/trades", tradeBodyWantCoins(t, "trade30",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 100,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 50, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 50, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 	original := tradesOf(t, "trade29")[0]
 
@@ -793,7 +793,7 @@ func TestTradeCounterMirrorsCoins(t *testing.T) {
 
 	// trade30 counters with the very same deal, direction flipped
 	rec = postJSON(t, router, cookie30, "/trades", tradeBodyWantCoins(t, "trade29",
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 50,
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 50,
 		[]models.TradeItem{item(cardFordT, "", 1)}, 100, original.ID))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
@@ -806,9 +806,9 @@ func TestTradeCounterMirrorsCoins(t *testing.T) {
 	target := tradeAction(t, router, cookie29, trades[0].ID, "accept")
 	require.Equal(t, "/trades", target)
 	require.Zero(t, ownedCardCount(t, "trade29", cardFordT, ""))
-	require.Equal(t, int64(1), ownedCardCount(t, "trade29", cardTungsten, ""))
+	require.Equal(t, int64(1), ownedCardCount(t, "trade29", cardRosetta, ""))
 	require.Equal(t, int64(1), ownedCardCount(t, "trade30", cardFordT, ""))
-	require.Zero(t, ownedCardCount(t, "trade30", cardTungsten, ""))
+	require.Zero(t, ownedCardCount(t, "trade30", cardRosetta, ""))
 	require.Equal(t, uint(250), shopBalance(t, "trade29"))
 	require.Equal(t, uint(250), shopBalance(t, "trade30"))
 }
@@ -909,7 +909,7 @@ func TestTradeInventoryMarksLocked(t *testing.T) {
 	createAccount(t, router, "trade35", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade36", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade35", cardFordT, 2)
-	giveCards(t, "trade36", cardTungsten, 1)
+	giveCards(t, "trade36", cardRosetta, 1)
 
 	cookie35 := login(t, router, "trade35", "foo-bar-baz-qux")
 	cookie36 := login(t, router, "trade36", "foo-bar-baz-qux")
@@ -917,7 +917,7 @@ func TestTradeInventoryMarksLocked(t *testing.T) {
 	// One of the two Ford Model T goes up in an offer
 	rec := postJSON(t, router, cookie35, "/trades", tradeBody(t, "trade36",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	body := getInventory(t, router, cookie35, "/inventory?tab=cards")
@@ -935,7 +935,7 @@ func TestTradeAcceptRespectsReceiverLocks(t *testing.T) {
 	createAccount(t, router, "trade38", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade39", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade37", cardFordT, 1)
-	giveCards(t, "trade38", cardTungsten, 1)
+	giveCards(t, "trade38", cardRosetta, 1)
 	giveCards(t, "trade39", cardMcMurdo, 2)
 	setCoins(t, "trade37", 100)
 
@@ -955,7 +955,7 @@ func TestTradeAcceptRespectsReceiverLocks(t *testing.T) {
 	// Then the Ford Model T and 80 coins go up in an offer to trade38
 	rec = postJSON(t, router, cookie37, "/trades", tradeBody(t, "trade38",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 80,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	trades := tradesOf(t, "trade39")
@@ -980,13 +980,13 @@ func TestTradeBlockedUsers(t *testing.T) {
 	createAccount(t, router, "trade40", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade41", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade40", cardFordT, 1)
-	giveCards(t, "trade41", cardTungsten, 1)
+	giveCards(t, "trade41", cardRosetta, 1)
 
 	cookie40 := login(t, router, "trade40", "foo-bar-baz-qux")
 	cookie41 := login(t, router, "trade41", "foo-bar-baz-qux")
 	body := tradeBody(t, "trade41",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0)
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0)
 
 	// An offer made before the block cannot be accepted after it
 	rec := postJSON(t, router, cookie40, "/trades", body)
@@ -1020,7 +1020,7 @@ func TestTradeWantsFreeCoins(t *testing.T) {
 	createAccount(t, router, "trade43", "foo-bar-baz-qux", 0)
 	createAccount(t, router, "trade44", "foo-bar-baz-qux", 0)
 	giveCards(t, "trade42", cardFordT, 1)
-	giveCards(t, "trade43", cardTungsten, 1)
+	giveCards(t, "trade43", cardRosetta, 1)
 	giveCards(t, "trade44", cardMcMurdo, 1)
 	setCoins(t, "trade43", 1000)
 
@@ -1029,7 +1029,7 @@ func TestTradeWantsFreeCoins(t *testing.T) {
 
 	// 800 of trade43's coins go up in an offer to trade44
 	rec := postJSON(t, router, cookie43, "/trades", tradeBody(t, "trade44",
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 800,
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 800,
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
@@ -1040,7 +1040,7 @@ func TestTradeWantsFreeCoins(t *testing.T) {
 	require.Contains(t, rec.Body.String(), "The other user does not have that many coins")
 	rec = postJSON(t, router, cookie42, "/trades", tradeBody(t, "trade43",
 		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusBadRequest, rec.Code)
 	require.Contains(t, rec.Body.String(), "Some copies of a card are up in another trade")
 
