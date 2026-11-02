@@ -21,11 +21,16 @@
 	let root = $state(undefined);
 	let trigger = $state(undefined);
 
+	// Asked while loading, the response may predate the change
+	let stale = false;
+
 	async function load() {
 		if (loading) {
+			stale = true;
 			return;
 		}
 		loading = true;
+		stale = false;
 		try {
 			const response = await fetch('/api/notifications?limit=5', { credentials: 'include' });
 			if (response.status === 401) {
@@ -46,6 +51,9 @@
 			error = true;
 		} finally {
 			loading = false;
+		}
+		if (stale) {
+			load();
 		}
 	}
 
@@ -102,8 +110,11 @@
 		document.addEventListener('visibilitychange', handleVisibility);
 		document.addEventListener('pointerdown', handleOutsidePointer);
 		document.addEventListener('keydown', handleKeydown);
+		// Sent by the shoutbox when private messages arrive or are read
+		globalThis.addEventListener('notifications-changed', load);
 		return () => {
 			clearInterval(interval);
+			globalThis.removeEventListener('notifications-changed', load);
 			document.removeEventListener('visibilitychange', handleVisibility);
 			document.removeEventListener('pointerdown', handleOutsidePointer);
 			document.removeEventListener('keydown', handleKeydown);

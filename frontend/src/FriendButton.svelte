@@ -1,123 +1,135 @@
-<script lang="ts">
-	import { onMount } from "svelte";
+<script>
+	// How long an error stays shown, in milliseconds
+	const ERROR_DELAY = 4000;
 
-	let { dataset } = $props()
-	let relation = $state([])
-	let popup = $state([])
-	let action = $state("")
-	let text = $state("")
-	let error = $state("")
+	let { dataset } = $props();
 
-	async function loadRelation() {
-		let target = "/api/friends/" + dataset.id
-		try {
-			const response = await fetch(target, {
-				method: "GET",
-			});
-			const data = await response.json();
-			relation = data.relation;
-			switch (relation.toString()) {
-				case "pending":
-					action  = "cancel"
-					text	= dataset.labelcancel
-					break
-				case "friends":
-					action  = "unfriend"
-					text	= dataset.labelunfriend
-					break
-				case "blocked":
-					action =  "unblock"
-					text	= dataset.labelunblock
-					break
-				case "respond":
-					action =  "accept"
-					text	= dataset.labelaccept
-					break
-				default:
-					action = "add"
-					text	= dataset.labeladd
-			}
+	// Relation to the user, rendered by the server then given back by every action
+	let relation = $derived(dataset.relation ?? '');
+	let busy = $state(false);
+	let error = $state('');
+
+	// Actions available for each relation
+	const ACTIONS = {
+		'': ['add'],
+		pending: ['cancel'],
+		respond: ['accept', 'deny'],
+		friends: ['unfriend'],
+		blocked: ['unblock'],
+		// Blocked by the other user, adding them explains why it can't be done
+		block: ['add'],
+	};
+	// Dataset key of each action's label
+	const LABELS = {
+		add: 'labelAdd',
+		cancel: 'labelCancel',
+		accept: 'labelAccept',
+		deny: 'labelDeny',
+		unfriend: 'labelUnfriend',
+		block: 'labelBlock',
+		unblock: 'labelUnblock',
+	};
+
+	let actions = $derived.by(() => {
+		const list = [...(ACTIONS[relation] ?? ACTIONS[''])];
+		if (dataset.block !== undefined && relation !== 'blocked') {
+			list.push('block');
 		}
-		catch (err)
-		{
-			error = err;
-		}
-	}
-
-	onMount(() => {
-		loadRelation()
+		return list;
 	});
 
-	async function relationAction(act) {
-		const r = await fetch(`/friendaction?target=${dataset.id}&action=${act}`, {
-			method: "POST",
-		})
-		const d = await r.json()
-		popup = d.response
-		loadRelation()
-	}
-	
 	$effect(() => {
-		setInterval(() => {
-			popup = "";
-		}, 3000);
+		if (!error) {
+			return;
+		}
+		const timeout = setTimeout(() => (error = ''), ERROR_DELAY);
+		return () => clearTimeout(timeout);
 	});
 
+	async function run(action) {
+		busy = true;
+		error = '';
+		try {
+			const params = new URLSearchParams({ target: dataset.id, action });
+			const response = await fetch(`/friendaction?${params}`, { method: 'POST' });
+			const data = await response.json();
+			if (typeof data.relation === 'string') {
+				relation = data.relation;
+			}
+			if (!response.ok) {
+				error = data.message ?? dataset.labelError;
+			}
+		} catch {
+			error = dataset.labelError;
+		} finally {
+			busy = false;
+		}
+	}
 </script>
 
-<div>
-{#if error != ""}
-	<span>error: {{error}}</span>
-{/if}
-{#if relation.toString() != "you"}
-	{#if relation.toString() == "respond"}
-		<button class="deny" onclick={()=>relationAction("deny")}>{ dataset.labeldeny }</button>
-	{/if}
-	<button class={action} onclick={()=>relationAction(action)}>{ text }</button>
-	{#if dataset.block && action == "add"}
-		<button class="deny" onclick={()=>relationAction("block")}>{ dataset.labelblock }</button>
-	{/if}
-{/if}
-
-{#key popup}
-	{#if popup && popup.toString() != "ok"}
-		<div id="friend-response-popup">{popup}</div>
-	{/if}
-{/key}
+<div class="friend-actions">
+	{#each actions as action (action)}
+		<button
+			type="button"
+			class="friend-action"
+			class:is-main={action === 'add' || action === 'accept'}
+			class:is-danger={action === 'block' || action === 'unfriend'}
+			disabled={busy}
+			onclick={() => run(action)}
+		>
+			{dataset[LABELS[action]]}
+		</button>
+	{/each}
 </div>
+{#if error}
+	<p class="friend-error" role="alert">{error}</p>
+{/if}
 
 <style>
-div {
-	display: flex;
-	justify-content: center;
-}
-button {
-	margin: 2%;
-	width: 100px;
-	padding-left: 0;
-	padding-right: 0;
-}
-.block {
-	background-color: darkred;
-}
-.unblock {
-	background-color: darkred;
-}
-#friend-response-popup {
-	position: fixed;
-	bottom: 5%;
-	align-self: center;
-	text-align: center;
-	background-color: darkred;
-	border-radius: 2px;
-}
-.add {
-	background-color: darkgreen;
-}
-.accept {
-	background-color: lightgreen;
-}
-.deny {
-	background-color: red;
-}
+	.friend-actions {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: inherit;
+		gap: 0.4rem;
+	}
+
+	.friend-action {
+		padding: 0.35rem 0.75rem;
+
+		color: var(--color-text);
+		background: var(--color-bg-4);
+		border: 1px solid var(--color-border-1);
+		border-radius: 0.55rem;
+
+		font-size: 0.85rem;
+		font-weight: 600;
+		line-height: 1.3;
+
+		transition: background-color 120ms ease;
+
+		&:hover:not(:disabled) {
+			background: var(--color-bg-3);
+		}
+
+		&.is-main {
+			color: var(--color-text-alt);
+			background: var(--color-accent-primary);
+			border-color: transparent;
+
+			&:hover:not(:disabled) {
+				background: var(--color-accent-primary-dark);
+			}
+		}
+
+		&.is-danger {
+			color: var(--color-error-3);
+		}
+	}
+
+	.friend-error {
+		margin: 0.4rem 0 0;
+
+		color: var(--color-error-3);
+		font-size: 0.8rem;
+	}
 </style>
