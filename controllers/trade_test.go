@@ -197,7 +197,9 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	require.Equal(t, models.TradePending, trades[0].State)
 	items, err := trades[0].Items(tests.DB)
 	require.NoError(t, err)
-	require.Equal(t, []models.TradeItem{item(cardRosetta, "", 1)}, give)
+	require.Equal(t, []models.TradeItem{item(cardRosetta, "", 1)}, items.Give)
+	// The counter replaced the stacks of the original offer
+	require.Equal(t, []models.TradeItem{item(cardFordT, "", 1)}, items.Want)
 
 	// trade3 accepts its own card back, with the coins on top
 	target := tradeAction(t, router, cookie3, trades[0].ID, "accept")

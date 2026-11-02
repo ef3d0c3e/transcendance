@@ -50,7 +50,7 @@ func TestSellPaysTheFixedPriceWhateverTheQuantity(t *testing.T) {
 	require.Equal(t, uint(20), shopBalance(t, "sell1"))
 
 	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 3))
-	require.Equal(t, "/inventory?tab=cards&sold=3&coins=30", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=3&coins=30", rec.Header().Get("Location"))
 	require.Equal(t, uint(50), shopBalance(t, "sell1"))
 	require.Empty(t, ownedCards(t, "sell1"))
 
@@ -80,7 +80,7 @@ func TestSellFoilIsWorthDouble(t *testing.T) {
 
 	// The foils are worth 20 each, only the plain copies stay behind
 	rec := sell(t, router, cookie, sellForm(cardRosetta, "foil1", 2))
-	require.Equal(t, "/inventory?tab=cards&sold=2&coins=40", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=2&coins=40", rec.Header().Get("Location"))
 	owned := ownedCards(t, "sell2")
 	require.Len(t, owned, 2)
 	for _, card := range owned {
@@ -152,7 +152,7 @@ func TestSellKeepsCopiesUpInTrades(t *testing.T) {
 	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 2))
 	require.Equal(t, "/inventory?tab=cards&error=sell-locked", rec.Header().Get("Location"))
 	rec = sell(t, router, cookie, sellForm(cardRosetta, "", 1))
-	require.Equal(t, "/inventory?tab=cards&sold=1&coins=10", rec.Header().Get("Location"))
+	requireSignedNotice(t, "/inventory?tab=cards&sold=1&coins=10", rec.Header().Get("Location"))
 
 	// The trade can still be settled
 	target := tradeAction(t, router, login(t, router, "sell7", "foo-bar-baz-qux"), tradesOf(t, "sell6")[0].ID, "accept")
