@@ -26,6 +26,16 @@ type PrivateMessage struct {
 	ReadAt *time.Time `gorm:"index:idx_private_recipient,priority:2"`
 }
 
+// A user a moderator muted in the shoutbox until a given time: their messages there are refused, private
+// messages still work
+type ShoutboxMute struct {
+	UserID      uint      `gorm:"primaryKey"`
+	User        User      `gorm:"constraint:OnDelete:CASCADE"`
+	ModeratorID uint      `gorm:"not null;index"`
+	Moderator   User      `gorm:"constraint:OnDelete:CASCADE"`
+	Until       time.Time `gorm:"not null"`
+}
+
 // A user ignored by another until a given time: their shoutbox messages are hidden and their private messages
 // rejected
 type UserIgnore struct {

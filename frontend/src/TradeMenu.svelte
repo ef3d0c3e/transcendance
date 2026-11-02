@@ -10,6 +10,7 @@
 
 <script>
 	import { onMount } from "svelte";
+	import { apiFetch } from "./api.js";
 
 	let { target } = $props();
 
@@ -32,6 +33,12 @@
 	const labelError = $derived(target.dataset.labelError ?? "");
 	const labelSearch = $derived(target.dataset.labelSearch ?? "");
 	const labelNoMatch = $derived(target.dataset.labelNoMatch ?? "");
+	const labelCopies = $derived(target.dataset.labelCopies ?? "");
+	const rarityLabels = $derived({
+		common: target.dataset.labelRarityCommon ?? "",
+		rare: target.dataset.labelRarityRare ?? "",
+		legendary: target.dataset.labelRarityLegendary ?? "",
+	});
 
 	let mine = $state([]);
 	let theirs = $state([]);
@@ -39,8 +46,8 @@
 	let balance = $state(0);
 	let theirBalance = $state(0);
 	// Copies put up per stack, by `card_id:foil`
-	let give = $state({});
-	let want = $state({});
+	const give = $state({});
+	const want = $state({});
 	let coins = $state(0);
 	let wantCoins = $state(0);
 	let loading = $state(true);
@@ -53,7 +60,10 @@
 	// Width of a picker column and of the fixed 30ch card box, in pixels. The
 	// cards are scaled to the column so a tile never overflows it, whatever
 	// the viewport.
-	let pickerWidth = $state(0);
+	// Content box of the first picker, without the padding the rings of
+	// the tiles show in
+	let pickerRect = $state();
+	const pickerWidth = $derived(pickerRect?.width ?? 0);
 	let cardWidth = $state(0);
 	const cardScale = $derived(
 		pickerWidth && cardWidth ? Math.min(0.6, pickerWidth / cardWidth) : 0.6,
@@ -82,8 +92,19 @@
 	const mineShown = $derived(search(mine, giveQuery));
 	const theirsShown = $derived(search(theirs, wantQuery));
 
+	// The card, its rarity and foil: the thumbnails only show the rarity as
+	// a border color
 	function title(stack) {
-		return stack.foil ? `${stack.title} · ${labelFoil}` : stack.title;
+		const parts = [stack.title, rarityLabels[stack.rarity] ?? ""];
+		if (stack.foil) {
+			parts.push(labelFoil);
+		}
+		return parts.filter(Boolean).join(" · ");
+	}
+
+	// Name of a picker tile, whose card render is presentational
+	function tileName(stack) {
+		return `${title(stack)}, ${labelCopies}: ${stack.count}`;
 	}
 
 	// Same rarity palette as the card badges
@@ -113,9 +134,19 @@
 		toggle(side, stack);
 	}
 
+	// The tile is the button: the card's collection link stays clickable but
+	// leaves the tab order
+	function unfocusLinks(node) {
+		for (const link of node.querySelectorAll("a")) {
+			link.tabIndex = -1;
+		}
+	}
+
 	function pickKey(e, side, stack) {
 		if (e.key !== "Enter" && e.key !== " ") return;
 		e.preventDefault();
+		// A held key toggles once
+		if (e.repeat) return;
 		toggle(side, stack);
 	}
 
@@ -130,15 +161,15 @@
 	}
 
 	// The free balance is the most that can be put up or asked for: cap the
-	// amount as it is typed. An empty field is left alone so it can be
-	// retyped into.
+	// amount as it is typed, in whole coins. An empty field is left alone so
+	// it can be retyped into.
 	function capCoins(e, side) {
 		const input = e.currentTarget;
 		if (input.value === "") {
 			return;
 		}
 		const limit = side === "give" ? balance : theirBalance;
-		const amount = Math.min(Math.max(0, Number(input.value) || 0), limit);
+		const amount = Math.min(Math.max(0, Math.floor(Number(input.value) || 0)), limit);
 		if (side === "give") {
 			coins = amount;
 		} else {
@@ -151,19 +182,19 @@
 
 	// A prefilled coin amount, capped to the free balance of its side
 	function prefillCoins(encoded, limit) {
-		return Math.min(Math.max(0, Number(encoded) || 0), limit);
+		return Math.min(Math.max(0, Math.floor(Number(encoded) || 0)), limit);
 	}
 
 	// Start a side from the stacks of a counter, capped to the stacks free to
 	// put up on that side
 	function prefill(sel, stacks, encoded) {
-		let items;
+		let prefilled;
 		try {
-			items = JSON.parse(encoded || "[]");
+			prefilled = JSON.parse(encoded || "[]");
 		} catch {
-			items = [];
+			prefilled = [];
 		}
-		for (const item of items) {
+		for (const item of prefilled) {
 			const stack = stacks.find((s) => s.card_id === item.card_id && s.foil === item.foil);
 			if (stack && stack.count > 0) {
 				sel[key(stack)] = Math.min(item.count, stack.count);
@@ -185,21 +216,21 @@
 		sending = true;
 		message = "";
 		try {
-			const response = await fetch(submitUrl, {
+			const response = await apiFetch(submitUrl, {
 				method: "POST",
-				credentials: "same-origin",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					target: targetName,
 					give: items(give, mine),
-					coins: Math.max(0, coins || 0),
+					coins: Math.max(0, Math.floor(coins || 0)),
 					want: items(want, theirs),
-					want_coins: Math.max(0, wantCoins || 0),
+					want_coins: Math.max(0, Math.floor(wantCoins || 0)),
 					counter_of: counterId,
 				}),
 			});
 			if (response.ok) {
-				const body = await response.json();
+				// The offer is saved even if the answer can't be read
+				const body = await response.json().catch(() => ({}));
 				location.assign(body.redirect ?? "/trades");
 				return;
 			}
@@ -214,7 +245,7 @@
 
 	onMount(async () => {
 		try {
-			const response = await fetch(stacksUrl, { credentials: "same-origin" });
+			const response = await apiFetch(stacksUrl);
 			if (!response.ok) {
 				throw new Error();
 			}
@@ -239,16 +270,18 @@
 	<!-- Invisible ruler: the card markup is a fixed 30ch box, this is the
 	     width the tiles are scaled from -->
 	<span class="trade-menu-probe" bind:clientWidth={cardWidth}></span>
-	{#if loading}
-		<p class="trade-menu-status">{labelLoading}</p>
-	{:else}
+	<!-- Present from the start, so the end of the loading is announced -->
+	<p class="trade-menu-status" role="status">{loading ? labelLoading : ""}</p>
+	{#if !loading}
 		<section class="trade-menu-sides">
 			<section class="trade-menu-side">
 				<div class="trade-menu-side-head">
-					<h2>{labelGive}</h2>
+					<h2 id="trade-menu-give">{labelGive}</h2>
 					<label class="trade-menu-coins">
-						<span>{labelCoins}</span>
-						<input type="number" min="0" max={balance} bind:value={coins}
+						<span id="trade-menu-give-coins">{labelCoins}</span>
+						<!-- Named "You give, coins": the other side has its own -->
+						<input type="number" min="0" max={balance} step="1" inputmode="numeric"
+							aria-labelledby="trade-menu-give trade-menu-give-coins" bind:value={coins}
 							oninput={(e) => capCoins(e, "give")} />
 					</label>
 				</div>
@@ -258,9 +291,9 @@
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
-								<button type="button" aria-label={labelDecrease} onclick={() => step("give", stack, -1)}>−</button>
-								<span class="trade-menu-count">{give[key(stack)]}</span>
-								<button type="button" aria-label={labelIncrease} onclick={() => step("give", stack, 1)}>+</button>
+								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("give", stack, -1)}>−</button>
+								<span class="trade-menu-count" aria-live="polite">{give[key(stack)]}</span>
+								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("give", stack, 1)}>+</button>
 							</span>
 						</div>
 					{/each}
@@ -269,14 +302,18 @@
 					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
 						bind:value={giveQuery} />
 				{/if}
-				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
+				<div class="trade-menu-picker" bind:contentRect={pickerRect}
 					style="--trade-card-scale: {cardScale}">
 					{#each mineShown as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={give[key(stack)]} class:is-locked={!stack.count}
-							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
+							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(give[key(stack)])}
+							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "give", stack)}
 							onkeydown={(e) => pickKey(e, "give", stack)}>
-							<div class="trade-menu-card">{@html stack.html}</div>
+							<!-- The stack's card, rendered by the server's html/template from the
+							     static card data, never from user input -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
 						<p class="trade-menu-empty">{mine.length > 0 ? labelNoMatch : labelEmpty}</p>
@@ -286,10 +323,11 @@
 
 			<section class="trade-menu-side">
 				<div class="trade-menu-side-head">
-					<h2>{labelGet}</h2>
+					<h2 id="trade-menu-get">{labelGet}</h2>
 					<label class="trade-menu-coins">
-						<span>{labelCoins}</span>
-						<input type="number" min="0" max={theirBalance} bind:value={wantCoins}
+						<span id="trade-menu-get-coins">{labelCoins}</span>
+						<input type="number" min="0" max={theirBalance} step="1" inputmode="numeric"
+							aria-labelledby="trade-menu-get trade-menu-get-coins" bind:value={wantCoins}
 							oninput={(e) => capCoins(e, "want")} />
 					</label>
 				</div>
@@ -299,9 +337,9 @@
 							<img class="trade-menu-thumb" src={stack.image} alt="" />
 							<span class="trade-menu-item-title">{title(stack)}</span>
 							<span class="trade-menu-stepper">
-								<button type="button" aria-label={labelDecrease} onclick={() => step("want", stack, -1)}>−</button>
-								<span class="trade-menu-count">{want[key(stack)]}</span>
-								<button type="button" aria-label={labelIncrease} onclick={() => step("want", stack, 1)}>+</button>
+								<button type="button" aria-label="{labelDecrease}: {stack.title}" onclick={() => step("want", stack, -1)}>−</button>
+								<span class="trade-menu-count" aria-live="polite">{want[key(stack)]}</span>
+								<button type="button" aria-label="{labelIncrease}: {stack.title}" onclick={() => step("want", stack, 1)}>+</button>
 							</span>
 						</div>
 					{/each}
@@ -310,14 +348,18 @@
 					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
 						bind:value={wantQuery} />
 				{/if}
-				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
-					style="--trade-card-scale: {cardScale}">
+				<!-- Both columns are as wide: the first one is measured -->
+				<div class="trade-menu-picker" style="--trade-card-scale: {cardScale}">
 					{#each theirsShown as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={want[key(stack)]} class:is-locked={!stack.count}
-							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
+							role="button" tabindex="0" aria-label={tileName(stack)} aria-pressed={Boolean(want[key(stack)])}
+							aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
 							onkeydown={(e) => pickKey(e, "want", stack)}>
-							<div class="trade-menu-card">{@html stack.html}</div>
+							<!-- The stack's card, rendered by the server's html/template from the
+							     static card data, never from user input -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
+							<div class="trade-menu-card" {@attach unfocusLinks}>{@html stack.html}</div>
 						</div>
 					{:else}
 						<p class="trade-menu-empty">{theirs.length > 0 ? labelNoMatch : labelEmpty}</p>
@@ -327,15 +369,18 @@
 		</section>
 
 		<footer class="trade-menu-footer">
-			{#if message}
-				<p class="trade-menu-error">{message}</p>
-			{/if}
 			<a class="trade-menu-back" href="/trades">{labelBack}</a>
 			<button type="button" class="trade-menu-send" disabled={sending} onclick={send}>
 				{counterId ? labelCounter : labelSend}
 			</button>
 		</footer>
 	{/if}
+	<!-- Present from the start, so the failure written in is announced -->
+	<div class="trade-menu-alert" role="alert">
+		{#if message}
+			<p class="trade-menu-error">{message}</p>
+		{/if}
+	</div>
 </div>
 
 <style>
@@ -357,6 +402,11 @@
 	.trade-menu-status {
 		margin: 1.5rem 0;
 		color: var(--color-text-muted);
+	}
+
+	/* Stays in the page once loaded, without taking room */
+	.trade-menu-status:empty {
+		margin: 0;
 	}
 
 	/* The two sides of the offer, one section split down the middle.
@@ -522,7 +572,7 @@
 
 		color: var(--color-text);
 		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
+		border: 1px solid var(--color-border-control);
 		border-radius: 0.5rem;
 
 		font-variant-numeric: tabular-nums;
@@ -545,7 +595,7 @@
 
 		color: var(--color-text);
 		background: var(--color-bg-2);
-		border: 1px solid var(--color-border-1);
+		border: 1px solid var(--color-border-control);
 		border-radius: 0.5rem;
 	}
 
@@ -562,7 +612,9 @@
 
 		flex: 1 1 auto;
 		min-height: 0;
-		max-height: calc(2 * 30em * var(--trade-card-scale) + 0.75rem);
+		max-height: calc(2 * 30em * var(--trade-card-scale) + 0.75rem + 1.2rem);
+		/* Room for the picked ring and the focus outline around the tiles */
+		padding: 0.6rem;
 		overflow-y: auto;
 		overflow-x: hidden;
 	}
@@ -582,10 +634,42 @@
 		transform: translateY(-1px);
 	}
 
-	.trade-menu-tile.is-picked,
-	.trade-menu-tile:focus-visible {
+	/* Picked: a ring and a check mark, so it isn't told by color alone. The
+	   keyboard focus is a separate, offset outline, both can show at once. */
+	.trade-menu-tile {
 		border-radius: calc(var(--card-border-radius) * var(--trade-card-scale));
-		outline: 2px solid var(--color-accent-primary);
+	}
+
+	.trade-menu-tile.is-picked {
+		box-shadow: 0 0 0 3px var(--color-accent-primary);
+	}
+
+	.trade-menu-tile.is-picked::after {
+		content: "✓";
+		position: absolute;
+		top: 0.35rem;
+		left: 50%;
+		translate: -50% 0;
+		z-index: 20;
+
+		display: grid;
+		place-items: center;
+		width: 1.5rem;
+		height: 1.5rem;
+
+		color: var(--color-text-alt);
+		background: var(--color-accent-primary);
+		border: 2px solid var(--color-bg-2);
+		border-radius: 999px;
+
+		font-size: 0.8rem;
+		font-weight: 800;
+		line-height: 1;
+	}
+
+	.trade-menu-tile:focus-visible {
+		outline: 3px solid var(--color-accent-secondary);
+		outline-offset: 5px;
 	}
 
 	/* A stack fully up in other trades cannot be picked */
@@ -631,8 +715,7 @@
 	}
 
 	.trade-menu-error {
-		flex: 1;
-		margin: 0;
+		margin: 1rem 0 0;
 		padding: 0.55rem 0.75rem;
 
 		color: var(--color-error-3);
@@ -726,8 +809,8 @@
 		}
 
 		.trade-menu-stepper button {
-			width: 1.45rem;
-			height: 1.45rem;
+			width: 1.5rem;
+			height: 1.5rem;
 		}
 	}
 
@@ -746,9 +829,10 @@
 			gap: 0.25rem;
 		}
 
+		/* Never under 24px, so they stay easy to hit */
 		.trade-menu-stepper button {
-			width: 1.25rem;
-			height: 1.25rem;
+			width: 1.5rem;
+			height: 1.5rem;
 		}
 	}
 </style>

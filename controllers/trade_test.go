@@ -195,7 +195,7 @@ func TestTradeCounterFlipsTheOffer(t *testing.T) {
 	require.Equal(t, userID(t, "trade3"), trades[0].ToID)
 	require.Equal(t, uint(100), trades[0].Coins)
 	require.Equal(t, models.TradePending, trades[0].State)
-	give, err := trades[0].GiveItems()
+	items, err := trades[0].Items(tests.DB)
 	require.NoError(t, err)
 	require.Equal(t, []models.TradeItem{item(cardRosetta, "", 1)}, give)
 

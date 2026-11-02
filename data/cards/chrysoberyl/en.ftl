@@ -1,0 +1,2 @@
+title = Chrysoberyl
+description = The mineral or gemstone chrysoberyl is an aluminate of beryllium with the formula Be Al2O4. The name chrysoberyl is derived from the Greek words χρυσός chrysos and βήρυλλος beryllos, meaning "a gold-white spar". Despite the similarity of their names, chrysoberyl and beryl are two completely different gemstones, although they both contain beryllium, aluminium and oxygen.

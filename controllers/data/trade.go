@@ -109,6 +109,11 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"message": dc.Renderer.T(c, "trade-error-user")})
 		return
 	}
+	// Compared by ID too: usernames compare ignoring case and trailing spaces in the database
+	if target.ID == user.ID {
+		c.JSON(http.StatusBadRequest, gin.H{"message": dc.Renderer.T(c, "trade-error-self")})
+		return
+	}
 	if blocked, err := controllers.TradeBlocked(dc.DB, user.ID, target.ID); err != nil || blocked {
 		c.JSON(http.StatusForbidden, gin.H{"message": dc.Renderer.T(c, "trade-error-blocked")})
 		return
@@ -137,24 +142,24 @@ func (dc *DataController) TradeStacksGet(c *gin.Context) {
 	// offer is the partner's, so only their side skips it
 	mine, err := controllers.TradeCommitmentsOf(dc.DB, user.ID, 0)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		controllers.InternalError(c, dc.Renderer, err)
 		return
 	}
 	theirs, err := controllers.TradeCommitmentsOf(dc.DB, target.ID, skipTradeID)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		controllers.InternalError(c, dc.Renderer, err)
 		return
 	}
 
 	loc := dc.Renderer.Localizer.GetLocale(c)
 	mineStacks, err := dc.tradeStacks(c, loc, user.ID, mine)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		controllers.InternalError(c, dc.Renderer, err)
 		return
 	}
 	theirStacks, err := dc.tradeStacks(c, loc, target.ID, theirs)
 	if err != nil {
-		c.String(http.StatusInternalServerError, err.Error())
+		controllers.InternalError(c, dc.Renderer, err)
 		return
 	}
 

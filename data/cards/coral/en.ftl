@@ -1,0 +1,2 @@
+title = Precious Coral
+description = Precious coral, or red coral, is the common name given to a genus of marine corals, Corallium. The distinguishing characteristic of precious corals is their durable and intensely colored red or pink-orange skeleton, which is used for making jewelry.

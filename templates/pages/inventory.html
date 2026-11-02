@@ -1,8 +1,5 @@
 {{ define "inventory" }}
 <div class="inventory">
-	{{ with .Data.Streak }}
-	{{ template "daily-streak" . }}
-	{{ end }}
 	<div class="inventory-header">
 		<div class="inventory-heading">
 			<h1 class="inventory-title">{{ .Data.Title }}</h1>
@@ -25,12 +22,19 @@
 			{{ if ne (len .Data.Viewed) 0 }}
 			<input type="hidden" name="u" value="{{ .Data.Viewed }}">
 			{{ end }}
+			{{/* The placeholder goes away once typed in: the label stays */}}
 			<input type="text" id="q" name="q" placeholder="{{ if .Data.All }}{{ .T "card-search-placeholder" }}{{ else }}{{ .T "inventory-search-placeholder" }}{{ end }}"
+				aria-label="{{ if .Data.All }}{{ .T "card-search-placeholder" }}{{ else }}{{ .T "inventory-search-placeholder" }}{{ end }}"
 				value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "inventory-search-submit" }}></button>
 		</form>
 		{{ end }}
 	</div>
+
+	{{/* After the page's h1: its title is the outline's first sub-heading */}}
+	{{ with .Data.Streak }}
+	{{ template "daily-streak" . }}
+	{{ end }}
 
 	{{ template "inventory-tabs" . }}
 
@@ -56,7 +60,7 @@
 		</div>
 		<label>
 			<span>{{ .T "inventory-filter-rarity" }}</span>
-			<select name="rarity" form="search-form" data-autosubmit>
+			<select name="rarity" form="search-form" data-filter>
 				{{ range .Data.RarityOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -65,7 +69,7 @@
 		{{ if not .Data.All }}
 		<label>
 			<span>{{ .T "inventory-filter-effect" }}</span>
-			<select name="effect" form="search-form" data-autosubmit>
+			<select name="effect" form="search-form" data-filter>
 				{{ range .Data.EffectOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -74,12 +78,13 @@
 		{{ end }}
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
-			<select name="sort" form="search-form" data-autosubmit>
+			<select name="sort" form="search-form" data-filter>
 				{{ range .Data.SortOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
 			</select>
 		</label>
+		<button type="submit" form="search-form" class="inventory-filters-apply">{{ .T "inventory-filters-apply" }}</button>
 		{{ with .Data.Duplicates }}{{ if .Count }}
 		<button type="button" class="inventory-sell-duplicates" aria-haspopup="dialog"
 			data-dialog-open="inventory-sell-duplicates-popup">{{ $.T "inventory-sell-duplicates" }}</button>
@@ -87,7 +92,7 @@
 	</div>
 	{{ with .Data.Duplicates }}{{ if .Count }}
 	<!-- Says what selling the duplicates pays before doing it -->
-	<dialog id="inventory-sell-duplicates-popup" class="inventory-confirm"
+	<dialog id="inventory-sell-duplicates-popup" class="popup inventory-confirm"
 		aria-labelledby="inventory-sell-duplicates-title" aria-describedby="inventory-sell-duplicates-text">
 		<form class="inventory-confirm-content" action="/shop/sell-duplicates" method="post">
 			<h2 id="inventory-sell-duplicates-title">{{ $.T "inventory-sell-duplicates-title" }}</h2>
@@ -121,7 +126,7 @@
 	{{ if ne (len .Data.Items) 0 }}
 	<p class="tradeup-rules">{{ .T "tradeup-rules" "count" .Data.TradeupCost }}</p>
 	<div class="tradeup-layout">
-		<e-cluster class="inventory-cards tradeup-cards" justify="center">
+		<e-cluster class="inventory-cards tradeup-cards" id="tradeup-cards" justify="center">
 			{{ range $val := .Data.Items }}
 			<div class="tradeup-card" data-tradeup-id="{{ $val.CardID }}" data-tradeup-foil="{{ $val.Foil }}"
 				data-tradeup-count="{{ $val.Count }}" data-tradeup-rarity="{{ $val.Rarity }}"
@@ -137,7 +142,7 @@
 			<form class="tradeup-filter" action="/inventory" method="get">
 				<input type="hidden" name="tab" value="tradeup">
 				<input type="search" id="tradeup-search" name="q" placeholder="{{ .T "card-filter-placeholder" }}"
-					aria-label="{{ .T "card-filter-placeholder" }}">
+					aria-label="{{ .T "card-filter-placeholder" }}" aria-controls="tradeup-cards">
 				<label>
 					<span>{{ .T "inventory-filter-collection" }}</span>
 					<select id="tradeup-collection-filter" name="collection">
@@ -150,7 +155,9 @@
 			<form class="tradeup-form" action="/tradeup" method="post">
 				<div id="tradeup-picker" data-cost="{{ .Data.TradeupCost }}" data-label-slots="{{ .T "tradeup-slots" }}"
 					data-label-remove="{{ .T "tradeup-remove" }}" data-label-clear="{{ .T "tradeup-clear" }}"
-					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"></div>
+					data-label-submit="{{ .T "tradeup-submit" }}" data-label-empty="{{ .T "tradeup-slot-empty" }}"
+					data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
+					data-label-copies="{{ .T "inventory-card-copies" }}"></div>
 			</form>
 		</div>
 	</div>
@@ -161,11 +168,19 @@
 	{{ end }}
 	{{ if eq .Data.Tab "boosters" }}
 	<e-cluster class="inventory-boosters" justify="center">
+		{{/* Boosters to open are links to their opening, which works without
+		JavaScript; it only keeps a drag to tilt them from following them */}}
 		{{ with .Data.Pile }}
-		<div class="inventory-booster"{{ if not .PileEmpty }} data-booster-open="{{ .PileOpen }}"
-			data-booster-label="{{ .PileLabel }}"{{ end }}>
+		{{ if .PileEmpty }}
+		<div class="inventory-booster">
 			{{ template "booster-pile" . }}
 		</div>
+		{{ else }}
+		<a class="inventory-booster" href="{{ .PileOpen }}" draggable="false" data-booster-open="{{ .PileOpen }}"
+			data-booster-label="{{ .PileLabel }}" aria-label="{{ .PileLabel }}, {{ .PileCountLabel }}">
+			{{ template "booster-pile" . }}
+		</a>
+		{{ end }}
 		{{ end }}
 		{{ range $val := .Data.Items }}
 		{{ if $val.Empty }}
@@ -178,10 +193,11 @@
 			</div>
 		</div>
 		{{ else if eq (len $.Data.Viewed) 0 }}
-		<div class="inventory-booster" data-booster-open="/opening?booster={{ $val.BoosterID }}"
-			data-booster-label="{{ $val.Label }}">
+		<a class="inventory-booster" href="/opening?booster={{ $val.BoosterID }}" draggable="false"
+			data-booster-open="/opening?booster={{ $val.BoosterID }}" data-booster-label="{{ $val.Label }}"
+			aria-label="{{ $val.Label }}, {{ $.T "inventory-booster-count" "count" $val.Data.CollectionStack }}">
 			{{ template "collection" $val }}
-		</div>
+		</a>
 		{{ else }}
 		<div class="inventory-booster">
 			{{ template "collection" $val }}
@@ -240,6 +256,7 @@
 		data-label-value="{{ .T "inventory-card-value" }}" data-label-sell="{{ .T "inventory-card-sell" }}"
 		data-label-quantity="{{ .T "inventory-sell-quantity" }}" data-label-total="{{ .T "inventory-sell-total" }}"
 		data-label-confirm="{{ .T "inventory-sell-confirm" }}" data-label-coins="{{ .T "shop-coins" }}"
+		data-label-foil="{{ .T "inventory-filter-effect-foil" }}"
 		{{ with .Data.SellAction }}data-sell-action="{{ . }}"{{ end }}></div>
 	{{ end }}
 	{{ end }}

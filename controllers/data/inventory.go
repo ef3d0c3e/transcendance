@@ -25,15 +25,16 @@ const (
 	inventoryPageSize = 20
 )
 
-func (dc *DataController) InventoryAddGet(c *gin.Context) {
+// /add POST: debug tool adding the card `id` to the authenticated admin's inventory
+func (dc *DataController) InventoryAddPost(c *gin.Context) {
 	user := controllers.GetAuthenticatedUser(c)
 
-	if user == nil {
-		c.String(http.StatusForbidden, "You must be authenticated")
+	if !user.IsAdmin() {
+		c.String(http.StatusForbidden, "Admins only")
 		return
 	}
 
-	cardId, err := strconv.Atoi(c.Query("id"))
+	cardId, err := strconv.Atoi(c.PostForm("id"))
 	if err != nil {
 		c.String(http.StatusBadRequest, "invalid id")
 		return
@@ -54,6 +55,7 @@ func (dc *DataController) InventoryAddGet(c *gin.Context) {
 		c.String(http.StatusInternalServerError, "failed to insert card: %s", err)
 		return
 	}
+	c.Status(http.StatusCreated)
 }
 
 const (
@@ -380,10 +382,8 @@ func (dc *DataController) InventoryGet(c *gin.Context) {
 		return
 	}
 
-	page, err := strconv.Atoi(c.Query("p"))
-	if err != nil || page <= 0 {
-		page = 1
-	}
+	page := controllers.PageParam(c.Query("p"))
+	var err error
 
 	v := &inventoryView{
 		Tab:      inventoryTabBoosters,

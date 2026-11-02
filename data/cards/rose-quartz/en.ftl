@@ -1,0 +1,2 @@
+title = Rose Quartz
+description = Rose quartz is a pink, translucent variety of quartz with a massive habit. Its color is due to microscopic inclusions of a fibrous silicate mineral related to dumortierite. Previously, the color was believed to be due to inclusions of rutile. Rose quartz is dichroic and may display asterism when cut into spheres or cabochons. It formed at very high temperatures of 400–700 °C (752–1,292 °F) in the quartz cores of pegmatites.

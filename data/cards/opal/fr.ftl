@@ -1,0 +1,2 @@
+title = Opale
+description = L'opale est un minéraloïde composé de silice hydratée, de formule SiO2·n H2O, avec des traces d'aluminium, de potassium, de sodium et de calcium principalement. La teneur en eau est habituellement comprise entre 3 et 9 %, mais peut (rarement) dépasser 15 %. L'opale comporte parfois des cristallites de cristobalite, montrant parfois des défauts d'empilement de type tridymite.

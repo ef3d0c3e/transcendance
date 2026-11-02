@@ -1,0 +1,2 @@
+title = Sphalérite
+description = Le sulfure de zinc (ZnS) cristallise en plusieurs polytypes, les deux principaux étant la sphalérite et la wurtzite. Bien que la formule idéale soit ZnS, la wurtzite est légèrement déficiente en soufre (ZnS1-x) et la sphalérite est légèrement déficiente en zinc (Zn1-xS). L’éclat, résineux, devient métallique quand le taux de fer augmente. La couleur varie d'incolore à jaune-brun; avec du fer, elle devient noire.

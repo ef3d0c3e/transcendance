@@ -1,0 +1,2 @@
+title = Talc
+description = Talc, or talcum, is a clay mineral composed of hydrated magnesium silicate, with the chemical formula Mg3Si4O10(OH)2. Talc in powdered form, often combined with corn starch, is used as baby powder. This mineral is used as a thickening agent and lubricant. It is an ingredient in ceramics, paints, and roofing material. It is a main ingredient in many cosmetics. It occurs as foliated to fibrous masses, and in an exceptionally rare crystal form.

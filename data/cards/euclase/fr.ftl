@@ -1,0 +1,2 @@
+title = Euclase
+description = L'euclase est un minéral de silicate d'hydroxyde d'aluminium et de béryllium (BeAlSiO4(OH)). Il cristallise dans le système monoclinique et est généralement massif à fibreux ainsi que dans des cristaux prismatiques minces. Il est apparenté au béryl (Be3Al2Si6O18) et à d'autres minéraux de béryllium. C'est un produit de la décomposition du béryl dans les pegmatites. Son symbole IMA est Ecs.
