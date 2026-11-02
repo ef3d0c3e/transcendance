@@ -35,12 +35,18 @@ export function cardName(container, labels = {}) {
 	].filter(Boolean).join(', ');
 }
 
+// Names a card button again once what it shows changed, e.g its copies
+// after a sale
+export function refreshCardName(container, labels = {}) {
+	container.setAttribute('aria-label', cardName(container, labels));
+}
+
 // Makes a card a button: reachable, named, and with its collection link out
 // of the tab order, as a link inside a button can't be reached reliably
 export function makeCardButton(container, labels = {}) {
 	container.tabIndex = 0;
 	container.setAttribute('role', 'button');
-	container.setAttribute('aria-label', cardName(container, labels));
+	refreshCardName(container, labels);
 	for (const link of container.querySelectorAll('a')) {
 		link.tabIndex = -1;
 	}

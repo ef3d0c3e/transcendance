@@ -2387,6 +2387,11 @@ section {
     color: var(--color-error-3);
 }
 
+/* What else to know about the outcome, on a line of its own */
+.shop-message-hint {
+    display: block;
+}
+
 /* Number of identical boosters in a stack */
 /* Number of copies of a folded booster or card */
 .collection-stack,

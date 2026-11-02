@@ -304,6 +304,9 @@ inventory-sold = { $count ->
     [one] You sold { $count } card for { $amount } coins
    *[other] You sold { $count } cards for { $amount } coins
 }
+inventory-sold-stale = The card count next to the title updates when the page is refreshed.
+inventory-page-sold = Every card of this page was sold
+inventory-reload = Refresh the page
 inventory-sell-error-card = This card cannot be sold
 inventory-sell-error-quantity = Choose a quantity of at least 1
 inventory-sell-error-missing = You do not have that many copies to sell

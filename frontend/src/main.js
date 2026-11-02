@@ -415,8 +415,13 @@ import { apiFetch } from './api.js';
 		}
 		button.setAttribute('aria-controls', dialog.id);
 		button.addEventListener('click', () => dialog.showModal());
+		// Unless marked disabled, e.g while the dialog's action is made
 		for (const close of dialog.querySelectorAll('[data-dialog-close]')) {
-			close.addEventListener('click', () => dialog.close());
+			close.addEventListener('click', () => {
+				if (close.getAttribute('aria-disabled') !== 'true') {
+					dialog.close();
+				}
+			});
 		}
 		// Clicking the backdrop targets the dialog itself
 		dialog.addEventListener('click', (event) => {
