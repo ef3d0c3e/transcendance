@@ -8,12 +8,14 @@ import (
 	"net/url"
 	"strings"
 	"testing"
+	"time"
 
 	"transcendance/models"
 	"transcendance/tests"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/require"
+	"gorm.io/datatypes"
 )
 
 type notificationsResponse struct {
@@ -65,12 +67,39 @@ func getNotifications(t *testing.T, router *gin.Engine, cookie *http.Cookie, que
 	return res
 }
 
-func addFriendRequest(t *testing.T, router *gin.Engine, cookie *http.Cookie, username string) {
-	rec := notificationRequest(t, router, cookie, http.MethodPost, "/add_notification", url.Values{
-		"type":     {models.NotificationFriendRequest},
-		"username": {username},
-	})
+// The user signed in with a session cookie
+func cookieUserID(t *testing.T, cookie *http.Cookie) uint {
+	var session models.UserSession
+	require.NoError(t, tests.DB.Where("token = ?", models.HashSessionToken(cookie.Value)).First(&session).Error)
+	return session.UserID
+}
+
+// Notify the signed in user of a friend request from `username`, as the friends system does
+func addFriendRequest(t *testing.T, _ *gin.Engine, cookie *http.Cookie, username string) {
+	require.NoError(t, tests.DB.Create(&models.Notification{
+		UserID: cookieUserID(t, cookie),
+		Type:   models.NotificationFriendRequest,
+		Data:   datatypes.JSONMap{"username": username},
+		Action: "/profile/" + url.PathEscape(username),
+	}).Error)
+	// Notifications are listed newest first, keep them apart
+	time.Sleep(time.Millisecond)
+}
+
+// The debug page creating notifications is for admins only
+func TestAddNotificationAdminOnly(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "notifdbg1", "123456789", 0)
+	createAccount(t, router, "notifdbg2", "123456789", 2)
+	form := url.Values{"type": {models.NotificationFriendRequest}, "username": {"someone"}}
+
+	rec := notificationRequest(t, router, login(t, router, "notifdbg1", "123456789"), http.MethodPost, "/add_notification", form)
+	require.Equal(t, http.StatusForbidden, rec.Code)
+
+	admin := login(t, router, "notifdbg2", "123456789")
+	rec = notificationRequest(t, router, admin, http.MethodPost, "/add_notification", form)
 	require.Equal(t, http.StatusSeeOther, rec.Code)
+	require.Equal(t, int64(1), getNotifications(t, router, admin, "").Unread)
 }
 
 func TestNotificationsUnauthenticated(t *testing.T) {

@@ -1,0 +1,2 @@
+title = Roentgenium
+description = Le roentgenium est l'élément chimique de numéro atomique 111, de symbole Rg, nommé en l'honneur du physicien Wilhelm Röntgen, découvreur des rayons X. Synthétisé pour la première fois en 1994 au GSI de Darmstadt, en Allemagne, c'est un élément extrêmement radioactif qui ne peut être créé qu'en laboratoire. Son isotope le plus stable connu a une demi-vie d'environ deux minutes.

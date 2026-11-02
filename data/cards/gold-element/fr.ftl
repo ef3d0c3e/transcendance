@@ -1,0 +1,2 @@
+title = Or
+description = L'or est l'élément chimique de numéro atomique 79, de symbole Au, formé des deux premières lettres de son nom latin aurum. Le corps simple est un métal jaune brillant, dense, mou, très malléable et ductile. C'est l'un des éléments les moins réactifs : inaltérable à l'air et à l'eau, il conserve indéfiniment son éclat, ce qui en fait depuis la préhistoire un métal précieux utilisé en bijouterie et comme monnaie.

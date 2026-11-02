@@ -1,9 +1,20 @@
 package models
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"time"
 
 	"gorm.io/gorm"
+)
+
+// User ranks, each one has every permission of the ranks below it
+const (
+	RankUser uint = 0
+	// Moderates the chat
+	RankModerator uint = 1
+	// Manages accounts and roles
+	RankAdmin uint = 2
 )
 
 type User struct {
@@ -40,9 +51,16 @@ type UserSession struct {
 	UserID uint `gorm:"not null;index"`
 	User   User `gorm:"constraint:OnDelete:CASCADE"`
 
-	Token     string    `gorm:"not null"`
+	// SHA-256 of the cookie's token, see HashSessionToken: a leaked table holds no usable session
+	Token     string    `gorm:"size:64;not null;uniqueIndex"`
 	CreatedAt time.Time `gorm:"not null"`
-	ExpiresAt time.Time `gorm:"not null"`
+	ExpiresAt time.Time `gorm:"not null;index"`
+}
+
+// HashSessionToken is the form a session cookie's token is stored and looked up in
+func HashSessionToken(token string) string {
+	sum := sha256.Sum256([]byte(token))
+	return hex.EncodeToString(sum[:])
 }
 
 type UserProfile struct {

@@ -10,6 +10,7 @@ import ShopBuyPopup from './ShopBuyPopup.svelte';
 import TradeMenu from './TradeMenu.svelte';
 import TradeUpPicker from './TradeUpPicker.svelte';
 import TradeUpResult from './TradeUpResult.svelte';
+import FoilRoulette from './FoilRoulette.svelte';
 
 import NavbarEnhancer from './Navbar.svelte';
 import ThemeSwitcher from './ThemeSwitcher.svelte';
@@ -20,6 +21,8 @@ import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 import { enhanceCountdowns } from './countdown.js';
 import { openTopup } from './topup.js';
+import { enhanceSellDuplicates } from './sell.js';
+import { apiFetch } from './api.js';
 
 // Navbar
 {
@@ -33,6 +36,10 @@ import { openTopup } from './topup.js';
 	if (target) {
 		mount(LanguageSwitcher, {
 			target,
+			props: {
+				label: target.dataset.label,
+				labelCurrent: target.dataset.labelCurrent,
+			},
 		});
 	}
 }
@@ -43,6 +50,10 @@ import { openTopup } from './topup.js';
 	if (target) {
 		mount(ThemeSwitcher, {
 			target,
+			props: {
+				labelLight: target.dataset.themeLabelLight,
+				labelDark: target.dataset.themeLabelDark,
+			},
 		});
 	}
 }
@@ -96,16 +107,27 @@ import { openTopup } from './topup.js';
 	enhanceCountdowns();
 }
 
-// Log out, then land on a page visitors can see
+// Log out in the background, then land on the home page, which visitors can
+// see. Without JavaScript the form posts and the server redirects there.
 {
-	for (const button of document.querySelectorAll('[data-logout]')) {
-		button.addEventListener('click', async () => {
-			button.disabled = true;
+	for (const form of document.querySelectorAll('form[data-logout]')) {
+		form.addEventListener('submit', async (event) => {
+			event.preventDefault();
+			form.querySelector('button')?.setAttribute('aria-disabled', 'true');
 			try {
-				await fetch(button.dataset.logout, { credentials: 'same-origin' });
-			} finally {
-				location.assign('/cards/search/');
+				const response = await apiFetch(form.dataset.logout, {
+					method: 'POST',
+					headers: { Accept: 'application/json' },
+				});
+				if (response.ok) {
+					location.assign('/');
+					return;
+				}
+			} catch {
+				// Offline: posted as is below, the browser tells what went wrong
 			}
+			// Refused: the plain form shows the server's own answer
+			form.submit();
 		});
 	}
 }
@@ -133,9 +155,8 @@ import { openTopup } from './topup.js';
 			button.disabled = true;
 			error.hidden = true;
 			try {
-				const response = await fetch(button.dataset.accountDelete, {
+				const response = await apiFetch(button.dataset.accountDelete, {
 					method: 'POST',
-					credentials: 'same-origin',
 				});
 				if (response.ok) {
 					location.assign('/cards/search/');
@@ -153,35 +174,25 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Login popup
+// Login and register popups: the header's links to their pages open the
+// form in a popup instead, except on the page that shows it already
 {
-	const target = document.querySelector('#login-popup');
+	for (const kind of ['login', 'register']) {
+		const target = document.querySelector(`#${kind}-popup`);
+		if (!target || document.querySelector(`#${kind}-form`)) {
+			continue;
+		}
 
-	if (target) {
+		target.replaceChildren();
 		mount(Popup, {
 			target,
 			props: {
-				url: '/login',
-				target,
-				formSelector: '#login-form',
-				enhancementSelector: '#login-enhancement',
-			},
-		});
-	}
-}
-
-// Register popup
-{
-	const target = document.querySelector('#register-popup');
-
-	if (target) {
-		mount(Popup, {
-			target,
-			props: {
-				url: '/register',
-				target,
-				formSelector: '#register-form',
-				enhancementSelector: '#register-enhancement',
+				url: `/${kind}`,
+				kind,
+				label: target.dataset.label,
+				labelLoading: target.dataset.labelLoading,
+				labelError: target.dataset.labelError,
+				labelClose: target.dataset.labelClose,
 			},
 		});
 	}
@@ -261,11 +272,11 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Selects that apply as soon as they change (inventory filters)
+// Filters of the search forms, applied by their button: choosing an option
+// doesn't reload the page, the arrow keys go through the options
 {
 	const forms = new Set();
-	for (const select of document.querySelectorAll('select[data-autosubmit]')) {
-		select.addEventListener('change', () => select.form?.requestSubmit());
+	for (const select of document.querySelectorAll('select[data-filter]')) {
 		if (select.form) {
 			forms.add(select.form);
 		}
@@ -287,35 +298,22 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Inventory boosters open on click, dragging to tilt them doesn't count
+// Inventory boosters are links to their opening: dragging one to tilt it
+// isn't a click on it
 {
-	const tiles = document.querySelectorAll('.inventory-booster[data-booster-open] .card-container');
 	// Pointer travel (px) after which a press counts as a tilt drag
 	const dragThreshold = 6;
-	let press;
 
-	for (const tile of tiles) {
-		const booster = tile.closest('.inventory-booster');
-		const open = () => location.assign(booster.dataset.boosterOpen);
-
-		tile.tabIndex = 0;
-		tile.setAttribute('role', 'link');
-		tile.setAttribute('aria-label', booster.dataset.boosterLabel ?? '');
-		tile.addEventListener('pointerdown', (event) => {
+	for (const link of document.querySelectorAll('a.inventory-booster[data-booster-open]')) {
+		let press;
+		link.addEventListener('pointerdown', (event) => {
 			press = { x: event.clientX, y: event.clientY };
 		}, { passive: true });
-		tile.addEventListener('click', (event) => {
+		link.addEventListener('click', (event) => {
 			if (press && Math.hypot(event.clientX - press.x, event.clientY - press.y) > dragThreshold) {
-				return;
+				event.preventDefault();
 			}
-			open();
-		});
-		tile.addEventListener('keydown', (event) => {
-			if (event.key !== 'Enter') {
-				return;
-			}
-			event.preventDefault();
-			open();
+			press = undefined;
 		});
 	}
 }
@@ -329,7 +327,16 @@ import { openTopup } from './topup.js';
 	}
 }
 
-// Tradeup result popup
+// Foil roulette picker
+{
+	const target = document.querySelector('#foil-roulette');
+
+	if (target) {
+		mount(FoilRoulette, { target, props: { target } });
+	}
+}
+
+// Tradeup and foil roulette result popup
 {
 	const target = document.querySelector('#tradeup-result');
 
@@ -353,8 +360,8 @@ import { openTopup } from './topup.js';
 				againLabel: target.dataset.againLabel,
 				coins: Number(target.dataset.coins) || 0,
 				autostart: target.dataset.autostart === 'true',
-				soundOnLabel: target.dataset.soundOn,
-				soundOffLabel: target.dataset.soundOff,
+				soundLabel: target.dataset.soundLabel,
+				motionLabel: target.dataset.motionLabel,
 				skipLabel: target.dataset.skipLabel,
 				spinningLabel: target.dataset.spinningLabel,
 			},
@@ -419,6 +426,15 @@ import { openTopup } from './topup.js';
 		});
 		// Focus comes back to the button, as it opened the popup
 		dialog.addEventListener('close', () => button.focus());
+	}
+}
+
+// Selling the duplicate cards without reloading the page
+{
+	const form = document.querySelector('#inventory-sell-duplicates-popup form');
+
+	if (form) {
+		enhanceSellDuplicates(form);
 	}
 }
 

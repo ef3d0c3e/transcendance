@@ -7,6 +7,10 @@
 
 	const CARD_SELECTOR = ".card-container";
 	const DEFAULT_MAX_TILT = 20; // degrees, overriden by data-tilt-max
+	// Mount points whose components add cards after the page loaded (pack
+	// reels, trade menu, trade-up result, shop preview): only they are
+	// watched, not the chat and the rest of the page
+	const DYNAMIC_ROOTS = "#pack-opening, #trade-menu, #tradeup-result, #shop-buy-popup";
 
 	// Data attributes
 	const EFFECT_VARS = {
@@ -82,7 +86,7 @@
 		card.style.setProperty("--tilt-y", "0deg");
 	}
 
-	export function initCards() {
+	function initCards() {
 		let active = null; // card currently hovered
 		let drag = null; // { card, pointerId } while pressed
 		let pending = null;
@@ -188,7 +192,9 @@
 
 			try {
 				card.releasePointerCapture(e.pointerId);
-			} catch {}
+			} catch {
+				// Already released, e.g. by a pointercancel
+			}
 			delete card.dataset.dragging;
 
 			// If the pointer was released outside the card, clear hover state.
@@ -226,7 +232,7 @@
 		document.addEventListener("pointerup", onPointerEnd);
 		document.addEventListener("pointercancel", onPointerEnd);
 
-		// Effects: prepare what's on the page now, then anything added later
+		// Effects: prepare what's on the page now, then the cards added later
 		prepareEffectsIn(document.body);
 
 		const observer = new MutationObserver((mutations) => {
@@ -234,7 +240,9 @@
 				mutation.addedNodes.forEach(prepareEffectsIn);
 			}
 		});
-		observer.observe(document.body, { childList: true, subtree: true });
+		for (const root of document.querySelectorAll(DYNAMIC_ROOTS)) {
+			observer.observe(root, { childList: true, subtree: true });
+		}
 
 		return () => {
 			document.removeEventListener("pointerdown", onPointerDown);

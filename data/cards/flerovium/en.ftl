@@ -1,0 +1,2 @@
+title = Flerovium
+description = Flerovium is a synthetic chemical element; it has symbol Fl and atomic number 114. It is an extremely radioactive, superheavy element, named after the Flerov Laboratory of Nuclear Reactions of the Joint Institute for Nuclear Research in Dubna, Russia, where the element was discovered in 1999. The lab's name, in turn, honours Russian physicist Georgy Flyorov (Флёров in Cyrillic, hence the transliteration of "yo" to "ë").

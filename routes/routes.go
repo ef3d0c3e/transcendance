@@ -20,12 +20,23 @@ func RegisterRoutes(
 		DB:       db,
 		Renderer: renderer,
 		Data:     data,
+		Logins:   controllers.NewLoginLimits(),
 	}
+
+	// Before the routes, so every route gets them
+	router.Use(controllers.SecurityHeaders())
+	router.Use(controllers.SoftErrors())
+	// Debug tools are for admins, and never part of a release build
+	debug := gin.Mode() != gin.ReleaseMode
 
 	// Static data
 	router.Static("/frontend", "./frontend/dist")
 	router.Static("/static", "./static")
 	router.StaticFile("/favicon.ico", "./static/favicon.ico")
+
+	// seo.go
+	router.GET("/robots.txt", controller.RobotsGet)
+	router.GET("/sitemap.xml", controller.SitemapGet)
 
 	// health.go
 	router.GET("/healthz", controller.HealthzGet)
@@ -38,7 +49,7 @@ func RegisterRoutes(
 	router.POST("/register", controller.RegisterPost)
 	router.GET("/login", controller.LoginGet)
 	router.POST("/login", controller.LoginPost)
-	router.GET("/api/logout", controller.LogoutGet)
+	router.POST("/api/logout", controller.LogoutPost)
 
 	// profile.go
 	router.GET("/profile", controller.ProfileGet)
@@ -51,6 +62,12 @@ func RegisterRoutes(
 	router.POST("/profiles/:id/avatar", controller.AvatarPost)
 	router.POST("/profiles/:id/avatar/delete", controller.AvatarDelete)
 	router.GET("/avatars/:id", controller.AvatarGet)
+
+	// admin.go
+	router.GET("/admin/users", controller.AdminUsersGet)
+	router.POST("/admin/users/:id/rank", controller.AdminUserRankPost)
+	router.POST("/admin/users/:id/password", controller.AdminUserPasswordPost)
+	router.POST("/admin/users/:id/delete", controller.AdminUserDeletePost)
 	router.HEAD("/avatars/:id", controller.AvatarGet)
 
 	// legal.go
@@ -70,9 +87,11 @@ func RegisterRoutes(
 	router.POST("/api/notifications/:ID/unread", controller.ApiNotificationUnreadPost)
 	router.POST("/api/notifications/:ID/delete", controller.ApiNotificationDeletePost)
 
-	// DEBUG: send a notification to the authenticated user
-	router.GET("/add_notification", controller.AddNotificationGet)
-	router.POST("/add_notification", controller.AddNotificationPost)
+	// Debug: send a notification to the authenticated admin
+	if debug {
+		router.GET("/add_notification", controller.AddNotificationGet)
+		router.POST("/add_notification", controller.AddNotificationPost)
+	}
 
 	// shoutbox.go
 	shoutboxController := controllers.NewShoutboxController(db, renderer)
@@ -93,18 +112,27 @@ func RegisterRoutes(
 
 	router.GET("/inventory", dataController.InventoryGet)
 	router.POST("/inventory/claim", dataController.InventoryClaimPost)
-	router.GET("/add", dataController.InventoryAddGet)
+	// Debug: add a card to the authenticated admin's inventory
+	if debug {
+		router.POST("/add", dataController.InventoryAddPost)
+	}
 
 	router.GET("/opening", dataController.OpeningGet)
-	router.POST("/opening", dataController.OpeningPost)
-	router.POST("/opening/buy", dataController.OpeningBuyPost)
+	// Without JavaScript, the opened cards are shown in the inventory, newest first
+	openedTarget, openFailedTarget := "/inventory?tab=cards&sort=recent", "/inventory?tab=boosters&error=opening"
+	router.POST("/opening", controllers.FormFallback(dataController.OpeningPost, openedTarget, openFailedTarget))
+	router.POST("/opening/buy", controllers.FormFallback(dataController.OpeningBuyPost, openedTarget, openFailedTarget))
 
 	// tradeup.go
 	router.POST("/tradeup", dataController.TradeupPost)
+	// foil.go
+	router.POST("/foil", dataController.FoilRoulettePost)
 
-	// Debug: add a booster to the authenticated user's inventory
-	router.GET("/add_booster", dataController.AddBoosterGet)
-	router.POST("/add_booster", dataController.AddBoosterPost)
+	// Debug: add a booster to the authenticated admin's inventory
+	if debug {
+		router.GET("/add_booster", dataController.AddBoosterGet)
+		router.POST("/add_booster", dataController.AddBoosterPost)
+	}
 
 	// trade.go
 	router.GET("/trades", controller.TradesGet)

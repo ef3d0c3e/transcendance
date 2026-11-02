@@ -1,0 +1,2 @@
+title = Rutile
+description = Le rutile est une espèce minérale composée de dioxyde de titane de formule TiO2. Il contient des traces de fer (près de 10 % parfois), de tantale, de niobium, de chrome, de vanadium et d'étain. Il est trimorphe avec la brookite et l'anatase. Il est la forme la plus stable du dioxyde de titane et il est produit à haute température, la brookite se formant à des températures plus basses et l'anatase formée à des températures encore plus basses.

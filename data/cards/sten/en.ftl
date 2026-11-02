@@ -1,0 +1,2 @@
+title = Sten
+description = The STEN is a British submachine gun chambered in 9×19mm which was used extensively by British and Commonwealth forces throughout World War II and during the Korean War. The Sten paired a simple design with a low production cost, facilitating mass production to meet the demand for submachine guns. As well as equipping regular units, the Sten was distributed to resistance groups within occupied Europe.

@@ -1,0 +1,2 @@
+title = Gallium
+description = Gallium is a chemical element; it has symbol Ga and atomic number 31. Discovered by the French chemist Paul-Émile Lecoq de Boisbaudran in Paris, France, 1875, elemental gallium is a soft, silvery metal at standard temperature and pressure with a complex orthorhombic crystal structure. In its liquid state, it becomes silvery white. If enough force is applied, solid gallium may fracture conchoidally.

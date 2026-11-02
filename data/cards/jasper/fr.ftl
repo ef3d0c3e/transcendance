@@ -1,0 +1,2 @@
+title = Jaspe
+description = Le jaspe est une roche sédimentaire contenant de 80 à 95 % de silice, souvent classée avec les quartz microcristallins mais qui peut aussi contenir de l'argile. Elle est constituée de radiolaires calcédonieux pris dans un ciment de calcédoine. Sa cassure est écailleuse, parfois conchoïdale. Le jaspe peut avoir plusieurs aspects : tacheté, rubané, rouge, à taches rouges sur fond vert, noir, etc.

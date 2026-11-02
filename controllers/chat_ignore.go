@@ -23,7 +23,11 @@ type chatIgnoredUser struct {
 	Until    string `json:"until"`
 }
 
-// The users a user ignores, by ID for the hub and as sent to clients. Expired ignores are cleared.
+// Ignores the hub keeps for users the user blocked from their profile, which have no end
+var blockedUntil = time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC)
+
+// The users a user ignores, by ID for the hub and as sent to clients. The hub also hides the messages of the users
+// they blocked. Expired ignores are cleared.
 func (sc *ShoutboxController) loadIgnores(ctx context.Context, userID uint) (map[uint]time.Time, []chatIgnoredUser, error) {
 	now := time.Now()
 	db := sc.DB.WithContext(ctx)
@@ -47,10 +51,21 @@ func (sc *ShoutboxController) loadIgnores(ctx context.Context, userID uint) (map
 		return nil, nil, err
 	}
 
-	ids := make(map[uint]time.Time, len(rows))
+	var blocked []uint
+	if err := db.Model(&models.Relation{}).Where("user_id = ? AND type = ?", userID, models.RelationBlocked).
+		Pluck("target_id", &blocked).Error; err != nil {
+		return nil, nil, err
+	}
+
+	ids := make(map[uint]time.Time, len(rows)+len(blocked))
+	for _, id := range blocked {
+		ids[id] = blockedUntil
+	}
 	users := make([]chatIgnoredUser, len(rows))
 	for i, row := range rows {
-		ids[row.IgnoredID] = row.Until
+		if _, ok := ids[row.IgnoredID]; !ok {
+			ids[row.IgnoredID] = row.Until
+		}
 		users[i] = chatIgnoredUser{Username: row.Username, Until: row.Until.Format(time.RFC3339)}
 	}
 	return ids, users, nil

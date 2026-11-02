@@ -1,7 +1,8 @@
 <script>
-	import { onMount } from 'svelte';
+	import { onMount, tick } from 'svelte';
 	import Bell from '../icons/Bell.svelte';
 	import { relativeTime, fullDate } from './relative-time.js';
+	import { apiFetch } from './api.js';
 
 	let { dataset } = $props();
 
@@ -20,6 +21,7 @@
 
 	let root = $state(undefined);
 	let trigger = $state(undefined);
+	let panel = $state(undefined);
 
 	// Asked while loading, the response may predate the change
 	let stale = false;
@@ -32,7 +34,7 @@
 		loading = true;
 		stale = false;
 		try {
-			const response = await fetch('/api/notifications?limit=5', { credentials: 'include' });
+			const response = await apiFetch('/api/notifications?limit=5');
 			if (response.status === 401) {
 				authenticated = false;
 				return;
@@ -46,8 +48,8 @@
 			locale = data.locale;
 			error = false;
 			loaded = true;
-		} catch (err) {
-			console.error('Failed to load notifications:', err);
+		} catch {
+			// Offline or logged out meanwhile: the panel says it failed
 			error = true;
 		} finally {
 			loading = false;
@@ -58,13 +60,22 @@
 	}
 
 	async function markAllRead() {
-		const response = await fetch('/api/notifications/read_all', { method: 'POST', credentials: 'include' });
-		if (response.ok) {
-			for (const notification of notifications) {
-				notification.Read = true;
+		try {
+			const response = await apiFetch('/api/notifications/read_all', { method: 'POST' });
+			if (!response.ok) {
+				return;
 			}
-			unread = 0;
+		} catch {
+			// Offline: they stay unread, the button stays for another try
+			return;
 		}
+		for (const notification of notifications) {
+			notification.Read = true;
+		}
+		unread = 0;
+		// The button is gone: the focus goes to the first notification
+		await tick();
+		panel?.querySelector('.notification-body, .notif-panel-footer')?.focus();
 	}
 
 	function toggle() {
@@ -129,7 +140,6 @@
 			type="button"
 			class="notif-bell"
 			aria-label={unread > 0 ? `${dataset.labelTitle}, ${unread} ${dataset.labelUnread}` : dataset.labelTitle}
-			aria-haspopup="true"
 			aria-expanded={open}
 			aria-controls="notification-panel"
 			onclick={toggle}
@@ -142,7 +152,9 @@
 		</button>
 
 		{#if open}
-			<div id="notification-panel" class="notif-panel" role="dialog" aria-label={dataset.labelTitle}>
+			<!-- A disclosure: the focus stays on its button until the user moves in -->
+			<div id="notification-panel" class="notif-panel" role="region" aria-label={dataset.labelTitle}
+				bind:this={panel}>
 				<div class="notif-panel-head">
 					<span class="notif-panel-title">{dataset.labelTitle}</span>
 					{#if unread > 0}
@@ -173,6 +185,10 @@
 									<span class="notification-icon" data-type={notification.Type} aria-hidden="true"></span>
 									<a class="notification-body" href="/notification/{notification.ID}">
 										<span class="notification-title">{notification.Title}</span>
+									<!-- The tint and the dot only show it -->
+									{#if !notification.Read}
+										<span class="sr-only">({dataset.labelUnread})</span>
+									{/if}
 										<span class="notification-desc">{notification.Desc}</span>
 										<time
 											class="notification-time"

@@ -8,8 +8,9 @@
 			{{ end }}
 		</div>
 		<form class="search-form inventory-search" id="search-form" action="{{ .Data.Path }}" method="get">
+			{{/* The placeholder goes away once typed in: the label stays */}}
 			<input type="text" id="q" name="q" placeholder="{{ .T "search-user-form-placeholder" }}"
-				value="{{ .Data.Query }}">
+				aria-label="{{ .T "search-user-form-placeholder" }}" value="{{ .Data.Query }}">
 			<button type="submit" aria-label={{ .T "search-user-submit" }}></button>
 		</form>
 	</div>
@@ -18,7 +19,7 @@
 		{{ if .Data.ListOptions }}
 		<label>
 			<span>{{ .T "friends-list" }}</span>
-			<select name="list" form="search-form" data-autosubmit>
+			<select name="list" form="search-form" data-filter>
 				{{ range .Data.ListOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -27,7 +28,7 @@
 		{{ end }}
 		<label>
 			<span>{{ .T "search-user-filter-joined" }}</span>
-			<select name="joined" form="search-form" data-autosubmit>
+			<select name="joined" form="search-form" data-filter>
 				{{ range .Data.JoinedOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -35,7 +36,7 @@
 		</label>
 		<label>
 			<span>{{ .T "search-user-filter-status" }}</span>
-			<select name="status" form="search-form" data-autosubmit>
+			<select name="status" form="search-form" data-filter>
 				{{ range .Data.StatusOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
@@ -43,12 +44,13 @@
 		</label>
 		<label>
 			<span>{{ .T "inventory-sort" }}</span>
-			<select name="sort" form="search-form" data-autosubmit>
+			<select name="sort" form="search-form" data-filter>
 				{{ range .Data.SortOptions }}
 				<option value="{{ .Value }}" {{ if .Selected }}selected{{ end }}>{{ .Label }}</option>
 				{{ end }}
 			</select>
 		</label>
+		<button type="submit" form="search-form" class="inventory-filters-apply">{{ .T "inventory-filters-apply" }}</button>
 	</div>
 
 	{{ if .Data.Message }}

@@ -1,0 +1,2 @@
+title = Accuracy International Arctic Warfare
+description = The Accuracy International Arctic Warfare rifle is a bolt-action sniper rifle designed and manufactured by the British company Accuracy International. It has proved popular as a civilian, police, and military rifle since its introduction in the 1980s. The rifles have features that improve performance in extremely cold conditions without impairing operation in less extreme conditions.

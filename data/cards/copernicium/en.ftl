@@ -1,0 +1,2 @@
+title = Copernicium
+description = Copernicium is a synthetic chemical element; it has symbol Cn and atomic number 112. Its known isotopes are extremely radioactive, and have only been created in a laboratory. The most stable known isotope, copernicium-285, has a half-life of approximately 30 seconds. Copernicium was first created in February 1996 by the GSI Helmholtz Centre for Heavy Ion Research near Darmstadt, Germany.

@@ -1,5 +1,19 @@
 package controllers
 
+import "strconv"
+
+// Highest page number accepted, beyond it offsets would overflow
+const maxPage = 100000
+
+// PageParam is a page number from a query value: 1 when missing or invalid, at most maxPage
+func PageParam(raw string) int {
+	page, err := strconv.Atoi(raw)
+	if err != nil || page < 1 {
+		return 1
+	}
+	return min(page, maxPage)
+}
+
 // An option of the filter and sort selects
 type SelectOption struct {
 	Value    string

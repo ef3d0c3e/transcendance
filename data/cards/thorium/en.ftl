@@ -1,0 +1,2 @@
+title = Thorium
+description = Thorium is a chemical element; it has symbol Th and atomic number 90. Thorium is a weakly radioactive light silver metal which tarnishes olive grey when it is exposed to air, forming thorium dioxide; it is moderately soft, malleable, and has a high melting point. Thorium is an electropositive actinide whose chemistry is dominated by the +4 oxidation state; it is quite reactive and can ignite in air when finely divided.
