@@ -143,7 +143,7 @@ func TestFoilRouletteLimitsSacrifices(t *testing.T) {
 	createAccount(t, router, "foil5", "foo-bar-baz-qux", 0)
 	cookie := login(t, router, "foil5", "foo-bar-baz-qux")
 
-	rec := foilRoll(t, router, cookie, strconv.Itoa(cardPythagorean), copies(cardTungsten, "", 101)...)
+	rec := foilRoll(t, router, cookie, strconv.Itoa(cardPythagorean), copies(cardRosetta, "", 101)...)
 
 	require.Equal(t, "/inventory?tab=foil&error=count", rec.Header().Get("Location"))
 	require.Contains(t, getInventory(t, router, cookie, "/inventory?tab=foil&error=count"), "A roll can sacrifice at most 100 cards")
@@ -156,12 +156,12 @@ func TestFoilRouletteKeepsCopiesUpInTrades(t *testing.T) {
 	createAccount(t, router, "foil7", "foo-bar-baz-qux", 0)
 	giveCards(t, "foil6", cardPythagorean, 1)
 	giveCards(t, "foil6", cardMcMurdo, 2)
-	giveCards(t, "foil7", cardTungsten, 1)
+	giveCards(t, "foil7", cardRosetta, 1)
 	cookie := login(t, router, "foil6", "foo-bar-baz-qux")
 
 	rec := postJSON(t, router, cookie, "/trades", tradeBody(t, "foil7",
 		[]models.TradeItem{item(cardMcMurdo, "", 1)}, 0,
-		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+		[]models.TradeItem{item(cardRosetta, "", 1)}, 0))
 	require.Equal(t, http.StatusCreated, rec.Code)
 
 	// The tab only offers the free copy
@@ -187,7 +187,7 @@ func TestFoilRouletteAnonymousIsSentToLogin(t *testing.T) {
 func TestFoilRouletteTab(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "foil8", "foo-bar-baz-qux", 0)
-	giveCards(t, "foil8", cardTungsten, 1)
+	giveCards(t, "foil8", cardRosetta, 1)
 	giveCards(t, "foil8", cardFordT, 2)
 	giveCardAt(t, "foil8", cardPythagorean, "foil2", time.Now())
 	cookie := login(t, router, "foil8", "foo-bar-baz-qux")
@@ -200,7 +200,7 @@ func TestFoilRouletteTab(t *testing.T) {
 	require.Less(t, strings.Index(body, "inventory-tab-tradeup"), strings.Index(body, "inventory-tab-foil"))
 
 	// Every rarity can be rolled or sacrificed, foils included, in collection order
-	require.Equal(t, []string{"Pythagorean tiling", "Ford Model T", "Tungsten"}, cardTitles(body))
+	require.Equal(t, []string{"Pythagorean tiling", "Ford Model T", "Rosetta Stone"}, cardTitles(body))
 	require.Contains(t, body, `data-foil-id="1001" data-foil-foil="foil2"`)
 	require.Contains(t, body, `data-foil-count="1" data-foil-rarity="common"`)
 	require.Contains(t, body, `data-foil-id="1004" data-foil-foil=""`)
