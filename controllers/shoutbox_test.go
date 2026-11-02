@@ -52,6 +52,8 @@ type shoutboxEvent struct {
 	Ignored       []chatIgnoredUser    `json:"ignored"`
 	Error         string               `json:"error"`
 	RetryAfter    int64                `json:"retryAfter"`
+	ID            uint                 `json:"id"`
+	Moderator     bool                 `json:"moderator"`
 }
 
 func shoutboxDial(t *testing.T, server *httptest.Server, cookie *http.Cookie, origin string, extraCookies ...*http.Cookie) (*websocket.Conn, *http.Response, error) {

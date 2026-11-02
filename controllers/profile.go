@@ -323,18 +323,23 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 	c.JSON(httpStatusCode, response)
 }
 
-// profileTarget authorizes the target before loading any other account.
-func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*models.User, int) {
-	origin := c.GetHeader("Origin")
-	if origin != "" {
+// sameOriginRequest reports whether a request changing an account comes from the site itself, on top of the
+// session cookie not being sent cross-site
+func sameOriginRequest(c *gin.Context) bool {
+	if origin := c.GetHeader("Origin"); origin != "" {
 		u, err := url.Parse(origin)
 		// Ports are not compared, the gateway forwards the host without the port
 		host := (&url.URL{Host: c.Request.Host}).Hostname()
 		if err != nil || !strings.EqualFold(u.Hostname(), host) || (u.Scheme != "http" && u.Scheme != "https") {
-			return nil, http.StatusForbidden
+			return false
 		}
 	}
-	if c.GetHeader("Sec-Fetch-Site") == "cross-site" {
+	return c.GetHeader("Sec-Fetch-Site") != "cross-site"
+}
+
+// profileTarget authorizes the target before loading any other account.
+func (pc *Controller) profileTarget(c *gin.Context, actor *AuthenticatedUser) (*models.User, int) {
+	if !sameOriginRequest(c) {
 		return nil, http.StatusForbidden
 	}
 
