@@ -4228,8 +4228,9 @@ form .notification-action {
     scrollbar-width: thin;
 }
 
-/* Search and filters of the tradeup and foil roulette sidebars. The labels
-   share a column, so the dropdowns line up and take what the labels leave */
+/* Search, filters and sort of the tradeup and foil roulette sidebars. The
+   labels share a column, so the dropdowns line up and take what the labels
+   leave */
 .tradeup-filter {
     display: grid;
     grid-template-columns: auto minmax(0, 1fr);

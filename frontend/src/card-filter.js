@@ -7,7 +7,8 @@
  *  - `search`: text input, keeps the tiles whose name or collection holds it
  *  - `collection`: select of collection IDs, '' for all of them
  *  - `rarity`: select of rarities, '' for all of them
- *  - `sort`: select of `number`, `name`, `name-desc`, `rarity` or `count`
+ *  - `sort`: select of `number`, `name`, `name-desc`, `rarity`, `count` or
+ *    `grouped`
  *  - `noMatch`: element shown when the filters hide every tile
  *  - `pagers`: elements the page links are drawn in, above and below the
  *    grid. Each provides `data-page-size`, `data-label-nav`,
@@ -15,7 +16,9 @@
  *    shows at once.
  *
  * `read(tile)` gives what a tile is filtered and sorted on:
- * `{ title, collection, collectionId, rarity, number, count }`.
+ * `{ title, collection, collectionId, rarity, number, count, order }`, where
+ * `order` is the tile's place in an alternative order of the page's own, the
+ * one the `grouped` sort brings back (the tradeup's collection-and-rarity).
  *
  * Paging happens here too, not by navigating: a picker's selection would not
  * survive a new page. Changing a filter goes back to the first page.
@@ -52,6 +55,7 @@ const COMPARATORS = {
 	'rarity': (_, first, second) => rarityRank(first.rarity) - rarityRank(second.rarity),
 	'count': (_, first, second) => second.count - first.count,
 	'number': (_, first, second) => first.number - second.number,
+	'grouped': (_, first, second) => (first.order ?? 0) - (second.order ?? 0),
 };
 
 function compareTiles(state, order, first, second) {
