@@ -1,5 +1,5 @@
 {{ define "paginator" }}
-<nav class="paginator" aria-label={{ .T "paginator-label-nav" }}>
+<nav class="paginator" aria-label="{{ if .Data.Bottom }}{{ .T "paginator-label-nav-bottom" }}{{ else }}{{ .T "paginator-label-nav" }}{{ end }}">
 	<ul>
 	{{ if gt .Data.Current 1 }}
 	<li><a href="{{ .Data.Url }}{{ sub .Data.Current 1 }}" aria-label={{ .T "paginator-label-previous" }} rel="prev">‹</a></li>

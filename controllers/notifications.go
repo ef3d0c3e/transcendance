@@ -27,11 +27,10 @@ const (
 func (nc *Controller) translate(c *gin.Context, notif *models.Notification) (string, string) {
 	args := make([]any, 0, len(notif.Data)*2)
 	for key, value := range notif.Data {
-		// Numbers come out of the JSON column as json.Number, which the
-		// translator cannot format: give it floats instead
+		// Numbers are read back as `json.Number`, which isn't one for plurals
 		if number, ok := value.(json.Number); ok {
-			if float, err := number.Float64(); err == nil {
-				value = float
+			if f, err := number.Float64(); err == nil {
+				value = f
 			}
 		}
 		args = append(args, key, value)
@@ -105,11 +104,7 @@ func (nc *Controller) NotificationsGet(c *gin.Context) {
 		"Redirect":      current,
 	})
 	if list.Pages > 1 {
-		content.Add("paginator", "Paginator", map[string]any{
-			"Current": page,
-			"Total":   int(list.Pages),
-			"Url":     "?filter=" + filter + "&p=",
-		})
+		content.AddPaginator(page, int(list.Pages), "?filter="+filter+"&p=")
 	}
 	nc.Renderer.Render(c, &builder)
 }

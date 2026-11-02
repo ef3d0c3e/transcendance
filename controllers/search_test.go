@@ -90,6 +90,15 @@ func TestSearchUsersFiltersAndSorts(t *testing.T) {
 	body := getPage(t, router, "/search?q=flt&sort=cards")
 	require.Contains(t, body, `<dt>Cards:</dt>`)
 	require.Contains(t, body, `<option value="cards" selected>Most cards</option>`)
+	require.NotContains(t, body, `/inventory?tab=cards`)
+
+	// A signed-in visitor's card-count link opens that user's cards tab.
+	cookie := login(t, router, "flta", "foo-bar-baz-qux")
+	body = getInventory(t, router, cookie, "/search?q=flt&sort=cards")
+	require.Contains(t, body, `<a href="/inventory?tab=cards&amp;u=fltb">12</a>`)
+	body = getInventory(t, router, cookie, "/inventory?tab=cards&u=fltb")
+	require.Contains(t, body, `<a class="inventory-tab-cards" href="/inventory?tab=cards&amp;u=fltb" aria-current="page">`)
+	require.Contains(t, body, `<h2 class="card-title">Tungsten</h2>`)
 }
 
 func TestSearchUsersEmpty(t *testing.T) {

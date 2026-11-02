@@ -55,8 +55,9 @@ type streakTile struct {
 }
 
 // streakTileData builds the template data of the daily streak section
-func (dc *DataController) streakTileData(c *gin.Context, state *controllers.StreakState) *streakTile {
+func (dc *DataController) streakTileData(c *gin.Context, state *controllers.StreakState, tab string) *streakTile {
 	tile := &streakTile{
+		Tab:         tab,
 		Title:       dc.Renderer.T(c, "daily-streak-title"),
 		ClaimAction: "/inventory/claim",
 	}
@@ -126,8 +127,9 @@ func (dc *DataController) InventoryClaimPost(c *gin.Context) {
 	// Back to the tab the bonus was claimed from, flagged with the claim
 	// when the bonus was credited just now
 	params := url.Values{}
-	if c.PostForm("tab") == inventoryTabBoosters {
-		params.Set("tab", inventoryTabBoosters)
+	switch tab := c.PostForm("tab"); tab {
+	case inventoryTabCards, inventoryTabBoosters, inventoryTabCollections:
+		params.Set("tab", tab)
 	}
 	if err == nil {
 		params.Set("claimed", "1")

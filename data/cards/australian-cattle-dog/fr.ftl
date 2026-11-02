@@ -1,0 +1,2 @@
+title = Bouvier australien
+description = Le bouvier australien (en anglais Australian cattle dog) est une race de chien originaire d'Australie, rattachée au groupe 1 de la nomenclature des races de la Fédération cynologique internationale. Il compte parmi ses ancêtres le dingo, chien sauvage peuplant le bush et les bergers importés par les colons, soucieux d'adapter leurs chiens de troupeaux au climat australien.

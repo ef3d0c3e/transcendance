@@ -37,8 +37,8 @@ type pileTile struct {
 	PileEmpty bool
 	// Page opening one default booster out of the pile
 	PileOpen string
-	// Asked before opening one
-	PileConfirm string
+	// Accessible name of the tile, which opens one
+	PileLabel string
 
 	ColorPrimary   template.CSS
 	ColorSecondary template.CSS
@@ -66,7 +66,7 @@ func (dc *DataController) pileTileData(c *gin.Context, pile *models.BoosterPile)
 		PileTimerSeconds: timerSeconds,
 		PileEmpty:        pile.Count == 0,
 		PileOpen:         "/opening?booster=" + defaultBoosterRef,
-		PileConfirm:      dc.Renderer.T(c, "booster-pile-open-confirm"),
+		PileLabel:        dc.Renderer.T(c, "inventory-booster-open", "name", dc.Renderer.T(c, "booster-pile-title")),
 		ColorPrimary:     template.CSS(defaultBoosterColorPrimary),
 		ColorSecondary:   template.CSS(defaultBoosterColorSecondary),
 	}

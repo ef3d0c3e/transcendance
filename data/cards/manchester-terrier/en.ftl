@@ -1,0 +1,2 @@
+title = Manchester Terrier
+description = The Manchester Terrier is a breed of dog of the smooth-haired terrier type. It was first bred in the 19th century to control vermin, notably rats, at which it excelled. So efficient at the task was it that it often appeared in rat-baiting pits until that sport, which had effectively been illegal in the UK since 1835, finally died out at the beginning of the 20th century.

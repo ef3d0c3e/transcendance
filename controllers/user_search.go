@@ -91,6 +91,8 @@ type userSearchResult struct {
 	// nil when the user was never seen
 	LastSeenAt *time.Time
 	Online     bool
+	// Relation of the authenticated user to this one
+	Relation string
 }
 
 // Everything needed to render the user search page
@@ -105,6 +107,17 @@ type userSearchView struct {
 	Page  int
 	Count int64
 	Users []userSearchResult
+	// Friends page: the user whose friends list is shown, and which one
+	Owner uint
+	List  string
+}
+
+// Page of the search
+func (v *userSearchView) path() string {
+	if v.List != "" {
+		return "/friends"
+	}
+	return "/search"
 }
 
 func (v *userSearchView) filtered() bool {
@@ -114,6 +127,9 @@ func (v *userSearchView) filtered() bool {
 // Query parameters of the search, without the page
 func (v *userSearchView) params() url.Values {
 	params := url.Values{}
+	if v.List != "" && v.List != friendsListFriends {
+		params.Set("list", v.List)
+	}
 	if v.Query != "" {
 		params.Set("q", v.Query)
 	}
@@ -131,7 +147,7 @@ func (v *userSearchView) params() url.Values {
 
 // Users matching the search and filters, without ordering
 func (sc *Controller) userQuery(c *gin.Context, v *userSearchView) *gorm.DB {
-	db := sc.DB.WithContext(c.Request.Context()).Model(&models.User{})
+	db := friendsJoin(sc.DB.WithContext(c.Request.Context()).Model(&models.User{}), v)
 	if v.Query != "" {
 		pattern := "%" + escapeLike(v.Query) + "%"
 		if len([]rune(v.Query)) >= userSearchFuzzyLength {
@@ -187,10 +203,24 @@ func (sc *Controller) searchUsers(c *gin.Context, v *userSearchView) error {
 		Offset((v.Page - 1) * userSearchPageSize).
 		Limit(userSearchPageSize).
 		Scan(&v.Users).Error
+	if err != nil {
+		return err
+	}
+	ids := make([]uint, len(v.Users))
 	for i := range v.Users {
 		v.Users[i].Online = models.IsOnline(v.Users[i].LastSeenAt)
+		ids[i] = v.Users[i].ID
 	}
-	return err
+	if user := GetAuthenticatedUser(c); user != nil {
+		relations, err := relationsOf(sc.DB.WithContext(c.Request.Context()), user.ID, ids)
+		if err != nil {
+			return err
+		}
+		for i := range v.Users {
+			v.Users[i].Relation = relations[v.Users[i].ID]
+		}
+	}
+	return nil
 }
 
 // search: every user, or the ones matching the search and filters
@@ -221,7 +251,7 @@ func (sc *Controller) SearchUsersGet(c *gin.Context) {
 		})
 		return
 	}
-	sc.renderSearch(c, v)
+	sc.renderSearch(c, v, "search-user-title")
 }
 
 // Options of the filter and sort selects
@@ -254,16 +284,25 @@ func (sc *Controller) searchOptions(c *gin.Context, v *userSearchView) map[strin
 			sortOptions[i].Value = ""
 		}
 	}
+	var lists []SelectOption
+	if v.List != "" {
+		lists = SelectOptions(friendsLists, v.List, func(value string) string {
+			return sc.Renderer.T(c, "friends-list-"+value)
+		})
+		// The default list isn't submitted
+		lists[0].Value = ""
+	}
 	return map[string]any{
+		"ListOptions":   lists,
 		"JoinedOptions": joined,
 		"StatusOptions": status,
 		"SortOptions":   sortOptions,
 	}
 }
 
-func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
+func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView, t string) {
 	user := GetAuthenticatedUser(c)
-	title := sc.Renderer.T(c, "search-user-title")
+	title := sc.Renderer.T(c, t)
 	builder := views.PageBuilder("base", map[string]any{
 		"Title": title,
 		"User":  user,
@@ -272,6 +311,9 @@ func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
 	message := ""
 	if len(v.Users) == 0 {
 		message = sc.Renderer.T(c, "search-user-empty")
+		if v.List != "" && !v.filtered() {
+			message = sc.Renderer.T(c, "friends-empty-"+v.List)
+		}
 	}
 	count := ""
 	if v.Count > 0 {
@@ -281,6 +323,7 @@ func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
 	fields := map[string]any{
 		"Title":    title,
 		"User":     user,
+		"Path":     v.path(),
 		"Locale":   sc.Renderer.Localizer.GetLocale(c),
 		"Query":    v.Query,
 		"Users":    v.Users,
@@ -298,10 +341,6 @@ func (sc *Controller) renderSearch(c *gin.Context, v *userSearchView) {
 	if params := v.params(); len(params) != 0 {
 		paginatorUrl = "?" + params.Encode() + "&p="
 	}
-	content.Add("paginator", "Paginator", map[string]any{
-		"Current": v.Page,
-		"Total":   totalPages,
-		"Url":     paginatorUrl,
-	})
+	content.AddPaginator(v.Page, totalPages, paginatorUrl)
 	sc.Renderer.Render(c, &builder)
 }

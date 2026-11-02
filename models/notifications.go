@@ -8,10 +8,12 @@ import (
 
 // Notification types, each one has `notification-<type>-title` and `notification-<type>-desc` translations
 const (
-	NotificationFriendRequest = "friend-request"
-	NotificationInfo          = "info"
-	NotificationTrade         = "trade"
-	NotificationTradeCounter  = "trade-counter"
+	NotificationFriendRequest  = "friend-request"
+	NotificationFriendAccepted = "friend-accepted"
+	NotificationInfo           = "info"
+	NotificationPrivateMessage = "private-message"
+	NotificationTrade          = "trade"
+	NotificationTradeCounter   = "trade-counter"
 )
 
 type Notification struct {
