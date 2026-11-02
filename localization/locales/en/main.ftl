@@ -116,6 +116,8 @@ card-rarity-rare = Rare
 card-rarity-legendary = Legendary
 
 card-search-placeholder = Search for cards
+card-filter-placeholder = Filter by card or collection name
+card-filter-no-match = No card matches this filter
 card-search-empty = No cards found
 card-search-submit = Search
 card-search-error-internal = Search failed
@@ -285,6 +287,8 @@ inventory-filter-effect = Effect
 inventory-filter-effect-all = All effects
 inventory-filter-effect-none = No effect
 inventory-filter-effect-foil = Foil
+inventory-filter-collection = Collection
+inventory-filter-collection-all = All collections
 inventory-sort = Sort by
 inventory-sort-relevance = Relevance
 inventory-sort-recent = Last acquired
@@ -297,6 +301,7 @@ inventory-tabs-label = Inventory sections
 inventory-tab-cards = Cards
 inventory-tab-boosters = Boosters
 inventory-tab-collections = Collections
+inventory-tab-tradeup = Trade up
 inventory-message-no-boosters = No boosters yet
 inventory-booster-open = Open booster { $name }
 inventory-booster-count = { $count ->
@@ -485,6 +490,11 @@ contact-privacy-title = Personal data requests
 contact-privacy-text = For a request about your personal data, contact a team member privately rather than opening a public issue. You can delete your account at any time from your profile.
 
 inventory-trade = Propose a trade
+inventory-trades = Your trades
+inventory-trades-incoming = { $count ->
+    [one] { $count } offer waiting for your answer
+   *[other] { $count } offers waiting for your answer
+}
 
 trades-title = Trades
 trade-menu-title = Trade with { $username }
@@ -572,3 +582,20 @@ shoutbox-ignoring-notice = You are ignoring this user: their shoutbox messages a
 shoutbox-error-user-not-found = This user doesn't exist
 shoutbox-error-self = You can't message yourself
 shoutbox-error-blocked = This user isn't accepting your messages right now
+
+tradeup-rules = Trade { $count } cards of the same rarity for one random card of the next rarity. Each collection's chance follows how many of the cards come from it.
+tradeup-empty = No cards here can be traded up
+tradeup-slots = Trade-up slots
+tradeup-remove = Remove
+tradeup-slot-empty = Empty slot
+tradeup-clear = Clear
+tradeup-submit = Trade up
+tradeup-result = You obtained
+tradeup-result-close = Close
+tradeup-error-count = A trade-up needs exactly { $count } cards
+tradeup-error-rarity = Every card in a trade-up must share the same rarity
+tradeup-error-tier = These cards cannot be traded up
+tradeup-error-missing = You do not own enough of these cards
+tradeup-error-locked = Some of these cards are up in trades
+tradeup-error-empty = None of these collections holds a card of the next rarity
+tradeup-error-internal = Failed to complete the trade-up

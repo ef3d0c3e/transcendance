@@ -18,8 +18,10 @@ type tradeStack struct {
 	Foil   string `json:"foil"`
 	Count  uint   `json:"count"`
 	Title  string `json:"title"`
-	Rarity string `json:"rarity"`
-	Image  string `json:"image"`
+	// Title of the card's collection, the menu's search matches it too
+	Collection string `json:"collection"`
+	Rarity     string `json:"rarity"`
+	Image      string `json:"image"`
 	// The stack's card, rendered as on the inventory page
 	HTML string `json:"html"`
 }
@@ -72,13 +74,14 @@ func (dc *DataController) tradeStacks(c *gin.Context, loc string, userID uint, c
 			free = 0
 		}
 		stacks = append(stacks, tradeStack{
-			CardID: row.CardID,
-			Foil:   row.Foil,
-			Count:  free,
-			Title:  title,
-			Rarity: card.Rarity,
-			Image:  fmt.Sprint("/cards/", collection.ID*1000+card.ID, "/thumbnail"),
-			HTML:   html,
+			CardID:     row.CardID,
+			Foil:       row.Foil,
+			Count:      free,
+			Title:      title,
+			Collection: fmt.Sprint(cardData["CardCollectionTitle"]),
+			Rarity:     card.Rarity,
+			Image:      fmt.Sprint("/cards/", collection.ID*1000+card.ID, "/thumbnail"),
+			HTML:       html,
 		})
 	}
 	return stacks, nil

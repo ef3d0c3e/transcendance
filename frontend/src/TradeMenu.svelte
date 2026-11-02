@@ -30,6 +30,8 @@
 	const labelDecrease = $derived(target.dataset.labelDecrease ?? "");
 	const labelFoil = $derived(target.dataset.labelFoil ?? "");
 	const labelError = $derived(target.dataset.labelError ?? "");
+	const labelSearch = $derived(target.dataset.labelSearch ?? "");
+	const labelNoMatch = $derived(target.dataset.labelNoMatch ?? "");
 
 	let mine = $state([]);
 	let theirs = $state([]);
@@ -44,6 +46,9 @@
 	let loading = $state(true);
 	let sending = $state(false);
 	let message = $state("");
+	// What each side's inventory is filtered down to
+	let giveQuery = $state("");
+	let wantQuery = $state("");
 
 	// Width of a picker column and of the fixed 30ch card box, in pixels. The
 	// cards are scaled to the column so a tile never overflows it, whatever
@@ -59,6 +64,23 @@
 	// Stacks put up on each side, in inventory order
 	const givePicked = $derived(mine.filter((stack) => give[key(stack)]));
 	const wantPicked = $derived(theirs.filter((stack) => want[key(stack)]));
+
+	// Case and accents are ignored when filtering
+	function fold(text) {
+		return text.normalize("NFD").replaceAll(/\p{Diacritic}/gu, "").toLowerCase();
+	}
+
+	// Stacks whose card or collection name holds the query
+	function search(stacks, query) {
+		const folded = fold(query.trim());
+		if (folded === "") {
+			return stacks;
+		}
+		return stacks.filter((stack) => fold(`${stack.title} ${stack.collection ?? ""}`).includes(folded));
+	}
+
+	const mineShown = $derived(search(mine, giveQuery));
+	const theirsShown = $derived(search(theirs, wantQuery));
 
 	function title(stack) {
 		return stack.foil ? `${stack.title} · ${labelFoil}` : stack.title;
@@ -243,9 +265,13 @@
 						</div>
 					{/each}
 				</div>
+				{#if mine.length > 0}
+					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
+						bind:value={giveQuery} />
+				{/if}
 				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
 					style="--trade-card-scale: {cardScale}">
-					{#each mine as stack (key(stack))}
+					{#each mineShown as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={give[key(stack)]} class:is-locked={!stack.count}
 							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "give", stack)}
@@ -253,7 +279,7 @@
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
 					{:else}
-						<p class="trade-menu-empty">{labelEmpty}</p>
+						<p class="trade-menu-empty">{mine.length > 0 ? labelNoMatch : labelEmpty}</p>
 					{/each}
 				</div>
 			</section>
@@ -280,9 +306,13 @@
 						</div>
 					{/each}
 				</div>
+				{#if theirs.length > 0}
+					<input type="search" class="trade-menu-search" placeholder={labelSearch} aria-label={labelSearch}
+						bind:value={wantQuery} />
+				{/if}
 				<div class="trade-menu-picker" bind:clientWidth={pickerWidth}
 					style="--trade-card-scale: {cardScale}">
-					{#each theirs as stack (key(stack))}
+					{#each theirsShown as stack (key(stack))}
 						<div class="trade-menu-tile" class:is-picked={want[key(stack)]} class:is-locked={!stack.count}
 							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
@@ -290,7 +320,7 @@
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
 					{:else}
-						<p class="trade-menu-empty">{labelEmpty}</p>
+						<p class="trade-menu-empty">{theirs.length > 0 ? labelNoMatch : labelEmpty}</p>
 					{/each}
 				</div>
 			</section>
@@ -506,6 +536,17 @@
 	.trade-menu-coins input::-webkit-inner-spin-button {
 		-webkit-appearance: none;
 		margin: 0;
+	}
+
+	/* Filters the inventory below by card or collection name */
+	.trade-menu-search {
+		width: 100%;
+		padding: 0.45rem 0.65rem;
+
+		color: var(--color-text);
+		background: var(--color-bg-2);
+		border: 1px solid var(--color-border-1);
+		border-radius: 0.5rem;
 	}
 
 	/* Inventories to pick the stacks from. Two rows of cards at most: the

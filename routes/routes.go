@@ -99,6 +99,9 @@ func RegisterRoutes(
 	router.POST("/opening", dataController.OpeningPost)
 	router.POST("/opening/buy", dataController.OpeningBuyPost)
 
+	// tradeup.go
+	router.POST("/tradeup", dataController.TradeupPost)
+
 	// Debug: add a booster to the authenticated user's inventory
 	router.GET("/add_booster", dataController.AddBoosterGet)
 	router.POST("/add_booster", dataController.AddBoosterPost)

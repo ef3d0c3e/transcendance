@@ -458,6 +458,8 @@ func TestTradeMenuAndStacks(t *testing.T) {
 	require.Contains(t, body, `id="trade-menu"`)
 	require.Contains(t, body, "Trade with trade16")
 	require.Contains(t, body, `data-stacks-url="/api/trade/stacks?u=trade16"`)
+	// Each side's inventory can be filtered
+	require.Contains(t, body, `data-label-search="Filter by card or collection name"`)
 
 	// No menu for oneself or for a user that does not exist
 	rec := get(t, router, cookie15, "/trades/new?u=trade15")
@@ -487,6 +489,7 @@ func TestTradeMenuAndStacks(t *testing.T) {
 	require.Len(t, stacks.Theirs, 1)
 	require.Equal(t, uint(cardMcMurdo), stacks.Theirs[0].CardID)
 	require.Equal(t, "McMurdo Station", stacks.Theirs[0].Title)
+	require.Equal(t, "Development", stacks.Theirs[0].Collection)
 	require.NotEmpty(t, stacks.Theirs[0].Image)
 
 	// Every stack brings its card render along, foils wear their effect
@@ -505,9 +508,11 @@ type stackJSON struct {
 	Foil   string `json:"foil"`
 	Count  uint   `json:"count"`
 	Title  string `json:"title"`
-	Rarity string `json:"rarity"`
-	Image  string `json:"image"`
-	HTML   string `json:"html"`
+	// The search matches it as well as the title
+	Collection string `json:"collection"`
+	Rarity     string `json:"rarity"`
+	Image      string `json:"image"`
+	HTML       string `json:"html"`
 }
 
 // GET a page as the authenticated user, without following redirects
@@ -533,9 +538,21 @@ func TestTradeButtonOnCollection(t *testing.T) {
 	require.Contains(t, body, `class="inventory-trade"`)
 	require.Contains(t, body, `href="/trades/new?u=trade18"`)
 
-	// One's own collection has nobody to trade with
+	// One's own inventory links to one's trades instead
 	body = getInventory(t, router, cookie17, "/inventory")
-	require.NotContains(t, body, "inventory-trade")
+	require.NotContains(t, body, "/trades/new")
+	require.Contains(t, body, `<a class="inventory-trade" href="/trades">Your trades</a>`)
+
+	// With how many offers wait for an answer
+	giveCards(t, "trade17", cardTungsten, 1)
+	giveCards(t, "trade18", cardFordT, 1)
+	rec := postJSON(t, router, login(t, router, "trade18", "foo-bar-baz-qux"), "/trades", tradeBody(t, "trade17",
+		[]models.TradeItem{item(cardFordT, "", 1)}, 0,
+		[]models.TradeItem{item(cardTungsten, "", 1)}, 0))
+	require.Equal(t, http.StatusCreated, rec.Code)
+	body = getInventory(t, router, cookie17, "/inventory?tab=cards")
+	require.Contains(t, body, `<span class="inventory-trade-count" aria-hidden="true">1</span>`)
+	require.Contains(t, body, `<span class="sr-only">1 offer waiting for your answer</span>`)
 }
 
 // Trades are listed for their two sides only, and erased with their users
