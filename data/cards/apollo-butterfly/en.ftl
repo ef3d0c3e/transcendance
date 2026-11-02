@@ -1,0 +1,2 @@
+title = Apollo Butterfly
+description = The Apollo (Parnassius apollo), also called the mountain Apollo, is a butterfly of the family Papilionidae. The species is named in the classical tradition for the deity Apollo. This mountain butterfly species prefers hills and flowery alpine meadows, and pastures of the continental European mountains, in Spain, Scandinavia and Central Europe, in the Balkans up to northern Greece, and in the Alps between Italy and France.

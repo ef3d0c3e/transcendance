@@ -1,0 +1,2 @@
+title = Coléoptère bombardier
+description = Les coléoptères bombardiers sont des coléoptères de la famille des carabidés (Carabidae) ayant la capacité de projeter bruyamment sur leurs prédateurs (fourmis...) un liquide corrosif en ébullition, mélange de substances issues de la réaction entre l'hydroquinone et le peroxyde d'hydrogène conservées dans des réservoirs distincts dans l'abdomen avant de se retrouver dans une chambre spéciale, avec une enzyme qui catalyse la réaction.

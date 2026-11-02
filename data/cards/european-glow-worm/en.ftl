@@ -1,0 +1,2 @@
+title = European Glow-Worm
+description = Lampyris noctiluca, the common glowworm of Europe (see also "glowworm"), is the type species of beetle in the genus Lampyris and the family Lampyridae. Lampyris noctiluca presents conspicuous sexual dimorphism. The males are winged, with brown elytra, a clearer pronotum and a large brown spot in the middle, while females are larviform, with no wings, and they are often twice the size of the males (up to 25 millimetres (1 in) in length).

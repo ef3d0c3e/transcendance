@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -26,6 +27,15 @@ func getPage(t *testing.T, router *gin.Engine, target string) string {
 	router.ServeHTTP(rec, req)
 	require.Equal(t, http.StatusOK, rec.Code)
 	return strings.NewReplacer("\u2068", "", "\u2069", "").Replace(rec.Body.String())
+}
+
+// Fluent formats counts with thousands separators: 1023 shows as "1,023"
+func formatCount(n int) string {
+	s := strconv.Itoa(n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
 }
 
 func TestCatalogListsEveryCard(t *testing.T) {
@@ -105,7 +115,7 @@ func TestCatalogCollectionsInInventory(t *testing.T) {
 	require.Contains(t, body, `<p class="pack-progress-count"><strong>2</strong> / 5</p>`)
 	require.Contains(t, body, `<div class="pack-progress-bar" style="width: 40%"></div>`)
 	require.Contains(t, body, `<p class="pack-progress-count"><strong>0</strong> / 151</p>`)
-	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d collections</p>`, len(tests.Data.Collections)))
+	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%s collections</p>`, formatCount(len(tests.Data.Collections))))
 	require.NotContains(t, body, `name="rarity"`)
 }
 

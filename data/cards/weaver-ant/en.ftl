@@ -1,0 +1,2 @@
+title = Weaver Ant
+description = Oecophylla smaragdina (common names include Asian weaver ant, weaver ant, green ant, green tree ant, and orange gaster) is a species of arboreal ant found in tropical Asia and Australia. These ants form colonies with multiple nests in trees, each nest being made of leaves stitched together using the silk produced by the ant larvae, hence the specific name oecophylla (Greek for "leaf-house").

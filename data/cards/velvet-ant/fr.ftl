@@ -1,0 +1,2 @@
+title = Dasymutilla occidentalis
+description = Dasymutilla occidentalis, parfois surnommée « tueuse de vaches », est une guêpe parasitoïde présente de la Nouvelle-Angleterre au Kansas et de la Floride au Texas. C'est la plus grande des fourmis de velours de l'est des États-Unis, avec près de deux centimètres de long, et une coloration d'avertissement noir et rouge orangé. Malgré son nom, c'est une guêpe et non une fourmi.

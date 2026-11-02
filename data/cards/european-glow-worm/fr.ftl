@@ -1,0 +1,2 @@
+title = Lampyre
+description = Le lampyre, Lampyris noctiluca, communément appelé ver luisant, est une espèce d’insectes coléoptères de la famille des Lampyridae, de la sous-famille des Lampyrinae. Le mot vient du latin lampyris, qui vient lui-même du grec λαμπυρίς (lampurís), dérivé du verbe grec λάμπειν (lámpein (en)), « briller ». Il s'apparente aux lucioles (du genre Luciola, sous-famille des Luciolinae).

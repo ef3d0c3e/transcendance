@@ -1,0 +1,2 @@
+title = Rose Chafer
+description = Cetonia aurata, called the rose chafer or the green rose chafer, is a beetle, 20 millimetres (3⁄4 in) long, that has a metallic structurally coloured green and a distinct V-shaped scutellum. The scutellum is the small V-shaped area between the wing cases; it may show several small, irregular, white lines and marks. The underside of the beetle has a coppery colour, and its upper side is sometimes bronze, copper, violet, blue/black, or grey.

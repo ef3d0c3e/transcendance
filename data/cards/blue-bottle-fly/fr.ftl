@@ -1,0 +1,2 @@
+title = Mouche bleue
+description = La Mouche bleue (Calliphora vomitoria) ou mouche à viande est une espèce d'insectes diptères brachycères, une mouche commune dans la plupart des régions du monde et qui est l'espèce type du genre Calliphora. Une espèce proche (Calliphora vicina), appelée aussi Mouche bleue, est très semblable, plus commune ; ses joues, situées sous les yeux, sont rougeâtres au lieu de noires chez Calliphora vomitoria.

@@ -1,0 +1,2 @@
+title = Dytique bordé
+description = Le dytique bordé (Dytiscus marginalis) est une espèce européenne de coléoptères dytiscidés qui mesure de 30 à 35 mm de long. C'est l’un des plus grands des dytiques et « scarabées d'eau » européens ; sa taille lui permet de s'attaquer à des têtards, voire aux alevins, larves de tritons et salamandres ou petits poissons. Il est pour cette raison considéré par les éleveurs de poissons rouges comme un indésirable dans leurs étangs d'élevage.

@@ -1,0 +1,2 @@
+title = Solenopsis invicta
+description = Solenopsis invicta, parfois appelée fourmi de feu, est l'une des 215 espèces de fourmis du genre très commun Solenopsis. Bien qu'elle soit originaire d'Amérique du Sud, elle est maintenant plus connue aux États-Unis, en Australie, à Taïwan, aux Philippines et dans le sud de la Chine (province de Guangdong). En janvier 2005, plusieurs fourmilières de cette espèce ont été découvertes dans le nord de Hong Kong.

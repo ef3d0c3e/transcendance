@@ -1,0 +1,2 @@
+title = Praying Mantis
+description = The European mantis (Mantis religiosa) is a large hemimetabolic insect in the family Mantidae, which is the largest family of the order Mantodea (mantises). Their common name praying mantis is derived from the distinctive posture of the first pair of legs, which can be observed when the mantis is in repose, resembling a praying position. Both males and females have elongated bodies with two pairs of wings.

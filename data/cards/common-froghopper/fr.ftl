@@ -1,0 +1,2 @@
+title = Philaenus spumarius
+description = Philaenus spumarius, le cercope des prés (ou la philène spumeuse) est une petite espèce d'insectes hémiptères, commune en Europe dans les plantes herbacées et ligneuses, de la famille des Aphrophoridae. Il est long de 6 mm et de couleurs et dessins très variables; sa larve s'entoure complètement d'une mousse qu'elle sécrète. Cette mousse est communément appelée crachat de coucou.

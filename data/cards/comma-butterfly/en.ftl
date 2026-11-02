@@ -1,0 +1,2 @@
+title = Comma Butterfly
+description = Polygonia c-album, or the comma, is a food generalist (polyphagous) butterfly species belonging to the family Nymphalidae. The angular notches on the edges of the forewings are characteristic of the genus Polygonia, which is why species in the genus are commonly referred to as anglewing butterflies. Comma butterflies can be identified by their prominent orange and dark brown/black dorsal wings.

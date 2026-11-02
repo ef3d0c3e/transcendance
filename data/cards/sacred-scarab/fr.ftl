@@ -1,0 +1,2 @@
+title = Bousier sacré
+description = Le bousier sacré ou scarabée sacré (Scarabaeus sacer) est une espèce d'insectes coléoptères de la famille des Scarabaeidae. Ce coléoptère coprophage a pour caractéristique de former des boules (souvent plusieurs fois plus grosses que lui) avec de la bouse et de les rouler vers un terrier afin d'y pondre un œuf. La larve se développe alors en se nourrissant de la matière ainsi mise à sa disposition.
