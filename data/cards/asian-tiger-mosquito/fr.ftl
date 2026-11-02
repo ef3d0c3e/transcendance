@@ -1,0 +1,2 @@
+title = Aedes albopictus
+description = Aedes albopictus (ou Stegomyia albopicta selon que Stegomyia est reconnu comme sous-genre d'Aedes ou genre à part entière), le Moustique-tigre, est une espèce d'insectes diptères de la famille des Culicidae, originaire d'Asie du sud-est. C'est l'une des cent espèces les plus invasives au monde, étant actuellement présente dans 100 pays sur les cinq continents.

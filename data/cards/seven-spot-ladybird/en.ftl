@@ -1,0 +1,2 @@
+title = Seven-Spot Ladybird
+description = Coccinella septempunctata, commonly known as the seven-spot ladybird (in North America, seven-spotted ladybug, seven-spotted lady beetle), often abbreviated C-7, is a carnivorous beetle native to Europe, most of Asia, and North Africa. It inhabits many regions with a temperate climate. The beetle has been introduced to several other areas, including North America as a biological pest control agent to combat aphid infestations.

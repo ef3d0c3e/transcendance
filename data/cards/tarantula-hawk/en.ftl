@@ -1,0 +1,2 @@
+title = Tarantula Hawk
+description = A tarantula hawk is a spider wasp (Pompilidae) that preys on tarantulas. Tarantula hawks belong to any of the many species in the genera Pepsis and Hemipepsis. They are some of the largest parasitoid wasps, using their sting to paralyze their prey before dragging it into a brood nest as living food; a single egg is laid on the prey, hatching to a larva, which then eats the still-living host.

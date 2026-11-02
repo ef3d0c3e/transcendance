@@ -1,0 +1,2 @@
+title = Malayan Jungle Nymph
+description = Heteropteryx is a monotypic genus of stick insects containing Heteropteryx dilatata as the only described species. and gives its name to the family of the Heteropterygidae. Their only species may be known as jungle nymph, Malaysian stick insect, Malayan jungle nymph, or Malayan wood nymph and because of their size it is commonly kept in zoological institutions and private terrariums of insect lovers.

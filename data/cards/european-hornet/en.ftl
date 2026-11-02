@@ -1,0 +1,2 @@
+title = European Hornet
+description = The European hornet (Vespa crabro) is the largest eusocial wasp native to Europe. It is also the only true hornet (genus Vespa) found in North America, having been introduced to the United States and Canada from Europe as early as 1840. Vespines, such as V. crabro, are known for making intricate paper-like nests out of surrounding plant materials and other fibers.

@@ -1,0 +1,2 @@
+title = Leafcutter Ant
+description = Atta cephalotes, commonly known as the hairy-headed leafcutter ant, is a species of leafcutter ant in the tribe Attini (fungus-growing ants). A colony can contain up to 5 million members, and each colony has a single queen that can live more than 20 years. The colony comprises different castes, known as "task partitioning", and each caste has a different job to do.

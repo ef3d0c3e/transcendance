@@ -1,0 +1,2 @@
+title = Southern Hawker
+description = The southern hawker or blue hawker (Aeshna cyanea) is a species of hawker dragonfly. The species is one of the most common and most widespread dragonflies in Europe. The range in the Western Palearctic covers a large part of Europe, to Scotland and southern Scandinavia in the north and to Italy (without the southwest) and the northern Balkans in the south); the eastern boundary is formed by the Urals and the western by Ireland.

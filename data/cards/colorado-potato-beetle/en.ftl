@@ -1,0 +1,2 @@
+title = Colorado Potato Beetle
+description = The Colorado potato beetle (Leptinotarsa decemlineata; also known as the Colorado beetle, the ten-striped spearman, the ten-lined potato beetle, and the potato bug) is a beetle known for being a major pest of potato crops. It is about 10 mm (3⁄8 in) long, with a bright yellow/orange body and five bold brown stripes along the length of each of its wings.

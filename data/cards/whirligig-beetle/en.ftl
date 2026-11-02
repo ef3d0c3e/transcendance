@@ -1,0 +1,2 @@
+title = Whirligig Beetle
+description = The whirligig beetles are water beetles, comprising the family Gyrinidae, that usually swim on the surface of the water if undisturbed, though they swim underwater when threatened. They get their common name from their habit of swimming rapidly in circles when alarmed, and are also notable for their divided eyes which are believed to enable them to see both above and below water.

@@ -1,0 +1,2 @@
+title = Pea Aphid
+description = Acyrthosiphon pisum, commonly known as the pea aphid (and colloquially known as the green dolphin, pea louse, and clover louse), is a sap-sucking insect in the family Aphididae. It feeds on several species of legumes (plant family Fabaceae) worldwide, including forage crops, such as pea, clover, alfalfa, and broad bean, and ranks among the aphid species of major agronomical importance.

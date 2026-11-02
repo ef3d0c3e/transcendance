@@ -1,0 +1,2 @@
+title = Black Garden Ant
+description = The black garden ant (Lasius niger), also known as the common black ant, is a formicine ant, the type species of the genus Lasius, which is found across Europe and in some parts of North America, and believed to inhabit certain parts of Asia. The European species was split into two species; L. niger, which is found in open areas; and L. platythorax, which is found in forest habitats.

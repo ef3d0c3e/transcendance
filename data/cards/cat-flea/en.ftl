@@ -1,0 +1,2 @@
+title = Cat Flea
+description = The cat flea (scientific name Ctenocephalides felis) is an extremely common parasitic insect whose principal host is the domestic cat, although a high proportion of the fleas found on dogs also belong to this species. This is despite the widespread existence of a separate and well-established "dog" flea, Ctenocephalides canis. Cat fleas originated in Africa but can now be found globally.

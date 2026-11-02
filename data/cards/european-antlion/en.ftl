@@ -1,0 +1,2 @@
+title = European Antlion
+description = Myrmeleon formicarius is a species of antlion native to Belgium and other parts of Europe. It is known to be present in the Genk nature reserve Opglabbekerzavel in 2020, according to the species inventory prepared for the city by the ecological study/advice company Mieco-effect. According to the European Environment Agency, this species has not yet been assessed by the IUCN and as such lacks an official conservation threat status.

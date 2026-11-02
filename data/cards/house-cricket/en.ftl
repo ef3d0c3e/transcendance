@@ -1,0 +1,2 @@
+title = House Cricket
+description = Acheta domesticus, commonly called the house cricket, is a species of cricket most likely native to Southwestern Asia, but between 1950 and 2000 it became the standard feeder insect for the pet and research industries and spread worldwide. They can be kept as pets themselves, as this has been the case in China and Japan.

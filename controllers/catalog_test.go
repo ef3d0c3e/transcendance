@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -23,6 +24,15 @@ func getPage(t *testing.T, router *gin.Engine, target string) string {
 	return strings.NewReplacer("\u2068", "", "\u2069", "").Replace(rec.Body.String())
 }
 
+// Fluent formats counts with thousands separators: 1023 shows as "1,023"
+func formatCount(n int) string {
+	s := strconv.Itoa(n)
+	for i := len(s) - 3; i > 0; i -= 3 {
+		s = s[:i] + "," + s[i:]
+	}
+	return s
+}
+
 func TestCatalogListsEveryCard(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 
@@ -31,7 +41,7 @@ func TestCatalogListsEveryCard(t *testing.T) {
 	require.Equal(t, []string{
 		"Pythagorean tiling", "Flying Scotsman", "McMurdo Station", "Ford Model T", "Rosetta Stone",
 	}, cardTitles(body)[:5])
-	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d cards</p>`, len(tests.Data.Cards)))
+	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%s cards</p>`, formatCount(len(tests.Data.Cards))))
 	// Only cards: collections are in the inventory
 	require.NotContains(t, body, "inventory-tab")
 	require.NotContains(t, body, "/collections/search/")
@@ -100,7 +110,7 @@ func TestCatalogCollectionsInInventory(t *testing.T) {
 	require.Contains(t, body, `<p class="pack-progress-count"><strong>2</strong> / 5</p>`)
 	require.Contains(t, body, `<div class="pack-progress-bar" style="width: 40%"></div>`)
 	require.Contains(t, body, `<p class="pack-progress-count"><strong>0</strong> / 151</p>`)
-	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%d collections</p>`, len(tests.Data.Collections)))
+	require.Contains(t, body, fmt.Sprintf(`<p class="inventory-count">%s collections</p>`, formatCount(len(tests.Data.Collections))))
 	require.NotContains(t, body, `name="rarity"`)
 }
 

@@ -1,0 +1,2 @@
+title = Yellow Fever Mosquito
+description = Aedes aegypti (; US: ; from Ancient Greek αηδής (aēdḗs) 'unpleasant' and Latin aegyptī 'Egyptian') – sometimes called the yellow fever mosquito – is a mosquito that spreads diseases such as dengue fever, yellow fever, and chikungunya. The mosquito can be recognized by black and white markings on its legs and a marking in the form of a lyre on the upper surface of its thorax.

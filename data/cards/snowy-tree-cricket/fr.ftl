@@ -1,0 +1,2 @@
+title = Oecanthus fultoni
+description = Oecanthus fultoni, le grillon de Fulton ou Oecanthe thermomètre au Canada, appelé en anglais « Snowy Tree Cricket » ou « Thermometer Cricket » est une espèce d'insectes orthoptères appartenant à la famille des Gryllidae (grillons). Son nom vernaculaire de « grillon thermomètre » indique que la fréquence de ses stridulations est en relation avec la température ambiante : voir loi de Dolbear.

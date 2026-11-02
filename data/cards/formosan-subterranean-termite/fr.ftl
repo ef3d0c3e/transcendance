@@ -1,0 +1,2 @@
+title = Coptotermes formosanus
+description = Le coptoterme de Formose (Coptotermes formosanus) est une espèce de termites d'origine de l'Asie de l'Est et devenu invasif notamment au Sud-Est des États-Unis. On estime les dépenses annuelles engendrées par cet insecte à 1 milliard de USD, répartis dans les frais pour son éradication et le remboursement des dégâts par les assurances. Le termite coptoterme de Formose fait partie des 100 pires espèces envahissantes selon UICN.

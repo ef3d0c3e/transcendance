@@ -1,0 +1,2 @@
+title = Formosan Subterranean Termite
+description = The Formosan termite (Coptotermes formosanus) is a species of termite local to southern China and introduced to Taiwan (formerly known as Formosa, where it gets its name), Japan, South Africa, Sri Lanka, Hawaii, and the continental United States. The Formosan termite is often nicknamed the super-termite because of its destructive habits due to the large size of its colonies and its ability to consume wood at a rapid rate.

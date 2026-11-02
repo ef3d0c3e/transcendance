@@ -1,0 +1,2 @@
+title = Plebejus samuelis
+description = Plebejus samuelis est un petit papillon bleu originaire de la région des Grands Lacs et du nord-est de l'Amérique du Nord. Il est étroitement lié aux savanes de chênes et aux pinèdes claires, où sa chenille se nourrit exclusivement du lupin sauvage (Lupinus perennis). L'espèce a considérablement régressé et ne survit plus aujourd'hui que dans quelques États américains, du Wisconsin au New Hampshire.

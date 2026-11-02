@@ -1,0 +1,2 @@
+title = Karner Blue
+description = The Karner blue (Plebejus samuelis) is a small blue butterfly native to the Great Lakes region and northeastern North America. It is closely associated with oak savanna and pine barrens habitats because its larvae feed exclusively on wild lupine (Lupinus perennis). The species once occurred in a narrow, nearly continuous band across twelve U.S. states and southern Ontario, Canada.

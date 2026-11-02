@@ -1,0 +1,2 @@
+title = Anoplophora glabripennis
+description = Anoplophora glabripennis, le longicorne asiatique ou capricorne asiatique, est une espèce d'insectes coléoptères originaire de Chine ou de Corée. Ce sont des insectes xylophages, qui attaquent diverses espèces de feuillus, et dont les larves creusent des galeries sous l’écorce des branches et du tronc. L'espèce est devenue envahissante en Amérique du Nord et en Europe centrale.

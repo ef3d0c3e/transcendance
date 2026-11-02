@@ -1,0 +1,2 @@
+title = Small Tortoiseshell
+description = The small tortoiseshell (Aglais urticae) is a colourful Eurasian butterfly in the family Nymphalidae. Adults feed on nectar and may hibernate over winter; in warmer climates they may have two broods in a season. While the dorsal surface of the wings is vividly marked, the ventral surface is drab, providing camouflage.

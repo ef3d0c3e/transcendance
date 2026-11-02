@@ -1,0 +1,2 @@
+title = Reticulitermes flavipes
+description = Reticulitermes flavipes (anciennement R. santonensis), le termite de Saintonge ou termite à pattes jaunes, est l’espèce du genre Reticulitermes la plus répandue sur terre. Elle est originaire d'Amérique du Nord et est invasive au Canada, en Californie, en Uruguay et aux Bahamas, en France, au Chili, en Allemagne, en Italie et en Autriche où elle a été décrite pour la première fois.

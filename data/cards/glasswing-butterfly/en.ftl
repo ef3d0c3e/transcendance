@@ -1,0 +1,2 @@
+title = Glasswing Butterfly
+description = Greta oto is a species of brush-footed butterfly and member of the subfamily Danainae, tribe Ithomiini, and subtribe Godyridina. It is known by the common name glasswing butterfly for its transparent wings, which allow it to camouflage without extensive coloration. In Spanish-speaking regions, it may also be referred to as espejitos, meaning "little mirrors" because of its transparent wings.
