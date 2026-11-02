@@ -109,7 +109,9 @@ services:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s
       timeout: 5s
-      start_period: 30s
+      # Boots alongside the JVM services, 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 15m
+      start_interval: 5s
       retries: 5
     depends_on:
       data-setup:
@@ -144,8 +146,8 @@ services:
       test: ["CMD-SHELL", "curl -fsS -u elastic:$$ELASTIC_PASSWORD 'http://localhost:9200/_cluster/health' | grep -qE '\"status\":\"(green|yellow)\"'"]
       interval: 15s
       timeout: 5s
-      # A first boot creates the system indices, slow on a small host; a healthy check ends it early
-      start_period: 300s
+      # A first boot creates the system indices, 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 20m
       start_interval: 5s
       retries: 10
     depends_on:
@@ -201,8 +203,8 @@ services:
       test: ["CMD-SHELL", "curl -s -o /dev/null -w '%{http_code}' http://localhost:5601/kibana/api/status | grep -qE '^(200|401)$$'"]
       interval: 15s
       timeout: 5s
-      # A first boot migrates every saved object index, an interrupted one fails the next start
-      start_period: 600s
+      # A first boot migrates every saved object index, 10 to 20 minutes on NFS; an interrupted one fails the next start
+      start_period: 30m
       start_interval: 5s
       retries: 10
     depends_on:
@@ -247,7 +249,9 @@ services:
       test: ["CMD-SHELL", "curl -fsS http://localhost:9600/ > /dev/null"]
       interval: 15s
       timeout: 5s
-      start_period: 60s
+      # Boots in 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 20m
+      start_interval: 5s
       retries: 10
     depends_on:
       elasticsearch-setup:
@@ -277,6 +281,9 @@ services:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9090/prometheus/-/healthy"]
       interval: 15s
       timeout: 5s
+      # Boots in 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 15m
+      start_interval: 5s
       retries: 5
     depends_on:
       data-setup:
@@ -430,7 +437,9 @@ services:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:3000/grafana/api/health"]
       interval: 15s
       timeout: 5s
-      start_period: 30s
+      # Boots in 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 15m
+      start_interval: 5s
       retries: 5
     depends_on:
       data-setup:
@@ -464,6 +473,9 @@ services:
       test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:9093/alertmanager/-/healthy"]
       interval: 15s
       timeout: 5s
+      # Boots in 10 to 20 minutes on NFS; a healthy check ends the wait early
+      start_period: 15m
+      start_interval: 5s
       retries: 5
     depends_on:
       data-setup:
