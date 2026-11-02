@@ -358,7 +358,8 @@ func TestOpeningPage(t *testing.T) {
 	require.Regexp(t, `data-rarity="legendary">\s*<span class="pack-odds-label">Legendary</span>\s*<span class="pack-odds-value">5%</span>`, body)
 	require.Regexp(t, `data-rarity="foil">\s*<span class="pack-odds-label">Foil</span>\s*<span class="pack-odds-value">5%</span>`, body)
 	require.Contains(t, body, `id="pack-background"`)
-	require.Contains(t, body, `data-autostart="true"`)
+	// Nothing opens on arrival: the page waits for the button
+	require.NotContains(t, body, `data-autostart`)
 	require.Contains(t, body, `<button type="submit" class="pack-open" >`)
 
 	// The server leaves the controls visible until JavaScript starts opening.
@@ -427,8 +428,9 @@ func TestOpeningPageWithoutBooster(t *testing.T) {
 
 	// Nothing to open: the buy button shows instead, and nothing starts on its own
 	require.Regexp(t, `<button type="submit" class="pack-open" hidden>`, body)
-	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" aria-label="Open again for 250 coins"\s+>`, body)
-	require.Contains(t, body, `data-autostart="false"`)
+	require.Regexp(t, `class="pack-open pack-buy" data-collection="1"\s+data-price="250" data-retry-aria="Open another pack for 250 coins"\s+aria-label="Open pack for 250 coins"\s+>`, body)
+	require.Contains(t, body, `<span class="pack-buy-label">Open pack</span>`)
+	require.NotContains(t, body, `data-autostart`)
 	require.Contains(t, body, `<div class="pack-page">`)
 	require.Contains(t, body, `<span id="pack-coins">0 coins</span>`)
 	// Topping up is offered without a redirect-driven automatic purchase
@@ -523,7 +525,8 @@ func TestInventoryBoosterOpens(t *testing.T) {
 	giveBoosters(t, "packbtn2", collectionDev, 5, 1)
 	cookie := login(t, router, "packbtn1", "foo-bar-baz-qux")
 
-	// Clicking a booster opens the oldest of its stack, without asking
+	// The tile leads to the pack opening page of the oldest booster in its
+	// stack, which opens there without asking
 	oldest := ownedBoosters(t, "packbtn1")[0]
 	body := getInventory(t, router, cookie, "/inventory?tab=boosters")
 	require.Contains(t, body, `data-booster-open="/opening?booster=`+strconv.FormatUint(uint64(oldest.ID), 10)+`"`)
@@ -532,7 +535,7 @@ func TestInventoryBoosterOpens(t *testing.T) {
 
 	// Other users' boosters can't be opened
 	other := getInventory(t, router, cookie, "/inventory?u=packbtn2&tab=boosters")
-	require.Contains(t, other, `<span class="collection-stack">×1</span>`)
+	require.Contains(t, other, `<span class="sr-only">1 booster</span>`)
 	require.NotContains(t, other, "data-booster-open")
 }
 

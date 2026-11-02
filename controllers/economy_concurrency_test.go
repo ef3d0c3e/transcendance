@@ -42,17 +42,26 @@ func raceForm(router *gin.Engine, cookie *http.Cookie, target string, form url.V
 	return recs
 }
 
-// A user with exactly the price of one booster gets one, however many buys run at once
+// A user with exactly the price of one booster opens one, however many buys run at once
 func TestConcurrentBuysSpendOnce(t *testing.T) {
 	router := tests.Run(tests.Data, tests.DB)
 	createAccount(t, router, "racebuy1", "foo-bar-baz-qux", 0)
 	setCoins(t, "racebuy1", controllers.BoosterPrice(collectionDev))
 	cookie := login(t, router, "racebuy1", "foo-bar-baz-qux")
 
-	raceForm(router, cookie, "/shop/buy", url.Values{"collection": {strconv.Itoa(collectionDev)}}, concurrentRequests)
+	recs := raceForm(router, cookie, "/opening/buy", url.Values{"collection": {strconv.Itoa(collectionDev)}}, concurrentRequests)
 
-	require.Len(t, shopBoosters(t, "racebuy1"), 1)
+	bought := 0
+	for _, rec := range recs {
+		if rec.Code == http.StatusOK {
+			bought++
+		}
+	}
+	require.Equal(t, 1, bought)
 	require.Zero(t, shopBalance(t, "racebuy1"))
+	// Bought and opened at once
+	require.Empty(t, shopBoosters(t, "racebuy1"))
+	require.Len(t, ownedCards(t, "racebuy1"), 5)
 }
 
 func TestConcurrentOpeningsOpenOnce(t *testing.T) {
