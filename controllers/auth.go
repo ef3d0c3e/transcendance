@@ -19,6 +19,10 @@ import (
 	"transcendance/views"
 )
 
+// PasswordHashCost is the bcrypt cost of new password hashes. The tests
+// lower it, hashing at the default cost is slow under the race detector
+var PasswordHashCost = bcrypt.DefaultCost
+
 type AuthenticatedUser struct {
 	ID       uint
 	Username string
@@ -169,7 +173,7 @@ func (ac *Controller) RegisterPost(c *gin.Context) {
 
 	passwordHash, err := bcrypt.GenerateFromPassword(
 		[]byte(password),
-		bcrypt.DefaultCost,
+		PasswordHashCost,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{

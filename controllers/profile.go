@@ -248,7 +248,7 @@ func (pc *Controller) ProfilePost(c *gin.Context) {
 		if errorMessages["password"] == "" && errorMessages["new_password"] == "" && errorMessages["confirm_password"] == "" {
 			newPasswordHash, err := bcrypt.GenerateFromPassword(
 				[]byte(newPassword),
-				bcrypt.DefaultCost,
+				PasswordHashCost,
 			)
 			if err != nil {
 				c.JSON(http.StatusInternalServerError, gin.H{
