@@ -1,0 +1,2 @@
+title = INSAS Rifle
+description = The INSAS, or Indian Small Arms System, is a family of infantry arms consisting of an assault rifle and a light machine gun (LMG). These weapons were developed in India by the Armament Research and Development Establishment and manufactured by the Ordnance Factories Board at its various factories. It was the standard infantry weapon of the Indian Armed Forces for almost three decades.

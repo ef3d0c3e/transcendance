@@ -1,0 +1,2 @@
+title = Winchester Model 1897
+description = The Winchester Model 1897, also known as the Model 97, M97, Riot Gun, or Trench Gun, is a pump-action shotgun with an external hammer and tube magazine manufactured by the Winchester Repeating Arms Company. The Model 1897 was an evolution of the Winchester Model 1893 designed by John Browning. From 1897 until 1957, over one million of these shotguns were produced.

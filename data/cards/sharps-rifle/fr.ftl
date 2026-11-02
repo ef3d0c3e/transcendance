@@ -1,0 +1,2 @@
+title = Fusil Sharps
+description = Le fusil Sharps, à un coup et à chargement par la culasse, fut conçu en 1848 par l'armurier nord-américain Christian Sharps. Il est basé sur un mécanisme de fermeture de culasse dit « à bloc tombant », très fiable et très robuste. Les fusils Sharps, qui ont existé dans une grande variété de versions et de calibres, avaient une réputation de grande fiabilité et de haute précision.
