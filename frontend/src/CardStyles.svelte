@@ -168,11 +168,20 @@
 		flex: 1 1 auto;
 		min-height: 0;
 		overflow: hidden;
-		margin: 1ch 1ch;
+		margin: 1ch 0.7ch;
+		padding: 0 0.3ch;
 
 		text-align: justify;
 		line-height: 1.1;
 		color: var(--color-text);
+	}
+
+	/* The light theme darkens the card towards its bottom corner, where the
+		dark text would fall to 3:1 on the darkest collections: a veil of the
+		page's background keeps it above 6:1 */
+	:global(:root[theme="light"] p.card-description) {
+		background: color-mix(in srgb, var(--color-bg-1) 40%, transparent);
+		border-radius: 0.3rem;
 	}
 
 	/* A band of the page's background behind the collection and the

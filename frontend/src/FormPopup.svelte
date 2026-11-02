@@ -99,11 +99,26 @@
 		status = "idle";
 	}
 
-	// Clicking the backdrop targets the dialog itself
+	// Clicking the backdrop targets the dialog itself. Pressed in the form
+	// and released over the backdrop (selecting a field's text) isn't one.
+	let pressedBackdrop = false;
+
+	function handlePointerdown(event) {
+		pressedBackdrop = event.target === dialog;
+	}
+
 	function handleClick(event) {
-		if (event.target === dialog) {
+		if (event.target === dialog && pressedBackdrop) {
 			close();
 		}
+		pressedBackdrop = false;
+	}
+
+	// The dialog lives in <body>, not in the header's navigation: the
+	// compact layout hides that one, and an open dialog would vanish with it
+	function portal(node) {
+		document.body.append(node);
+		return () => node.remove();
 	}
 </script>
 
@@ -120,6 +135,8 @@
 	class="popup form-popup"
 	aria-label={label}
 	bind:this={dialog}
+	{@attach portal}
+	onpointerdown={handlePointerdown}
 	onclick={handleClick}
 	onclose={handleClose}
 >

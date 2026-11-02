@@ -113,15 +113,19 @@ import { apiFetch } from './api.js';
 			event.preventDefault();
 			form.querySelector('button')?.setAttribute('aria-disabled', 'true');
 			try {
-				await apiFetch(form.dataset.logout, {
+				const response = await apiFetch(form.dataset.logout, {
 					method: 'POST',
 					headers: { Accept: 'application/json' },
 				});
-				location.assign('/');
+				if (response.ok) {
+					location.assign('/');
+					return;
+				}
 			} catch {
-				// Offline: posted as is, the browser tells what went wrong
-				form.submit();
+				// Offline: posted as is below, the browser tells what went wrong
 			}
+			// Refused: the plain form shows the server's own answer
+			form.submit();
 		});
 	}
 }

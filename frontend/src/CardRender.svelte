@@ -86,7 +86,7 @@
 		card.style.setProperty("--tilt-y", "0deg");
 	}
 
-	export function initCards() {
+	function initCards() {
 		let active = null; // card currently hovered
 		let drag = null; // { card, pointerId } while pressed
 		let pending = null;

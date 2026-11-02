@@ -483,8 +483,14 @@
 
 	// The skip button is gone once the reels stopped: the focus goes to what
 	// comes next, the stage's button, else the page's, else the way back
+	// Left alone if the user moved somewhere else meanwhile, e.g. the chat
 	async function focusNext() {
 		await tick();
+		const current = document.activeElement;
+		const lost = !current || current === document.body;
+		if (!lost && !stageElement?.contains(current) && !pageForm?.contains(current)) {
+			return;
+		}
 		const visible = [openButton, buyButton].find((button) => button && !button.hidden);
 		(againButton ?? visible ?? pageForm?.querySelector(".pack-back"))?.focus();
 	}

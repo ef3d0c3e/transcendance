@@ -93,9 +93,17 @@
 		returnFocus = null;
 	}
 
-	// Clicking the backdrop targets the dialog itself
+	// Clicking the backdrop targets the dialog itself. Pressed inside (the
+	// quantity slider) and released over the backdrop isn't one.
+	let pressedBackdrop = false;
+
+	function onDialogPointerdown(e) {
+		pressedBackdrop = e.target === dialog;
+	}
+
 	function onDialogClick(e) {
-		if (e.target === dialog) close();
+		if (e.target === dialog && pressedBackdrop) close();
+		pressedBackdrop = false;
 	}
 
 	onMount(() => {
@@ -152,6 +160,7 @@
 	class="popup inventory-popup"
 	aria-labelledby="inventory-popup-title"
 	bind:this={dialog}
+	onpointerdown={onDialogPointerdown}
 	onclick={onDialogClick}
 	onclose={onDialogClose}
 >
