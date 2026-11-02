@@ -20,6 +20,7 @@ import Shoutbox from './Shoutbox.svelte';
 import { enhanceNotificationList, enhanceRelativeTimes } from './relative-time.js';
 import { enhanceCountdowns } from './countdown.js';
 import { openTopup } from './topup.js';
+import { apiFetch } from './api.js';
 
 // Navbar
 {
@@ -33,6 +34,10 @@ import { openTopup } from './topup.js';
 	if (target) {
 		mount(LanguageSwitcher, {
 			target,
+			props: {
+				label: target.dataset.label,
+				labelCurrent: target.dataset.labelCurrent,
+			},
 		});
 	}
 }
@@ -43,6 +48,10 @@ import { openTopup } from './topup.js';
 	if (target) {
 		mount(ThemeSwitcher, {
 			target,
+			props: {
+				labelLight: target.dataset.themeLabelLight,
+				labelDark: target.dataset.themeLabelDark,
+			},
 		});
 	}
 }
@@ -133,9 +142,8 @@ import { openTopup } from './topup.js';
 			button.disabled = true;
 			error.hidden = true;
 			try {
-				const response = await fetch(button.dataset.accountDelete, {
+				const response = await apiFetch(button.dataset.accountDelete, {
 					method: 'POST',
-					credentials: 'same-origin',
 				});
 				if (response.ok) {
 					location.assign('/cards/search/');

@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import Bell from '../icons/Bell.svelte';
 	import { relativeTime, fullDate } from './relative-time.js';
+	import { apiFetch } from './api.js';
 
 	let { dataset } = $props();
 
@@ -32,7 +33,7 @@
 		loading = true;
 		stale = false;
 		try {
-			const response = await fetch('/api/notifications?limit=5', { credentials: 'include' });
+			const response = await apiFetch('/api/notifications?limit=5');
 			if (response.status === 401) {
 				authenticated = false;
 				return;
@@ -46,8 +47,8 @@
 			locale = data.locale;
 			error = false;
 			loaded = true;
-		} catch (err) {
-			console.error('Failed to load notifications:', err);
+		} catch {
+			// Offline or logged out meanwhile: the panel says it failed
 			error = true;
 		} finally {
 			loading = false;
@@ -58,13 +59,19 @@
 	}
 
 	async function markAllRead() {
-		const response = await fetch('/api/notifications/read_all', { method: 'POST', credentials: 'include' });
-		if (response.ok) {
-			for (const notification of notifications) {
-				notification.Read = true;
+		try {
+			const response = await apiFetch('/api/notifications/read_all', { method: 'POST' });
+			if (!response.ok) {
+				return;
 			}
-			unread = 0;
+		} catch {
+			// Offline: they stay unread, the button stays for another try
+			return;
 		}
+		for (const notification of notifications) {
+			notification.Read = true;
+		}
+		unread = 0;
 	}
 
 	function toggle() {

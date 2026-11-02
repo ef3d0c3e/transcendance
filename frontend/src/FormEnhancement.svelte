@@ -1,5 +1,6 @@
 <script>
 	import { onMount } from "svelte";
+	import { apiFetch } from "./api.js";
 
 	let { formSelector, onSuccess } = $props();
 
@@ -47,14 +48,14 @@
 			button.disabled = true;
 
 			try {
-				const response = await fetch(form.action, {
+				const response = await apiFetch(form.action, {
 					method: form.method,
 					body: new FormData(form),
 				});
 
 				const data = await response.json();
 
-				var section;
+				let section;
 				if (!result.hasChildNodes()) {
 					section = document.createElement("section");
 					result.appendChild(section);

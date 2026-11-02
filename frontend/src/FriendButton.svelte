@@ -1,4 +1,6 @@
 <script>
+	import { apiFetch } from './api.js';
+
 	// How long an error stays shown, in milliseconds
 	const ERROR_DELAY = 4000;
 
@@ -51,7 +53,7 @@
 		error = '';
 		try {
 			const params = new URLSearchParams({ target: dataset.id, action });
-			const response = await fetch(`/friendaction?${params}`, { method: 'POST' });
+			const response = await apiFetch(`/friendaction?${params}`, { method: 'POST' });
 			const data = await response.json();
 			if (typeof data.relation === 'string') {
 				relation = data.relation;

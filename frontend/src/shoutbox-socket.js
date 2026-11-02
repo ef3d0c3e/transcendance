@@ -53,11 +53,14 @@ export class ShoutboxConnection {
 	}
 
 	#handleMessage(event) {
+		let data;
 		try {
-			this.#onEvent(JSON.parse(event.data));
-		} catch (error) {
-			console.error('Invalid shoutbox event:', error);
+			data = JSON.parse(event.data);
+		} catch {
+			// Not an event of the server, there is nothing to show for it
+			return;
 		}
+		this.#onEvent(data);
 	}
 
 	#handleClose(event) {

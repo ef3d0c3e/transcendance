@@ -107,6 +107,7 @@ theme-switcher-light = Switch to light theme
 theme-switcher-dark = Switch to dark theme
 
 language-switcher = Choose language
+language-switcher-current = Language: English
 
 cards-error-not-found = Card not found
 cards-error-collection-not-found = Collection not found

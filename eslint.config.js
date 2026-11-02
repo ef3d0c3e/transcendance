@@ -3,6 +3,12 @@ import eslint from '@eslint/js';
 import unicorn from 'eslint-plugin-unicorn';
 import sonarjs from 'eslint-plugin-sonarjs';
 import importX from 'eslint-plugin-import-x';
+import svelte from 'eslint-plugin-svelte';
+
+// The plain JS helpers get the strict rule set, the Svelte components a
+// lighter one: their markup and scoped styles live next to the script
+const jsFiles = ['**/*.js'];
+const svelteFiles = ['frontend/**/*.svelte'];
 
 export default [
 	{
@@ -30,11 +36,13 @@ export default [
 
 	eslint.configs.recommended,
 
-	unicorn.configs.recommended,
+	{ ...unicorn.configs.recommended, files: jsFiles },
 
-	sonarjs.configs.recommended,
+	{ ...sonarjs.configs.recommended, files: jsFiles },
 
 	{
+		files: jsFiles,
+
 		plugins: {
 			'import-x': importX,
 		},
@@ -185,6 +193,50 @@ export default [
 			],
 
 			// Comments / TODOs
+			'no-warning-comments': [
+				'error',
+				{
+					terms: ['todo', 'fixme', 'hack', 'xxx'],
+					location: 'anywhere',
+				},
+			],
+		},
+	},
+
+	// Svelte components: the plugin's recommended rules (valid markup, keyed
+	// each blocks, no stray DOM manipulation or {@html}), plus the
+	// correctness rules of the JS helpers. Not consistent-return: onMount
+	// returns early without a cleanup function on pages missing its target.
+	...svelte.configs.recommended,
+
+	{
+		files: svelteFiles,
+		languageOptions: {
+			globals: globals.browser,
+		},
+		rules: {
+			'default-case-last': 'error',
+			'eqeqeq': ['error', 'always'],
+			'no-await-in-loop': 'error',
+			'no-duplicate-imports': 'error',
+			'no-else-return': 'error',
+			'no-lonely-if': 'error',
+			'no-nested-ternary': 'error',
+			'no-promise-executor-return': 'error',
+			'no-return-await': 'error',
+			'no-self-compare': 'error',
+			'no-sequences': 'error',
+			'no-shadow': 'error',
+			'no-throw-literal': 'error',
+			'no-unneeded-ternary': 'error',
+			'no-unused-vars': ['error', { caughtErrors: 'none' }],
+			'no-useless-concat': 'error',
+			'no-useless-return': 'error',
+			'no-var': 'error',
+			'object-shorthand': 'error',
+			// Knows that $props() and $derived() are declared with let
+			'svelte/prefer-const': 'error',
+			'prefer-template': 'error',
 			'no-warning-comments': [
 				'error',
 				{

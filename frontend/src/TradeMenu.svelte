@@ -10,6 +10,7 @@
 
 <script>
 	import { onMount } from "svelte";
+	import { apiFetch } from "./api.js";
 
 	let { target } = $props();
 
@@ -39,8 +40,8 @@
 	let balance = $state(0);
 	let theirBalance = $state(0);
 	// Copies put up per stack, by `card_id:foil`
-	let give = $state({});
-	let want = $state({});
+	const give = $state({});
+	const want = $state({});
 	let coins = $state(0);
 	let wantCoins = $state(0);
 	let loading = $state(true);
@@ -157,13 +158,13 @@
 	// Start a side from the stacks of a counter, capped to the stacks free to
 	// put up on that side
 	function prefill(sel, stacks, encoded) {
-		let items;
+		let prefilled;
 		try {
-			items = JSON.parse(encoded || "[]");
+			prefilled = JSON.parse(encoded || "[]");
 		} catch {
-			items = [];
+			prefilled = [];
 		}
-		for (const item of items) {
+		for (const item of prefilled) {
 			const stack = stacks.find((s) => s.card_id === item.card_id && s.foil === item.foil);
 			if (stack && stack.count > 0) {
 				sel[key(stack)] = Math.min(item.count, stack.count);
@@ -185,9 +186,8 @@
 		sending = true;
 		message = "";
 		try {
-			const response = await fetch(submitUrl, {
+			const response = await apiFetch(submitUrl, {
 				method: "POST",
-				credentials: "same-origin",
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify({
 					target: targetName,
@@ -214,7 +214,7 @@
 
 	onMount(async () => {
 		try {
-			const response = await fetch(stacksUrl, { credentials: "same-origin" });
+			const response = await apiFetch(stacksUrl);
 			if (!response.ok) {
 				throw new Error();
 			}
@@ -276,6 +276,9 @@
 							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "give", stack)}
 							onkeydown={(e) => pickKey(e, "give", stack)}>
+							<!-- The stack's card, rendered by the server's html/template from the
+							     static card data, never from user input -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
 					{:else}
@@ -317,6 +320,9 @@
 							role="button" tabindex="0" aria-label={title(stack)} aria-disabled={!stack.count}
 							onclick={(e) => pick(e, "want", stack)}
 							onkeydown={(e) => pickKey(e, "want", stack)}>
+							<!-- The stack's card, rendered by the server's html/template from the
+							     static card data, never from user input -->
+							<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 							<div class="trade-menu-card">{@html stack.html}</div>
 						</div>
 					{:else}
