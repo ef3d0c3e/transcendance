@@ -254,7 +254,8 @@ func (dc *DataController) TradeupPost(c *gin.Context) {
 		return
 	}
 
-	c.Redirect(http.StatusSeeOther, fmt.Sprintf("/inventory?tab=tradeup&result=%d", reward))
+	// Signed, so a link cannot show a contract that never happened
+	c.Redirect(http.StatusSeeOther, "/inventory?tab=tradeup&"+controllers.SignedNotice(c, fmt.Sprintf("result=%d", reward)))
 }
 
 // Highest rarity first, unknown rarities last
@@ -396,8 +397,8 @@ func (dc *DataController) inventoryTradeup(c *gin.Context, userID uint, v *inven
 		})
 	}
 
-	// The card the last tradeup awarded, with the foil it rolled
-	if id, err := strconv.Atoi(c.Query("result")); err == nil {
+	// The card the last tradeup awarded, with the foil it rolled, as the contract signed it
+	if id, err := strconv.Atoi(c.Query("result")); err == nil && controllers.NoticeSigned(c, "result="+c.Query("result")) {
 		card, collection := dc.Data.GetCard(id)
 		if card != nil && collection != nil {
 			result, err := GetCardData(c, loc, dc.Renderer, collection, card)

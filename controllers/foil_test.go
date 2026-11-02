@@ -248,3 +248,38 @@ func TestFoilRouletteTabIsNotOfferedOnOtherInventories(t *testing.T) {
 	require.NotContains(t, body, `id="foil-roulette"`)
 	require.Contains(t, body, `class="inventory-tab-boosters" href="/inventory?u=foil10" aria-current="page"`)
 }
+
+// A link cannot show the outcome of a roll or a contract that never happened
+func TestForgedResultLinksShowNothing(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "forged1", "foo-bar-baz-qux", 0)
+	giveCards(t, "forged1", cardPythagorean, 1)
+	cookie := login(t, router, "forged1", "foo-bar-baz-qux")
+
+	body := getInventory(t, router, cookie, "/inventory?tab=foil&result=1004&foil=foil3")
+	require.NotContains(t, body, `id="tradeup-result"`)
+	body = getInventory(t, router, cookie, "/inventory?tab=foil&result=1004&lost=1")
+	require.NotContains(t, body, `data-outcome="lost"`)
+	body = getInventory(t, router, cookie, "/inventory?tab=tradeup&result=1003")
+	require.NotContains(t, body, `id="tradeup-result"`)
+}
+
+// Rolls sent at once spend the rolled copy once
+func TestConcurrentFoilRollsSettleOnce(t *testing.T) {
+	router := tests.Run(tests.Data, tests.DB)
+	createAccount(t, router, "racefoil1", "foo-bar-baz-qux", 0)
+	giveCards(t, "racefoil1", cardFordT, 1)
+	cookie := login(t, router, "racefoil1", "foo-bar-baz-qux")
+
+	recs := raceForm(router, cookie, "/foil", url.Values{"target": {strconv.Itoa(cardFordT)}}, concurrentRequests)
+	settled := 0
+	for _, rec := range recs {
+		if strings.Contains(rec.Header().Get("Location"), "result=") {
+			settled++
+		}
+	}
+	require.Equal(t, 1, settled)
+	// Won, the copy is now foil; lost, it is gone: never both, never two
+	require.Zero(t, ownedCardCount(t, "racefoil1", cardFordT, ""))
+	require.LessOrEqual(t, len(ownedCards(t, "racefoil1")), 1)
+}

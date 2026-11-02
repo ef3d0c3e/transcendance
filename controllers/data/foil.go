@@ -12,7 +12,6 @@ import (
 	"slices"
 	"strconv"
 	"strings"
-	"time"
 
 	"transcendance/controllers"
 	"transcendance/models"
@@ -91,7 +90,8 @@ type foilTake struct {
 func parseFoilTake(value string) (foilTake, bool) {
 	idPart, foil, _ := strings.Cut(value, ":")
 	id, err := strconv.ParseUint(idPart, 10, 32)
-	if err != nil || id == 0 {
+	// Exactly a known foil, as on every other endpoint taking cards
+	if err != nil || id == 0 || !models.ValidFoil(foil) {
 		return foilTake{}, false
 	}
 	return foilTake{CardID: uint(id), Foil: foil}, true
@@ -156,11 +156,7 @@ func (dc *DataController) FoilRoulettePost(c *gin.Context) {
 		return
 	}
 
-	rnd := rand.New(rand.NewPCG(
-		uint64(time.Now().UnixNano()),
-		uint64(time.Now().UnixNano()),
-	))
-	won := rollFoilRoulette(rnd, chance)
+	won := rollFoilRoulette(newRand(), chance)
 
 	// Take the cards and settle the roll at once. Deleting with the owner
 	// check means the same card can't be spent twice, even when the request
@@ -231,16 +227,17 @@ func (dc *DataController) FoilRoulettePost(c *gin.Context) {
 		return
 	}
 
-	params := url.Values{
-		"tab":    {inventoryTabFoil},
-		"result": {strconv.FormatUint(uint64(target.CardID), 10)},
+	// Signed, so a link cannot show a roll that never happened
+	c.Redirect(http.StatusSeeOther, "/inventory?tab="+inventoryTabFoil+"&"+controllers.SignedNotice(c, foilResultNotice(
+		strconv.FormatUint(uint64(target.CardID), 10), won, won == "")))
+}
+
+// The query naming the outcome of a roll: the card, and the foil won or the card lost
+func foilResultNotice(card string, foil string, lost bool) string {
+	if lost {
+		return "result=" + card + "&lost=1"
 	}
-	if won != "" {
-		params.Set("foil", won)
-	} else {
-		params.Set("lost", "1")
-	}
-	c.Redirect(http.StatusSeeOther, "/inventory?"+params.Encode())
+	return "result=" + card + "&foil=" + url.QueryEscape(foil)
 }
 
 // Message for a foil roulette error code, "" when the code is unknown
@@ -346,8 +343,9 @@ func (dc *DataController) inventoryFoil(c *gin.Context, userID uint, v *inventor
 		})
 	}
 
-	// The card the last roll was for: foil when won, destroyed when lost
-	if id, err := strconv.Atoi(c.Query("result")); err == nil {
+	// The card the last roll was for: foil when won, destroyed when lost, as the roll signed it
+	if id, err := strconv.Atoi(c.Query("result")); err == nil &&
+		controllers.NoticeSigned(c, foilResultNotice(c.Query("result"), c.Query("foil"), c.Query("lost") != "")) {
 		card, collection := dc.Data.GetCard(id)
 		foil := getFoilPattern(c.Query("foil"))
 		lost := c.Query("lost") != ""
