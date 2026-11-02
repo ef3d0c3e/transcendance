@@ -30,8 +30,11 @@ You can use `npx vite build --watch` inside the `frontend/` directory to automat
 ## Running the server
 
 ```
-# Start the database container
-docker compose up -d
+# Development settings: copy, then fill in the passwords
+cp .env.example .env
+
+# Start the database container (docker-compose.dev.yml)
+make db
 
 # Run the server
 go run .
@@ -47,7 +50,7 @@ For convenience, a `Makefile` is provided. To build frontend components and run 
 
 # Database
 
-To start the database use docker-compose: `docker compose up -d`
+To start the database use `make db`, which runs `docker compose -f docker-compose.dev.yml up -d`. It only listens on `127.0.0.1:3306`.
 
 To connect to the database, do this:
 ```
