@@ -1,0 +1,2 @@
+title = Hummingbird Hawk-Moth
+description = The hummingbird hawk-moth (Macroglossum stellatarum) is a species of hawk moth found across temperate regions of Eurasia. The species is named for its similarity to hummingbirds, as they feed on the nectar of tube-shaped flowers using their long proboscis while hovering in the air; this resemblance is an example of convergent evolution. The hummingbird hawk-moth was first described by Carl Linnaeus in his 1758 10th edition of Systema Naturae.

@@ -1,0 +1,2 @@
+title = Southern Wood Ant
+description = Formica rufa, also known as the red wood ant, southern wood ant, or horse ant, is a boreal member of the Formica rufa group of ants, and is the type species for that group, being described by Linnaeus. It is native to Eurasia, with a recorded distribution stretching from the middle of Scandinavia to northern Iberia and Anatolia, and from Great Britain to Lake Baikal, with unconfirmed reports of it in the Russian Far East.

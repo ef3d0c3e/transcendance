@@ -1,0 +1,454 @@
+id = 11
+tags = ["insect"]
+color-primary = "#6fd44e"
+color-secondary = "#1e3512"
+
+[[cards]]
+name = "american-cockroach"
+
+[[cards]]
+name = "apollo-butterfly"
+
+[[cards]]
+name = "argentine-ant"
+
+[[cards]]
+name = "army-ant"
+
+[[cards]]
+name = "asian-giant-hornet"
+
+[[cards]]
+name = "asian-lady-beetle"
+
+[[cards]]
+name = "asian-longhorned-beetle"
+
+[[cards]]
+name = "asian-tiger-mosquito"
+
+[[cards]]
+name = "atlas-moth"
+
+[[cards]]
+name = "azure-damselfly"
+
+[[cards]]
+name = "banded-demoiselle"
+
+[[cards]]
+name = "beautiful-demoiselle"
+
+[[cards]]
+name = "black-garden-ant"
+
+[[cards]]
+name = "blue-bottle-fly"
+
+[[cards]]
+name = "blue-dasher"
+
+[[cards]]
+name = "blue-morpho"
+
+[[cards]]
+name = "bombardier-beetle"
+
+[[cards]]
+name = "botfly"
+
+[[cards]]
+name = "brimstone-butterfly"
+
+[[cards]]
+name = "brown-marmorated-stink-bug"
+
+[[cards]]
+name = "buff-tailed-bumblebee"
+
+[[cards]]
+name = "buff-tip"
+
+[[cards]]
+name = "bullet-ant"
+
+[[cards]]
+name = "carpenter-bee"
+
+[[cards]]
+name = "cat-flea"
+
+[[cards]]
+name = "cecropia-moth"
+
+[[cards]]
+name = "chinese-mantis"
+
+[[cards]]
+name = "cicada-orni"
+
+[[cards]]
+name = "cinnabar-moth"
+
+[[cards]]
+name = "colorado-potato-beetle"
+
+[[cards]]
+name = "comma-butterfly"
+
+[[cards]]
+name = "common-birdwing"
+
+[[cards]]
+name = "common-blue"
+
+[[cards]]
+name = "common-cockchafer"
+
+[[cards]]
+name = "common-darter"
+
+[[cards]]
+name = "common-earwig"
+
+[[cards]]
+name = "common-eastern-firefly"
+
+[[cards]]
+name = "common-froghopper"
+
+[[cards]]
+name = "common-fruit-fly"
+
+[[cards]]
+name = "common-green-darner"
+
+[[cards]]
+name = "common-green-lacewing"
+
+[[cards]]
+name = "common-pond-skater"
+
+[[cards]]
+name = "common-scorpionfly"
+
+[[cards]]
+name = "common-wasp"
+
+[[cards]]
+name = "crane-fly"
+
+[[cards]]
+name = "deaths-head-hawkmoth"
+
+[[cards]]
+name = "deathwatch-beetle"
+
+[[cards]]
+name = "desert-locust"
+
+[[cards]]
+name = "devil-flower-mantis"
+
+[[cards]]
+name = "devils-coach-horse-beetle"
+
+[[cards]]
+name = "eastern-carpenter-ant"
+
+[[cards]]
+name = "eastern-lubber-grasshopper"
+
+[[cards]]
+name = "eastern-subterranean-termite"
+
+[[cards]]
+name = "elephant-beetle"
+
+[[cards]]
+name = "elephant-hawk-moth"
+
+[[cards]]
+name = "emerald-cockroach-wasp"
+
+[[cards]]
+name = "emperor-dragonfly"
+
+[[cards]]
+name = "emperor-moth"
+
+[[cards]]
+name = "european-antlion"
+
+[[cards]]
+name = "european-glow-worm"
+
+[[cards]]
+name = "european-honey-bee"
+
+[[cards]]
+name = "european-hornet"
+
+[[cards]]
+name = "european-mole-cricket"
+
+[[cards]]
+name = "european-paper-wasp"
+
+[[cards]]
+name = "european-rhinoceros-beetle"
+
+[[cards]]
+name = "field-cricket"
+
+[[cards]]
+name = "formosan-subterranean-termite"
+
+[[cards]]
+name = "garden-tiger-moth"
+
+[[cards]]
+name = "gatekeeper-butterfly"
+
+[[cards]]
+name = "german-cockroach"
+
+[[cards]]
+name = "giant-leopard-moth"
+
+[[cards]]
+name = "giant-prickly-stick-insect"
+
+[[cards]]
+name = "glasswing-butterfly"
+
+[[cards]]
+name = "goliath-beetle"
+
+[[cards]]
+name = "great-diving-beetle"
+
+[[cards]]
+name = "great-green-bush-cricket"
+
+[[cards]]
+name = "green-drake-mayfly"
+
+[[cards]]
+name = "green-shield-bug"
+
+[[cards]]
+name = "green-tiger-beetle"
+
+[[cards]]
+name = "hercules-beetle"
+
+[[cards]]
+name = "house-cricket"
+
+[[cards]]
+name = "housefly"
+
+[[cards]]
+name = "human-louse"
+
+[[cards]]
+name = "hummingbird-hawk-moth"
+
+[[cards]]
+name = "indian-stick-insect"
+
+[[cards]]
+name = "japanese-beetle"
+
+[[cards]]
+name = "japanese-jewel-beetle"
+
+[[cards]]
+name = "jersey-tiger-moth"
+
+[[cards]]
+name = "julia-butterfly"
+
+[[cards]]
+name = "karner-blue"
+
+[[cards]]
+name = "large-blue-butterfly"
+
+[[cards]]
+name = "large-white"
+
+[[cards]]
+name = "leafcutter-ant"
+
+[[cards]]
+name = "lovebug"
+
+[[cards]]
+name = "luna-moth"
+
+[[cards]]
+name = "madagascar-hissing-cockroach"
+
+[[cards]]
+name = "malayan-jungle-nymph"
+
+[[cards]]
+name = "marbled-white"
+
+[[cards]]
+name = "marmalade-hoverfly"
+
+[[cards]]
+name = "meadow-brown"
+
+[[cards]]
+name = "meadow-grasshopper"
+
+[[cards]]
+name = "migratory-locust"
+
+[[cards]]
+name = "monarch-butterfly"
+
+[[cards]]
+name = "mormon-cricket"
+
+[[cards]]
+name = "orange-tip"
+
+[[cards]]
+name = "orchid-mantis"
+
+[[cards]]
+name = "painted-lady"
+
+[[cards]]
+name = "pea-aphid"
+
+[[cards]]
+name = "peacock-butterfly"
+
+[[cards]]
+name = "peanut-headed-lanternfly"
+
+[[cards]]
+name = "peppered-moth"
+
+[[cards]]
+name = "periodical-cicada"
+
+[[cards]]
+name = "polyphemus-moth"
+
+[[cards]]
+name = "praying-mantis"
+
+[[cards]]
+name = "purple-emperor"
+
+[[cards]]
+name = "queen-butterfly"
+
+[[cards]]
+name = "red-admiral"
+
+[[cards]]
+name = "red-imported-fire-ant"
+
+[[cards]]
+name = "red-mason-bee"
+
+[[cards]]
+name = "red-palm-weevil"
+
+[[cards]]
+name = "ringlet"
+
+[[cards]]
+name = "robber-fly"
+
+[[cards]]
+name = "rose-chafer"
+
+[[cards]]
+name = "rosy-maple-moth"
+
+[[cards]]
+name = "sacred-scarab"
+
+[[cards]]
+name = "seven-spot-ladybird"
+
+[[cards]]
+name = "silk-moth"
+
+[[cards]]
+name = "silver-washed-fritillary"
+
+[[cards]]
+name = "silverfish"
+
+[[cards]]
+name = "small-copper"
+
+[[cards]]
+name = "small-tortoiseshell"
+
+[[cards]]
+name = "snowy-tree-cricket"
+
+[[cards]]
+name = "southern-hawker"
+
+[[cards]]
+name = "southern-wood-ant"
+
+[[cards]]
+name = "spanish-fly"
+
+[[cards]]
+name = "speckled-wood"
+
+[[cards]]
+name = "spotted-lanternfly"
+
+[[cards]]
+name = "stag-beetle"
+
+[[cards]]
+name = "swallowtail-butterfly"
+
+[[cards]]
+name = "tarantula-hawk"
+
+[[cards]]
+name = "titan-beetle"
+
+[[cards]]
+name = "tsetse-fly"
+
+[[cards]]
+name = "two-spot-ladybird"
+
+[[cards]]
+name = "velvet-ant"
+
+[[cards]]
+name = "water-scorpion"
+
+[[cards]]
+name = "weaver-ant"
+
+[[cards]]
+name = "whirligig-beetle"
+
+[[cards]]
+name = "white-admiral"
+
+[[cards]]
+name = "yellow-fever-mosquito"
+
+[[cards]]
+name = "zebra-longwing"

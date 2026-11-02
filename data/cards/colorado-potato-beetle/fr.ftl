@@ -1,0 +1,2 @@
+title = Doryphore
+description = Le Doryphore (Leptinotarsa decemlineata), ou Doryphore de la pomme de terre, est une espèce d'insectes de l'ordre des coléoptères et de la famille des chrysomélidés aux élytres jaunes rayés de noir. Cet herbivore, spécialisé dans les plantes de la famille des Solanaceae, est un ravageur important, tant à l'état adulte qu'à l'état larvaire, des cultures de pommes de terre qu'il peut anéantir en cas de défoliation totale.

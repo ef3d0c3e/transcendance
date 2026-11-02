@@ -1,0 +1,2 @@
+title = Meadow Grasshopper
+description = Pseudochorthippus parallelus (often known by its synonym Chorthippus parallelus), the meadow grasshopper, is a common species of grasshopper in the tribe Gomphocerini. It is found in non-arid grasslands throughout the well vegetated areas of Europe and some adjoining areas of Asia. It is a well-studied organism in the discipline of evolutionary biology and was an early and important model system for the study of European phylogeography.

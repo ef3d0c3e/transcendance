@@ -1,0 +1,2 @@
+title = Cicada orni
+description = Cicada orni, colloquially called the common cicada or ash cicada, is the type species of cicada belonging to the family Cicadidae, subfamily Cicadinae, and the genus Cicada. The genus name comes directly from the Latin cicada 'buzzer', while the species name orni possibly comes from Fraxinus ornus (Manna Ash or South European Flowering Ash), where this cicada often lay its eggs deep in branches.

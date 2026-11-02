@@ -1,0 +1,2 @@
+title = Puceron vert du pois
+description = Le puceron vert du pois (Acyrthosiphon pisum), aussi appelé puceron du pois, est une espèce de petits insectes de l'ordre des hémiptères et de la famille des aphididés, qui parasite de nombreuses plantes cultivées ou sauvages de la famille des fabacées (légumineuses), dont le pois, le haricot, le trèfle et la luzerne. Il est aussi l'agent vecteur de certaines viroses.

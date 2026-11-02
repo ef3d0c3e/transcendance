@@ -1,0 +1,2 @@
+title = Monarque
+description = Le monarque (Danaus plexippus) est une espèce de papillons de la famille des Nymphalidae (sous-famille des Danainae), principalement américaine. Ce grand papillon est célèbre pour ses migrations de grande ampleur en Amérique, où il se déplace par groupes de millions d'individus sur des distances pouvant atteindre 4 000 km, deux fois par an, d'août à octobre vers le sud (surtout au Mexique), et au printemps vers le nord.

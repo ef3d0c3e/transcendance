@@ -1,0 +1,2 @@
+title = Red Palm Weevil
+description = The palm weevil Rhynchophorus ferrugineus is one of two species of snout beetle known as the red palm weevil, Asian palm weevil or sago palm weevil. The adult beetles are relatively large, ranging between 2 and 4 centimetres (1 and 1+1⁄2 inches) long, and are usually a rusty red colour—but many colour variants exist and have often been classified as different species (e.g., R. vulneratus).

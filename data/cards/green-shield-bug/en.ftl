@@ -1,0 +1,2 @@
+title = Green Shield Bug
+description = The green shield bug (Palomena prasina) is a Palearctic shield bug species in the family Pentatomidae. The name might equally apply to several other species in the tribe Nezarini, or if referred-to as a "green stink bug", it might more appropriately belong to the larger North American bug, Chinavia hilaris. The adult green shield bug ranges in the colour of their backs from bright green to bronze, without any substantial markings.

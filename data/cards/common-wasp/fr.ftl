@@ -1,0 +1,2 @@
+title = Vespula vulgaris
+description = La guêpe commune, Vespula vulgaris, est une espèce de guêpes sociales de la sous-famille des Vespinae, originaire de l'Eurasie. Elle a localement régressé dans son aire de répartition d'origine, mais elle a été introduite dans l'hémisphère sud, en Australie et en Nouvelle-Zélande où elle se comporte en espèce très invasive. Elle est très proche de la guêpe germanique, Vespula germanica.

@@ -1,0 +1,2 @@
+title = Tristan
+description = Le Tristan, Aphantopus hyperantus, est une espèce de lépidoptères (papillons) appartenant à la famille des Nymphalidae, à la sous-famille des Satyrinae, à la tribu des Satyrini et au genre Aphantopus dont il est le seul représentant en Europe. Ce papillon a fait l'objet d'études sur ses déplacements, qui ont conclu qu'il avait besoin de corridors écologiques spécifiques.

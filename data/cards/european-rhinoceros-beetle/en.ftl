@@ -1,0 +1,2 @@
+title = European Rhinoceros Beetle
+description = The European rhinoceros beetle (Oryctes nasicornis) is a large flying beetle belonging to the subfamily Dynastinae.

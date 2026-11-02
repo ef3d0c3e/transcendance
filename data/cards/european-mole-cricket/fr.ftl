@@ -1,0 +1,2 @@
+title = Gryllotalpa gryllotalpa
+description = Gryllotalpa gryllotalpa, la courtilière commune, ou taupette ou simplement Courtilière est une espèce d'insectes orthoptères de la famille des Gryllotalpidae, originaire d'Europe de l'Ouest. C'est un insecte fouisseur relativement gros vivant en milieu relativement humide, de la tourbière au potager humide ou encore dans les marais, prairies humides, schorres, polders, etc.

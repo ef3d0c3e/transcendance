@@ -1,0 +1,2 @@
+title = Mormon Cricket
+description = The Mormon cricket (Anabrus simplex) is a large insect native to western North America in rangelands dominated by sagebrush and forbs. Anabrus is a genus in the shield-backed katydid subfamily in the Tettigoniidae family, commonly called katydids, bush crickets, and previously "long-horned grasshoppers". Its common name, "Mormon cricket", is a misnomer: true crickets are of the family Gryllidae.

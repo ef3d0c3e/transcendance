@@ -1,0 +1,2 @@
+title = Death's-Head Hawkmoth
+description = The name death's-head hawkmoth refers to any of three moth species of the genus Acherontia (Acherontia atropos, Acherontia styx and Acherontia lachesis). The former species is found throughout Africa and in Europe, the latter two are Asian; most uses of the common name refer to the African species. These moths are easily distinguishable by the vaguely human skull-shaped pattern of markings on the thorax.

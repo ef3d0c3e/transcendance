@@ -1,0 +1,2 @@
+title = Argentine Ant
+description = The Argentine ant (Linepithema humile, formerly Iridomyrmex humilis) is an ant native to northern Argentina, Uruguay, Paraguay, Bolivia and southern Brazil. This invasive species was inadvertently introduced by humans on a global scale and has become established in many Mediterranean climate areas, including South Africa, New Zealand, Japan, Easter Island, Australia, the Azores, Europe, Hawaii, and the continental United States.

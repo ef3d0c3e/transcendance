@@ -1,0 +1,2 @@
+title = Red Mason Bee
+description = Osmia bicornis (synonym Osmia rufa) is a species of mason bee, and is known as the red mason bee due to its covering of dense gingery hair. It is a solitary bee that nests in holes or stems and is polylectic, meaning it forages pollen from various different flowering plants. These bees can be seen aggregating together and nests in preexisting hollows, choosing not to excavate their own.

@@ -1,0 +1,2 @@
+title = Tsetse Fly
+description = Tsetse flies (UK: (T)SET-see or US: (T)SEET-see; sometimes spelled tzetze; also known as tik-tik flies) are large biting flies that inhabit much of tropical Africa. Tsetse flies include all the species in the genus Glossina, which are placed in their own family, Glossinidae. The tsetse is an obligate parasite that lives by feeding on the blood of vertebrate animals.

@@ -1,0 +1,2 @@
+title = Common Wasp
+description = Vespula vulgaris, known as the common wasp, is a species of wasp found in regions that include the United Kingdom, Ireland, Germany, India, China, New Zealand and Australia. It is sometimes known in English as the European wasp, but the same name is used for the species Vespula germanica or German wasp. In 2010, the ostensibly Vespula vulgaris wasps in North America were found to be a different species, Vespula alascensis.

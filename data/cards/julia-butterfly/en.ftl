@@ -1,0 +1,2 @@
+title = Julia Butterfly
+description = Dryas iulia (often incorrectly spelled julia), commonly called the Julia butterfly, Julia heliconian, the flame, or flambeau, is a species of brush-footed (or nymphalid) butterfly. The sole representative of its genus Dryas, it is native from Brazil to southern Texas and Florida, and in summer can sometimes be found as far north as eastern Nebraska. Over 15 subspecies have been described.

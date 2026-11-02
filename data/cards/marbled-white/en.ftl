@@ -1,0 +1,2 @@
+title = Marbled White
+description = Melanargia galathea, the marbled white, is a medium-sized butterfly in the family Nymphalidae. The marbled white was described in 1666 by C Merrett, and in 1695 James Petiver found a specimen in a wood near Hampstead and called it Papilio leucomelanus, our half-Mourner, to distinguish it from the Bath White, which Vernon (1702) had called the half-Mourner. It was also known as The Marmoris by Benjamin Wilkes and The Marmoress by Moses Harris.
