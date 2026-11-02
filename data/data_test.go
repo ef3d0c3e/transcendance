@@ -17,7 +17,6 @@ func TestCollectionDefaultBoosterSize(t *testing.T) {
 	require.Equal(t, defaultBoosterSize, collection.BoosterSize)
 }
 
-// A locale cards are not translated in yet shows their English texts instead of failing
 func TestTranslationsFallBackToEnglish(t *testing.T) {
 	cards, err := LoadCards()
 	require.NoError(t, err)

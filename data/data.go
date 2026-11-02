@@ -38,8 +38,8 @@ type Card struct {
 // Locale of the texts of cards, collections and tags missing in the requested one
 const FallbackLocale = "en"
 
-// The bundle of a locale holding a message, the fallback locale's when the locale lacks it: a new interface
-// language must not break the pages showing cards that are not translated yet
+// localizedMessage falls back to FallbackLocale: a new interface language must
+// not break the pages showing cards that are not translated yet
 func localizedMessage(locales map[string]*fluent.Bundle, localeName string, id string) (*fluent.Bundle, *fluent.Message) {
 	for _, name := range []string{localeName, FallbackLocale} {
 		if loc := locales[name]; loc != nil {
@@ -80,7 +80,7 @@ type Collection struct {
 	ColorPrimary   string
 	ColorSecondary string
 	ContectSheet   string
-	// Number of cards in a booster of this collection
+	// Cards per booster
 	BoosterSize int
 }
 
@@ -114,8 +114,7 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 		return "", err
 	}
 
-	// Card image size is 330x192
-	// Scale shortest side to image display size, while preserving aspect ratio
+	// Scale to the 330x192 card display size, keeping the aspect ratio
 	thumbX := src.Bounds().Max.X
 	thumbY := src.Bounds().Max.Y
 	if thumbX > thumbY {
@@ -138,7 +137,7 @@ func generateThumbnail(imagePath string, cardName string) (string, error) {
 type Data struct {
 	Cards       map[string]*Card
 	Collections map[string]*Collection
-	// Tags locales
+	// Tag names, by locale
 	Tags      map[string]*fluent.Bundle
 	cardsById map[int]struct {
 		*Card
@@ -153,7 +152,6 @@ func LoadCards() (*Data, error) {
 	cards := make(map[string]*Card)
 	collections := make(map[string]*Collection)
 
-	// Build tags locales
 	traverse_tags := func(path string, file os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -225,7 +223,7 @@ func LoadCards() (*Data, error) {
 				if err := card.Locales[localeName].AddResource(resource); err != nil {
 					return err
 				}
-				// Verify locale contains messages
+
 				if _, ok := card.Locales[localeName].Message("title"); !ok {
 					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
@@ -240,7 +238,7 @@ func LoadCards() (*Data, error) {
 				if card.Tags, err = tomlStrings(config, path, "tags"); err != nil {
 					return err
 				}
-				// Verify tags have a locale key
+
 				for localeName, locale := range tags {
 					for _, tag := range card.Tags {
 						if _, ok := locale.Message(tag); ok {
@@ -286,7 +284,7 @@ func LoadCards() (*Data, error) {
 	if err := filepath.Walk("data/cards", traverse_cards); err != nil {
 		return nil, err
 	}
-	// Build collection
+
 	traverse_collections := func(path string, file os.FileInfo, err error) error {
 		if err != nil {
 			return err
@@ -323,7 +321,7 @@ func LoadCards() (*Data, error) {
 				if err := collection.Locales[localeName].AddResource(resource); err != nil {
 					return err
 				}
-				// Verify locale contains messages
+
 				if _, ok := collection.Locales[localeName].Message("title"); !ok {
 					return fmt.Errorf("missing 'title' local key in %s", path)
 				}
@@ -338,7 +336,7 @@ func LoadCards() (*Data, error) {
 				if collection.Tags, err = tomlStrings(config, path, "tags"); err != nil {
 					return err
 				}
-				// Verify tags have a locale key
+
 				for localeName, locale := range tags {
 					for _, tag := range collection.Tags {
 						if _, ok := locale.Message(tag); ok {
@@ -389,7 +387,6 @@ func LoadCards() (*Data, error) {
 		return nil, err
 	}
 
-	// Verify every cards in collections exist
 	cardsInCollection := make(map[string]string)
 	for _, collection := range collections {
 		for _, collectionCard := range collection.Cards {
@@ -397,7 +394,7 @@ func LoadCards() (*Data, error) {
 			if !ok {
 				return nil, fmt.Errorf("collection '%s' has card '%s' but it doesn't exist", collection.Name, collectionCard.Name)
 			}
-			// Set card color if they don't override the collection's color
+			// Cards inherit the collection's colors unless they set their own
 			if card.ColorPrimary == "" {
 				card.ColorPrimary = collection.ColorPrimary
 			}
@@ -409,7 +406,6 @@ func LoadCards() (*Data, error) {
 		}
 	}
 
-	// Verify every card is in a collection, then build the id -> card lookup
 	cardsById := make(map[int]struct {
 		*Card
 		*Collection
@@ -435,13 +431,11 @@ func LoadCards() (*Data, error) {
 		}
 	}
 
-	// Build collectionsById
 	collectionsById := make(map[int]*Collection)
 	for _, collection := range collections {
 		collectionsById[collection.ID] = collection
 	}
 
-	// Generate thumbnails
 	for _, card := range cards {
 		thumbnail, err := generateThumbnail(card.ArtworkPath, card.Name)
 		if err != nil {
@@ -451,7 +445,6 @@ func LoadCards() (*Data, error) {
 		cards[card.Name] = card
 	}
 
-	// Generate contact sheets for collections
 	for _, collection := range collections {
 		contactSheet, err := generateCollectionSheet(collection, cards)
 		if err != nil {
@@ -464,10 +457,10 @@ func LoadCards() (*Data, error) {
 	log.Print("========================================")
 
 	return &Data{
-		Cards:       cards,
-		Collections: collections,
-		Tags:        tags,
-		cardsById:   cardsById,
+		Cards:           cards,
+		Collections:     collections,
+		Tags:            tags,
+		cardsById:       cardsById,
 		collectionsById: collectionsById,
 	}, nil
 }
@@ -484,7 +477,7 @@ func (dc *Data) GetCollection(id int) *Collection {
 // Rarities a card can have, from the most to the least common
 var Rarities = []string{"common", "rare", "legendary"}
 
-// tomlValue reads a required key of a TOML file with its type, `key` names it in the error
+// tomlValue reads a required key, the whole dotted `key` only names it in the error
 func tomlValue[T any](config *toml.Tree, path string, key string) (T, error) {
 	name := key[strings.LastIndex(key, ".")+1:]
 	value, ok := config.Get(name).(T)
@@ -495,7 +488,6 @@ func tomlValue[T any](config *toml.Tree, path string, key string) (T, error) {
 	return value, nil
 }
 
-// tomlStrings reads a required array of strings of a TOML file
 func tomlStrings(config *toml.Tree, path string, key string) ([]string, error) {
 	value, ok := config.GetArray(key).([]string)
 	if !ok {
@@ -504,7 +496,7 @@ func tomlStrings(config *toml.Tree, path string, key string) ([]string, error) {
 	return value, nil
 }
 
-// TagLocale is the bundle of tag names of a locale, the fallback locale's when it has none
+// TagLocale falls back to FallbackLocale when the locale has no tag names
 func (dc *Data) TagLocale(localeName string) *fluent.Bundle {
 	if loc := dc.Tags[localeName]; loc != nil {
 		return loc
