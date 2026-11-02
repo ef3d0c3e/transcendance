@@ -1,0 +1,2 @@
+title = Métro de Paris
+description = Le métro de Paris est l'un des systèmes de transport en commun desservant la ville de Paris et son agglomération. Exploité par la RATP, il comporte seize lignes essentiellement souterraines, totalisant 245,6 kilomètres et 321 stations. Devenu l'un des symboles de Paris, il se caractérise par la densité de son réseau et par son style architectural influencé par l'Art nouveau.
